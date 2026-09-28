@@ -546,5 +546,12 @@
   reset();
   const best = LB.localBest();
   bestLine.textContent = best ? '이 기기 최고 기록: ' + best.toLocaleString() : '';
+  const hallBody = document.getElementById('hallBody');
+  LB.watchTop(5, rows => {
+    if (rows === null) { hallBody.innerHTML = '<div class="note">' + (LB.ready ? '랭킹을 불러오지 못했습니다' : '온라인 랭킹 미설정') + '</div>'; return; }
+    if (!rows.length) { hallBody.innerHTML = '<div class="note">아직 기록이 없습니다. 첫 번째 영웅이 되어보세요!</div>'; return; }
+    const medal = ['🥇', '🥈', '🥉'];
+    hallBody.innerHTML = '<table>' + rows.map((r, i) => '<tr><td class="rank">' + (medal[i] || (i + 1)) + '</td><td>' + String(r.name).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) + '</td><td class="score">' + r.score.toLocaleString() + '</td></tr>').join('') + '</table>';
+  });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();

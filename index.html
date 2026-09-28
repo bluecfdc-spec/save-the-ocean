@@ -13,6 +13,7 @@
   :root { --app-w: 390px; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; background: #04101c; overflow: hidden; overscroll-behavior: none; }
+  body, #panel, .zone, #hud { touch-action: manipulation; }
   body { font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif; color: #eaf2fb; user-select: none; -webkit-user-select: none; touch-action: none; }
 
   #app {
@@ -43,22 +44,38 @@
   #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   /* ---------- Control panel ---------- */
-  #panel { position: relative; width: 100%; aspect-ratio: 941 / 242; flex: 0 0 auto; display: flex; background: #1b2430; }
+  #panel { position: relative; width: 100%; aspect-ratio: 941 / 242; flex: 0 0 auto; display: flex; align-items: stretch; background: #1b2430 url(assets/metal.jpg) center / auto 100% repeat-x; border-top: 3px solid #0a0f16; }
   #panel.left-hand { flex-direction: row-reverse; }
-  #panel .toggle { position: relative; flex: 0 0 22.1%; background: url(assets/panel_toggle.jpg) center / 100% 100% no-repeat; cursor: pointer; }
+  #panel .toggle { position: relative; flex: 0 0 15%; background: url(assets/panel_toggle.jpg) center / 100% 100% no-repeat; cursor: pointer; }
   #panel .toggle.on::after { content: ''; position: absolute; inset: 12% 8%; border-radius: 10%; box-shadow: 0 0 0 2px #46c3ff, 0 0 18px #46c3ff88 inset; pointer-events: none; }
-  #panel .buttons { position: relative; flex: 1 1 auto; background: url(assets/panel_buttons.jpg) center / 100% 100% no-repeat; }
-  .zone { position: absolute; top: 12%; height: 60%; border-radius: 10%; cursor: pointer; }
-  .zone.left  { left: 4%;  width: 23%; }
-  .zone.bomb  { left: 36%; width: 24%; border-radius: 50%; }
-  .zone.right { left: 69%;   width: 23%; }
-  .zone.pressed { background: rgba(255,255,255,.22); box-shadow: 0 0 22px rgba(120,200,255,.55); }
-  .zone.bomb.pressed { background: rgba(255,255,255,.30); }
-  .zone.disabled { filter: none; }
+  #panel .buttons { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 2.2%; padding: 2.5% 2%; }
+  .zone { position: relative; height: 100%; aspect-ratio: 164 / 148; flex: 0 1 auto; max-width: 36%; background: center / 100% 100% no-repeat; cursor: pointer; transition: transform .06s, filter .06s; }
+  .zone.left  { background-image: url(assets/btn_left.png); }
+  .zone.right { background-image: url(assets/btn_right.png); }
+  .zone.bomb  { background-image: url(assets/btn_bomb.png); aspect-ratio: 1 / 1; height: 96%; }
+  .zone.pressed { transform: scale(.94); filter: brightness(1.35) saturate(1.2); }
 
   /* ---------- Overlays ---------- */
   .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; text-align: center; background: rgba(3, 14, 28, .72); backdrop-filter: blur(2px); z-index: 5; }
   .overlay.hidden { display: none; }
+  /* 시작 화면: 앱 전체를 덮는 타이틀 */
+  #startOverlay { position: fixed; inset: 0; margin: 0 auto; width: min(100vw, 560px); justify-content: flex-end; gap: 10px; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); background: #06182b url(assets/title.jpg) center top / cover no-repeat; backdrop-filter: none; z-index: 20; }
+  #startOverlay::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: linear-gradient(rgba(3,14,28,0), rgba(3,14,28,.55) 30%, rgba(3,14,28,.88)); pointer-events: none; }
+  #startOverlay > * { position: relative; }
+  .start-btn { width: min(92%, 380px); padding: 16px 20px; border-radius: 14px; border: 3px solid #9fdcff; background: linear-gradient(#3c9cf0, #0e4f9e 60%, #0a3d7c); box-shadow: 0 6px 0 #062a55, 0 0 24px #2b9dff88, inset 0 1px 0 #cfeeff; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; font-family: 'Orbitron', system-ui, sans-serif; }
+  .start-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #062a55; }
+  .start-btn .t1 { font-size: clamp(22px, 7.5vw, 34px); font-weight: 800; letter-spacing: .04em; text-shadow: 0 3px 0 #06305c; }
+  .start-btn .t2 { font-family: system-ui, sans-serif; font-size: 13px; color: #d7efff; margin-top: 2px; }
+  .start-btn .arrow { font-size: 26px; color: #cfeeff; }
+  #hall { width: min(92%, 380px); background: rgba(6, 22, 40, .82); border: 2px solid #ffd77a; border-radius: 14px; padding: 10px 12px 8px; box-shadow: 0 0 20px rgba(255,200,80,.25); }
+  #hall h3 { margin: 0 0 6px; font-size: clamp(15px, 4.6vw, 20px); color: #ffd77a; letter-spacing: .06em; text-shadow: 0 0 10px #ffb03a88; }
+  #hall .sub { font-family: system-ui, sans-serif; font-size: 11px; color: #a9c3da; margin-bottom: 6px; }
+  #hall table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 14px; }
+  #hall td { padding: 5px 4px; border-top: 1px solid rgba(255,255,255,.08); text-align: left; white-space: nowrap; }
+  #hall td.rank { width: 2em; font-family: 'Orbitron', sans-serif; font-weight: 800; color: #8fe3ff; }
+  #hall tr:nth-child(1) td.rank { color: #ffd54a; } #hall tr:nth-child(2) td.rank { color: #d8dde3; } #hall tr:nth-child(3) td.rank { color: #e0a06a; }
+  #hall td.score { text-align: right; font-family: 'Orbitron', sans-serif; font-weight: 700; color: #fff; }
+  #hall .note { font-family: system-ui, sans-serif; font-size: 12px; color: #9fb9d2; padding: 4px 0; }
   .overlay h1 { margin: 0; font-size: clamp(26px, 9vw, 44px); letter-spacing: .08em; color: #8fe3ff; text-shadow: 0 0 18px #2bb7ff, 0 3px 0 #05304d; }
   .overlay h2 { margin: 0; font-size: clamp(18px, 6vw, 30px); color: #ffc93c; text-shadow: 0 0 12px #ff9d00; }
   .overlay p { margin: 0; font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.55; color: #cfe3f5; max-width: 320px; }
@@ -100,12 +117,16 @@
     <button id="mute" aria-label="소리 켜기/끄기" title="소리">♪</button>
 
     <div class="overlay" id="startOverlay">
-      <h1>SAVE THE OCEAN</h1>
-      <p>수면의 군함으로 심해의 잠수정을 격침하세요.<br>
-      좌우로 이동하고 폭탄을 떨어뜨립니다 (동시에 5개까지).<br>
-      빨간 잠수정은 고득점! 어뢰에 4번 맞으면 침몰합니다.</p>
-      <button class="btn red" id="startBtn">START</button>
-      <div id="bestLine" class="note" style="font-family:system-ui;font-size:13px;color:#9fb9d2"></div>
+      <button class="start-btn" id="startBtn" aria-label="작전 시작">
+        <span class="arrow">▶</span>
+        <span><div class="t1">작전 시작</div><div class="t2">해양을 지켜라 — 좌우 이동 · 폭탄 투하 · 빨간 잠수정은 고득점</div></span>
+      </button>
+      <div id="hall">
+        <h3>🏆 명예의 전당</h3>
+        <div class="sub">바다를 지킨 영웅들의 기록입니다.</div>
+        <div id="hallBody"><div class="note">불러오는 중…</div></div>
+        <div id="bestLine" class="note"></div>
+      </div>
     </div>
 
     <div class="overlay hidden" id="overOverlay">
@@ -139,6 +160,20 @@
 <script src="firebase-config.js"></script>
 <script src="audio.js"></script>
 <script src="leaderboard.js"></script>
+<script>
+  // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
+  (function () {
+    let last = 0;
+    document.addEventListener('touchend', function (e) {
+      const now = Date.now();
+      if (now - last < 350) e.preventDefault();
+      last = now;
+    }, { passive: false });
+    document.addEventListener('touchstart', function (e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  })();
+</script>
 <script src="game.js"></script>
 </body>
 </html>
