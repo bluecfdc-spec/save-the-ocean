@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a1a2e">
+<title>SAVE THE OCEAN — 군함 vs 잠수정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --app-w: 390px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #04101c; overflow: hidden; overscroll-behavior: none; }
+  body { font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif; color: #eaf2fb; user-select: none; -webkit-user-select: none; touch-action: none; }
+
+  #app {
+    position: fixed; inset: 0; margin: 0 auto;
+    width: min(100vw, 560px);
+    display: flex; flex-direction: column;
+    height: 100%;
+  }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: relative; width: 100%; aspect-ratio: 941 / 97; flex: 0 0 auto;
+    background: url(assets/hud.jpg) center / 100% 100% no-repeat;
+    font-weight: 800;
+  }
+  #hud .hp-wrap { position: absolute; left: 13%; top: 46%; width: 18%; height: 34%; }
+  #hud .hp-bar { position: absolute; inset: 0; border: 2px solid #8fb4d8; border-radius: 4px; background: #0b1d30; overflow: hidden; box-shadow: 0 0 6px #3aa0ff88 inset; }
+  #hud .hp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(#8dff6a, #34c81e); box-shadow: 0 0 8px #6cff4a; transition: width .25s; }
+  #hud .hp-fill.warn { background: linear-gradient(#ffd36a, #e89a1e); box-shadow: 0 0 8px #ffbb4a; }
+  #hud .hp-fill.danger { background: linear-gradient(#ff7a6a, #d8281e); box-shadow: 0 0 8px #ff4a3a; }
+  #hud .hp-text { position: absolute; left: 31.5%; top: 44%; height: 40%; display: flex; align-items: center; font-size: clamp(9px, 2.7vw, 15px); color: #fff; text-shadow: 0 0 6px #000; }
+  #hud .score { position: absolute; left: 36%; width: 30%; top: 40%; height: 48%; display: flex; align-items: center; justify-content: center; font-size: clamp(13px, 4.3vw, 25px); color: #ffc93c; letter-spacing: .06em; text-shadow: 0 0 8px #ff9d00aa, 0 2px 0 #4b2a00; }
+  #hud .bombs { position: absolute; left: 83.5%; width: 13.5%; top: 42%; height: 46%; display: flex; align-items: center; justify-content: center; gap: .15em; font-size: clamp(10px, 3.4vw, 20px); color: #fff; text-shadow: 0 0 6px #000; }
+  #hud .bombs .n { color: #ffc93c; }
+
+  /* ---------- Game canvas ---------- */
+  #game-wrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: #0b3a5e; }
+  #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* ---------- Control panel ---------- */
+  #panel { position: relative; width: 100%; aspect-ratio: 941 / 242; flex: 0 0 auto; display: flex; background: #1b2430; }
+  #panel.left-hand { flex-direction: row-reverse; }
+  #panel .toggle { position: relative; flex: 0 0 22.1%; background: url(assets/panel_toggle.jpg) center / 100% 100% no-repeat; cursor: pointer; }
+  #panel .toggle.on::after { content: ''; position: absolute; inset: 12% 8%; border-radius: 10%; box-shadow: 0 0 0 2px #46c3ff, 0 0 18px #46c3ff88 inset; pointer-events: none; }
+  #panel .buttons { position: relative; flex: 1 1 auto; background: url(assets/panel_buttons.jpg) center / 100% 100% no-repeat; }
+  .zone { position: absolute; top: 12%; height: 60%; border-radius: 10%; cursor: pointer; }
+  .zone.left  { left: 4%;  width: 23%; }
+  .zone.bomb  { left: 36%; width: 24%; border-radius: 50%; }
+  .zone.right { left: 69%;   width: 23%; }
+  .zone.pressed { background: rgba(255,255,255,.22); box-shadow: 0 0 22px rgba(120,200,255,.55); }
+  .zone.bomb.pressed { background: rgba(255,255,255,.30); }
+  .zone.disabled { filter: none; }
+
+  /* ---------- Overlays ---------- */
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; text-align: center; background: rgba(3, 14, 28, .72); backdrop-filter: blur(2px); z-index: 5; }
+  .overlay.hidden { display: none; }
+  .overlay h1 { margin: 0; font-size: clamp(26px, 9vw, 44px); letter-spacing: .08em; color: #8fe3ff; text-shadow: 0 0 18px #2bb7ff, 0 3px 0 #05304d; }
+  .overlay h2 { margin: 0; font-size: clamp(18px, 6vw, 30px); color: #ffc93c; text-shadow: 0 0 12px #ff9d00; }
+  .overlay p { margin: 0; font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.55; color: #cfe3f5; max-width: 320px; }
+  .overlay .big { font-size: clamp(30px, 11vw, 54px); color: #fff; text-shadow: 0 0 14px #46c3ff; }
+  .btn { font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: 16px; letter-spacing: .06em; padding: 14px 28px; min-width: 200px; border: 2px solid #8fd3ff; border-radius: 10px; color: #fff; background: linear-gradient(#2a7fd8, #0f4a9a); box-shadow: 0 5px 0 #062a55, 0 0 16px #2b9dff66; cursor: pointer; }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #062a55; }
+  .btn.red { border-color: #ffb3aa; background: linear-gradient(#e5382a, #9c1a10); box-shadow: 0 5px 0 #4a0a05, 0 0 16px #ff4a3a66; }
+  .btn.ghost { background: transparent; box-shadow: none; border-color: #6c93b8; color: #cfe3f5; }
+  input.name { font-family: 'Orbitron', system-ui, sans-serif; font-size: 18px; text-align: center; padding: 10px 12px; width: 220px; border-radius: 8px; border: 2px solid #8fd3ff; background: #071a2e; color: #fff; letter-spacing: .1em; outline: none; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* leaderboard */
+  #board { width: min(320px, 92%); max-height: 38vh; overflow: auto; background: rgba(4, 22, 40, .85); border: 1px solid #2f6da0; border-radius: 10px; padding: 8px 10px; font-family: system-ui, sans-serif; font-size: 14px; }
+  #board table { width: 100%; border-collapse: collapse; }
+  #board td { padding: 4px 6px; border-bottom: 1px solid #1c3d5c; text-align: left; white-space: nowrap; }
+  #board td.rank { width: 2.2em; color: #8fe3ff; font-family: 'Orbitron', sans-serif; font-weight: 800; }
+  #board td.score { text-align: right; color: #ffc93c; font-family: 'Orbitron', sans-serif; font-weight: 600; }
+  #board tr.me td { background: rgba(255, 201, 60, .14); }
+  #board .note { color: #9fb9d2; font-size: 12px; padding: 6px 0; }
+
+  #flash { position: absolute; inset: 0; pointer-events: none; background: #ff2a1a; opacity: 0; z-index: 4; }
+  #toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); padding: 6px 14px; background: rgba(0,0,0,.6); border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 6; font-family: system-ui, sans-serif; }
+  #mute { position: absolute; right: 8px; top: 8px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.7); color: #cfe3f5; font-size: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="hp-wrap"><div class="hp-bar"><div class="hp-fill" id="hpFill"></div></div></div>
+    <div class="hp-text" id="hpText">100%</div>
+    <div class="score" id="scoreText">000000</div>
+    <div class="bombs"><span class="n" id="bombN">5</span><span>/</span><span>5</span></div>
+  </div>
+
+  <div id="game-wrap">
+    <canvas id="game"></canvas>
+    <div id="flash"></div>
+    <div id="toast"></div>
+    <button id="mute" aria-label="소리 켜기/끄기" title="소리">♪</button>
+
+    <div class="overlay" id="startOverlay">
+      <h1>SAVE THE OCEAN</h1>
+      <p>수면의 군함으로 심해의 잠수정을 격침하세요.<br>
+      좌우로 이동하고 폭탄을 떨어뜨립니다 (동시에 5개까지).<br>
+      빨간 잠수정은 고득점! 어뢰에 4번 맞으면 침몰합니다.</p>
+      <button class="btn red" id="startBtn">START</button>
+      <div id="bestLine" class="note" style="font-family:system-ui;font-size:13px;color:#9fb9d2"></div>
+    </div>
+
+    <div class="overlay hidden" id="overOverlay">
+      <h2>침몰…</h2>
+      <div class="big" id="finalScore">0</div>
+      <div id="submitBox">
+        <p>랭킹에 이름을 남기세요 (2~8자)</p>
+        <input class="name" id="nameInput" maxlength="8" placeholder="이름" autocomplete="off" inputmode="text">
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="submitBtn">등록</button>
+          <button class="btn ghost" id="skipBtn">건너뛰기</button>
+        </div>
+      </div>
+      <div id="board"></div>
+      <button class="btn red" id="retryBtn">다시 하기</button>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div class="toggle" id="handToggle" role="button" aria-label="왼손 모드 전환" tabindex="0"></div>
+    <div class="buttons">
+      <div class="zone left"  id="zLeft"  role="button" aria-label="왼쪽으로 이동"></div>
+      <div class="zone bomb"  id="zBomb"  role="button" aria-label="폭탄 투하"></div>
+      <div class="zone right" id="zRight" role="button" aria-label="오른쪽으로 이동"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="audio.js"></script>
+<script src="leaderboard.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
