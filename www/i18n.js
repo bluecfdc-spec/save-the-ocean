@@ -125,7 +125,7 @@
       'hall.premium': '🌍 View global leaderboard',
       'loading': 'Loading...',
       'best': 'Best on this device: {n}',
-      'over': 'SUNK…',
+      'over': 'YOU LOSE',
       'over.score': 'Your score',
       'over.checking': 'Checking rank...',
       'over.offline': 'Online ranking not set — best on this device {n}',
