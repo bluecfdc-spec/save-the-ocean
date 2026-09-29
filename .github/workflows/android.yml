@@ -1,5 +1,7 @@
 # Android 빌드 — push 마다 디버그 APK(테스트용) 생성, 서명 시크릿이 있으면 Play 스토어용 AAB 도 생성
 name: Android build
+permissions:
+  contents: write
 on:
   push:
     branches: [app]
@@ -37,6 +39,15 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: steps.check.outputs.ok == 'true'
         with: { name: save-the-ocean-debug-apk, path: android/app/build/outputs/apk/debug/*.apk }
+      - name: Publish test APK to GitHub Release (로그인 없이 폰에서 바로 다운로드)
+        if: steps.check.outputs.ok == 'true'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk save-the-ocean-test.apk
+          gh release delete android-test --yes --cleanup-tag 2>/dev/null || true
+          gh release create android-test save-the-ocean-test.apk --prerelease \
+            --title "Save the Ocean — Android 테스트 APK (build #${{ github.run_number }})" \
+            --notes "테스트용(서명 안 된 디버그 빌드). 폰에서 다운로드 → 설치 시 '출처를 알 수 없는 앱 허용' 필요. 커밋 ${{ github.sha }}"
       - name: Release AAB (signed)
         if: steps.check.outputs.ok == 'true' && env.KS != ''
         working-directory: android
