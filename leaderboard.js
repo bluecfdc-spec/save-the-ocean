@@ -89,6 +89,17 @@
       return { total: (t.exists && t.data().count) | 0, today: (d.exists && d.data().count) | 0 };
     } catch (e) { console.warn('visit failed', e); return null; }
   };
+  // 공지: visits/notice 문서 → 없으면 DEFAULT_NOTICE
+  LB.notice = async function () {
+    const def = window.DEFAULT_NOTICE || null;
+    if (!LB.ready) return def;
+    try {
+      const d = await timeout(db.collection('visits').doc('notice').get(), 8000);
+      if (d && d.exists) { const v = d.data(); return { active: !!v.active, title: v.title || '', body: v.body || '', button: v.button || '확인' }; }
+    } catch (e) {}
+    return def;
+  };
+
   LB.fmtCount = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
 
   LB.escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -671,6 +671,22 @@
   async function loadTop3() { LB.renderList(top3El, await LB.top(3), null); }
   loadTop3();
   LB.renderSeasons(document.getElementById('seasons'));
+  // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
+  LB.notice().then(n => {
+    if (!n || !n.active) return;
+    const key = 'savetheocean_notice_hide';
+    let h = 0; const str = n.title + '|' + n.body; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(key) === h + '|' + today) return;
+    document.getElementById('noticeTitle').textContent = n.title;
+    document.getElementById('noticeBody').textContent = n.body;
+    document.getElementById('noticeOk').textContent = n.button || '확인';
+    const el = document.getElementById('notice'); el.classList.add('show');
+    document.getElementById('noticeOk').addEventListener('click', () => {
+      if (document.getElementById('noticeHide').checked) localStorage.setItem(key, h + '|' + today);
+      el.classList.remove('show');
+    });
+  });
   const visitsEl = document.getElementById('visits');
   LB.visit().then(v => { visitsEl.textContent = v ? '오늘 ' + LB.fmtCount(v.today) + ' · 누적 ' + LB.fmtCount(v.total) : '오늘 – · 누적 –'; });
   requestAnimationFrame(t => { lastT = t; loop(t); });
