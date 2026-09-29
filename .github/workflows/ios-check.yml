@@ -27,6 +27,8 @@ jobs:
         if: steps.check.outputs.ok == 'true'
         working-directory: ios/App
         run: |
+          set -o pipefail
           xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO build | tail -50
+            CODE_SIGNING_ALLOWED=NO build | tee build.log | grep -E "error:|warning: .*deprecated|BUILD" || true
+          if grep -q "BUILD SUCCEEDED" build.log; then echo "✅ iOS BUILD SUCCEEDED" >> $GITHUB_STEP_SUMMARY; else echo "❌ iOS build failed" >> $GITHUB_STEP_SUMMARY; grep -E "error:" build.log | head -30 >> $GITHUB_STEP_SUMMARY; exit 1; fi
