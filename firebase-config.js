@@ -28,5 +28,7 @@ window.DEFAULT_NOTICE = {
   active: true,
   title: "☕ 베타 테스트 중!",
   body: "지금은 베타 기간입니다.\n이번 주 금요일(10/2) 00시에 완성본을 배포할 예정이에요.\n\n그 전까지 의견을 주시는 분께는\n커피 쿠폰을 드립니다! ☕\n\n불편한 점, 아이디어, 버그 뭐든 환영합니다.",
-  button: "확인"
+  button: "확인",
+  en: { title: "☕ Beta test in progress!", body: "This is the beta period.\nThe full release is scheduled for Friday (10/2) at 00:00 KST.\n\nFeedback of any kind — bugs, ideas, annoyances — is welcome!", button: "OK" },
+  ja: { title: "☕ ベータテスト中！", body: "現在はベータ期間です。\n今週金曜日(10/2) 0時に完成版を公開予定です。\n\n不具合・アイデア・気になる点など、ご意見をお待ちしています！", button: "OK" }
 };

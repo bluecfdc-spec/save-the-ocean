@@ -126,25 +126,27 @@
   @media (orientation: landscape) and (max-height: 520px) { #rotate { display: flex; } }
   #flash { position: absolute; inset: 0; pointer-events: none; background: #ff2a1a; opacity: 0; z-index: 4; }
   #toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); padding: 6px 14px; background: rgba(0,0,0,.6); border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 6; font-family: system-ui, sans-serif; }
+  #langBtn { position: fixed; left: 8px; top: calc(min(100vw, 560px) * 0.103 + 6px); z-index: 25; height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
   #mute { position: absolute; right: 8px; top: 8px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.7); color: #cfe3f5; font-size: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
-<div id="rotate">📱<br>세로로 돌려주세요<br><small>이 게임은 세로 화면 전용입니다</small></div>
+<div id="rotate">📱<br><span data-i18n="rotate">세로로 돌려주세요</span><br><small data-i18n="rotate.sub">이 게임은 세로 화면 전용입니다</small></div>
 <div id="notice" role="dialog" aria-modal="true">
   <div class="card">
     <h3 id="noticeTitle"></h3>
     <div class="body" id="noticeBody"></div>
     <div class="foot">
-      <button class="btn" id="noticeOk">확인</button>
-      <label><input type="checkbox" id="noticeHide"> 오늘 하루 보지 않기</label>
+      <button class="btn" id="noticeOk" data-i18n="notice.ok">확인</button>
+      <label><input type="checkbox" id="noticeHide"> <span data-i18n="notice.hide">오늘 하루 보지 않기</span></label>
     </div>
   </div>
 </div>
 <div id="soundBtns">
-  <button id="bgmBtn" aria-label="배경음 켜기/끄기" title="배경음 (바다·심해 소리)">🌊</button>
-  <button id="sfxBtn" aria-label="효과음 켜기/끄기" title="효과음 (폭탄·격파·피격)">💥</button>
+  <button id="bgmBtn" data-i18n-label="sound.bgm" aria-label="배경음 켜기/끄기">🌊</button>
+  <button id="sfxBtn" data-i18n-label="sound.sfx" aria-label="효과음 켜기/끄기">💥</button>
 </div>
+<button id="langBtn" data-i18n="lang">🌐 EN</button>
 <div id="app">
   <div id="hud">
     <div class="hp-wrap"><div class="hp-bar"><div class="hp-fill" id="hpFill"></div></div></div>
@@ -157,20 +159,20 @@
   <div id="game-wrap">
     <canvas id="game"></canvas>
     <div id="flash"></div>
-    <button class="ctl" id="ctlMode" aria-label="조작 방식 전환">🤲 양손</button>
-    <button class="ctl" id="ctlHand" aria-label="사용 손 전환">▶ 우수</button>
+    <button class="ctl" id="ctlMode" data-i18n-label="aria.ctl" aria-label="조작 방식 전환">🤲 양손</button>
+    <button class="ctl" id="ctlHand" data-i18n-label="aria.hand" aria-label="사용 손 전환">▶ 우수</button>
     <div id="toast"></div>
 
     <div class="overlay" id="startOverlay">
-      <div id="visits">오늘 – · 누적 –</div>
+      <div id="visits" data-i18n="visits.empty">오늘 – · 누적 –</div>
       <div class="spacer"></div>
-      <button class="start-btn" id="startBtn" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1">작전 시작</span></button>
+      <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
       <div id="hall">
-        <h3>🏆 명예의 전당</h3>
-        <div class="part">⚓ 이번 시즌 TOP 3</div>
-        <div id="top3"><div class="note">불러오는 중...</div></div>
+        <h3 data-i18n="hall">🏆 명예의 전당</h3>
+        <div class="part" data-i18n="hall.top3">⚓ 이번 시즌 TOP 3</div>
+        <div id="top3"><div class="note" data-i18n="loading">불러오는 중...</div></div>
         <div class="sep"></div>
-        <div class="part">👑 시즌 1위</div>
+        <div class="part" data-i18n="hall.season">👑 시즌 1위</div>
         <div id="seasons"></div>
         <div id="bestLine" class="note"></div>
       </div>
@@ -178,35 +180,37 @@
     </div>
 
     <div class="overlay hidden" id="overOverlay">
-      <h2>침몰…</h2>
-      <div class="score-line">이번 점수</div>
+      <h2 data-i18n="over">침몰…</h2>
+      <div class="score-line" data-i18n="over.score">이번 점수</div>
       <div class="big" id="finalScore">0</div>
       <div id="recordBox">
-        <div class="msg" id="recordMsg">순위 확인 중...</div>
+        <div class="msg" id="recordMsg" data-i18n="over.checking">순위 확인 중...</div>
         <div class="row" id="nameRow" style="display:none">
-          <input class="name" id="nameInput" maxlength="8" placeholder="이름 입력" autocomplete="off" inputmode="text">
-          <button class="btn" id="submitBtn" style="min-width:90px;padding:12px 18px">등록</button>
+          <input class="name" id="nameInput" maxlength="8" data-i18n-ph="name.ph" placeholder="이름 입력" autocomplete="off" inputmode="text">
+          <button class="btn" id="submitBtn" data-i18n="submit" style="min-width:90px;padding:12px 18px">등록</button>
         </div>
       </div>
-      <div id="board"><h3>🏆 명예의 전당 TOP 10</h3><div id="top10"><div class="note">불러오는 중...</div></div></div>
-      <button class="btn red" id="retryBtn">다시 하기</button>
+      <div id="board"><h3 data-i18n="board">🏆 명예의 전당 TOP 10</h3><div id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div></div>
+      <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
     </div>
   </div>
 
   <div id="panel">
     <div class="buttons">
-      <div class="zone left"  id="zLeft"  role="button" aria-label="왼쪽으로 이동"></div>
-      <div class="zone bomb"  id="zBomb"  role="button" aria-label="폭탄 투하"></div>
-      <div class="zone right" id="zRight" role="button" aria-label="오른쪽으로 이동"></div>
+      <div class="zone left"  id="zLeft"  role="button" data-i18n-label="aria.left" aria-label="왼쪽으로 이동"></div>
+      <div class="zone bomb"  id="zBomb"  role="button" data-i18n-label="aria.bomb" aria-label="폭탄 투하"></div>
+      <div class="zone right" id="zRight" role="button" data-i18n-label="aria.right" aria-label="오른쪽으로 이동"></div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=20260929i"></script>
-<script src="audio.js?v=20260929i"></script>
-<script src="leaderboard.js?v=20260929i"></script>
+<script src="i18n.js?v=20260929j"></script>
+<script>I18N.apply();</script>
+<script src="firebase-config.js?v=20260929j"></script>
+<script src="audio.js?v=20260929j"></script>
+<script src="leaderboard.js?v=20260929j"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -221,6 +225,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20260929i"></script>
+<script src="game.js?v=20260929j"></script>
 </body>
 </html>

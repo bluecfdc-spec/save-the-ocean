@@ -116,23 +116,23 @@
   }
   let playRecorded = false;
   async function showOver() {
-    finalScore.textContent = lastFinal.score.toLocaleString();
+    finalScore.textContent = I18N.num(lastFinal.score);
     nameRow.style.display = 'none'; playRecorded = false;
-    recordMsg.textContent = LB.ready ? '순위 확인 중...' : '온라인 랭킹 미설정 — 이 기기 최고 기록 ' + LB.localBest().toLocaleString();
-    top10El.innerHTML = '<div class="note">불러오는 중...</div>';
+    recordMsg.textContent = LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) });
+    top10El.innerHTML = '<div class="note">' + t('loading') + '</div>';
     nameInput.value = LB.lastName();
     overOverlay.classList.remove('hidden');
-    if (TEST) { recordMsg.textContent = '🧪 테스트 모드 — 기록은 저장되지 않아요'; top10El.innerHTML = ''; return; }
+    if (TEST) { recordMsg.textContent = '🧪 TEST MODE — ' + ({ ko: '기록은 저장되지 않아요', ja: '記録は保存されません' }[I18N.lang] || 'nothing is saved'); top10El.innerHTML = ''; return; }
     if (!LB.ready) { LB.renderList(top10El, null); return; }
     const [rows, rank] = await Promise.all([LB.top(10), LB.rank(lastFinal.score)]);
     LB.renderList(top10El, rows, null);
     // 10위 안이면 이름 입력, 아니면 등수만 안내 + 무명 기록
     const inTop10 = rank !== null ? rank <= 10 : (rows !== null && (rows.length < 10 || lastFinal.score > rows[9].score));
     if (inTop10) {
-      recordMsg.innerHTML = '🎉 ' + (rank !== null ? rank + '위! ' : 'TOP 10 진입! ') + '이름을 남겨보세요.';
+      recordMsg.innerHTML = rank !== null ? t('over.top10', { rank }) : t('over.top10.norank');
       nameRow.style.display = '';
     } else {
-      recordMsg.innerHTML = (rank > 1000 ? '1000위 밖이에요!' : rank + '등이에요!') + '<small>10위 안에 들면 이름을 남길 수 있어요.</small>';
+      recordMsg.innerHTML = (rank > 1000 ? t('over.rank.far') : t('over.rank', { rank })) + '<small>' + t('over.rank.sub') + '</small>';
       if (!playRecorded) { playRecorded = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
     }
   }
@@ -211,7 +211,7 @@
       ship.drill--;
       bombs.push({ type: 'drill', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 70, w: DRILL_W, h: DRILL_W * 240 / 102, rot: 0, hits: 0, pts: 0 });
       SFX.drill();
-      if (ship.drill === 0) popText(ship.x, ship.y - 30, 'DRILL 종료', '#ffb347');
+      if (ship.drill === 0) popText(ship.x, ship.y - 30, t('drill.end'), '#ffb347');
     } else {
       bombs.push({ type: 'bomb', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 40, w: BOMB_W, h: BOMB_W * 34 / 44, rot: 0 });
       SFX.drop();
@@ -666,13 +666,13 @@
     const one = localStorage.getItem('savetheocean_ctrl') === 'one';
     const left = localStorage.getItem('savetheocean_lefthand') === '1';
     panel.classList.toggle('one', one); panel.classList.toggle('left-hand', one && left);
-    ctlMode.textContent = one ? '☝️ 한손' : '🤲 양손';
-    ctlHand.textContent = left ? '◀ 좌수' : '▶ 우수';
+    ctlMode.textContent = one ? t('ctl.one') : t('ctl.two');
+    ctlHand.textContent = left ? t('ctl.left') : t('ctl.right');
     ctlHand.classList.toggle('show', one);
   }
   applyCtl();
-  ctlMode.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const one = localStorage.getItem('savetheocean_ctrl') === 'one'; localStorage.setItem('savetheocean_ctrl', one ? 'two' : 'one'); applyCtl(); SFX.click(); showToast(one ? '양손 모드' : '한손 모드'); });
-  ctlHand.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const left = localStorage.getItem('savetheocean_lefthand') === '1'; localStorage.setItem('savetheocean_lefthand', left ? '0' : '1'); applyCtl(); SFX.click(); showToast(left ? '우수 (오른손)' : '좌수 (왼손)'); });
+  ctlMode.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const one = localStorage.getItem('savetheocean_ctrl') === 'one'; localStorage.setItem('savetheocean_ctrl', one ? 'two' : 'one'); applyCtl(); SFX.click(); showToast(one ? t('toast.two') : t('toast.one')); });
+  ctlHand.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const left = localStorage.getItem('savetheocean_lefthand') === '1'; localStorage.setItem('savetheocean_lefthand', left ? '0' : '1'); applyCtl(); SFX.click(); showToast(left ? t('toast.right') : t('toast.left')); });
 
   // 사운드: 배경음(바다·심해) / 효과음 따로
   const bgmBtn = document.getElementById('bgmBtn'), sfxBtn = document.getElementById('sfxBtn');
@@ -680,22 +680,22 @@
   function applySfx(m) { SFX.setSfxMuted(m); sfxBtn.classList.toggle('off', m); localStorage.setItem('savetheocean_sfx_muted', m ? '1' : '0'); }
   applyBgm(localStorage.getItem('savetheocean_bgm_muted') === '1');
   applySfx(localStorage.getItem('savetheocean_sfx_muted') === '1');
-  bgmBtn.addEventListener('click', () => { applyBgm(!SFX.isBgmMuted()); showToast(SFX.isBgmMuted() ? '배경음 끔' : '배경음 켬'); });
-  sfxBtn.addEventListener('click', () => { applySfx(!SFX.isSfxMuted()); showToast(SFX.isSfxMuted() ? '효과음 끔' : '효과음 켬'); });
+  bgmBtn.addEventListener('click', () => { applyBgm(!SFX.isBgmMuted()); showToast(SFX.isBgmMuted() ? t('toast.bgmOff') : t('toast.bgmOn')); });
+  sfxBtn.addEventListener('click', () => { applySfx(!SFX.isSfxMuted()); showToast(SFX.isSfxMuted() ? t('toast.sfxOff') : t('toast.sfxOn')); });
 
   // 시작/재시작/랭킹
   document.getElementById('startBtn').addEventListener('click', start);
   document.getElementById('retryBtn').addEventListener('click', start);
   document.getElementById('submitBtn').addEventListener('click', async () => {
-    const name = nameInput.value.trim() || '익명';
-    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = '등록 중...';
+    const name = nameInput.value.trim() || t('anon');
+    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = t('submitting');
     const r = await LB.submit(name, lastFinal.score, lastFinal.date);
-    btn.disabled = false; btn.textContent = '등록';
+    btn.disabled = false; btn.textContent = t('submit');
     if (r.ok) {
-      nameRow.style.display = 'none'; recordMsg.textContent = '✅ 등록 완료!';
+      nameRow.style.display = 'none'; recordMsg.textContent = t('submitted');
       const rows = await LB.top(10); LB.renderList(top10El, rows, lastFinal);
       loadTop3();
-    } else showToast('등록에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } else showToast(t('toast.submitFail'));
   });
   nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('submitBtn').click(); });
 
@@ -711,12 +711,15 @@
   // ───────────── 초기화 ─────────────
   resize();
   reset();
-  const best = LB.localBest();
-  bestLine.textContent = best ? '이 기기 최고 기록: ' + best.toLocaleString() : '';
+  function renderBest() { const best = LB.localBest(); bestLine.textContent = best ? t('best', { n: I18N.num(best) }) : ''; }
+  renderBest();
   const top3El = document.getElementById('top3');
   async function loadTop3() { LB.renderList(top3El, await LB.top(3), null); }
   loadTop3();
   LB.renderSeasons(document.getElementById('seasons'));
+  // 언어 전환 (🌐): ko → en → ja
+  document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); SFX.click && SFX.click(); });
+  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); if (state === 'over') showOver(); });
   // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
   LB.notice().then(n => {
     if (!n || !n.active) return;
@@ -726,7 +729,7 @@
     if (localStorage.getItem(key) === h + '|' + today) return;
     document.getElementById('noticeTitle').textContent = n.title;
     document.getElementById('noticeBody').textContent = n.body;
-    document.getElementById('noticeOk').textContent = n.button || '확인';
+    document.getElementById('noticeOk').textContent = n.button || t('notice.ok');
     const el = document.getElementById('notice'); el.classList.add('show');
     document.getElementById('noticeOk').addEventListener('click', () => {
       if (document.getElementById('noticeHide').checked) localStorage.setItem(key, h + '|' + today);
@@ -735,6 +738,6 @@
   });
   const visitsEl = document.getElementById('visits');
   if (TEST) { visitsEl.textContent = '🧪 TEST MODE'; document.getElementById('hall').style.display = 'none'; }
-  else LB.visit().then(v => { visitsEl.textContent = v ? '오늘 ' + LB.fmtCount(v.today) + ' · 누적 ' + LB.fmtCount(v.total) : '오늘 – · 누적 –'; });
+  else LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();

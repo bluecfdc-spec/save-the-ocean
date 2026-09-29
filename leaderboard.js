@@ -39,7 +39,7 @@
     try {
       const snap = await timeout(db.collection(SCORES).orderBy('score', 'desc').limit(n).get(), 15000);
       if (!snap) return null;
-      const rows = []; snap.forEach(d => { const v = d.data(); rows.push({ id: d.id, name: v.name || '익명', score: v.score | 0, date: v.date || '' }); });
+      const rows = []; snap.forEach(d => { const v = d.data(); rows.push({ id: d.id, name: v.name || t('anon'), score: v.score | 0, date: v.date || '' }); });
       return rows;
     } catch (e) { console.warn('top failed', e); return null; }
   };
@@ -57,7 +57,7 @@
 
   // 이름 있는 기록 등록
   LB.submit = async function (name, score, date) {
-    name = String(name || '').trim().slice(0, 8) || '익명';
+    name = String(name || '').trim().slice(0, 8) || t('anon');
     localStorage.setItem('savetheocean_name', name);
     if (!LB.ready) return { ok: false, reason: 'not-configured' };
     try {
@@ -91,11 +91,15 @@
   };
   // 공지: visits/notice 문서 → 없으면 DEFAULT_NOTICE
   LB.notice = async function () {
-    const def = window.DEFAULT_NOTICE || null;
+    let def = window.DEFAULT_NOTICE || null;
+    if (def && window.I18N && def[I18N.lang]) def = Object.assign({}, def, def[I18N.lang]);
     if (!LB.ready) return def;
     try {
       const d = await timeout(db.collection('visits').doc('notice').get(), 8000);
-      if (d && d.exists) { const v = d.data(); return { active: !!v.active, title: v.title || '', body: v.body || '', button: v.button || '확인' }; }
+      if (d && d.exists) {
+        const v = d.data(), L = window.I18N ? I18N.lang : 'ko', sfx = L === 'ko' ? '' : '_' + L;
+        return { active: !!v.active, title: v['title' + sfx] || v.title || '', body: v['body' + sfx] || v.body || '', button: v['button' + sfx] || v.button || t('notice.ok') };
+      }
     } catch (e) {}
     return def;
   };
@@ -106,20 +110,20 @@
 
   // 순위 목록 렌더링 (크림이 러너와 같은 4칸: 순위 · 이름 · 점수 · 날짜)
   LB.renderList = function (el, rows, hl) {
-    if (rows === null) { el.innerHTML = '<div class="note">' + (LB.ready ? '순위를 불러오지 못했어요.' : '온라인 랭킹 미설정') + '</div>'; return; }
-    if (!rows.length) { el.innerHTML = '<div class="note">아직 기록이 없어요. 첫 기록의 주인공이 되어보세요!</div>'; return; }
+    if (rows === null) { el.innerHTML = '<div class="note">' + (LB.ready ? t('lb.fail') : t('lb.notset')) + '</div>'; return; }
+    if (!rows.length) { el.innerHTML = '<div class="note">' + t('lb.empty') + '</div>'; return; }
     el.innerHTML = '<ul class="lb">' + rows.map((r, i) => {
       const me = hl && r.score === hl.score && r.date === hl.date;
-      return '<li' + (me ? ' class="me"' : '') + '><span class="lb-rank">' + (i + 1) + '위</span><span class="lb-name">' + LB.escape(r.name) + '</span><span class="lb-score">' + r.score.toLocaleString() + '점</span><span class="lb-date">' + LB.escape(r.date) + '</span></li>';
+      return '<li' + (me ? ' class="me"' : '') + '><span class="lb-rank">' + t('lb.rank', { n: i + 1 }) + '</span><span class="lb-name">' + LB.escape(r.name) + '</span><span class="lb-score">' + t('lb.pts', { n: I18N.num(r.score) }) + '</span><span class="lb-date">' + LB.escape(r.date) + '</span></li>';
     }).join('') + '</ul>';
   };
 
   // 지난 시즌 1위 (firebase-config.js 의 SEASONS_DATA)
   LB.renderSeasons = function (el) {
     const list = (window.SEASONS_DATA || []).slice().reverse();
-    if (!list.length) { el.innerHTML = '<div class="note">시즌 1 진행 중 — 첫 시즌의 1위는 누가 될까요?</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="note">' + t('lb.season.first') + '</div>'; return; }
     el.innerHTML = '<ul class="lb seasons">' + list.map(s =>
-      '<li><span class="lb-rank">시즌 ' + s.n + '</span><span class="lb-date">' + LB.escape(s.range || '') + '</span><span class="lb-name">' + (s.name ? '👑 ' + LB.escape(s.name) : '기록 없음') + '</span><span class="lb-score">' + (s.score ? Number(s.score).toLocaleString() : '') + '</span></li>'
+      '<li><span class="lb-rank">' + t('lb.season', { n: s.n }) + '</span><span class="lb-date">' + LB.escape(s.range || '') + '</span><span class="lb-name">' + (s.name ? '👑 ' + LB.escape(s.name) : t('lb.season.none')) + '</span><span class="lb-score">' + (s.score ? I18N.num(s.score) : '') + '</span></li>'
     ).join('') + '</ul>';
   };
 
