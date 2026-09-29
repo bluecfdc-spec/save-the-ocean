@@ -1,0 +1,28 @@
+▶ npm install
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: @capacitor-firebase/app-check@8.5.2
+npm error Found: firebase@10.12.2
+npm error node_modules/firebase
+npm error   firebase@"10.12.2" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peerOptional firebase@"^12.6.0" from @capacitor-firebase/app-check@8.5.2
+npm error node_modules/@capacitor-firebase/app-check
+npm error   @capacitor-firebase/app-check@"^8.0.0" from the root project
+npm error
+npm error Conflicting peer dependency: firebase@12.19.0
+npm error node_modules/firebase
+npm error   peerOptional firebase@"^12.6.0" from @capacitor-firebase/app-check@8.5.2
+npm error   node_modules/@capacitor-firebase/app-check
+npm error     @capacitor-firebase/app-check@"^8.0.0" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-debug-0.log

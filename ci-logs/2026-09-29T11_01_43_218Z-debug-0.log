@@ -1,0 +1,514 @@
+0 verbose cli /Users/runner/hostedtoolcache/node/22.23.2/arm64/bin/node /Users/runner/hostedtoolcache/node/22.23.2/arm64/bin/npm
+1 info using npm@10.9.8
+2 info using node@v22.23.2
+3 silly config load:file:/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/runner/work/save-the-ocean/save-the-ocean/.npmrc
+5 silly config load:file:/Users/runner/.npmrc
+6 silly config load:file:/Users/runner/hostedtoolcache/node/22.23.2/arm64/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install" "--no-audit" "--no-fund"
+9 verbose logfile logs-max:10 dir:/Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-
+10 verbose logfile /Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 silly idealTree buildDeps
+14 silly fetch manifest @capacitor/android@^8.0.0
+15 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fandroid cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fandroid 186ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fandroid set size:undefined disposed:false
+18 silly fetch manifest @capacitor/core@^8.0.0
+19 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcore cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fcore 108ms (cache miss)
+21 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcore set size:undefined disposed:false
+22 silly fetch manifest @capacitor/app@^8.0.0
+23 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fapp cache-miss
+24 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fapp 111ms (cache miss)
+25 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fapp set size:undefined disposed:false
+26 silly fetch manifest @capacitor/ios@^8.0.0
+27 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fios cache-miss
+28 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fios 104ms (cache miss)
+29 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fios set size:undefined disposed:false
+30 silly fetch manifest @capacitor/splash-screen@^8.0.0
+31 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fsplash-screen cache-miss
+32 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fsplash-screen 102ms (cache miss)
+33 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fsplash-screen set size:undefined disposed:false
+34 silly fetch manifest @capacitor/status-bar@^8.0.0
+35 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fstatus-bar cache-miss
+36 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fstatus-bar 102ms (cache miss)
+37 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fstatus-bar set size:undefined disposed:false
+38 silly fetch manifest @capacitor-firebase/app-check@^8.0.0
+39 silly packumentCache full:https://registry.npmjs.org/@capacitor-firebase%2fapp-check cache-miss
+40 http fetch GET 200 https://registry.npmjs.org/@capacitor-firebase%2fapp-check 311ms (cache miss)
+41 silly packumentCache full:https://registry.npmjs.org/@capacitor-firebase%2fapp-check set size:undefined disposed:false
+42 silly fetch manifest firebase@10.12.2
+43 silly packumentCache full:https://registry.npmjs.org/firebase cache-miss
+44 http fetch GET 200 https://registry.npmjs.org/firebase 439ms (cache miss)
+45 silly packumentCache full:https://registry.npmjs.org/firebase set size:undefined disposed:false
+46 silly fetch manifest firebase@^12.6.0
+47 silly packumentCache full:https://registry.npmjs.org/firebase cache-miss
+48 http cache https://registry.npmjs.org/firebase 33ms (cache hit)
+49 silly packumentCache full:https://registry.npmjs.org/firebase set size:30287814 disposed:false
+50 silly fetch manifest @capacitor-firebase/authentication@^8.0.0
+51 silly packumentCache full:https://registry.npmjs.org/@capacitor-firebase%2fauthentication cache-miss
+52 http fetch GET 200 https://registry.npmjs.org/@capacitor-firebase%2fauthentication 50ms (cache miss)
+53 silly packumentCache full:https://registry.npmjs.org/@capacitor-firebase%2fauthentication set size:undefined disposed:false
+54 silly fetch manifest @revenuecat/purchases-capacitor@^13.0.0
+55 silly packumentCache full:https://registry.npmjs.org/@revenuecat%2fpurchases-capacitor cache-miss
+56 http fetch GET 200 https://registry.npmjs.org/@revenuecat%2fpurchases-capacitor 57ms (cache miss)
+57 silly packumentCache full:https://registry.npmjs.org/@revenuecat%2fpurchases-capacitor set size:undefined disposed:false
+58 silly fetch manifest @capacitor/assets@^3.0.5
+59 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fassets cache-miss
+60 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fassets 44ms (cache miss)
+61 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fassets set size:undefined disposed:false
+62 silly fetch manifest @capacitor/cli@^8.0.0
+63 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcli cache-miss
+64 http fetch GET 200 https://registry.npmjs.org/@capacitor%2fcli 121ms (cache miss)
+65 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcli set size:undefined disposed:false
+66 silly fetch manifest @fontsource/orbitron@^5.0.0
+67 silly packumentCache full:https://registry.npmjs.org/@fontsource%2forbitron cache-miss
+68 http fetch GET 200 https://registry.npmjs.org/@fontsource%2forbitron 175ms (cache miss)
+69 silly packumentCache full:https://registry.npmjs.org/@fontsource%2forbitron set size:undefined disposed:false
+70 silly fetch manifest @trapezedev/configure@^7.0.0
+71 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fconfigure cache-miss
+72 http fetch GET 200 https://registry.npmjs.org/@trapezedev%2fconfigure 205ms (cache miss)
+73 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fconfigure set size:undefined disposed:false
+74 silly fetch manifest esbuild@^0.25.0
+75 silly packumentCache full:https://registry.npmjs.org/esbuild cache-miss
+76 http fetch GET 200 https://registry.npmjs.org/esbuild 71ms (cache miss)
+77 silly packumentCache full:https://registry.npmjs.org/esbuild set size:undefined disposed:false
+78 silly placeDep ROOT @capacitor-firebase/app-check@8.5.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+79 silly placeDep ROOT @capacitor/core@8.5.2 OK for: @capacitor-firebase/app-check@8.5.2 want: >=8.0.0
+80 silly placeDep ROOT @capacitor-firebase/authentication@8.5.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+81 silly placeDep ROOT @capacitor/android@8.5.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+82 silly placeDep ROOT @capacitor/app@8.1.1 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+83 silly placeDep ROOT @capacitor/assets@3.0.5 OK for: save-the-ocean@1.0.0 want: ^3.0.5
+84 silly placeDep ROOT @capacitor/cli@8.5.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+85 silly placeDep ROOT @capacitor/ios@8.5.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+86 silly placeDep ROOT @capacitor/splash-screen@8.0.2 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+87 silly placeDep ROOT @capacitor/status-bar@8.0.3 OK for: save-the-ocean@1.0.0 want: ^8.0.0
+88 silly placeDep ROOT @fontsource/orbitron@5.3.0 OK for: save-the-ocean@1.0.0 want: ^5.0.0
+89 silly placeDep ROOT @revenuecat/purchases-capacitor@13.6.1 OK for: save-the-ocean@1.0.0 want: ^13.0.0
+90 silly placeDep ROOT @trapezedev/configure@7.1.10 OK for: save-the-ocean@1.0.0 want: ^7.0.0
+91 silly placeDep ROOT esbuild@0.25.12 OK for: save-the-ocean@1.0.0 want: ^0.25.0
+92 silly placeDep ROOT firebase@10.12.2 OK for: save-the-ocean@1.0.0 want: 10.12.2
+93 silly fetch manifest tslib@^2.1.0
+94 silly packumentCache full:https://registry.npmjs.org/tslib cache-miss
+95 silly fetch manifest debug@4.3.4
+96 silly packumentCache full:https://registry.npmjs.org/debug cache-miss
+97 silly fetch manifest sharp@0.32.6
+98 silly packumentCache full:https://registry.npmjs.org/sharp cache-miss
+99 silly fetch manifest tslib@2.6.2
+100 silly packumentCache full:https://registry.npmjs.org/tslib cache-miss
+101 http fetch GET 200 https://registry.npmjs.org/tslib 29ms (cache miss)
+102 silly packumentCache full:https://registry.npmjs.org/tslib set size:undefined disposed:false
+103 silly fetch manifest yargs@17.7.2
+104 silly packumentCache full:https://registry.npmjs.org/yargs cache-miss
+105 http fetch GET 200 https://registry.npmjs.org/debug 62ms (cache miss)
+106 silly packumentCache full:https://registry.npmjs.org/debug set size:undefined disposed:false
+107 silly fetch manifest fs-extra@10.1.0
+108 silly packumentCache full:https://registry.npmjs.org/fs-extra cache-miss
+109 http fetch GET 200 https://registry.npmjs.org/yargs 49ms (cache miss)
+110 silly packumentCache full:https://registry.npmjs.org/yargs set size:undefined disposed:false
+111 silly fetch manifest commander@8.3.0
+112 silly packumentCache full:https://registry.npmjs.org/commander cache-miss
+113 http fetch GET 200 https://registry.npmjs.org/tslib 85ms (cache miss)
+114 silly packumentCache full:https://registry.npmjs.org/tslib set size:undefined disposed:false
+115 silly fetch manifest node-fetch@2.7.0
+116 silly packumentCache full:https://registry.npmjs.org/node-fetch cache-miss
+117 http fetch GET 200 https://registry.npmjs.org/sharp 93ms (cache miss)
+118 silly packumentCache full:https://registry.npmjs.org/sharp set size:undefined disposed:false
+119 silly fetch manifest @capacitor/cli@^5.3.0
+120 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcli cache-miss
+121 http cache https://registry.npmjs.org/@capacitor%2fcli 6ms (cache hit)
+122 silly packumentCache full:https://registry.npmjs.org/@capacitor%2fcli set size:5234777 disposed:false
+123 silly fetch manifest @ionic/utils-fs@3.1.7
+124 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-fs cache-miss
+125 http fetch GET 200 https://registry.npmjs.org/fs-extra 71ms (cache miss)
+126 silly packumentCache full:https://registry.npmjs.org/fs-extra set size:undefined disposed:false
+127 silly fetch manifest node-html-parser@5.4.2
+128 silly packumentCache full:https://registry.npmjs.org/node-html-parser cache-miss
+129 http fetch GET 200 https://registry.npmjs.org/commander 56ms (cache miss)
+130 silly packumentCache full:https://registry.npmjs.org/commander set size:undefined disposed:false
+131 silly fetch manifest @ionic/utils-array@2.1.6
+132 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-array cache-miss
+133 http fetch GET 200 https://registry.npmjs.org/node-fetch 77ms (cache miss)
+134 silly packumentCache full:https://registry.npmjs.org/node-fetch set size:undefined disposed:false
+135 silly fetch manifest @trapezedev/project@^7.0.10
+136 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fproject cache-miss
+137 http fetch GET 200 https://registry.npmjs.org/@ionic%2futils-fs 46ms (cache miss)
+138 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-fs set size:undefined disposed:false
+139 silly fetch manifest tar@^7.5.3
+140 silly packumentCache full:https://registry.npmjs.org/tar cache-miss
+141 http fetch GET 200 https://registry.npmjs.org/node-html-parser 39ms (cache miss)
+142 silly packumentCache full:https://registry.npmjs.org/node-html-parser set size:undefined disposed:false
+143 silly fetch manifest open@^8.4.0
+144 silly packumentCache full:https://registry.npmjs.org/open cache-miss
+145 http fetch GET 200 https://registry.npmjs.org/@ionic%2futils-array 53ms (cache miss)
+146 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-array set size:undefined disposed:false
+147 silly fetch manifest debug@^4.4.0
+148 silly packumentCache full:https://registry.npmjs.org/debug cache-miss
+149 http cache https://registry.npmjs.org/debug 2ms (cache hit)
+150 silly packumentCache full:https://registry.npmjs.org/debug set size:195840 disposed:false
+151 silly fetch manifest kleur@^4.1.5
+152 silly packumentCache full:https://registry.npmjs.org/kleur cache-miss
+153 http fetch GET 200 https://registry.npmjs.org/open 27ms (cache miss)
+154 silly packumentCache full:https://registry.npmjs.org/open set size:undefined disposed:false
+155 silly fetch manifest plist@^3.1.0
+156 silly packumentCache full:https://registry.npmjs.org/plist cache-miss
+157 http fetch GET 200 https://registry.npmjs.org/tar 36ms (cache miss)
+158 silly packumentCache full:https://registry.npmjs.org/tar set size:undefined disposed:false
+159 silly fetch manifest tslib@^2.8.1
+160 silly packumentCache full:https://registry.npmjs.org/tslib cache-miss
+161 http cache https://registry.npmjs.org/tslib 5ms (cache hit)
+162 silly packumentCache full:https://registry.npmjs.org/tslib set size:108843 disposed:false
+163 silly fetch manifest xcode@^3.0.1
+164 silly packumentCache full:https://registry.npmjs.org/xcode cache-miss
+165 http fetch GET 200 https://registry.npmjs.org/@trapezedev%2fproject 55ms (cache miss)
+166 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fproject set size:undefined disposed:false
+167 silly fetch manifest rimraf@^6.0.1
+168 silly packumentCache full:https://registry.npmjs.org/rimraf cache-miss
+169 http fetch GET 200 https://registry.npmjs.org/kleur 36ms (cache miss)
+170 silly packumentCache full:https://registry.npmjs.org/kleur set size:undefined disposed:false
+171 silly fetch manifest semver@^7.6.3
+172 silly packumentCache full:https://registry.npmjs.org/semver cache-miss
+173 http fetch GET 200 https://registry.npmjs.org/plist 28ms (cache miss)
+174 silly packumentCache full:https://registry.npmjs.org/plist set size:undefined disposed:false
+175 silly fetch manifest xml2js@^0.6.2
+176 silly packumentCache full:https://registry.npmjs.org/xml2js cache-miss
+177 http fetch GET 200 https://registry.npmjs.org/xml2js 38ms (cache miss)
+178 silly packumentCache full:https://registry.npmjs.org/xml2js set size:undefined disposed:false
+179 silly fetch manifest prompts@^2.4.2
+180 silly packumentCache full:https://registry.npmjs.org/prompts cache-miss
+181 http fetch GET 200 https://registry.npmjs.org/semver 44ms (cache miss)
+182 silly packumentCache full:https://registry.npmjs.org/semver set size:undefined disposed:false
+183 silly fetch manifest fs-extra@^11.2.0
+184 silly packumentCache full:https://registry.npmjs.org/fs-extra cache-miss
+185 http fetch GET 200 https://registry.npmjs.org/rimraf 58ms (cache miss)
+186 silly packumentCache full:https://registry.npmjs.org/rimraf set size:undefined disposed:false
+187 silly fetch manifest commander@^12.1.0
+188 silly packumentCache full:https://registry.npmjs.org/commander cache-miss
+189 http cache https://registry.npmjs.org/fs-extra 4ms (cache hit)
+190 silly packumentCache full:https://registry.npmjs.org/fs-extra set size:242028 disposed:false
+191 silly fetch manifest env-paths@^2.2.0
+192 silly packumentCache full:https://registry.npmjs.org/env-paths cache-miss
+193 http cache https://registry.npmjs.org/commander 7ms (cache hit)
+194 silly packumentCache full:https://registry.npmjs.org/commander set size:353104 disposed:false
+195 silly fetch manifest native-run@^2.0.3
+196 silly packumentCache full:https://registry.npmjs.org/native-run cache-miss
+197 http fetch GET 200 https://registry.npmjs.org/prompts 30ms (cache miss)
+198 silly packumentCache full:https://registry.npmjs.org/prompts set size:undefined disposed:false
+199 silly fetch manifest @ionic/utils-terminal@^2.3.5
+200 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-terminal cache-miss
+201 http fetch GET 200 https://registry.npmjs.org/env-paths 29ms (cache miss)
+202 silly packumentCache full:https://registry.npmjs.org/env-paths set size:undefined disposed:false
+203 silly fetch manifest @ionic/utils-subprocess@^3.0.1
+204 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-subprocess cache-miss
+205 http fetch GET 200 https://registry.npmjs.org/xcode 103ms (cache miss)
+206 silly packumentCache full:https://registry.npmjs.org/xcode set size:undefined disposed:false
+207 silly fetch manifest @ionic/cli-framework-output@^2.2.8
+208 silly packumentCache full:https://registry.npmjs.org/@ionic%2fcli-framework-output cache-miss
+209 http fetch GET 200 https://registry.npmjs.org/native-run 61ms (cache miss)
+210 silly packumentCache full:https://registry.npmjs.org/native-run set size:undefined disposed:false
+211 silly fetch manifest @revenuecat/purchases-typescript-internal-esm@19.3.1
+212 silly packumentCache full:https://registry.npmjs.org/@revenuecat%2fpurchases-typescript-internal-esm cache-miss
+213 http fetch GET 200 https://registry.npmjs.org/@ionic%2futils-terminal 47ms (cache miss)
+214 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-terminal set size:undefined disposed:false
+215 silly fetch manifest @ionic/cli-framework-output@^2.2.2
+216 silly packumentCache full:https://registry.npmjs.org/@ionic%2fcli-framework-output cache-miss
+217 http fetch GET 200 https://registry.npmjs.org/@ionic%2fcli-framework-output 42ms (cache miss)
+218 silly packumentCache full:https://registry.npmjs.org/@ionic%2fcli-framework-output set size:undefined disposed:false
+219 silly fetch manifest @ionic/utils-fs@^3.1.5
+220 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-fs cache-miss
+221 http cache https://registry.npmjs.org/@ionic%2futils-fs 2ms (cache hit)
+222 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-fs set size:155283 disposed:false
+223 silly fetch manifest @ionic/utils-terminal@^2.3.1
+224 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-terminal cache-miss
+225 http cache https://registry.npmjs.org/@ionic%2futils-terminal 2ms (cache hit)
+226 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-terminal set size:118057 disposed:false
+227 silly fetch manifest @trapezedev/project@^7.1.10
+228 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fproject cache-miss
+229 http cache https://registry.npmjs.org/@trapezedev%2fproject 2ms (cache hit)
+230 silly packumentCache full:https://registry.npmjs.org/@trapezedev%2fproject set size:227902 disposed:false
+231 silly fetch manifest commander@^8.2.0
+232 silly packumentCache full:https://registry.npmjs.org/commander cache-hit
+233 silly fetch manifest kleur@^4.1.4
+234 silly packumentCache full:https://registry.npmjs.org/kleur cache-miss
+235 http fetch GET 200 https://registry.npmjs.org/@ionic%2fcli-framework-output 42ms (cache miss)
+236 silly packumentCache full:https://registry.npmjs.org/@ionic%2fcli-framework-output set size:undefined disposed:false
+237 silly fetch manifest lodash@^4.17.21
+238 silly packumentCache full:https://registry.npmjs.org/lodash cache-miss
+239 http cache https://registry.npmjs.org/kleur 3ms (cache hit)
+240 silly packumentCache full:https://registry.npmjs.org/kleur set size:61853 disposed:false
+241 silly fetch manifest yaml@^1.10.2
+242 silly packumentCache full:https://registry.npmjs.org/yaml cache-miss
+243 http fetch GET 200 https://registry.npmjs.org/@revenuecat%2fpurchases-typescript-internal-esm 70ms (cache miss)
+244 silly packumentCache full:https://registry.npmjs.org/@revenuecat%2fpurchases-typescript-internal-esm set size:undefined disposed:false
+245 silly fetch manifest yargs@^17.2.1
+246 silly packumentCache full:https://registry.npmjs.org/yargs cache-miss
+247 http cache https://registry.npmjs.org/yargs 4ms (cache hit)
+248 silly packumentCache full:https://registry.npmjs.org/yargs set size:763370 disposed:false
+249 silly fetch manifest @esbuild/aix-ppc64@0.25.12
+250 silly packumentCache full:https://registry.npmjs.org/@esbuild%2faix-ppc64 cache-miss
+251 http fetch GET 200 https://registry.npmjs.org/lodash 39ms (cache miss)
+252 silly packumentCache full:https://registry.npmjs.org/lodash set size:undefined disposed:false
+253 silly fetch manifest @esbuild/linux-arm@0.25.12
+254 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm cache-miss
+255 http fetch GET 200 https://registry.npmjs.org/yaml 43ms (cache miss)
+256 silly packumentCache full:https://registry.npmjs.org/yaml set size:undefined disposed:false
+257 silly fetch manifest @esbuild/linux-x64@0.25.12
+258 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-x64 cache-miss
+259 http fetch GET 200 https://registry.npmjs.org/@ionic%2futils-subprocess 145ms (cache miss)
+260 silly packumentCache full:https://registry.npmjs.org/@ionic%2futils-subprocess set size:undefined disposed:false
+261 silly fetch manifest @esbuild/sunos-x64@0.25.12
+262 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fsunos-x64 cache-miss
+263 http fetch GET 200 https://registry.npmjs.org/@esbuild%2faix-ppc64 46ms (cache miss)
+264 silly packumentCache full:https://registry.npmjs.org/@esbuild%2faix-ppc64 set size:undefined disposed:false
+265 silly fetch manifest @esbuild/win32-x64@0.25.12
+266 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-x64 cache-miss
+267 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-arm 44ms (cache miss)
+268 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm set size:undefined disposed:false
+269 silly fetch manifest @esbuild/darwin-x64@0.25.12
+270 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-x64 cache-miss
+271 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-x64 62ms (cache miss)
+272 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-x64 set size:undefined disposed:false
+273 silly fetch manifest @esbuild/linux-ia32@0.25.12
+274 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ia32 cache-miss
+275 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fsunos-x64 49ms (cache miss)
+276 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fsunos-x64 set size:undefined disposed:false
+277 silly fetch manifest @esbuild/netbsd-x64@0.25.12
+278 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-x64 cache-miss
+279 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-x64 39ms (cache miss)
+280 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-x64 set size:undefined disposed:false
+281 silly fetch manifest @esbuild/win32-ia32@0.25.12
+282 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-ia32 cache-miss
+283 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fdarwin-x64 60ms (cache miss)
+284 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-x64 set size:undefined disposed:false
+285 silly fetch manifest @esbuild/android-arm@0.25.12
+286 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm cache-miss
+287 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-ia32 53ms (cache miss)
+288 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ia32 set size:undefined disposed:false
+289 silly fetch manifest @esbuild/android-x64@0.25.12
+290 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-x64 cache-miss
+291 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fnetbsd-x64 53ms (cache miss)
+292 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-x64 set size:undefined disposed:false
+293 silly fetch manifest @esbuild/freebsd-x64@0.25.12
+294 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-x64 cache-miss
+295 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-ia32 44ms (cache miss)
+296 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-ia32 set size:undefined disposed:false
+297 silly fetch manifest @esbuild/linux-arm64@0.25.12
+298 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm64 cache-miss
+299 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-arm 47ms (cache miss)
+300 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm set size:undefined disposed:false
+301 silly fetch manifest @esbuild/linux-ppc64@0.25.12
+302 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ppc64 cache-miss
+303 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-x64 44ms (cache miss)
+304 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-x64 set size:undefined disposed:false
+305 silly fetch manifest @esbuild/linux-s390x@0.25.12
+306 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-s390x cache-miss
+307 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-arm64 48ms (cache miss)
+308 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm64 set size:undefined disposed:false
+309 silly fetch manifest @esbuild/openbsd-x64@0.25.12
+310 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-x64 cache-miss
+311 http fetch GET 200 https://registry.npmjs.org/@esbuild%2ffreebsd-x64 51ms (cache miss)
+312 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-x64 set size:undefined disposed:false
+313 silly fetch manifest @esbuild/win32-arm64@0.25.12
+314 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-arm64 cache-miss
+315 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-ppc64 48ms (cache miss)
+316 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ppc64 set size:undefined disposed:false
+317 silly fetch manifest @esbuild/darwin-arm64@0.25.12
+318 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-arm64 cache-miss
+319 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fopenbsd-x64 40ms (cache miss)
+320 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-x64 set size:undefined disposed:false
+321 silly fetch manifest @esbuild/netbsd-arm64@0.25.12
+322 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 cache-miss
+323 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-s390x 48ms (cache miss)
+324 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-s390x set size:undefined disposed:false
+325 silly fetch manifest @esbuild/android-arm64@0.25.12
+326 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm64 cache-miss
+327 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-arm64 43ms (cache miss)
+328 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-arm64 set size:undefined disposed:false
+329 silly fetch manifest @esbuild/freebsd-arm64@0.25.12
+330 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 cache-miss
+331 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fdarwin-arm64 46ms (cache miss)
+332 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-arm64 set size:undefined disposed:false
+333 silly fetch manifest @esbuild/linux-loong64@0.25.12
+334 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-loong64 cache-miss
+335 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 36ms (cache miss)
+336 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 set size:undefined disposed:false
+337 silly fetch manifest @esbuild/linux-riscv64@0.25.12
+338 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-riscv64 cache-miss
+339 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-arm64 58ms (cache miss)
+340 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm64 set size:undefined disposed:false
+341 silly fetch manifest @esbuild/openbsd-arm64@0.25.12
+342 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 cache-miss
+343 http fetch GET 200 https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 57ms (cache miss)
+344 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 set size:undefined disposed:false
+345 silly fetch manifest @esbuild/linux-mips64el@0.25.12
+346 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-mips64el cache-miss
+347 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-riscv64 41ms (cache miss)
+348 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-riscv64 set size:undefined disposed:false
+349 silly fetch manifest @esbuild/openharmony-arm64@0.25.12
+350 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenharmony-arm64 cache-miss
+351 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-loong64 61ms (cache miss)
+352 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-loong64 set size:undefined disposed:false
+353 silly fetch manifest @firebase/app@0.10.5
+354 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp cache-miss
+355 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 41ms (cache miss)
+356 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 set size:undefined disposed:false
+357 silly fetch manifest @firebase/auth@1.7.4
+358 silly packumentCache full:https://registry.npmjs.org/@firebase%2fauth cache-miss
+359 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fopenharmony-arm64 36ms (cache miss)
+360 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenharmony-arm64 set size:undefined disposed:false
+361 silly fetch manifest @firebase/util@1.9.6
+362 silly packumentCache full:https://registry.npmjs.org/@firebase%2futil cache-miss
+363 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-mips64el 76ms (cache miss)
+364 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-mips64el set size:undefined disposed:false
+365 silly fetch manifest @firebase/storage@0.12.5
+366 silly packumentCache full:https://registry.npmjs.org/@firebase%2fstorage cache-miss
+367 http fetch GET 200 https://registry.npmjs.org/@firebase%2futil 262ms (cache miss)
+368 silly packumentCache full:https://registry.npmjs.org/@firebase%2futil set size:undefined disposed:false
+369 silly fetch manifest @firebase/database@1.0.5
+370 silly packumentCache full:https://registry.npmjs.org/@firebase%2fdatabase cache-miss
+371 http fetch GET 200 https://registry.npmjs.org/@firebase%2fauth 350ms (cache miss)
+372 silly packumentCache full:https://registry.npmjs.org/@firebase%2fauth set size:undefined disposed:false
+373 silly fetch manifest @firebase/analytics@0.10.4
+374 silly packumentCache full:https://registry.npmjs.org/@firebase%2fanalytics cache-miss
+375 http fetch GET 200 https://registry.npmjs.org/@firebase%2fapp 447ms (cache miss)
+376 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp set size:undefined disposed:false
+377 silly fetch manifest @firebase/app-check@0.8.4
+378 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-check cache-miss
+379 http fetch GET 200 https://registry.npmjs.org/@firebase%2fstorage 461ms (cache miss)
+380 silly packumentCache full:https://registry.npmjs.org/@firebase%2fstorage set size:undefined disposed:false
+381 silly fetch manifest @firebase/app-types@0.9.2
+382 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-types cache-miss
+383 http fetch GET 200 https://registry.npmjs.org/@firebase%2fapp-check 166ms (cache miss)
+384 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-check set size:undefined disposed:false
+385 silly fetch manifest @firebase/firestore@4.6.3
+386 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffirestore cache-miss
+387 http fetch GET 200 https://registry.npmjs.org/@firebase%2fanalytics 270ms (cache miss)
+388 silly packumentCache full:https://registry.npmjs.org/@firebase%2fanalytics set size:undefined disposed:false
+389 silly fetch manifest @firebase/functions@0.11.5
+390 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffunctions cache-miss
+391 http fetch GET 200 https://registry.npmjs.org/@firebase%2fdatabase 404ms (cache miss)
+392 silly packumentCache full:https://registry.npmjs.org/@firebase%2fdatabase set size:undefined disposed:false
+393 silly fetch manifest @firebase/messaging@0.12.9
+394 silly packumentCache full:https://registry.npmjs.org/@firebase%2fmessaging cache-miss
+395 http fetch GET 200 https://registry.npmjs.org/@firebase%2fapp-types 288ms (cache miss)
+396 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-types set size:undefined disposed:false
+397 silly fetch manifest @firebase/app-compat@0.2.35
+398 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-compat cache-miss
+399 http fetch GET 200 https://registry.npmjs.org/@firebase%2ffunctions 290ms (cache miss)
+400 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffunctions set size:undefined disposed:false
+401 silly fetch manifest @firebase/auth-compat@0.5.9
+402 silly packumentCache full:https://registry.npmjs.org/@firebase%2fauth-compat cache-miss
+403 http fetch GET 200 https://registry.npmjs.org/@firebase%2ffirestore 406ms (cache miss)
+404 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffirestore set size:undefined disposed:false
+405 silly fetch manifest @firebase/performance@0.6.7
+406 silly packumentCache full:https://registry.npmjs.org/@firebase%2fperformance cache-miss
+407 http fetch GET 200 https://registry.npmjs.org/@firebase%2fapp-compat 319ms (cache miss)
+408 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-compat set size:undefined disposed:false
+409 silly fetch manifest @firebase/installations@0.6.7
+410 silly packumentCache full:https://registry.npmjs.org/@firebase%2finstallations cache-miss
+411 http fetch GET 200 https://registry.npmjs.org/@firebase%2fmessaging 427ms (cache miss)
+412 silly packumentCache full:https://registry.npmjs.org/@firebase%2fmessaging set size:undefined disposed:false
+413 silly fetch manifest @firebase/remote-config@0.4.7
+414 silly packumentCache full:https://registry.npmjs.org/@firebase%2fremote-config cache-miss
+415 http fetch GET 200 https://registry.npmjs.org/@firebase%2fauth-compat 246ms (cache miss)
+416 silly packumentCache full:https://registry.npmjs.org/@firebase%2fauth-compat set size:undefined disposed:false
+417 silly fetch manifest @firebase/storage-compat@0.3.8
+418 silly packumentCache full:https://registry.npmjs.org/@firebase%2fstorage-compat cache-miss
+419 http fetch GET 200 https://registry.npmjs.org/@firebase%2fperformance 262ms (cache miss)
+420 silly packumentCache full:https://registry.npmjs.org/@firebase%2fperformance set size:undefined disposed:false
+421 silly fetch manifest @firebase/database-compat@1.0.5
+422 silly packumentCache full:https://registry.npmjs.org/@firebase%2fdatabase-compat cache-miss
+423 http fetch GET 200 https://registry.npmjs.org/@firebase%2fstorage-compat 195ms (cache miss)
+424 silly packumentCache full:https://registry.npmjs.org/@firebase%2fstorage-compat set size:undefined disposed:false
+425 silly fetch manifest @firebase/analytics-compat@0.2.10
+426 silly packumentCache full:https://registry.npmjs.org/@firebase%2fanalytics-compat cache-miss
+427 http fetch GET 200 https://registry.npmjs.org/@firebase%2fremote-config 293ms (cache miss)
+428 silly packumentCache full:https://registry.npmjs.org/@firebase%2fremote-config set size:undefined disposed:false
+429 silly fetch manifest @firebase/app-check-compat@0.3.11
+430 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-check-compat cache-miss
+431 http fetch GET 200 https://registry.npmjs.org/@firebase%2finstallations 405ms (cache miss)
+432 silly packumentCache full:https://registry.npmjs.org/@firebase%2finstallations set size:undefined disposed:false
+433 silly fetch manifest @firebase/firestore-compat@0.3.32
+434 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffirestore-compat cache-miss
+435 http fetch GET 200 https://registry.npmjs.org/@firebase%2fdatabase-compat 192ms (cache miss)
+436 silly packumentCache full:https://registry.npmjs.org/@firebase%2fdatabase-compat set size:undefined disposed:false
+437 silly fetch manifest @firebase/functions-compat@0.3.11
+438 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffunctions-compat cache-miss
+439 http fetch GET 200 https://registry.npmjs.org/@firebase%2fanalytics-compat 175ms (cache miss)
+440 silly packumentCache full:https://registry.npmjs.org/@firebase%2fanalytics-compat set size:undefined disposed:false
+441 silly fetch manifest @firebase/messaging-compat@0.2.9
+442 silly packumentCache full:https://registry.npmjs.org/@firebase%2fmessaging-compat cache-miss
+443 http fetch GET 200 https://registry.npmjs.org/@firebase%2fapp-check-compat 153ms (cache miss)
+444 silly packumentCache full:https://registry.npmjs.org/@firebase%2fapp-check-compat set size:undefined disposed:false
+445 silly fetch manifest @firebase/vertexai-preview@0.0.2
+446 silly packumentCache full:https://registry.npmjs.org/@firebase%2fvertexai-preview cache-miss
+447 http fetch GET 200 https://registry.npmjs.org/@firebase%2ffunctions-compat 122ms (cache miss)
+448 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffunctions-compat set size:undefined disposed:false
+449 silly fetch manifest @firebase/performance-compat@0.2.7
+450 silly packumentCache full:https://registry.npmjs.org/@firebase%2fperformance-compat cache-miss
+451 http fetch GET 200 https://registry.npmjs.org/@firebase%2fvertexai-preview 81ms (cache miss)
+452 silly packumentCache full:https://registry.npmjs.org/@firebase%2fvertexai-preview set size:undefined disposed:false
+453 silly fetch manifest @firebase/installations-compat@0.2.7
+454 silly packumentCache full:https://registry.npmjs.org/@firebase%2finstallations-compat cache-miss
+455 http fetch GET 200 https://registry.npmjs.org/@firebase%2ffirestore-compat 222ms (cache miss)
+456 silly packumentCache full:https://registry.npmjs.org/@firebase%2ffirestore-compat set size:undefined disposed:false
+457 silly fetch manifest @firebase/remote-config-compat@0.2.7
+458 silly packumentCache full:https://registry.npmjs.org/@firebase%2fremote-config-compat cache-miss
+459 http fetch GET 200 https://registry.npmjs.org/@firebase%2fmessaging-compat 164ms (cache miss)
+460 silly packumentCache full:https://registry.npmjs.org/@firebase%2fmessaging-compat set size:undefined disposed:false
+461 http fetch GET 200 https://registry.npmjs.org/@firebase%2fperformance-compat 120ms (cache miss)
+462 silly packumentCache full:https://registry.npmjs.org/@firebase%2fperformance-compat set size:undefined disposed:false
+463 http fetch GET 200 https://registry.npmjs.org/@firebase%2finstallations-compat 219ms (cache miss)
+464 silly packumentCache full:https://registry.npmjs.org/@firebase%2finstallations-compat set size:undefined disposed:false
+465 http fetch GET 200 https://registry.npmjs.org/@firebase%2fremote-config-compat 220ms (cache miss)
+466 silly packumentCache full:https://registry.npmjs.org/@firebase%2fremote-config-compat set size:undefined disposed:false
+467 verbose stack Error: could not resolve
+467 verbose stack     at PlaceDep.failPeerConflict (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:503:25)
+467 verbose stack     at new PlaceDep (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:157:21)
+467 verbose stack     at #buildDepStep (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:920:18)
+467 verbose stack     at async Arborist.buildIdealTree (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:181:7)
+467 verbose stack     at async Promise.all (index 1)
+467 verbose stack     at async Arborist.reify (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:133:5)
+467 verbose stack     at async Install.exec (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/lib/commands/install.js:150:5)
+467 verbose stack     at async Npm.exec (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/lib/npm.js:207:9)
+467 verbose stack     at async module.exports (/Users/runner/hostedtoolcache/node/22.23.2/arm64/lib/node_modules/npm/lib/cli/entry.js:74:5)
+468 error code ERESOLVE
+469 error ERESOLVE could not resolve
+470 error
+471 error While resolving: @capacitor-firebase/app-check@8.5.2
+471 error Found: firebase@10.12.2
+471 error node_modules/firebase
+471 error   firebase@"10.12.2" from the root project
+471 error
+471 error Could not resolve dependency:
+471 error peerOptional firebase@"^12.6.0" from @capacitor-firebase/app-check@8.5.2
+471 error node_modules/@capacitor-firebase/app-check
+471 error   @capacitor-firebase/app-check@"^8.0.0" from the root project
+471 error
+471 error Conflicting peer dependency: firebase@12.19.0
+471 error node_modules/firebase
+471 error   peerOptional firebase@"^12.6.0" from @capacitor-firebase/app-check@8.5.2
+471 error   node_modules/@capacitor-firebase/app-check
+471 error     @capacitor-firebase/app-check@"^8.0.0" from the root project
+471 error
+471 error Fix the upstream dependency conflict, or retry
+471 error this command with --force or --legacy-peer-deps
+471 error to accept an incorrect (and potentially broken) dependency resolution.
+472 error
+472 error
+472 error For a full report see:
+472 error /Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-eresolve-report.txt
+473 silly unfinished npm timer reify 1790679703511
+474 silly unfinished npm timer reify:loadTrees 1790679703513
+475 silly unfinished npm timer idealTree:buildDeps 1790679703520
+476 silly unfinished npm timer idealTree:node_modules/@capacitor-firebase/app-check 1790679708944
+477 verbose cwd /Users/runner/work/save-the-ocean/save-the-ocean
+478 verbose os Darwin 25.6.0
+479 verbose node v22.23.2
+480 verbose npm  v10.9.8
+481 verbose exit 1
+482 verbose code 1
+483 error A complete log of this run can be found in: /Users/runner/.npm/_logs/2026-09-29T11_01_43_218Z-debug-0.log
