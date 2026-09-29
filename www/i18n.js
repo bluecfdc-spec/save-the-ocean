@@ -162,7 +162,7 @@
       'aria.bomb': 'Drop bomb',
       'aria.ctl': 'Toggle control layout',
       'aria.hand': 'Toggle handedness',
-      'lang': '🌐 한국어',
+      'lang': '🌐 日本語',
       'drill.end': 'OUT OF DRILLS',
       'credit': 'Made with AI',
       'deep': 'DEEP ZONE',
@@ -172,15 +172,102 @@
       'premium.cancel': 'Later',
       'premium.restore': 'Already bought (restore)',
       'premium.active': '🌍 Premium active'
+    },
+    ja: {
+      'app.title': 'SAVE THE OCEAN — 軍艦 vs 潜水艦',
+      'rotate': '縦向きにしてください',
+      'rotate.sub': 'このゲームは縦画面専用です',
+      'notice.ok': 'OK',
+      'notice.hide': '今日は表示しない',
+      'sound.bgm': '環境音のオン/オフ',
+      'sound.sfx': '効果音のオン/オフ',
+      'ctl.two': '🤲 両手',
+      'ctl.one': '☝️ 片手',
+      'ctl.right': '▶ 右手',
+      'ctl.left': '◀ 左手',
+      'toast.two': '両手モード',
+      'toast.one': '片手モード',
+      'toast.right': '右手モード',
+      'toast.left': '左手モード',
+      'toast.bgmOff': '環境音 オフ',
+      'toast.bgmOn': '環境音 オン',
+      'toast.sfxOff': '効果音 オフ',
+      'toast.sfxOn': '効果音 オン',
+      'toast.submitFail': '登録できませんでした。しばらくしてからもう一度お試しください。',
+      'toast.loginFail': 'ログインがキャンセルされたか失敗しました。',
+      'toast.purchaseFail': '購入が完了しませんでした。',
+      'toast.restored': '購入を復元しました！',
+      'toast.restoreNone': '復元できる購入履歴がありません。',
+      'toast.webOnly': 'アプリでのみ購入できます。',
+      'start': '出撃',
+      'visits': '今日 {today} · 累計 {total}',
+      'visits.empty': '今日 – · 累計 –',
+      'hall': '🏆 殿堂',
+      'hall.top3': '⚓ 今シーズン TOP 3',
+      'hall.season': '👑 歴代シーズン1位',
+      'hall.locked': '🔒 世界ランキングはプレミアムで解放',
+      'hall.premium': '🌍 世界ランキングを見る',
+      'loading': '読み込み中...',
+      'best': 'この端末の最高記録: {n}',
+      'credit': 'AIと一緒に作ったゲームです',
+      'over': '撃沈…',
+      'over.score': '今回のスコア',
+      'over.checking': '順位を確認中...',
+      'over.offline': 'オンラインランキング未設定 — この端末の最高記録 {n}',
+      'over.top10': '🎉 {rank}位！名前を残そう。',
+      'over.top10.norank': '🎉 TOP 10 入り！名前を残そう。',
+      'over.rank': '{rank}位でした！',
+      'over.rank.far': '1000位圏外でした！',
+      'over.rank.sub': '10位以内に入ると名前を残せます。',
+      'over.free': 'この端末の最高記録: {n}',
+      'over.free.sub': 'プレミアムなら世界の順位と比べて名前を残せます。',
+      'over.premiumBtn': '🌍 世界ランキングを解放 · {price}',
+      'over.restore': '購入を復元',
+      'over.needLogin': 'スコア登録にはアカウントのログインが必要です。',
+      'over.login.apple': ' Appleでサインイン',
+      'over.login.google': 'G  Googleでサインイン',
+      'name.ph': '名前を入力',
+      'submit': '登録',
+      'submitting': '登録中...',
+      'submitted': '✅ 登録完了！',
+      'board': '🏆 殿堂 TOP 10',
+      'retry': 'もう一度',
+      'lb.fail': 'ランキングを読み込めませんでした。',
+      'lb.notset': 'オンラインランキング未設定',
+      'lb.empty': 'まだ記録がありません。最初の記録を残そう！',
+      'lb.rank': '{n}位',
+      'lb.pts': '{n}点',
+      'lb.season': 'シーズン {n}',
+      'lb.season.none': '記録なし',
+      'lb.season.first': 'シーズン1 進行中 — 最初の1位は誰になる？',
+      'anon': '名無し',
+      'aria.start': '出撃',
+      'aria.left': '左へ移動',
+      'aria.right': '右へ移動',
+      'aria.bomb': '爆雷投下',
+      'aria.ctl': '操作方法の切替',
+      'aria.hand': '利き手の切替',
+      'lang': '🌐 한국어',
+      'drill.end': 'DRILL 終了',
+      'deep': '深海',
+      'premium.title': '🌍 プレミアム',
+      'premium.body': '· 世界中のプレイヤーと順位を競う\n· シーズンランキングを全て閲覧\n· 買い切り、ずっと使える',
+      'premium.buy': '{price}で解放',
+      'premium.cancel': 'あとで',
+      'premium.restore': '購入済み（復元）',
+      'premium.active': '🌍 プレミアム利用中'
     }
   };
 
   const KEY = 'savetheocean_lang';
+  const LANGS = ['ko', 'en', 'ja'];
   function detect() {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (LANGS.includes(q)) { localStorage.setItem(KEY, q); return q; }
     const saved = localStorage.getItem(KEY);
-    if (saved === 'ko' || saved === 'en') return saved;
-    const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
-    return nav.toLowerCase().startsWith('ko') ? 'ko' : 'en';
+    if (LANGS.includes(saved)) return saved;
+    const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase();
+    return nav.startsWith('ko') ? 'ko' : nav.startsWith('ja') ? 'ja' : 'en';
   }
   let lang = detect();
 
@@ -191,8 +278,8 @@
       if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
       return s;
     },
-    set(l) { lang = l === 'ko' ? 'ko' : 'en'; localStorage.setItem(KEY, lang); I18N.apply(); },
-    toggle() { I18N.set(lang === 'ko' ? 'en' : 'ko'); },
+    set(l) { lang = LANGS.includes(l) ? l : 'en'; localStorage.setItem(KEY, lang); I18N.apply(); },
+    toggle() { I18N.set(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]); },
     // data-i18n 속성이 붙은 요소 전부 갱신
     apply() {
       document.documentElement.lang = lang;
@@ -203,7 +290,7 @@
       document.dispatchEvent(new CustomEvent('i18n:change', { detail: { lang } }));
     },
     // 숫자 표기 (1,234 / 1.2K)
-    num(n) { return Number(n).toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US'); }
+    num(n) { return Number(n).toLocaleString(lang === 'ko' ? 'ko-KR' : lang === 'ja' ? 'ja-JP' : 'en-US'); }
   };
   window.I18N = I18N;
   window.t = I18N.t;
