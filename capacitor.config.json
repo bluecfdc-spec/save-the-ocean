@@ -1,0 +1,13 @@
+{
+  "appId": "com.bluecfdc.savetheocean",
+  "appName": "Save the Ocean",
+  "webDir": "www",
+  "backgroundColor": "#04101c",
+  "ios": { "contentInset": "never", "scrollEnabled": false, "backgroundColor": "#04101c" },
+  "android": { "backgroundColor": "#04101c", "allowMixedContent": false },
+  "plugins": {
+    "SplashScreen": { "launchAutoHide": false, "backgroundColor": "#04101c", "showSpinner": false },
+    "StatusBar": { "overlaysWebView": false, "style": "DARK", "backgroundColor": "#04101c" },
+    "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["apple.com", "google.com"] }
+  }
+}

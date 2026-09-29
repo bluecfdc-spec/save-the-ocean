@@ -1,0 +1,32 @@
+{
+  "name": "save-the-ocean",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Save the Ocean — warship vs submarines (Capacitor app)",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs",
+    "bundle": "esbuild src/native.js --bundle --format=iife --outfile=www/vendor/native.js --minify",
+    "build": "npm run vendor && npm run bundle",
+    "sync": "npm run build && cap sync",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#04101c' --splashBackgroundColor '#04101c' --iconBackgroundColorDark '#04101c' --splashBackgroundColorDark '#04101c'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor-firebase/app-check": "^7.0.0",
+    "@capacitor-firebase/authentication": "^7.0.0",
+    "@revenuecat/purchases-capacitor": "^10.0.0",
+    "firebase": "10.12.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0",
+    "@fontsource/orbitron": "^5.0.0",
+    "@trapezedev/configure": "^7.0.0",
+    "esbuild": "^0.24.0"
+  }
+}

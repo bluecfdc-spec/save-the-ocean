@@ -1,0 +1,58 @@
+# Android 빌드 — push 마다 디버그 APK(테스트용) 생성, 서명 시크릿이 있으면 Play 스토어용 AAB 도 생성
+name: Android build
+on:
+  push:
+    branches: [app]
+    paths-ignore: ['**.md', 'ios/**']
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip until bootstrapped
+        id: check
+        run: |
+          if [ -d android ]; then echo "ok=true" >> $GITHUB_OUTPUT; else echo "ok=false" >> $GITHUB_OUTPUT; echo "android/ 없음 — bootstrap 먼저"; fi
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.ok == 'true'
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        if: steps.check.outputs.ok == 'true'
+        with: { distribution: temurin, java-version: 21 }
+      - name: Web build + cap sync
+        if: steps.check.outputs.ok == 'true'
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npx cap sync android
+      - name: Firebase config (google-services.json)
+        if: steps.check.outputs.ok == 'true' && env.GS != ''
+        env: { GS: "${{ secrets.GOOGLE_SERVICES_JSON }}" }
+        run: echo "$GS" | base64 --decode > android/app/google-services.json
+      - name: Debug APK
+        if: steps.check.outputs.ok == 'true'
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.ok == 'true'
+        with: { name: save-the-ocean-debug-apk, path: android/app/build/outputs/apk/debug/*.apk }
+      - name: Release AAB (signed)
+        if: steps.check.outputs.ok == 'true' && env.KS != ''
+        working-directory: android
+        env:
+          KS: "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          RELEASE_KEYSTORE_PASSWORD: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+          RELEASE_KEY_ALIAS: "${{ secrets.ANDROID_KEY_ALIAS }}"
+          RELEASE_KEY_PASSWORD: "${{ secrets.ANDROID_KEY_PASSWORD }}"
+          VERSION_CODE: "${{ github.run_number }}"
+        run: |
+          echo "$KS" | base64 --decode > release.keystore
+          echo "===== Signing SHA-1 (Firebase Android 앱에 등록) ====="
+          keytool -list -v -keystore release.keystore -alias "$RELEASE_KEY_ALIAS" -storepass "$RELEASE_KEYSTORE_PASSWORD" | grep -E "SHA1|SHA256"
+          export RELEASE_KEYSTORE="$PWD/release.keystore"
+          ./gradlew bundleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.ok == 'true' && env.KS != ''
+        env: { KS: "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" }
+        with: { name: save-the-ocean-release-aab, path: android/app/build/outputs/bundle/release/*.aab }

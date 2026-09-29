@@ -1,0 +1,32 @@
+# iOS 컴파일 확인 (서명 없음, 시뮬레이터용) — 실제 TestFlight 배포는 Xcode Cloud 가 담당 (APP-SETUP.md)
+name: iOS build check
+on:
+  push:
+    branches: [app]
+    paths-ignore: ['**.md', 'android/**']
+  workflow_dispatch:
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip until bootstrapped
+        id: check
+        run: |
+          if [ -d ios ]; then echo "ok=true" >> $GITHUB_OUTPUT; else echo "ok=false" >> $GITHUB_OUTPUT; echo "ios/ 없음 — bootstrap 먼저"; fi
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.ok == 'true'
+        with: { node-version: 22 }
+      - name: Web build + cap sync + pods
+        if: steps.check.outputs.ok == 'true'
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npx cap sync ios
+      - name: Build for simulator
+        if: steps.check.outputs.ok == 'true'
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -50

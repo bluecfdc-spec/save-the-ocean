@@ -1,0 +1,16 @@
+// node_modules 에서 앱에 내장할 파일을 www/vendor 로 복사 (Firebase compat SDK, Orbitron 폰트)
+import { mkdirSync, copyFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+const out = 'www/vendor', fonts = join(out, 'fonts');
+mkdirSync(fonts, { recursive: true });
+for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'])
+  copyFileSync(join('node_modules/firebase', f), join(out, f));
+const src = 'node_modules/@fontsource/orbitron/files';
+const css = [];
+for (const w of [600, 800]) {
+  const file = readdirSync(src).find(n => n.includes(`latin-${w}-normal`) && n.endsWith('.woff2'));
+  copyFileSync(join(src, file), join(fonts, file));
+  css.push(`@font-face{font-family:'Orbitron';font-style:normal;font-weight:${w};font-display:swap;src:url(${file}) format('woff2');}`);
+}
+writeFileSync(join(fonts, 'orbitron.css'), css.join('\n') + '\n');
+console.log('vendor ok');

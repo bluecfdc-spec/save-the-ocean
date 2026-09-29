@@ -1,0 +1,53 @@
+# 네이티브 프로젝트 설정 (Trapeze) — scripts/bootstrap-native.sh 가 적용
+# 세로 고정, 앱 이름, 로컬라이즈, Sign in with Apple 권한
+vars:
+  APP_NAME:
+    default: Save the Ocean
+  VERSION:
+    default: 1.0.0
+
+platforms:
+  ios:
+    targets:
+      App:
+        version: $VERSION
+        buildNumber: 1
+        displayName: $APP_NAME
+        plist:
+          replace: false
+          entries:
+            - CFBundleDisplayName: $APP_NAME
+            - CFBundleDevelopmentRegion: ko
+            - CFBundleLocalizations: [ko, en]
+            - ITSAppUsesNonExemptEncryption: false
+            - UIRequiresFullScreen: true
+            - UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+            - UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown]
+            - UIStatusBarStyle: UIStatusBarStyleLightContent
+            - UIViewControllerBasedStatusBarAppearance: true
+        entitlements:
+          - com.apple.developer.applesignin: [Default]
+
+  android:
+    versionName: $VERSION
+    versionCode: 1
+    manifest:
+      - file: AndroidManifest.xml
+        target: manifest/application/activity
+        attrs:
+          android:screenOrientation: portrait
+      - file: AndroidManifest.xml
+        target: manifest/application
+        attrs:
+          android:allowBackup: false
+    res:
+      - path: values/strings.xml
+        file: strings.xml
+        text: |
+          <?xml version='1.0' encoding='utf-8'?>
+          <resources>
+              <string name="app_name">Save the Ocean</string>
+              <string name="title_activity_main">Save the Ocean</string>
+              <string name="package_name">com.bluecfdc.savetheocean</string>
+              <string name="custom_url_scheme">com.bluecfdc.savetheocean</string>
+          </resources>

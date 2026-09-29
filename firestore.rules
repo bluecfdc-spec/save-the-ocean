@@ -1,0 +1,35 @@
+rules_version = '2';
+// Save the Ocean — 앱 버전 규칙
+//  · 모든 접근은 Firebase 로그인 필요 (앱은 시작 시 익명 로그인)
+//  · 이름 있는 기록(scores*)은 Apple/Google 로그인 사용자만, 본인 uid 로만 생성
+//  · 무명 기록(plays*)은 익명도 가능 (순위 계산용)
+//  · App Check 를 콘솔에서 '적용'으로 켜면 앱 밖에서 오는 요청은 추가로 차단됨
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function realUser() { return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    function validScore() {
+      return request.resource.data.score is int
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 999999;
+    }
+    match /{col}/{doc} {
+      allow read: if signedIn() && col.matches('^(scores|plays)(_s[0-9]+)?$');
+      allow create: if col.matches('^scores(_s[0-9]+)?$')
+                    && realUser()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() >= 1
+                    && request.resource.data.name.size() <= 8
+                    && validScore();
+      allow update, delete: if false;
+    }
+    match /{col}/{doc} {
+      allow create: if col.matches('^plays(_s[0-9]+)?$') && signedIn() && validScore();
+    }
+    match /visits/{doc} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && doc != 'notice' && request.resource.data.count is int;
+    }
+  }
+}
