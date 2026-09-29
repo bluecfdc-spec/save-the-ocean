@@ -108,7 +108,7 @@
     if (!LB.ready) return def;
     try {
       await authed();
-      const d = await timeout(db.collection('visits').doc('notice').get(), 8000);
+      const d = await timeout(db.collection('visits').doc('notice_app').get(), 8000);   // 앱 전용 공지 (웹의 'notice' 와 분리)
       if (d && d.exists) {
         const v = d.data(); const en = window.I18N && I18N.lang === 'en';
         return { active: !!v.active, title: (en && v.title_en) || v.title || '', body: (en && v.body_en) || v.body || '', button: (en && v.button_en) || v.button || t('notice.ok') };

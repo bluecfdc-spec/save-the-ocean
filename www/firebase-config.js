@@ -22,8 +22,8 @@ window.SEASON_SUFFIX = "_s1";
 // 예: { n: 1, range: "09.29 ~ 10.05", name: "바다의수호자", score: 12480 }
 window.SEASONS_DATA = [];
 
-// 기본 공지 (Firebase 콘솔의 visits/notice 문서가 있으면 그 내용이 우선)
-//  · Firestore > visits 컬렉션 > 문서 ID "notice" > 필드: active(boolean), title(string), body(string), button(string)
+// 기본 공지 (Firebase 콘솔의 visits/notice_app 문서가 있으면 그 내용이 우선 — 웹의 notice 와 분리)
+//  · Firestore > visits 컬렉션 > 문서 ID "notice_app" > 필드: active(boolean), title(string), body(string), button(string)
 //  · 영어 사용자용 필드: title_en / body_en / button_en (없으면 한국어 표시)
 window.DEFAULT_NOTICE = {
   active: false,

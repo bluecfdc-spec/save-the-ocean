@@ -108,7 +108,8 @@ keytool -genkeypair -v -keystore release.keystore -alias savetheocean -keyalg RS
 | 파일 | 내용 |
 |---|---|
 | `www/app-config.js` | RevenueCat 키, 상품 ID, 기본 가격 표기, TOP3 맛보기 여부 |
-| `www/firebase-config.js` | Firebase 설정, 시즌 접미사, 공지(한/영) |
+| `www/firebase-config.js` | Firebase 설정, 시즌 접미사, 기본 공지(한/영) |
+| Firestore `visits/notice_app` | 앱 전용 공지 (웹의 `notice` 와 별개). 필드: active, title, body, button, title_en, body_en, button_en |
 | `www/i18n.js` | 한국어/영어 문구 전부 |
 | `capacitor.config.json` | 앱 ID·이름·색상 |
 | `trapeze.config.yaml` | 버전 번호(1.0.0), 세로 고정 등 네이티브 설정 |
