@@ -47,7 +47,13 @@
   /* ---------- Control panel ---------- */
   #panel { position: relative; width: 100%; aspect-ratio: 941 / 242; flex: 0 0 auto; display: flex; align-items: stretch; background: #1b2430 url(assets/metal.jpg) center / auto 100% repeat-x; border-top: 3px solid #0a0f16; }
   /* 양손 모드(기본): 좌우 끝 + 가운데 폭탄 */
-  #panel .buttons { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: space-between; gap: 2%; padding: 3% 4%; }
+  #panel .buttons { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: space-between; gap: 1%; padding: 2% 1%; }
+  /* 양손: 좌우 버튼이 남는 폭을 전부 채우고(터치 영역), 폭탄은 10% 크게 */
+  #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { flex: 1 1 0; max-width: none; aspect-ratio: auto; background-size: auto 100%; }
+  #panel:not(.one) .zone.left  { background-position: right center; }
+  #panel:not(.one) .zone.right { background-position: left center; }
+  #panel:not(.one) .zone.bomb { height: 100%; transform: scale(1.1); }
+  #panel:not(.one) .zone.bomb.pressed { transform: scale(1.02); }
   /* 한손 모드: 한쪽으로 모음 (기본 오른쪽, 좌수는 왼쪽) */
   #panel.one .buttons { justify-content: flex-end; gap: 1.5%; padding: 3% 1.5% 3% 0; }
   #panel.one.left-hand .buttons { justify-content: flex-start; padding: 3% 0 3% 1.5%; }
@@ -198,9 +204,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=20260929f"></script>
-<script src="audio.js?v=20260929f"></script>
-<script src="leaderboard.js?v=20260929f"></script>
+<script src="firebase-config.js?v=20260929g"></script>
+<script src="audio.js?v=20260929g"></script>
+<script src="leaderboard.js?v=20260929g"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -215,6 +221,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20260929f"></script>
+<script src="game.js?v=20260929g"></script>
 </body>
 </html>

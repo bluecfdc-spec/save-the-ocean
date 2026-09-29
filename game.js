@@ -140,12 +140,15 @@
     if (rage) level = Math.max(level, 11);
     // 단계별 동시 어뢰 상한: 처음엔 0 → 2,3 → 5,6 → 8,10 → 12,14,16 → 18,20
     const TORP_STAGES = [0, 2, 3, 5, 6, 8, 10, 12, 14, 16, 18, 20];
+    // 흰 잠수정은 어뢰 1발, 빨간은 3발이라 어뢰 공급 = 잠수정 수 × 빨간 비율. 단계가 오를수록 둘 다 ↑
+    const SPAWN_GAP  = [2.4, 1.9, 1.6, 1.3, 1.1, 0.95, 0.85, 0.75, 0.65, 0.55, 0.5, 0.45];
+    const RED_CHANCE = [0.15, 0.22, 0.30, 0.36, 0.42, 0.46, 0.50, 0.54, 0.58, 0.60, 0.62, 0.65];
+    const L = Math.min(level, 11);
     return {
       subSpeed: Math.min(58 + level * 9 + Math.min(level, 6) * 3, W / 1.8), // 잠수정 속도 (상한: 화면을 1.8초에 통과)
-      maxTorps: TORP_STAGES[Math.min(level, TORP_STAGES.length - 1)],
-      spawnGap: rage ? 0.6 : Math.max(0.85, 2.3 - level * 0.16), // 생성 간격
-      redChance: Math.min(0.2 + level * 0.03, 0.4),
-      fireRate: Math.min(0.55 + level * 0.08, 1) * (rage ? 2 : 1), // 초당 발사 확률 계수
+      maxTorps: TORP_STAGES[L],
+      spawnGap: SPAWN_GAP[L],
+      redChance: RED_CHANCE[L],
       twist: level >= 3,                                  // 3단계부터 '꼬임' 패턴
       rage
     };
@@ -164,8 +167,7 @@
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    const cdScale = Math.max(0.25, 70 / speed);           // 빠를수록 대기시간 짧게
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, fireCd: (0.6 + Math.random() * 1.2) * cdScale, cdScale, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: red ? 3 : 1, fireCd: 0.15 + Math.random() * 0.3, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -264,24 +266,19 @@
       if (s.x < -W * WORLD_MARGIN - SUB_W * 2 || s.x > W + W * WORLD_MARGIN + SUB_W * 2) { subs.splice(i, 1); continue; }
       // 뒤쪽 거품
       if (s.x > -SUB_W && s.x < W + SUB_W && Math.random() < 0.5) addBubble(s.x - s.dir * s.w * 0.52, s.y + 2, false);
-      // 대기시간은 항상 흐르고, 발사는 화면 안에 있을 때만
-      if (state === 'play') s.fireCd -= dt;
-      if (state === 'play' && s.x > s.w * 0.3 && s.x < W - s.w * 0.3) {
+      // 발사: 화면 안에 있는 동안 무작위 시점에 (군함 위치와 무관). 남은 탄약을 화면을 지나는 동안 고르게 쓰도록 확률을 잡음
+      if (state === 'play' && s.ammo > 0 && s.x > s.w * 0.3 && s.x < W - s.w * 0.3) {
+        s.fireCd -= dt;
         if (s.fireCd <= 0 && torps.length < d.maxTorps) {
-          // 군함과 가까울수록 발사 확률 ↑ (그래도 무작위성 유지)
-          const near = Math.abs(s.x - ship.x) < W * 0.35;
-          let p = d.fireRate * (near ? 1 : 0.35) * (s.red ? 1.3 : 1);
-          // 최대 구간(7만점~): 어뢰가 15개 밑으로 떨어지면 무조건 발사 → 15~20개 난사 유지
-          const barrage = d.maxTorps >= 18 && torps.length < d.maxTorps - 3;   // 최고조: 항상 15~20개 유지
-          if (barrage) p = 1;
-          if (Math.random() < p) {
-            fireTorp(s);
-            // 꼬임: 빨간 잠수정이 가끔 2발 연속
-            if (d.twist && s.red && Math.random() < 0.35) setTimeout(() => { if (state === 'play' && subs.includes(s)) fireTorp(s); }, 260);
-            // 7만점 이후: 모든 잠수정이 2발씩 (좌우로 살짝 벌려서)
-            if (d.maxTorps >= 18) { const t2 = torps[torps.length - 1]; if (t2) t2.x -= s.dir * 10; setTimeout(() => { if (state === 'play' && subs.includes(s)) { fireTorp(s); const t3 = torps[torps.length - 1]; if (t3) t3.x += s.dir * 10; } }, 140); }
-            s.fireCd = barrage ? 0.22 : (1.0 + Math.random() * 1.2 - Math.min(level * 0.06, 0.5)) * (s.cdScale || 1);
-          } else s.fireCd = 0.15 * (s.cdScale || 1);
+          const remain = Math.max(0.3, (s.dir === 1 ? (W - s.w * 0.3 - s.x) : (s.x - s.w * 0.3)) / s.speed); // 화면을 벗어나기까지 남은 시간
+          const barrage = d.maxTorps >= 18 && torps.length < d.maxTorps - 3;   // 최고조: 난사
+          let rate = (s.ammo / remain) * (barrage ? 3 : 1.6);                  // 초당 발사 기대 횟수
+          // Y축 겹침 회피: 바로 위에 어뢰가 있으면 잠깐 미룸
+          const crowded = torps.some(t => Math.abs(t.x - s.x) < 34 && t.y < s.y && s.y - t.y < 90);
+          if (!crowded && Math.random() < rate * dt) {
+            fireTorp(s); s.ammo--;
+            s.fireCd = s.ammo > 0 ? (barrage ? 0.2 : 0.35 + Math.random() * 0.4) : 0;
+          }
         }
       }
     }
@@ -427,6 +424,12 @@
       if (s.x < -s.w || s.x > W + s.w) continue;
       const yy = s.y + Math.sin(s.wobble) * 2;
       drawSprite(s.red ? IMG.subR : IMG.subW, s.x, yy, s.w, s.h, s.dir === -1, 0);
+      // 남은 어뢰 표시 (등 위에 작은 어뢰 아이콘)
+      if (s.ammo > 0 && IMG.torpedo.complete && IMG.torpedo.naturalWidth) {
+        const tw = 4, th = 13, gap = 2, n = s.ammo;
+        const startX = s.x - s.dir * s.w * 0.05 - ((n - 1) * (tw + gap)) / 2;
+        for (let k = 0; k < n; k++) ctx.drawImage(IMG.torpedo, startX + k * (tw + gap) - tw / 2, yy - s.h * 0.55 - th, tw, th);
+      }
       // 잠망경 불빛
       ctx.fillStyle = s.red ? '#ff3b2f' : '#dff6ff';
       ctx.globalAlpha = 0.6 + 0.4 * Math.sin(s.wobble * 3);
