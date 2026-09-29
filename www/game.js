@@ -47,6 +47,8 @@
   const SHIELD_EVERY = 20;              // 잠수정 20척 격파마다 쉴드 아이템
   const SHIELD_TIME = 10;               // 쉴드 지속(초)
   const DRILL_SHOTS = 5;                // 드릴 장전 수
+  const DEEP_FRAC = 0.10;               // 잠수정 깊이 구간의 아래 10% = 심해 (격파 시 흰 500 / 빨강 1500)
+  const DEEP_PTS = { white: 500, red: 1500 };
   const DRILL_W = 15;
 
   // ───────────── 상태 ─────────────
@@ -191,10 +193,14 @@
   }
 
   // ───────────── 엔티티 ─────────────
+  // 잠수정 깊이 구간 / 심해 경계선 (경계선 아래에 있는 잠수정은 보너스)
+  const subMinY = () => surfaceY + 70, subMaxY = () => radar.y - 30;
+  const deepLineY = () => subMaxY() - (subMaxY() - subMinY()) * DEEP_FRAC;
+  const isDeep = s => s.y >= deepLineY();
   function spawnSub(d) {
     const dir = Math.random() < 0.5 ? 1 : -1;
     const startX = dir === 1 ? -W * WORLD_MARGIN - SUB_W : W + W * WORLD_MARGIN + SUB_W;
-    const minY = surfaceY + 70, maxY = radar.y - 30;
+    const minY = subMinY(), maxY = subMaxY();
     // 이미 있는 잠수정과 깊이 겹치지 않게 시도
     let y = 0;
     for (let i = 0; i < 6; i++) {
@@ -235,7 +241,7 @@
     if (state !== 'play' || bombs.length >= MAX_BOMBS) return;
     if (ship.drill > 0) {
       ship.drill--;
-      bombs.push({ type: 'drill', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 70, w: DRILL_W, h: DRILL_W * 240 / 102, rot: 0, hits: 0 });
+      bombs.push({ type: 'drill', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 70, w: DRILL_W, h: DRILL_W * 240 / 102, rot: 0, hits: 0, pts: 0 });
       SFX.drill();
       if (ship.drill === 0) popText(ship.x, ship.y - 30, t('drill.end'), '#ffb347');
     } else {
@@ -345,14 +351,21 @@
         const s = subs[j];
         if (Math.abs(b.x - s.x) < s.w * 0.48 && Math.abs(b.y - s.y) < s.h * 0.6 + (isDrill ? 12 : 6)) {
           subs.splice(j, 1); hit = true;
-          const pts = s.red ? 300 : 100;
-          score += pts;
+          const deep = isDeep(s);
+          const pts = deep ? (s.red ? DEEP_PTS.red : DEEP_PTS.white) : (s.red ? 300 : 100);
+          if (isDrill) {
+            // 드릴 연속 격파: 이 드릴이 잡은 점수 합계 × 격파 수 (누적 차액만큼 가산)
+            const prevTotal = b.pts * b.hits;
+            b.pts += pts; b.hits++;
+            score += b.pts * b.hits - prevTotal; updateHud();
+            if (b.hits >= 2) popText(s.x, s.y - 38, 'x' + b.hits + ' COMBO ' + (b.pts * b.hits).toLocaleString(), '#ffb347');
+          } else score += pts;
           fx.push(explosion(s.x, s.y, s.red ? 46 : 36, s.red));
-          popText(s.x, s.y - 20, '+' + pts, s.red ? '#ff5a4a' : '#ffffff');
+          popText(s.x, s.y - 20, '+' + pts + (deep ? ' DEEP' : ''), deep ? '#ffd77a' : (s.red ? '#ff5a4a' : '#ffffff'));
           if (s.red) { SFX.boom(true); SFX.points(); } else SFX.boom(false);
           for (let k = 0; k < 10; k++) addBubble(s.x + (Math.random() - 0.5) * 40, s.y, true);
           onKill(s);
-          if (isDrill) { b.hits++; hit = false; continue; }   // 드릴은 뚫고 계속 내려감
+          if (isDrill) { hit = false; continue; }   // 드릴은 뚫고 계속 내려감
           break;
         }
       }
@@ -455,6 +468,17 @@
     }
     ctx.globalAlpha = 1;
 
+    // 심해 경계선 (아래쪽 잠수정 격파 시 보너스)
+    {
+      const dy = deepLineY();
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 215, 122, 0.55)'; ctx.lineWidth = 1; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.moveTo(0, dy); ctx.lineTo(W, dy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(255, 215, 122, 0.85)'; ctx.font = '600 10px system-ui, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText((window.I18N ? I18N.t('deep') : '심해') + ' +' + DEEP_PTS.white + ' / +' + DEEP_PTS.red, 6, dy + 12);
+      ctx.restore();
+    }
     // 잠수정
     for (const s of subs) {
       if (s.x < -s.w || s.x > W + s.w) continue;
