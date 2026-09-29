@@ -20,25 +20,49 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /scores/{doc} {
+    // 이름 있는 기록: scores, scores_s2, scores_s3 ...
+    match /{col}/{doc} {
       allow read: if true;
-      allow create: if request.resource.data.name is string
-                    && request.resource.data.name.size() >= 2
+      allow create: if col.matches('^scores(_s[0-9]+)?$')
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() >= 1
                     && request.resource.data.name.size() <= 8
                     && request.resource.data.score is int
                     && request.resource.data.score >= 0
                     && request.resource.data.score <= 999999;
       allow update, delete: if false;
     }
+    // 10위 밖 무명 기록 (순위 계산용): plays, plays_s2 ...
+    match /{col}/{doc} {
+      allow create: if col.matches('^plays(_s[0-9]+)?$')
+                    && request.resource.data.score is int
+                    && request.resource.data.score >= 0
+                    && request.resource.data.score <= 999999;
+    }
+    // 방문자 수
+    match /visits/{doc} {
+      allow read: if true;
+      allow create, update: if request.resource.data.count is int;
+    }
   }
 }
 ```
 부적절한 이름/점수는 콘솔에서 문서를 직접 삭제하면 됩니다.
 
+## 시즌 운영
+`firebase-config.js`의 `SEASON_SUFFIX`를 `"_s2"`로 바꾸면 새 컬렉션(scores_s2, plays_s2)에 기록이 쌓입니다.
+끝난 시즌 1위는 `SEASONS_DATA`에 한 줄 추가하면 시작 화면 "👑 시즌 1위"에 표시됩니다.
+
+## 아이템
+- 🛡 쉴드: 잠수정 20척 격파마다 수면에 등장. 군함이 닿으면 10초 무적(어뢰가 튕겨나감)
+- 🔩 드릴: 무작위 간격으로 수면에 등장. 먹으면 5발 장전(우측 상단 아이콘이 드릴로 바뀜). 잠수정을 뚫고 계속 내려가며 여러 대 격파
+
 ## 조작
-- 좌/우 버튼: 누르고 있는 동안 이동
+- 좌/우 버튼: 누르고 있는 동안 이동 (버튼 3개가 한쪽에 모여 엄지 하나로 조작)
 - 가운데 빨간 버튼: 폭탄 투하 (동시에 5개까지)
 - LEFT-HAND MODE: 버튼 배치 좌우 교체 (기기에 저장됨)
+- 🌊 배경음 / 💥 효과음 버튼: 따로 켜고 끔
+- 세로 화면 전용 (가로로 돌리면 안내 표시)
 - PC 테스트: ←/→ 이동, Space 폭탄, Enter 시작
 
 ## 규칙

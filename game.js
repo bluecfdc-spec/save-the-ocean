@@ -15,9 +15,13 @@
   const startOverlay = document.getElementById('startOverlay');
   const overOverlay = document.getElementById('overOverlay');
   const finalScore = document.getElementById('finalScore');
-  const submitBox = document.getElementById('submitBox');
   const nameInput = document.getElementById('nameInput');
-  const boardEl = document.getElementById('board');
+  const nameRow = document.getElementById('nameRow');
+  const recordMsg = document.getElementById('recordMsg');
+  const top10El = document.getElementById('top10');
+  const hudEl = document.getElementById('hud');
+  const hudDrill = document.getElementById('hudDrill');
+  const bombMax = document.getElementById('bombMax');
   const bestLine = document.getElementById('bestLine');
   const flash = document.getElementById('flash');
   const toast = document.getElementById('toast');
@@ -25,7 +29,7 @@
 
   // ───────────── 이미지 ─────────────
   const IMG = {};
-  const files = { bg: 'assets/bg.jpg', ship: 'assets/ship.png', subW: 'assets/sub_white.png', subR: 'assets/sub_red.png', bomb: 'assets/bomb.png', torpedo: 'assets/torpedo.png', radar: 'assets/radar_frame.png' };
+  const files = { bg: 'assets/bg.jpg', ship: 'assets/ship.png', subW: 'assets/sub_white.png', subR: 'assets/sub_red.png', bomb: 'assets/bomb.png', torpedo: 'assets/torpedo.png', radar: 'assets/radar_frame.png', drill: 'assets/item_drill.png', shield: 'assets/item_shield.png' };
   let loaded = 0; const total = Object.keys(files).length;
   for (const k in files) { const im = new Image(); im.src = files[k]; im.onload = im.onerror = () => { loaded++; }; IMG[k] = im; }
 
@@ -40,6 +44,10 @@
   const BOMB_W = 17;
   const TORP_W = 8;
   const WORLD_MARGIN = 1.0;             // 화면 밖 확장 폭 (화면 폭의 배수, 양쪽 각각)
+  const SHIELD_EVERY = 20;              // 잠수정 20척 격파마다 쉴드 아이템
+  const SHIELD_TIME = 10;               // 쉴드 지속(초)
+  const DRILL_SHOTS = 5;                // 드릴 장전 수
+  const DRILL_W = 15;
 
   // ───────────── 상태 ─────────────
   let W = 390, H = 600, DPR = 1;
@@ -50,7 +58,8 @@
   let ship, bombs = [], subs = [], torps = [], fx = [], bubbles = [], texts = [], streaks = [];
   let spawnTimer = 0, shake = 0, radarAngle = 0, lastT = 0;
   let input = { left: false, right: false };
-  let myScoreId = null;
+  let kills = 0, items = [], drillTimer = 0;
+  let lastFinal = { score: 0, date: '' };
 
   // ───────────── 크기/배치 ─────────────
   function resize() {
@@ -79,18 +88,17 @@
   function reset() {
     score = 0; hp = MAX_HP; time = 0; level = 0; spawnTimer = 0.8; shake = 0;
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
-    ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0 };
-    streaks = [];
-    myScoreId = null;
+    ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0 };
+    streaks = []; items = []; kills = 0; drillTimer = 25 + Math.random() * 20;
     updateHud();
   }
   function start() {
     SFX.unlock(); SFX.wake(false);
+    document.getElementById('visits').style.display = 'none';
     resize(); reset();
     state = 'play';
     startOverlay.classList.add('hidden'); overOverlay.classList.add('hidden');
     SFX.startAmbient(); SFX.seaStart();
-    LB.stop();
   }
   function gameOver() {
     state = 'over';
@@ -99,15 +107,29 @@
     shake = 18;
     fx.push(explosion(ship.x, ship.y, 60, true));
     LB.saveLocal(score);
+    lastFinal = { score: Math.floor(score), date: LB.formatToday() };
     setTimeout(showOver, 1300);
   }
-  function showOver() {
-    finalScore.textContent = score.toLocaleString();
-    submitBox.style.display = '';
+  let playRecorded = false;
+  async function showOver() {
+    finalScore.textContent = lastFinal.score.toLocaleString();
+    nameRow.style.display = 'none'; playRecorded = false;
+    recordMsg.textContent = LB.ready ? '순위 확인 중...' : '온라인 랭킹 미설정 — 이 기기 최고 기록 ' + LB.localBest().toLocaleString();
+    top10El.innerHTML = '<div class="note">불러오는 중...</div>';
     nameInput.value = LB.lastName();
-    boardEl.innerHTML = '<div class="note">랭킹 불러오는 중…</div>';
     overOverlay.classList.remove('hidden');
-    LB.watchTop(10, rows => LB.render(boardEl, rows, myScoreId));
+    if (!LB.ready) { LB.renderList(top10El, null); return; }
+    const [rows, rank] = await Promise.all([LB.top(10), LB.rank(lastFinal.score)]);
+    LB.renderList(top10El, rows, null);
+    // 10위 안이면 이름 입력, 아니면 등수만 안내 + 무명 기록
+    const inTop10 = rank !== null ? rank <= 10 : (rows !== null && (rows.length < 10 || lastFinal.score > rows[9].score));
+    if (inTop10) {
+      recordMsg.innerHTML = '🎉 ' + (rank !== null ? rank + '위! ' : 'TOP 10 진입! ') + '이름을 남겨보세요.';
+      nameRow.style.display = '';
+    } else {
+      recordMsg.innerHTML = (rank > 1000 ? '1000위 밖이에요!' : rank + '등이에요!') + '<small>10위 안에 들면 이름을 남길 수 있어요.</small>';
+      if (!playRecorded) { playRecorded = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
+    }
   }
 
   // ───────────── 난이도 ─────────────
@@ -139,12 +161,7 @@
     let speed = d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25);
     subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, fireCd: 1.2 + Math.random() * 1.5, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
-  function dropBomb() {
-    if (state !== 'play' || bombs.length >= MAX_BOMBS) return;
-    bombs.push({ x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 40, w: BOMB_W, h: BOMB_W * 34 / 44, rot: 0 });
-    SFX.drop();
-    updateHud();
-  }
+  function dropBomb() { launch(); }
   function fireTorp(s) {
     torps.push({ x: s.x, y: s.y - 6, vy: 150 + level * 8, w: TORP_W, h: TORP_W * 52 / 11, alive: true, splashed: false });
   }
@@ -161,6 +178,27 @@
     bubbles.push({ x: x + (Math.random() - 0.5) * 6, y, vy: -(18 + Math.random() * 28), life: 0.8 + Math.random() * 1.2, r: big ? 1.5 + Math.random() * 2.5 : 1 + Math.random() * 1.5 });
   }
   function popText(x, y, str, color) { texts.push({ x, y, str, color, t: 0 }); }
+  function spawnItem(type) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    items.push({ type, x: dir === 1 ? -30 : W + 30, y: surfaceY, dir, speed: 34 + Math.random() * 10, t: 0 });
+  }
+  function onKill(s) {
+    kills++;
+    if (kills % SHIELD_EVERY === 0) spawnItem('shield');
+  }
+  function launch() {
+    if (state !== 'play' || bombs.length >= MAX_BOMBS) return;
+    if (ship.drill > 0) {
+      ship.drill--;
+      bombs.push({ type: 'drill', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 70, w: DRILL_W, h: DRILL_W * 240 / 102, rot: 0, hits: 0 });
+      SFX.drill();
+      if (ship.drill === 0) popText(ship.x, ship.y - 30, 'DRILL 종료', '#ffb347');
+    } else {
+      bombs.push({ type: 'bomb', x: ship.x - ship.dir * 6, y: ship.y + 4, vy: 40, w: BOMB_W, h: BOMB_W * 34 / 44, rot: 0 });
+      SFX.drop();
+    }
+    updateHud();
+  }
 
   // ───────────── 업데이트 ─────────────
   function update(dt) {
@@ -176,7 +214,14 @@
       SFX.wake(mv !== 0);
       ship.x = Math.max(ship.w * 0.45, Math.min(W - ship.w * 0.45, ship.x));
       if (ship.inv > 0) ship.inv -= dt;
+      if (ship.shield > 0) { ship.shield -= dt; if (ship.shield <= 0) { ship.shield = 0; updateHud(); } }
       ship.mv = mv;
+      // 드릴 아이템: 무작위 간격으로 등장 (장전 중이거나 이미 떠 있으면 대기)
+      drillTimer -= dt;
+      if (drillTimer <= 0) {
+        if (ship.drill === 0 && !items.some(i => i.type === 'drill')) spawnItem('drill');
+        drillTimer = 30 + Math.random() * 25;
+      }
       // 출렁임: 움직이면 진행 방향으로 기울고(롤), 앞뒤로 까딱임(피치) — 시각 효과만
       const targetRoll = -mv * 0.16 + (mv ? Math.sin(time * 7) * 0.05 : 0);
       ship.roll += (targetRoll - ship.roll) * Math.min(1, dt * 6);
@@ -229,16 +274,31 @@
       }
     }
 
-    // 폭탄 낙하
+    // 아이템 (수면에 떠서 흘러감 → 군함이 닿으면 획득)
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.x += it.dir * it.speed * dt; it.t += dt;
+      if (it.x < -60 || it.x > W + 60) { items.splice(i, 1); continue; }
+      if (state === 'play' && Math.abs(it.x - ship.x) < ship.w * 0.5 + 10) {
+        items.splice(i, 1);
+        SFX.pickup();
+        if (it.type === 'shield') { ship.shield = SHIELD_TIME; SFX.shieldOn(); popText(ship.x, ship.y - 34, 'SHIELD!', '#8fe3ff'); }
+        else { ship.drill = DRILL_SHOTS; popText(ship.x, ship.y - 34, 'DRILL x' + DRILL_SHOTS, '#ffb347'); }
+        updateHud();
+      }
+    }
+
+    // 폭탄/드릴 낙하
     for (let i = bombs.length - 1; i >= 0; i--) {
       const b = bombs[i];
-      b.vy = Math.min(b.vy + 22 * dt, 88);        // 천천히 가속, 상한
-      b.y += b.vy * dt; b.rot += dt * 0.8 * (i % 2 ? 1 : -1);
-      if (Math.random() < 0.7) addBubble(b.x, b.y - 8, true);
+      const isDrill = b.type === 'drill';
+      b.vy = isDrill ? Math.min(b.vy + 30 * dt, 120) : Math.min(b.vy + 22 * dt, 88);   // 천천히 가속, 상한
+      b.y += b.vy * dt; b.rot += dt * (isDrill ? 14 : 0.8 * (i % 2 ? 1 : -1));
+      if (Math.random() < (isDrill ? 1 : 0.7)) addBubble(b.x + (isDrill ? (Math.random() - 0.5) * 10 : 0), b.y - 8, true);
       let hit = false;
       for (let j = subs.length - 1; j >= 0; j--) {
         const s = subs[j];
-        if (Math.abs(b.x - s.x) < s.w * 0.48 && Math.abs(b.y - s.y) < s.h * 0.6 + 6) {
+        if (Math.abs(b.x - s.x) < s.w * 0.48 && Math.abs(b.y - s.y) < s.h * 0.6 + (isDrill ? 12 : 6)) {
           subs.splice(j, 1); hit = true;
           const pts = s.red ? 300 : 100;
           score += pts;
@@ -246,6 +306,8 @@
           popText(s.x, s.y - 20, '+' + pts, s.red ? '#ff5a4a' : '#ffffff');
           if (s.red) { SFX.boom(true); SFX.points(); } else SFX.boom(false);
           for (let k = 0; k < 10; k++) addBubble(s.x + (Math.random() - 0.5) * 40, s.y, true);
+          onKill(s);
+          if (isDrill) { b.hits++; hit = false; continue; }   // 드릴은 뚫고 계속 내려감
           break;
         }
       }
@@ -265,6 +327,13 @@
       if (state === 'play' && t.alive && Math.abs(t.y - ship.y) < ship.h * 0.5 && Math.abs(t.x - ship.x) < ship.w * 0.42) {
         // 군함 피격
         t.alive = false; torps.splice(i, 1);
+        if (ship.shield > 0) {
+          // 쉴드에 튕겨나감
+          SFX.deflect();
+          fx.push(explosion(t.x, ship.y + 6, 16, false));
+          for (let k = 0; k < 10; k++) bubbles.push({ x: t.x + (Math.random() - 0.5) * 10, y: ship.y + 4, vy: -(60 + Math.random() * 100), vx: (Math.random() - 0.5) * 120, life: 0.5, r: 1.5 + Math.random() * 2, foam: true, grav: true });
+          continue;
+        }
         if (ship.inv <= 0) {
           hp = Math.max(0, hp - HIT_DMG); ship.inv = 0.6; shake = 12;
           fx.push(explosion(t.x, ship.y, 30, false));
@@ -305,7 +374,12 @@
   // ───────────── HUD ─────────────
   function updateHud() {
     scoreText.textContent = String(Math.min(score, 999999)).padStart(6, '0');
-    bombN.textContent = MAX_BOMBS - bombs.length;
+    const drillMode = ship && ship.drill > 0;
+    hudEl.classList.toggle('drill', !!drillMode);
+    hudDrill.style.display = drillMode ? '' : 'none';
+    bombN.textContent = drillMode ? ship.drill : (MAX_BOMBS - bombs.length);
+    bombMax.textContent = drillMode ? DRILL_SHOTS : MAX_BOMBS;
+    hpFill.style.boxShadow = (ship && ship.shield > 0) ? '0 0 12px #46c3ff, 0 0 4px #fff' : '';
     hpFill.style.width = hp + '%';
     hpFill.className = 'hp-fill' + (hp <= 25 ? ' danger' : hp <= 50 ? ' warn' : '');
     hpText.textContent = hp + '%';
@@ -358,8 +432,27 @@
       }
     }
 
-    // 폭탄
-    for (const b of bombs) drawSprite(IMG.bomb, b.x, b.y, b.w, b.h, false, Math.sin(b.rot) * 0.25);
+    // 폭탄 / 드릴
+    for (const b of bombs) {
+      if (b.type === 'drill') {
+        // 회전하는 느낌: 좌우로 살짝 흔들림 + 주황 빛
+        ctx.save(); ctx.shadowColor = '#ffb347'; ctx.shadowBlur = 10;
+        drawSprite(IMG.drill, b.x, b.y, b.w, b.h, Math.sin(b.rot) > 0, Math.sin(b.rot * 0.5) * 0.06);
+        ctx.restore();
+      } else drawSprite(IMG.bomb, b.x, b.y, b.w, b.h, false, Math.sin(b.rot) * 0.25);
+    }
+    // 아이템 (수면)
+    for (const it of items) {
+      const bob = Math.sin(it.t * 3) * 2.5;
+      const im = it.type === 'shield' ? IMG.shield : IMG.drill;
+      const w = it.type === 'shield' ? 30 : 18, h = it.type === 'shield' ? 32 : 42;
+      ctx.save(); ctx.globalAlpha = 0.85 + 0.15 * Math.sin(it.t * 6);
+      ctx.shadowColor = it.type === 'shield' ? '#46c3ff' : '#ffb347'; ctx.shadowBlur = 14;
+      drawSprite(im, it.x, surfaceY - 8 + bob, w, h, false, Math.sin(it.t * 2) * 0.12);
+      ctx.restore();
+      // 물결
+      ctx.globalAlpha = 0.5; ctx.strokeStyle = '#eaf9ff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(it.x, surfaceY + 8, 14 + Math.sin(it.t * 3) * 3, 3, 0, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1;
+    }
 
     // 수면 물살 줄기
     ctx.lineCap = 'round'; ctx.lineWidth = 1.5;
@@ -371,6 +464,19 @@
       const bob = Math.sin(time * 2.2) * 1.5 + (ship.mv ? Math.sin(time * 9) * 1.2 : 0) + ship.pitch * 0.3;
       const rot = Math.sin(time * 2.2) * 0.02 + ship.roll * (ship.dir === -1 ? -1 : 1);
       if (!(ship.inv > 0 && Math.floor(time * 20) % 2 === 0)) drawSprite(IMG.ship, ship.x, ship.y - ship.h * 0.35 + bob, ship.w, ship.h, ship.dir === -1, rot);
+      // 쉴드 보호막
+      if (ship.shield > 0) {
+        const ending = ship.shield < 2 && Math.floor(time * 8) % 2 === 0;
+        const r = ship.w * 0.62;
+        ctx.save(); ctx.globalAlpha = ending ? 0.25 : 0.55 + 0.15 * Math.sin(time * 6);
+        const g = ctx.createRadialGradient(ship.x, ship.y - 4, r * 0.5, ship.x, ship.y - 4, r);
+        g.addColorStop(0, 'rgba(70,195,255,0)'); g.addColorStop(0.8, 'rgba(70,195,255,.25)'); g.addColorStop(1, 'rgba(160,230,255,.9)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(ship.x, ship.y - 4, r, r * 0.62, 0, 0, 6.283); ctx.fill();
+        ctx.strokeStyle = '#bfefff'; ctx.lineWidth = 1.5; ctx.shadowColor = '#46c3ff'; ctx.shadowBlur = 10; ctx.stroke();
+        ctx.restore();
+        ctx.font = '700 9px Orbitron, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#bfefff';
+        ctx.fillText('SHIELD ' + Math.ceil(ship.shield), ship.x, ship.y - ship.h - 8);
+      }
     } else if (ship && state === 'over') {
       const sink = Math.min(1, (fx.length ? 0.4 : 1));
       drawSprite(IMG.ship, ship.x, ship.y - ship.h * 0.35 + sink * 30, ship.w, ship.h, ship.dir === -1, 0.35 * sink);
@@ -406,7 +512,7 @@
     // 레벨 표시 (작게)
     if (state === 'play') {
       ctx.font = '600 10px Orbitron, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,230,255,.75)';
-      ctx.fillText('LV ' + (level + 1), W - 52, 16);
+      ctx.fillText('LV ' + (level + 1), W - 92, 20);
     }
   }
 
@@ -510,25 +616,28 @@
   applyHand(localStorage.getItem('savetheocean_lefthand') === '1');
   handToggle.addEventListener('pointerdown', e => { e.preventDefault(); applyHand(!panel.classList.contains('left-hand')); SFX.click(); showToast(panel.classList.contains('left-hand') ? '왼손 모드' : '오른손 모드'); });
 
-  // 음소거
-  const muteBtn = document.getElementById('mute');
-  function applyMute(m) { SFX.setMuted(m); muteBtn.textContent = m ? '✕' : '♪'; localStorage.setItem('savetheocean_mute', m ? '1' : '0'); }
-  applyMute(localStorage.getItem('savetheocean_mute') === '1');
-  muteBtn.addEventListener('click', () => applyMute(!SFX.isMuted()));
+  // 사운드: 배경음(바다·심해) / 효과음 따로
+  const bgmBtn = document.getElementById('bgmBtn'), sfxBtn = document.getElementById('sfxBtn');
+  function applyBgm(m) { SFX.setBgmMuted(m); bgmBtn.classList.toggle('off', m); localStorage.setItem('savetheocean_bgm_muted', m ? '1' : '0'); }
+  function applySfx(m) { SFX.setSfxMuted(m); sfxBtn.classList.toggle('off', m); localStorage.setItem('savetheocean_sfx_muted', m ? '1' : '0'); }
+  applyBgm(localStorage.getItem('savetheocean_bgm_muted') === '1');
+  applySfx(localStorage.getItem('savetheocean_sfx_muted') === '1');
+  bgmBtn.addEventListener('click', () => { applyBgm(!SFX.isBgmMuted()); showToast(SFX.isBgmMuted() ? '배경음 끔' : '배경음 켬'); });
+  sfxBtn.addEventListener('click', () => { applySfx(!SFX.isSfxMuted()); showToast(SFX.isSfxMuted() ? '효과음 끔' : '효과음 켬'); });
 
   // 시작/재시작/랭킹
   document.getElementById('startBtn').addEventListener('click', start);
   document.getElementById('retryBtn').addEventListener('click', start);
-  document.getElementById('skipBtn').addEventListener('click', () => { submitBox.style.display = 'none'; });
   document.getElementById('submitBtn').addEventListener('click', async () => {
-    const name = nameInput.value.trim();
-    if (name.length < 2) { showToast('이름을 2자 이상 입력하세요'); nameInput.focus(); return; }
-    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = '등록 중…';
-    const r = await LB.submit(name, score);
+    const name = nameInput.value.trim() || '익명';
+    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = '등록 중...';
+    const r = await LB.submit(name, lastFinal.score, lastFinal.date);
     btn.disabled = false; btn.textContent = '등록';
-    if (r.ok) { myScoreId = r.id; submitBox.style.display = 'none'; showToast('랭킹에 등록됐습니다!'); }
-    else if (r.reason === 'not-configured') { submitBox.style.display = 'none'; showToast('온라인 랭킹이 아직 설정되지 않았습니다'); }
-    else showToast('등록 실패 — 네트워크를 확인하세요');
+    if (r.ok) {
+      nameRow.style.display = 'none'; recordMsg.textContent = '✅ 등록 완료!';
+      const rows = await LB.top(10); LB.renderList(top10El, rows, lastFinal);
+      loadTop3();
+    } else showToast('등록에 실패했어요. 잠시 후 다시 시도해주세요.');
   });
   nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('submitBtn').click(); });
 
@@ -539,19 +648,18 @@
   document.addEventListener('visibilitychange', () => { input.left = input.right = false; });
 
   // 테스트용 훅
-  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, get state() { return state; } };
+  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, spawnItem, giveDrill() { ship.drill = DRILL_SHOTS; updateHud(); }, giveShield() { ship.shield = SHIELD_TIME; updateHud(); }, get state() { return state; } };
 
   // ───────────── 초기화 ─────────────
   resize();
   reset();
   const best = LB.localBest();
   bestLine.textContent = best ? '이 기기 최고 기록: ' + best.toLocaleString() : '';
-  const hallBody = document.getElementById('hallBody');
-  LB.watchTop(5, rows => {
-    if (rows === null) { hallBody.innerHTML = '<div class="note">' + (LB.ready ? '랭킹을 불러오지 못했습니다' : '온라인 랭킹 미설정') + '</div>'; return; }
-    if (!rows.length) { hallBody.innerHTML = '<div class="note">아직 기록이 없습니다. 첫 번째 영웅이 되어보세요!</div>'; return; }
-    const medal = ['🥇', '🥈', '🥉'];
-    hallBody.innerHTML = '<table>' + rows.map((r, i) => '<tr><td class="rank">' + (medal[i] || (i + 1)) + '</td><td>' + String(r.name).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) + '</td><td class="score">' + r.score.toLocaleString() + '</td></tr>').join('') + '</table>';
-  });
+  const top3El = document.getElementById('top3');
+  async function loadTop3() { LB.renderList(top3El, await LB.top(3), null); }
+  loadTop3();
+  LB.renderSeasons(document.getElementById('seasons'));
+  const visitsEl = document.getElementById('visits');
+  LB.visit().then(v => { visitsEl.textContent = v ? '오늘 ' + LB.fmtCount(v.today) + ' · 누적 ' + LB.fmtCount(v.total) : '오늘 – · 누적 –'; });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();
