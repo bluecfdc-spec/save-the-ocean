@@ -49,6 +49,8 @@
   const DRILL_SHOTS = 5;                // 드릴 장전 수
   const DEEP_FRAC = 0.10;               // 잠수정 깊이 구간의 아래 10% = 심해 (격파 시 흰 500 / 빨강 1500)
   const DEEP_PTS = { white: 500, red: 1500 };
+  // 테스트 모드 (주소 뒤에 ?test): 심해 출몰 ↑, 3~5척 동시 등장, 드릴 자주, 어뢰 없음, 기록 저장 안 함
+  const TEST = new URLSearchParams(location.search).has('test');
   const DRILL_W = 15;
 
   // ───────────── 상태 ─────────────
@@ -91,7 +93,7 @@
     score = 0; hp = MAX_HP; time = 0; level = 0; spawnTimer = 0.8; shake = 0;
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
     ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0 };
-    streaks = []; items = []; kills = 0; drillTimer = 25 + Math.random() * 20;
+    streaks = []; items = []; kills = 0; drillTimer = TEST ? 2 : 25 + Math.random() * 20;
     updateHud();
   }
   function start() {
@@ -108,7 +110,7 @@
     SFX.sink(); SFX.stopAmbient(); SFX.seaStop();
     shake = 18;
     fx.push(explosion(ship.x, ship.y, 60, true));
-    LB.saveLocal(score);
+    if (!TEST) LB.saveLocal(score);
     lastFinal = { score: Math.floor(score), date: LB.formatToday() };
     setTimeout(showOver, 1300);
   }
@@ -120,6 +122,7 @@
     top10El.innerHTML = '<div class="note">불러오는 중...</div>';
     nameInput.value = LB.lastName();
     overOverlay.classList.remove('hidden');
+    if (TEST) { recordMsg.textContent = '🧪 테스트 모드 — 기록은 저장되지 않아요'; top10El.innerHTML = ''; return; }
     if (!LB.ready) { LB.renderList(top10El, null); return; }
     const [rows, rank] = await Promise.all([LB.top(10), LB.rank(lastFinal.score)]);
     LB.renderList(top10El, rows, null);
@@ -168,12 +171,13 @@
     // 이미 있는 잠수정과 깊이 겹치지 않게 시도
     let y = 0;
     for (let i = 0; i < 6; i++) {
-      y = minY + Math.random() * (maxY - minY);
+      // 테스트 모드: 60% 확률로 심해 구역에서 등장
+      y = (TEST && Math.random() < 0.6) ? deepLineY() + Math.random() * (maxY - deepLineY()) : minY + Math.random() * (maxY - minY);
       if (subs.every(s => Math.abs(s.y - y) > 26)) break;
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: red ? 3 : 1, fireCd: 0.15 + Math.random() * 0.3, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: 0.15 + Math.random() * 0.3, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -235,7 +239,7 @@
       drillTimer -= dt;
       if (drillTimer <= 0) {
         if (ship.drill === 0 && !items.some(i => i.type === 'drill')) spawnItem('drill');
-        drillTimer = 30 + Math.random() * 25;
+        drillTimer = TEST ? 5 + Math.random() * 4 : 30 + Math.random() * 25;
       }
       // 출렁임: 움직이면 진행 방향으로 기울고(롤), 앞뒤로 까딱임(피치) — 시각 효과만
       const targetRoll = -mv * 0.16 + (mv ? Math.sin(time * 7) * 0.05 : 0);
@@ -257,10 +261,17 @@
     if (state === 'play') {
       spawnTimer -= dt;
       if (spawnTimer <= 0) {
-        spawnSub(d);
-        spawnTimer = d.spawnGap * (0.8 + Math.random() * 0.4);
-        // 꼬임 패턴: 가끔 반대 방향 2척 동시 등장
-        if (d.twist && Math.random() < 0.25) { spawnSub(d); }
+        if (TEST) {
+          // 테스트 모드: 3~5척 동시 등장, 1.5초 간격
+          const n = 3 + Math.floor(Math.random() * 3);
+          for (let k = 0; k < n; k++) spawnSub(d);
+          spawnTimer = 1.5;
+        } else {
+          spawnSub(d);
+          spawnTimer = d.spawnGap * (0.8 + Math.random() * 0.4);
+          // 꼬임 패턴: 가끔 반대 방향 2척 동시 등장
+          if (d.twist && Math.random() < 0.25) { spawnSub(d); }
+        }
       }
     }
 
@@ -723,6 +734,7 @@
     });
   });
   const visitsEl = document.getElementById('visits');
-  LB.visit().then(v => { visitsEl.textContent = v ? '오늘 ' + LB.fmtCount(v.today) + ' · 누적 ' + LB.fmtCount(v.total) : '오늘 – · 누적 –'; });
+  if (TEST) { visitsEl.textContent = '🧪 TEST MODE'; document.getElementById('hall').style.display = 'none'; }
+  else LB.visit().then(v => { visitsEl.textContent = v ? '오늘 ' + LB.fmtCount(v.today) + ' · 누적 ' + LB.fmtCount(v.total) : '오늘 – · 누적 –'; });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();
