@@ -136,13 +136,15 @@
   // 원칙: 반응속도 싸움이 아니라, 리듬에 익숙해질 즈음 패턴이 꼬이게.
   function difficulty() {
     level = Math.floor(time / 18);                       // 18초마다 한 단계
+    const rage = score >= 70000;                          // 7만점부터 어뢰 2배
     return {
-      subSpeed: 58 + level * 9 + Math.min(level, 6) * 3, // 잠수정 속도
-      maxTorps: Math.min(2 + level, 9),                   // 동시에 떠 있는 어뢰 수 상한
+      subSpeed: Math.min(58 + level * 9 + Math.min(level, 6) * 3, 230), // 잠수정 속도 (상한: 화면을 1.7초에 통과)
+      maxTorps: Math.min(2 + level, 9) * (rage ? 2 : 1),  // 동시에 떠 있는 어뢰 수 상한
       spawnGap: Math.max(0.85, 2.3 - level * 0.16),       // 생성 간격
       redChance: Math.min(0.2 + level * 0.03, 0.4),
-      fireRate: 0.55 + level * 0.08,                      // 초당 발사 확률 계수
-      twist: level >= 3                                   // 3단계부터 '꼬임' 패턴
+      fireRate: Math.min(0.55 + level * 0.08, 1) * (rage ? 2 : 1), // 초당 발사 확률 계수
+      twist: level >= 3,                                  // 3단계부터 '꼬임' 패턴
+      rage
     };
   }
 
@@ -159,7 +161,8 @@
     }
     const red = Math.random() < d.redChance;
     let speed = d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25);
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, fireCd: 1.2 + Math.random() * 1.5, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    const cdScale = Math.max(0.25, 70 / speed);           // 빠를수록 대기시간 짧게
+    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, fireCd: (0.6 + Math.random() * 1.2) * cdScale, cdScale, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -257,9 +260,9 @@
       if (s.x < -W * WORLD_MARGIN - SUB_W * 2 || s.x > W + W * WORLD_MARGIN + SUB_W * 2) { subs.splice(i, 1); continue; }
       // 뒤쪽 거품
       if (s.x > -SUB_W && s.x < W + SUB_W && Math.random() < 0.5) addBubble(s.x - s.dir * s.w * 0.52, s.y + 2, false);
-      // 화면 안에 있을 때만 발사
+      // 대기시간은 항상 흐르고, 발사는 화면 안에 있을 때만
+      if (state === 'play') s.fireCd -= dt;
       if (state === 'play' && s.x > s.w * 0.3 && s.x < W - s.w * 0.3) {
-        s.fireCd -= dt;
         if (s.fireCd <= 0 && torps.length < d.maxTorps) {
           // 군함과 가까울수록 발사 확률 ↑ (그래도 무작위성 유지)
           const near = Math.abs(s.x - ship.x) < W * 0.35;
@@ -268,8 +271,10 @@
             fireTorp(s);
             // 꼬임: 빨간 잠수정이 가끔 2발 연속
             if (d.twist && s.red && Math.random() < 0.35) setTimeout(() => { if (state === 'play' && subs.includes(s)) fireTorp(s); }, 260);
-            s.fireCd = 1.4 + Math.random() * 1.6 - Math.min(level * 0.08, 0.7);
-          } else s.fireCd = 0.35;
+            // 7만점 이후: 모든 잠수정이 2발씩 (좌우로 살짝 벌려서)
+            if (d.rage) { const t2 = torps[torps.length - 1]; if (t2) t2.x -= s.dir * 10; setTimeout(() => { if (state === 'play' && subs.includes(s)) { fireTorp(s); const t3 = torps[torps.length - 1]; if (t3) t3.x += s.dir * 10; } }, 140); }
+            s.fireCd = (1.0 + Math.random() * 1.2 - Math.min(level * 0.06, 0.5)) * (s.cdScale || 1);
+          } else s.fireCd = 0.15 * (s.cdScale || 1);
         }
       }
     }
@@ -648,7 +653,7 @@
   document.addEventListener('visibilitychange', () => { input.left = input.right = false; });
 
   // 테스트용 훅
-  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, spawnItem, giveDrill() { ship.drill = DRILL_SHOTS; updateHud(); }, giveShield() { ship.shield = SHIELD_TIME; updateHud(); }, get state() { return state; } };
+  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, spawnItem, giveDrill() { ship.drill = DRILL_SHOTS; updateHud(); }, giveShield() { ship.shield = SHIELD_TIME; updateHud(); }, cheat(s, t) { score = s; time = t; updateHud(); }, get torps() { return torps.length; }, get subs() { return subs.length; }, get state() { return state; } };
 
   // ───────────── 초기화 ─────────────
   resize();
