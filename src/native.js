@@ -6,9 +6,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { FirebaseAppCheck } from '@capacitor-firebase/app-check';
 
-window.Native = { Capacitor, App, StatusBar, SplashScreen, Purchases, FirebaseAuthentication, FirebaseAppCheck };
+window.Native = { Capacitor, App, StatusBar, SplashScreen, Purchases, FirebaseAuthentication };
 
 if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
