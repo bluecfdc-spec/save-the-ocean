@@ -135,11 +135,14 @@
   // ───────────── 난이도 ─────────────
   // 원칙: 반응속도 싸움이 아니라, 리듬에 익숙해질 즈음 패턴이 꼬이게.
   function difficulty() {
-    level = Math.floor(time / 18);                       // 18초마다 한 단계
-    const rage = score >= 70000;                          // 7만점부터 어뢰 2배
+    level = Math.floor(time / 54);                       // 54초마다 한 단계 (최고조까지 약 10분)
+    const rage = score >= 70000 || level >= 11;           // 최고조: 7만점 또는 11단계
+    if (rage) level = Math.max(level, 11);
+    // 단계별 동시 어뢰 상한: 처음엔 0 → 2,3 → 5,6 → 8,10 → 12,14,16 → 18,20
+    const TORP_STAGES = [0, 2, 3, 5, 6, 8, 10, 12, 14, 16, 18, 20];
     return {
       subSpeed: Math.min(58 + level * 9 + Math.min(level, 6) * 3, W / 1.8), // 잠수정 속도 (상한: 화면을 1.8초에 통과)
-      maxTorps: Math.min(Math.min(2 + level, 10) * (rage ? 2 : 1), 20),  // 동시에 떠 있는 어뢰 수 상한 (최대 20)
+      maxTorps: TORP_STAGES[Math.min(level, TORP_STAGES.length - 1)],
       spawnGap: rage ? 0.6 : Math.max(0.85, 2.3 - level * 0.16), // 생성 간격
       redChance: Math.min(0.2 + level * 0.03, 0.4),
       fireRate: Math.min(0.55 + level * 0.08, 1) * (rage ? 2 : 1), // 초당 발사 확률 계수
@@ -269,14 +272,14 @@
           const near = Math.abs(s.x - ship.x) < W * 0.35;
           let p = d.fireRate * (near ? 1 : 0.35) * (s.red ? 1.3 : 1);
           // 최대 구간(7만점~): 어뢰가 15개 밑으로 떨어지면 무조건 발사 → 15~20개 난사 유지
-          const barrage = d.rage && torps.length < 15;
+          const barrage = d.maxTorps >= 18 && torps.length < d.maxTorps - 3;   // 최고조: 항상 15~20개 유지
           if (barrage) p = 1;
           if (Math.random() < p) {
             fireTorp(s);
             // 꼬임: 빨간 잠수정이 가끔 2발 연속
             if (d.twist && s.red && Math.random() < 0.35) setTimeout(() => { if (state === 'play' && subs.includes(s)) fireTorp(s); }, 260);
             // 7만점 이후: 모든 잠수정이 2발씩 (좌우로 살짝 벌려서)
-            if (d.rage) { const t2 = torps[torps.length - 1]; if (t2) t2.x -= s.dir * 10; setTimeout(() => { if (state === 'play' && subs.includes(s)) { fireTorp(s); const t3 = torps[torps.length - 1]; if (t3) t3.x += s.dir * 10; } }, 140); }
+            if (d.maxTorps >= 18) { const t2 = torps[torps.length - 1]; if (t2) t2.x -= s.dir * 10; setTimeout(() => { if (state === 'play' && subs.includes(s)) { fireTorp(s); const t3 = torps[torps.length - 1]; if (t3) t3.x += s.dir * 10; } }, 140); }
             s.fireCd = barrage ? 0.22 : (1.0 + Math.random() * 1.2 - Math.min(level * 0.06, 0.5)) * (s.cdScale || 1);
           } else s.fireCd = 0.15 * (s.cdScale || 1);
         }
