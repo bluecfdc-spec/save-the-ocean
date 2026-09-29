@@ -46,17 +46,22 @@
 
   /* ---------- Control panel ---------- */
   #panel { position: relative; width: 100%; aspect-ratio: 941 / 242; flex: 0 0 auto; display: flex; align-items: stretch; background: #1b2430 url(assets/metal.jpg) center / auto 100% repeat-x; border-top: 3px solid #0a0f16; }
-  #panel.left-hand { flex-direction: row-reverse; }
-  #panel .toggle { position: relative; flex: 0 0 22.1%; background: url(assets/panel_toggle.jpg) center / 100% 100% no-repeat; cursor: pointer; }
-  #panel .toggle.on::after { content: ''; position: absolute; inset: 12% 8%; border-radius: 10%; box-shadow: 0 0 0 2px #46c3ff, 0 0 18px #46c3ff88 inset; pointer-events: none; }
-  /* 버튼 3개를 한쪽(기본 오른쪽)으로 바짝 모아 엄지 하나로 닿게 */
-  #panel .buttons { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 1.5%; padding: 3% 1.5% 3% 0; }
-  #panel.left-hand .buttons { justify-content: flex-end; flex-direction: row-reverse; padding: 3% 0 3% 1.5%; }
+  /* 양손 모드(기본): 좌우 끝 + 가운데 폭탄 */
+  #panel .buttons { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: space-between; gap: 2%; padding: 3% 4%; }
+  /* 한손 모드: 한쪽으로 모음 (기본 오른쪽, 좌수는 왼쪽) */
+  #panel.one .buttons { justify-content: flex-end; gap: 1.5%; padding: 3% 1.5% 3% 0; }
+  #panel.one.left-hand .buttons { justify-content: flex-start; padding: 3% 0 3% 1.5%; }
   .zone { position: relative; height: 100%; aspect-ratio: 164 / 148; flex: 0 1 auto; max-width: 30%; background: center / 100% 100% no-repeat; cursor: pointer; transition: transform .06s, filter .06s; }
   .zone.left  { background-image: url(assets/btn_left.png); }
   .zone.right { background-image: url(assets/btn_right.png); }
   .zone.bomb  { background-image: url(assets/btn_bomb.png); aspect-ratio: 1 / 1; height: 92%; }
   .zone.pressed { transform: scale(.94); filter: brightness(1.35) saturate(1.2); }
+  /* 조작 방식 전환 (레이더 양옆) */
+  .ctl { position: absolute; bottom: 2.4%; z-index: 3; height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid #7fb6e0; background: rgba(4, 22, 40, .78); color: #dbeeff; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: .02em; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .ctl:active { filter: brightness(1.4); }
+  #ctlMode { left: 8px; }
+  #ctlHand { right: 8px; display: none; }
+  #ctlHand.show { display: flex; }
 
   /* ---------- Overlays ---------- */
   .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; text-align: center; background: rgba(3, 14, 28, .72); backdrop-filter: blur(2px); z-index: 5; }
@@ -146,6 +151,8 @@
   <div id="game-wrap">
     <canvas id="game"></canvas>
     <div id="flash"></div>
+    <button class="ctl" id="ctlMode" aria-label="조작 방식 전환">🤲 양손</button>
+    <button class="ctl" id="ctlHand" aria-label="사용 손 전환">▶ 우수</button>
     <div id="toast"></div>
 
     <div class="overlay" id="startOverlay">
@@ -181,7 +188,6 @@
   </div>
 
   <div id="panel">
-    <div class="toggle" id="handToggle" role="button" aria-label="왼손 모드 전환" tabindex="0"></div>
     <div class="buttons">
       <div class="zone left"  id="zLeft"  role="button" aria-label="왼쪽으로 이동"></div>
       <div class="zone bomb"  id="zBomb"  role="button" aria-label="폭탄 투하"></div>
@@ -192,9 +198,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=20260929e"></script>
-<script src="audio.js?v=20260929e"></script>
-<script src="leaderboard.js?v=20260929e"></script>
+<script src="firebase-config.js?v=20260929f"></script>
+<script src="audio.js?v=20260929f"></script>
+<script src="leaderboard.js?v=20260929f"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -209,6 +215,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20260929e"></script>
+<script src="game.js?v=20260929f"></script>
 </body>
 </html>

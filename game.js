@@ -622,11 +622,19 @@
     if (e.key === 'ArrowRight' || e.key === 'd') input.right = false;
   });
 
-  // 왼손 모드
-  const handToggle = document.getElementById('handToggle');
-  function applyHand(on) { panel.classList.toggle('left-hand', on); handToggle.classList.toggle('on', on); localStorage.setItem('savetheocean_lefthand', on ? '1' : '0'); }
-  applyHand(localStorage.getItem('savetheocean_lefthand') === '1');
-  handToggle.addEventListener('pointerdown', e => { e.preventDefault(); applyHand(!panel.classList.contains('left-hand')); SFX.click(); showToast(panel.classList.contains('left-hand') ? '왼손 모드' : '오른손 모드'); });
+  // 조작 방식: 양손(기본) / 한손, 한손일 때 좌수·우수
+  const ctlMode = document.getElementById('ctlMode'), ctlHand = document.getElementById('ctlHand');
+  function applyCtl() {
+    const one = localStorage.getItem('savetheocean_ctrl') === 'one';
+    const left = localStorage.getItem('savetheocean_lefthand') === '1';
+    panel.classList.toggle('one', one); panel.classList.toggle('left-hand', one && left);
+    ctlMode.textContent = one ? '☝️ 한손' : '🤲 양손';
+    ctlHand.textContent = left ? '◀ 좌수' : '▶ 우수';
+    ctlHand.classList.toggle('show', one);
+  }
+  applyCtl();
+  ctlMode.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const one = localStorage.getItem('savetheocean_ctrl') === 'one'; localStorage.setItem('savetheocean_ctrl', one ? 'two' : 'one'); applyCtl(); SFX.click(); showToast(one ? '양손 모드' : '한손 모드'); });
+  ctlHand.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const left = localStorage.getItem('savetheocean_lefthand') === '1'; localStorage.setItem('savetheocean_lefthand', left ? '0' : '1'); applyCtl(); SFX.click(); showToast(left ? '우수 (오른손)' : '좌수 (왼손)'); });
 
   // 사운드: 배경음(바다·심해) / 효과음 따로
   const bgmBtn = document.getElementById('bgmBtn'), sfxBtn = document.getElementById('sfxBtn');
