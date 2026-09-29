@@ -62,10 +62,10 @@ echo "▶ ios: Xcode Cloud 스크립트 (ci_scripts/ci_post_clone.sh)"
 mkdir -p ios/App/ci_scripts
 cat > ios/App/ci_scripts/ci_post_clone.sh <<'EOF'
 #!/bin/sh
-# Xcode Cloud: 저장소 클론 직후 실행. 웹 리소스 빌드 + Capacitor 동기화 + CocoaPods
+# Xcode Cloud: 저장소 클론 직후 실행. 웹 리소스 빌드 + Capacitor 동기화 (SPM 방식이라 CocoaPods 불필요)
 set -e
 export HOMEBREW_NO_INSTALL_CLEANUP=1
-brew install node cocoapods >/dev/null 2>&1 || true
+brew install node >/dev/null 2>&1 || true
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 npm install --no-audit --no-fund
 npm run build

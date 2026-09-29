@@ -19,3 +19,4 @@ android/*.iml
 android/app/*.iml
 *.keystore
 .DS_Store
+icons/

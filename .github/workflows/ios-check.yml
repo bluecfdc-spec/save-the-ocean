@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.check.outputs.ok == 'true'
         with: { node-version: 22 }
-      - name: Web build + cap sync + pods
+      - name: Web build + cap sync
         if: steps.check.outputs.ok == 'true'
         run: |
           npm install --no-audit --no-fund
@@ -27,6 +27,6 @@ jobs:
         if: steps.check.outputs.ok == 'true'
         working-directory: ios/App
         run: |
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug \
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO build | tail -50
