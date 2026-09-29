@@ -138,8 +138,8 @@
     level = Math.floor(time / 18);                       // 18초마다 한 단계
     const rage = score >= 70000;                          // 7만점부터 어뢰 2배
     return {
-      subSpeed: Math.min(58 + level * 9 + Math.min(level, 6) * 3, 230), // 잠수정 속도 (상한: 화면을 1.7초에 통과)
-      maxTorps: Math.min(2 + level, 9) * (rage ? 2 : 1),  // 동시에 떠 있는 어뢰 수 상한
+      subSpeed: Math.min(58 + level * 9 + Math.min(level, 6) * 3, W / 1.8), // 잠수정 속도 (상한: 화면을 1.8초에 통과)
+      maxTorps: Math.min(Math.min(2 + level, 10) * (rage ? 2 : 1), 20),  // 동시에 떠 있는 어뢰 수 상한 (최대 20)
       spawnGap: Math.max(0.85, 2.3 - level * 0.16),       // 생성 간격
       redChance: Math.min(0.2 + level * 0.03, 0.4),
       fireRate: Math.min(0.55 + level * 0.08, 1) * (rage ? 2 : 1), // 초당 발사 확률 계수
@@ -160,7 +160,7 @@
       if (subs.every(s => Math.abs(s.y - y) > 26)) break;
     }
     const red = Math.random() < d.redChance;
-    let speed = d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25);
+    let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
     const cdScale = Math.max(0.25, 70 / speed);           // 빠를수록 대기시간 짧게
     subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, fireCd: (0.6 + Math.random() * 1.2) * cdScale, cdScale, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
