@@ -26,7 +26,7 @@ window.SEASONS_DATA = [];
 //  · Firestore > visits 컬렉션 > 문서 ID "notice" > 필드: active(boolean), title(string), body(string), button(string)
 window.DEFAULT_NOTICE = {
   active: true,
-  title: "📢 시즌 1 시작!",
-  body: "게임 밸런스 조정을 마치고 기록을 새로 시작합니다.\n이전 기록은 초기화되었습니다.\n\n어뢰는 시간이 갈수록 늘어나 4분 30초에 최고조!\n쉴드(20척 격파)와 드릴 아이템을 활용해 보세요.",
+  title: "☕ 베타 테스트 중!",
+  body: "지금은 베타 기간입니다.\n이번 주 금요일(10/2) 00시에 완성본을 배포할 예정이에요.\n\n그 전까지 의견을 주시는 분께는\n커피 쿠폰을 드립니다! ☕\n\n불편한 점, 아이디어, 버그 뭐든 환영합니다.",
   button: "확인"
 };
