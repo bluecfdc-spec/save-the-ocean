@@ -1,0 +1,34 @@
+name: 주간 시즌 넘기기
+
+on:
+  schedule:
+    # 매주 월요일 00:00 KST (= 일요일 15:00 UTC)
+    - cron: "0 15 * * 0"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "시즌이 5일 미만이어도 강제로 넘기기"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  rollover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 시즌 1위 박제 + 다음 시즌 시작
+        run: node tools/rollover.mjs ${{ inputs.force == true && '--force' || '' }}
+      - name: 커밋 & 배포
+        run: |
+          if git diff --quiet season.js; then echo "변경 없음"; exit 0; fi
+          git config user.name "season-bot"
+          git config user.email "season-bot@users.noreply.github.com"
+          git add season.js
+          git commit -m "시즌 자동 넘김: $(grep -o 'SEASON_SUFFIX = \"[^\"]*\"' season.js)"
+          git push

@@ -49,9 +49,12 @@ service cloud.firestore {
 ```
 부적절한 이름/점수는 콘솔에서 문서를 직접 삭제하면 됩니다.
 
-## 시즌 운영
-`firebase-config.js`의 `SEASON_SUFFIX`를 `"_s2"`로 바꾸면 새 컬렉션(scores_s2, plays_s2)에 기록이 쌓입니다.
-끝난 시즌 1위는 `SEASONS_DATA`에 한 줄 추가하면 시작 화면 "👑 시즌 1위"에 표시됩니다.
+## 시즌 운영 (자동)
+- 시즌 상태는 `season.js` 한 파일: `SEASON_SUFFIX`(현재 게시판), `SEASON_START`(시작일), `SEASONS_DATA`(끝난 시즌 1위 목록)
+- **매주 월요일 00:00 KST** GitHub Actions(`.github/workflows/season.yml`)가 `tools/rollover.mjs`를 실행해
+  현재 시즌 1위를 박제하고 다음 시즌(scores_sN+1)으로 넘긴 뒤 커밋 → 자동 배포
+- 수동으로 넘기려면 GitHub → Actions → "주간 시즌 넘기기" → Run workflow (force 체크 시 5일 미만 시즌도 넘김)
+- 지난 시즌 기록은 각 컬렉션(scores_s1 …)에 그대로 남음 (삭제 없음)
 
 ## 공지 팝업
 시작 화면에 공지가 뜹니다("오늘 하루 보지 않기" 지원). 내용 우선순위:
