@@ -177,7 +177,7 @@
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: 0.15 + Math.random() * 0.3, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: Math.random() * 0.15, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -235,6 +235,8 @@
       if (ship.inv > 0) ship.inv -= dt;
       if (ship.shield > 0) { ship.shield -= dt; if (ship.shield <= 0) { ship.shield = 0; updateHud(); } }
       ship.mv = mv;
+      const atEdge = ship.x < ship.w * 0.9 || ship.x > W - ship.w * 0.9;
+      ship.campT = atEdge ? (ship.campT || 0) + dt : 0;
       // 드릴 아이템: 무작위 간격으로 등장 (장전 중이거나 이미 떠 있으면 대기)
       drillTimer -= dt;
       if (drillTimer <= 0) {
@@ -284,12 +286,14 @@
       // 뒤쪽 거품
       if (s.x > -SUB_W && s.x < W + SUB_W && Math.random() < 0.5) addBubble(s.x - s.dir * s.w * 0.52, s.y + 2, false);
       // 발사: 화면 안에 있는 동안 무작위 시점에 (군함 위치와 무관). 남은 탄약을 화면을 지나는 동안 고르게 쓰도록 확률을 잡음
-      if (state === 'play' && s.ammo > 0 && s.x > s.w * 0.3 && s.x < W - s.w * 0.3) {
+      if (state === 'play' && s.ammo > 0 && s.x > 0 && s.x < W) {
         s.fireCd -= dt;
         if (s.fireCd <= 0 && torps.length < d.maxTorps) {
-          const remain = Math.max(0.3, (s.dir === 1 ? (W - s.w * 0.3 - s.x) : (s.x - s.w * 0.3)) / s.speed); // 화면을 벗어나기까지 남은 시간
+          const remain = Math.max(0.3, (s.dir === 1 ? (W - s.x) : s.x) / s.speed); // 화면을 벗어나기까지 남은 시간
           const barrage = d.maxTorps >= 18 && torps.length < d.maxTorps - 3;   // 최고조: 난사
           let rate = (s.ammo / remain) * (barrage ? 3 : 1.6);                  // 초당 발사 기대 횟수
+          // 구석 숨기 대응: 군함이 끝에 2.5초 이상 붙어 있으면, 군함 바로 아래를 지나는 잠수정은 즉시 발사
+          if (ship.campT > 3 && Math.abs(s.x - ship.x) < ship.w * 0.5) rate *= 2;
           // Y축 겹침 회피: 바로 위에 어뢰가 있으면 잠깐 미룸
           const crowded = torps.some(t => Math.abs(t.x - s.x) < 34 && t.y < s.y && s.y - t.y < 90);
           if (!crowded && Math.random() < rate * dt) {
