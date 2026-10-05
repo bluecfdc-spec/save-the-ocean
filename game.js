@@ -66,13 +66,23 @@
   let lastFinal = { score: 0, date: '' };
 
   // ───────────── 크기/배치 ─────────────
+  // 전장은 어느 기기에서나 같은 크기(가로 390 × 세로 600 논리 좌표)로 고정하고, 화면에 맞춰 통째로 확대·축소한다.
+  // → PC 처럼 세로로 긴 화면에서도 수심(폭탄이 떨어지는 깊이)이 모바일과 같다.
+  const FIELD_W = 390, FIELD_H = 600, APP_RATIO = 1.9;   // 앱 전체(점수판 + 전장 + 조작판)의 세로/가로 비
+  const appEl = document.getElementById('app');
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const aw = Math.max(200, Math.min(vw, 560, vh / APP_RATIO)), ah = aw * APP_RATIO;
+    appEl.style.width = aw + 'px'; appEl.style.height = ah + 'px'; appEl.style.bottom = 'auto';
+    appEl.style.top = Math.max(0, (vh - ah) * 0.4) + 'px';
+    document.documentElement.style.setProperty('--app-w', aw + 'px');
+    document.documentElement.style.setProperty('--app-top', Math.max(0, (vh - ah) * 0.4) + 'px');
     const r = wrap.getBoundingClientRect();
-    W = Math.max(200, Math.round(r.width)); H = Math.max(200, Math.round(r.height));
-    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
-    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    W = FIELD_W; H = FIELD_H;
+    canvas.width = Math.round(r.width * DPR); canvas.height = Math.round(r.height * DPR);
+    canvas.style.width = r.width + 'px'; canvas.style.height = r.height + 'px';
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
     // 배경 cover
     bgScale = Math.max(W / BG_W, H / BG_H);
     bgX = (W - BG_W * bgScale) / 2; bgY = (H - BG_H * bgScale) / 2;
