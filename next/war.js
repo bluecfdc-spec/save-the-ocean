@@ -52,9 +52,9 @@
   // 누적 점수 비율만큼 해역 배분 (각 세력은 본거지에서 가까운 해역부터)
   WAR.allocate = function (totals) {
     const owner = new Array(N).fill(0);
-    const sum = totals.reduce((a, t) => a + t.total, 0);
+    const sum = totals.reduce((a, t) => a + t.w, 0);
     if (!sum) return owner;
-    const q = totals.map(t => { const x = t.total / sum * N; return { f: t.f, n: Math.floor(x), r: x - Math.floor(x), has: t.total > 0 }; });
+    const q = totals.map(t => { const x = t.w / sum * N; return { f: t.f, n: Math.floor(x), r: x - Math.floor(x), has: t.w > 0 }; });
     let left = N - q.reduce((a, b) => a + b.n, 0);
     q.slice().sort((a, b) => b.r - a.r).forEach(o => { if (left > 0) { o.n++; left--; } });
     q.forEach(o => { if (o.has && o.n === 0) { const big = q.slice().sort((a, b) => b.n - a.n)[0]; big.n--; o.n = 1; } });
@@ -88,11 +88,11 @@
     }
     oc.putImageData(im, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(off, 0, 0, w, h);
     if (!bg) { c.fillStyle = '#0a1522'; c.strokeStyle = 'rgba(190,225,255,.5)'; c.lineWidth = 1; ISLES.forEach(s => { c.beginPath(); c.ellipse(s[0] * w, s[1] * h, s[2] * w * 1.5, s[2] * w, s[0] * 9, 0, 6.3); c.fill(); c.stroke(); }); }
-    const sum = (totals || []).reduce((a, t) => a + t.total, 0);
+    const sum = (totals || []).reduce((a, t) => a + t.w, 0);
     WAR.FACTIONS.forEach(f => {
       const x = f.home[0] * w, y = f.home[1] * h, s = Math.max(26, w * 0.1);
       c.save(); c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 6; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
-      if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).total || 0; c.font = '800 ' + Math.max(11, w * 0.04) + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + w * 0.045); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + w * 0.045); }
+      if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).w || 0; c.font = '800 ' + Math.max(11, w * 0.04) + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + w * 0.045); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + w * 0.045); }
     });
   };
 
@@ -103,17 +103,19 @@
     mounts.push(el); paint(el);
   };
   function paint(el) {
-    const m = LB.warMonth(), sum = last ? last.reduce((a, t) => a + t.total, 0) : 0, mine = (LB.profile() || {}).faction;
+    const m = LB.warMonth(), sum = last ? last.reduce((a, t) => a + t.w, 0) : 0, mine = (LB.profile() || {}).faction;
     el.querySelector('.war-title').textContent = t('war.title', { ym: m.y + '.' + String(m.m).padStart(2, '0') });
     WAR.draw(el.querySelector('.war-map'), last || []);
     el.querySelector('.war-rows').innerHTML = WAR.FACTIONS.map(f => {
-      const tt = last ? (last.find(x => x.f === f.id) || {}).total || 0 : 0;
-      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '"><img src="' + f.icon + '" alt=""><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(tt / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div>';
+      const row = last ? last.find(x => x.f === f.id) || {} : {}, tt = row.total || 0, w = row.w || 0;
+      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '"><img src="' + f.icon + '" alt=""><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div>';
     }).join('');
-    el.querySelector('.war-note').textContent = last === null ? t('war.fail') : last && !sum ? t('war.empty') : '';
+    el.querySelector('.war-note').textContent = last === null ? t('war.fail') : '';
   }
   WAR.repaint = () => mounts.forEach(paint);
-  WAR.refresh = async function () { last = await LB.warTotals(); WAR.repaint(); return last; };
+  // 시즌은 3등분에서 시작: 세력마다 기본 점수(BASE)를 깔고, 올라온 점수만큼 전선이 밀린다
+  const BASE = (window.STO_CONFIG || {}).WAR_BASE || 30000;
+  WAR.refresh = async function () { last = await LB.warTotals(); if (last) last.forEach(x => { x.w = x.total + BASE; }); WAR.repaint(); return last; };
   window.addEventListener('resize', () => WAR.repaint());
   window.WAR = WAR;
 })();
