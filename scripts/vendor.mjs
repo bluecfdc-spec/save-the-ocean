@@ -1,10 +1,12 @@
 // node_modules 에서 앱에 내장할 파일을 www/vendor 로 복사 (Firebase compat SDK, Orbitron 폰트)
-import { mkdirSync, copyFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { mkdirSync, copyFileSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { transformSync } from 'esbuild';
 import { join } from 'node:path';
 const out = 'www/vendor', fonts = join(out, 'fonts');
 mkdirSync(fonts, { recursive: true });
+// Firebase 는 최신 문법(?. ?? 등)을 써서 오래된 WebView(Chrome 79 이하)에서 읽지 못함 → es2017 로 낮춰서 내장
 for (const f of ['firebase-app-compat.js', 'firebase-firestore-compat.js'])
-  copyFileSync(join('node_modules/firebase', f), join(out, f));
+  writeFileSync(join(out, f), transformSync(readFileSync(join('node_modules/firebase', f), 'utf8'), { target: 'es2017', minify: true, legalComments: 'none' }).code);
 const src = 'node_modules/@fontsource/orbitron/files';
 const css = [];
 for (const w of [600, 800]) {
