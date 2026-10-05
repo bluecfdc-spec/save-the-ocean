@@ -57,6 +57,12 @@ service cloud.firestore {
 - 수동으로 넘기려면 GitHub → Actions → "주간 시즌 넘기기" → Run workflow (force 체크 시 5일 미만 시즌도 넘김)
 - 지난 시즌 기록은 각 컬렉션(scores_s1 …)에 그대로 남음 (삭제 없음)
 
+## 바다 점령전 (월간, 자동)
+- 세력 3개(파도·폭풍·태양)가 올린 점수가 `scores_sYYYYMM1·2·3` 에 누적되고, 비율만큼 지도를 차지 (세력별 기본 점수 30,000 에서 시작)
+- **매달 1일 00:10 KST** GitHub Actions(`.github/workflows/war-season.yml`)가 `tools/war-rollover.mjs` 로 지난달 우승 세력을 `war-seasons.js` 에 기록 → "명예의 전당" 탭에 표시
+- 수동 실행: GitHub → Actions → "점령전 월간 마감" → Run workflow (force 체크, 또는 month 에 YYYYMM)
+- 주간 개인 순위의 시즌 번호는 게임이 날짜로 계산 (웹·앱 공통, 월요일 00:00 KST)
+
 ## 공지 팝업
 시작 화면에 공지가 뜹니다("오늘 하루 보지 않기" 지원). 내용 우선순위:
 1. Firestore `visits` 컬렉션의 문서 `notice` — 필드 `active`(boolean), `title`, `body`, `button`(string). 콘솔에서 바로 수정/끄기 가능

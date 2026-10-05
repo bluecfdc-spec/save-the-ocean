@@ -167,7 +167,7 @@
       '<li><span class="lb-rank">' + t('lb.season', { n: s.n }) + '</span><span class="lb-date">' + LB.escape(s.range || '') + '</span><span class="lb-name">' + (s.name ? '👑 ' + LB.escape(s.name) : t('lb.season.none')) + '</span><span class="lb-score">' + (s.score ? I18N.num(s.score) : '') + '</span></li>'
     ).join('') + '</ul>' : '<div class="note">' + t('lb.season.first') + '</div>';
     h += '<div class="hall-h">' + t('hall.war') + '</div>';
-    h += wars.length ? '<ul class="lb seasons">' + wars.map(w => { const f = window.WAR && WAR.byId(w.f); return '<li><span class="lb-rank">' + LB.escape(w.ym) + '</span><span class="lb-date"></span><span class="lb-name">' + (f ? '<img class="hall-ic" src="' + f.icon + '" alt=""> <b style="color:' + f.color + '">' + t('f.' + f.key) + '</b>' : '') + '</span><span class="lb-score">' + (w.pct ? w.pct + '%' : '') + '</span></li>'; }).join('') + '</ul>'
+    h += wars.length ? '<ul class="lb seasons">' + wars.map(w => { const f = window.WAR && WAR.byId(w.f); return '<li><span class="lb-rank">' + LB.escape(w.ym) + '</span><span class="lb-date"></span><span class="lb-name">' + (f ? '<img class="hall-ic" src="' + f.icon + '" alt=""> <b style="color:' + f.color + '">' + t('f.' + f.key) + '</b>' : t('lb.season.none')) + '</span><span class="lb-score">' + (w.pct ? w.pct + '%' : '') + '</span></li>'; }).join('') + '</ul>'
       : '<div class="note">' + t('hall.war.first') + '</div>';
     el.innerHTML = h;
   };

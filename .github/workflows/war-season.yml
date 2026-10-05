@@ -1,0 +1,39 @@
+name: 점령전 월간 마감
+
+on:
+  schedule:
+    # 매달 1일 00:10 KST (= 전달 말일 15:10 UTC). 말일이 28~31일로 달라서 매일 돌리고, 스크립트가 KST 1일인지 확인한다.
+    - cron: "10 15 28-31 * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "1일이 아니어도 지난달을 마감"
+        type: boolean
+        default: false
+      month:
+        description: "특정 달을 마감 (YYYYMM, 비우면 지난달)"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  war-rollover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 지난달 우승 세력 기록
+        run: node tools/war-rollover.mjs ${{ inputs.force == true && '--force' || '' }} ${{ inputs.month != '' && format('--month={0}', inputs.month) || '' }}
+      - name: 커밋 & 배포
+        run: |
+          if git diff --quiet war-seasons.js; then echo "변경 없음"; exit 0; fi
+          git config user.name "season-bot"
+          git config user.email "season-bot@users.noreply.github.com"
+          git add war-seasons.js
+          git commit -m "점령전 월간 마감: $(grep -o '"ym": "[^"]*"' war-seasons.js | tail -1)"
+          git pull --rebase -q
+          git push
