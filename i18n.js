@@ -6,8 +6,12 @@
 (function () {
   const DICT = {
     ko: {
-      'tab.war': '🌊 바다 점령전',
-      'tab.top': '🏆 이번 주 TOP 10',
+      'tab.hall': '👑 명예의 전당',
+      'hall.week': '👑 주간 1위',
+      'hall.war': '🌊 점령전 우승 세력',
+      'hall.war.first': '첫 시즌 진행 중 — 우승 세력은 다음 달 1일에 기록돼요',
+      'tab.war': '🌊 점령전',
+      'tab.top': '🏆 주간 TOP 10',
       'war.title': '{ym} 시즌',
       'war.empty': '아직 주인 없는 바다예요. 첫 점수를 올려 차지하세요!',
       'war.fail': '점령 현황을 불러오지 못했어요.',
@@ -118,8 +122,12 @@
       'premium.active': '🌍 프리미엄 이용 중'
     },
     en: {
+      'tab.hall': '👑 Hall of Fame',
+      'hall.week': '👑 Weekly champions',
+      'hall.war': '🌊 Ocean War winners',
+      'hall.war.first': 'First season in progress — the winner is recorded on the 1st of next month',
       'tab.war': '🌊 Ocean War',
-      'tab.top': '🏆 Weekly TOP 10',
+      'tab.top': '🏆 Top 10',
       'war.title': 'Season {ym}',
       'war.empty': 'The ocean is unclaimed. Post the first score to take it!',
       'war.fail': 'Couldn\'t load the war map.',
@@ -230,8 +238,12 @@
       'premium.active': '🌍 Premium active'
     },
     ja: {
-      'tab.war': '🌊 海域争奪戦',
-      'tab.top': '🏆 今週のTOP 10',
+      'tab.hall': '👑 殿堂',
+      'hall.week': '👑 週間1位',
+      'hall.war': '🌊 争奪戦の優勝勢力',
+      'hall.war.first': '最初のシーズン進行中 — 優勝勢力は来月1日に記録されます',
+      'tab.war': '🌊 争奪戦',
+      'tab.top': '🏆 TOP 10',
       'war.title': '{ym} シーズン',
       'war.empty': 'まだ誰のものでもない海です。最初のスコアで手に入れよう！',
       'war.fail': '争奪状況を読み込めませんでした。',

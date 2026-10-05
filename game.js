@@ -772,10 +772,10 @@
   async function loadTop3() { LB.renderList(top3El, await LB.top(10)); }
   WAR.mount(document.getElementById('warStart')); WAR.mount(document.getElementById('warOver')); WAR.refresh();
   loadTop3();
-  LB.renderSeasons(document.getElementById('seasons'));
+  document.querySelectorAll('.hall-pane').forEach(el => LB.renderSeasons(el));
   // 언어 전환 (🌐): ko → en → ja
   document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); SFX.click && SFX.click(); });
-  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); WAR.repaint(); if (state === 'over') showOver(); });
+  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); document.querySelectorAll('.hall-pane').forEach(el => LB.renderSeasons(el)); WAR.repaint(); if (state === 'over') showOver(); });
   // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
   LB.notice().then(n => {
     if (!n || !n.active) return;

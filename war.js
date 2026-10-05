@@ -64,9 +64,9 @@
     return owner;
   };
 
-  WAR.draw = async function (canvas, totals) {
+  WAR.draw = async function (canvas, totals, hFix) {
     const bg = await mapImg; await WAR.assets;
-    const dpr = Math.min(window.devicePixelRatio || 1, 3), w = canvas.clientWidth || 320, h = Math.round(w * GH / GW);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3), w = canvas.clientWidth || 320, h = Math.round(hFix || w * GH / GW);
     canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.height = h + 'px';
     const c = canvas.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (bg) { const s = Math.max(w / bg.width, h / bg.height); c.drawImage(bg, (w - bg.width * s) / 2, (h - bg.height * s) / 2, bg.width * s, bg.height * s); }
@@ -89,10 +89,12 @@
     oc.putImageData(im, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(off, 0, 0, w, h);
     if (!bg) { c.fillStyle = '#0a1522'; c.strokeStyle = 'rgba(190,225,255,.5)'; c.lineWidth = 1; ISLES.forEach(s => { c.beginPath(); c.ellipse(s[0] * w, s[1] * h, s[2] * w * 1.5, s[2] * w, s[0] * 9, 0, 6.3); c.fill(); c.stroke(); }); }
     const sum = (totals || []).reduce((a, t) => a + t.w, 0);
+    const s = Math.max(22, Math.min(w * 0.1, h * 0.26)), fs = Math.max(11, Math.min(w * 0.04, h * 0.11));
     WAR.FACTIONS.forEach(f => {
-      const x = f.home[0] * w, y = f.home[1] * h, s = Math.max(26, w * 0.1);
+      // 문장과 % 글자가 지도 밖으로 잘리지 않게 위아래를 맞춘다
+      const x = f.home[0] * w, y = Math.max(s / 2 + 3, Math.min(f.home[1] * h, h - s / 2 - fs - 5));
       c.save(); c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 6; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
-      if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).w || 0; c.font = '800 ' + Math.max(11, w * 0.04) + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + w * 0.045); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + w * 0.045); }
+      if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).w || 0; c.font = '800 ' + fs + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + fs); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + fs); }
     });
   };
 
@@ -115,8 +117,8 @@
     // 지도는 탭 안에 남는 높이에 맞춰 크기를 정한다 (스크롤 없이 한 화면)
     const cs = getComputedStyle(el), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
     const availW = el.clientWidth - padX, availH = el.clientHeight - padY - title.offsetHeight - rows.offsetHeight - note.offsetHeight - 8;
-    cv.style.width = Math.max(120, Math.min(availW, availH > 60 ? availH * GW / GH : availW)) + 'px';
-    WAR.draw(cv, last || []);
+    cv.style.width = availW + 'px';
+    WAR.draw(cv, last || [], Math.max(90, Math.min(availH > 60 ? availH : availW * GH / GW, availW * 0.8)));
   }
   WAR.repaint = () => mounts.forEach(paint);
   // 시즌은 3등분에서 시작: 세력마다 기본 점수(BASE)를 깔고, 올라온 점수만큼 전선이 밀린다

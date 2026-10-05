@@ -159,12 +159,17 @@
     }).join('') + '</ul>';
   };
 
+  // 명예의 전당: 주간 1위(자동 기록) + 점령전 우승 세력(월간)
   LB.renderSeasons = function (el) {
-    const list = (window.SEASONS_DATA || []).slice().reverse();
-    if (!list.length) { el.innerHTML = '<div class="note">' + t('lb.season.first') + '</div>'; return; }
-    el.innerHTML = '<ul class="lb seasons">' + list.map(s =>
+    const list = (window.SEASONS_DATA || []).slice().reverse().slice(0, 6), wars = (window.WAR_SEASONS_DATA || []).slice().reverse().slice(0, 3);
+    let h = '<div class="hall-h">' + t('hall.week') + '</div>';
+    h += list.length ? '<ul class="lb seasons">' + list.map(s =>
       '<li><span class="lb-rank">' + t('lb.season', { n: s.n }) + '</span><span class="lb-date">' + LB.escape(s.range || '') + '</span><span class="lb-name">' + (s.name ? '👑 ' + LB.escape(s.name) : t('lb.season.none')) + '</span><span class="lb-score">' + (s.score ? I18N.num(s.score) : '') + '</span></li>'
-    ).join('') + '</ul>';
+    ).join('') + '</ul>' : '<div class="note">' + t('lb.season.first') + '</div>';
+    h += '<div class="hall-h">' + t('hall.war') + '</div>';
+    h += wars.length ? '<ul class="lb seasons">' + wars.map(w => { const f = window.WAR && WAR.byId(w.f); return '<li><span class="lb-rank">' + LB.escape(w.ym) + '</span><span class="lb-date"></span><span class="lb-name">' + (f ? '<img class="hall-ic" src="' + f.icon + '" alt=""> <b style="color:' + f.color + '">' + t('f.' + f.key) + '</b>' : '') + '</span><span class="lb-score">' + (w.pct ? w.pct + '%' : '') + '</span></li>'; }).join('') + '</ul>'
+      : '<div class="note">' + t('hall.war.first') + '</div>';
+    el.innerHTML = h;
   };
 
   window.LB = LB;
