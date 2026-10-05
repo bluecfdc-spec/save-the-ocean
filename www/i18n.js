@@ -6,7 +6,9 @@
 (function () {
   const DICT = {
     ko: {
-      'war.title': '🌊 바다 점령전 · {ym} 시즌',
+      'tab.war': '🌊 바다 점령전',
+      'tab.top': '🏆 이번 주 TOP 10',
+      'war.title': '{ym} 시즌',
       'war.empty': '아직 주인 없는 바다예요. 첫 점수를 올려 차지하세요!',
       'war.fail': '점령 현황을 불러오지 못했어요.',
       'f.wave': '파도',
@@ -116,7 +118,9 @@
       'premium.active': '🌍 프리미엄 이용 중'
     },
     en: {
-      'war.title': '🌊 Ocean War · Season {ym}',
+      'tab.war': '🌊 Ocean War',
+      'tab.top': '🏆 Weekly TOP 10',
+      'war.title': 'Season {ym}',
       'war.empty': 'The ocean is unclaimed. Post the first score to take it!',
       'war.fail': 'Couldn\'t load the war map.',
       'f.wave': 'Riptide',
@@ -226,7 +230,9 @@
       'premium.active': '🌍 Premium active'
     },
     ja: {
-      'war.title': '🌊 海域争奪戦 · {ym} シーズン',
+      'tab.war': '🌊 海域争奪戦',
+      'tab.top': '🏆 今週のTOP 10',
+      'war.title': '{ym} シーズン',
       'war.empty': 'まだ誰のものでもない海です。最初のスコアで手に入れよう！',
       'war.fail': '争奪状況を読み込めませんでした。',
       'f.wave': '蒼波',

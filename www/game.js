@@ -123,7 +123,7 @@
     profLine.innerHTML = p ? WAR.flagEmoji(p.flag) + ' <b>' + LB.escape(p.name) + '</b> · <img src="' + f.icon + '" alt=""> <span style="color:' + f.color + '">' + t('f.' + f.key) + '</span>' : '';
     profEdit.style.display = p ? '' : 'none';
     const done = lastFinal.done, zero = lastFinal.score <= 0;
-    regBtn.style.display = done ? 'none' : '';
+    regBtn.style.display = done || TEST ? 'none' : '';
     regBtn.disabled = zero || !LB.ready || left <= 0;
     regBtn.textContent = left <= 0 ? t('reg.premium') : t('reg.btn');
     regNote.textContent = !LB.ready ? t('reg.offline') : zero ? t('reg.zero') : left === Infinity ? t('reg.open') : left > 0 ? t('reg.left', { n: left }) : t('reg.none');
@@ -132,7 +132,7 @@
     finalScore.textContent = I18N.num(lastFinal.score);
     recordMsg.textContent = lastFinal.msg || (LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) }));
     top10El.innerHTML = '<div class="note">' + t('loading') + '</div>';
-    overOverlay.classList.remove('hidden'); overOverlay.scrollTop = 0;
+    overOverlay.classList.remove('hidden');
     renderReg();
     if (TEST) { recordMsg.textContent = '🧪 TEST MODE — ' + ({ ko: '기록은 저장되지 않아요', ja: '記録は保存されません' }[I18N.lang] || 'nothing is saved'); top10El.innerHTML = ''; return; }
     WAR.repaint();
@@ -185,6 +185,15 @@
     const next = afterProfile; afterProfile = null; if (next) next();
   });
   regBtn.addEventListener('click', () => { if (LB.profile()) doSubmit(); else openProfile(doSubmit); });
+  // 탭 (점령전 / TOP 10) — 시작 화면과 게임 오버 화면이 같은 탭을 본다
+  function setTab(name) {
+    document.querySelectorAll('.tabs').forEach(tb => {
+      tb.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x.dataset.tab === name));
+      tb.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === name));
+    });
+    WAR.repaint();
+  }
+  document.querySelectorAll('.tabbar').forEach(bar => bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setTab(b.dataset.tab); SFX.click && SFX.click(); } }));
   profEdit.addEventListener('click', () => openProfile(null));
 
   // ───────────── 난이도 ─────────────
