@@ -170,7 +170,7 @@
   img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
   #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
   /* 시작 화면 다듬기: 시작 버튼 축소, TOP 10 을 촘촘하게 */
-  #startOverlay .spacer { flex: 0 0 30vh; min-height: 180px; }
+  #startOverlay .spacer { flex: 0 0 31vh; min-height: 190px; }
   .start-btn { width: min(72%, 290px); padding: 10px 16px; border-radius: 12px; gap: 10px; }
   .start-btn .t1 { font-size: clamp(19px, 6vw, 26px); }
   .start-btn .arrow { font-size: 18px; }
@@ -178,6 +178,12 @@
   #hall h3 { font-size: clamp(14px, 4.2vw, 18px); }
   ul.lb .lb-name { text-align: left; }
   #hall ul.lb li, #board ul.lb li { padding: 2px 4px; font-size: 12.5px; }
+  /* 부제 */
+  #subtitle { display: flex; align-items: center; gap: 10px; margin: -2px 0 2px; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(20px, 6.6vw, 30px); letter-spacing: .3em; padding-left: .3em; white-space: nowrap;
+    background: linear-gradient(#fff6c9 10%, #ffd24a 45%, #c9820e 80%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px rgba(60, 28, 0, .55);
+    filter: drop-shadow(0 2px 0 #3a1c00) drop-shadow(0 0 10px rgba(0, 20, 50, .9)); }
+  #subtitle::before, #subtitle::after { content: ''; width: 28px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, #ffd24a); }
+  #subtitle::after { transform: scaleX(-1); margin-left: -.3em; }
 </style>
 </head>
 <body>
@@ -231,6 +237,7 @@
     <div class="overlay" id="startOverlay">
       <div id="visits" data-i18n="visits.empty">오늘 – · 누적 –</div>
       <div class="spacer"></div>
+      <div id="subtitle">DEPTH WAR</div>
       <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
       <div id="testBadge" data-i18n="test.badge">🧪 새 버전 시험 중</div>
       <div class="war" id="warStart"></div>
@@ -273,14 +280,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="next/i18n.js?v=n8"></script>
+<script src="next/i18n.js?v=n9"></script>
 <script>I18N.apply();</script>
 <script src="firebase-config.js?v=20261003a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261003a"></script>
-<script src="next/leaderboard.js?v=n8"></script>
-<script src="next/war.js?v=n8"></script>
+<script src="next/leaderboard.js?v=n9"></script>
+<script src="next/war.js?v=n9"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -295,6 +302,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="next/game.js?v=n8"></script>
+<script src="next/game.js?v=n9"></script>
 </body>
 </html>
