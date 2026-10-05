@@ -9,7 +9,7 @@
 <title>SAVE THE OCEAN: DEPTH WAR</title>
 <link href="vendor/fonts/orbitron.css" rel="stylesheet">
 <style>
-  :root { --app-w: 390px; }
+  :root { --app-w: min(100vw, 560px); }  /* 실제 값은 game.js resize() 가 정함 */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; background: #04101c; overflow: hidden; overscroll-behavior: none; }
   body, #panel, .zone, #hud { touch-action: manipulation; }
@@ -17,7 +17,7 @@
 
   #app {
     position: fixed; inset: 0; margin: 0 auto;
-    width: min(100vw, 560px);
+    width: var(--app-w);
     display: flex; flex-direction: column;
     height: 100%;
   }
@@ -72,7 +72,7 @@
   .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; text-align: center; background: rgba(3, 14, 28, .72); backdrop-filter: blur(2px); z-index: 5; }
   .overlay.hidden { display: none; }
   /* 시작 화면: 앱 전체를 덮는 타이틀 */
-  #startOverlay { position: fixed; inset: 0; margin: 0 auto; width: min(100vw, 560px); justify-content: flex-start; gap: 10px; padding: 0 16px max(12px, env(safe-area-inset-bottom)); background: #06182b url(assets/title.jpg) center top / cover no-repeat; backdrop-filter: none; z-index: 20; overflow-y: auto; }
+  #startOverlay { position: fixed; inset: 0; margin: 0 auto; width: var(--app-w); justify-content: flex-start; gap: 10px; padding: 0 16px max(12px, env(safe-area-inset-bottom)); background: #06182b url(assets/title.jpg) center top / cover no-repeat; backdrop-filter: none; z-index: 20; overflow-y: auto; }
   #startOverlay::before { content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 70%; background: linear-gradient(rgba(3,14,28,0), rgba(3,14,28,.6) 25%, rgba(3,14,28,.9)); pointer-events: none; }
   #startOverlay > * { position: relative; }
   #startOverlay .spacer { flex: 0 0 34vh; min-height: 200px; }
@@ -109,7 +109,7 @@
   #board { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #ffd77a; border-radius: 12px; padding: 8px 12px; }
   #board h3 { margin: 0 0 4px; font-size: 15px; color: #ffd77a; letter-spacing: .06em; }
   /* 사운드 버튼 (시작 화면 위에도 보이도록) */
-  #soundBtns { position: fixed; right: 8px; top: calc(min(100vw, 560px) * 0.103 + 6px); z-index: 25; display: flex; gap: 6px; }
+  #soundBtns { position: fixed; right: 8px; top: calc(var(--app-w) * 0.103 + 6px); z-index: 25; display: flex; gap: 6px; }
   #soundBtns button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-size: 15px; cursor: pointer; line-height: 1; }
   #soundBtns button.off { opacity: .45; text-decoration: line-through; }
   /* 공지 팝업 */
@@ -125,7 +125,7 @@
   @media (orientation: landscape) and (max-height: 520px) { #rotate { display: flex; } }
   #flash { position: absolute; inset: 0; pointer-events: none; background: #ff2a1a; opacity: 0; z-index: 4; }
   #toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); padding: 6px 14px; background: rgba(0,0,0,.6); border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 6; font-family: system-ui, sans-serif; }
-  #langBtn { position: fixed; left: 8px; top: calc(min(100vw, 560px) * 0.103 + 6px); z-index: 25; height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+  #langBtn { position: fixed; left: 8px; top: calc(var(--app-w) * 0.103 + 6px); z-index: 25; height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
   #mute { position: absolute; right: 8px; top: 8px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.7); color: #cfe3f5; font-size: 16px; cursor: pointer; }
 
   /* ---------- 새 버전: 점령전 · 프로필 ---------- */
@@ -183,17 +183,17 @@
   #subtitle::after { transform: scaleX(-1); margin-left: -.3em; }
   /* 새 타이틀 그림 (SAVE THE OCEAN · DEPTH WAR) — 로고가 화면 위 41% 를 차지 */
   #startOverlay { background: #04101c url(assets/title2.jpg) center top / 100% auto no-repeat; }
-  #startOverlay .spacer { flex: 0 0 calc(min(100vw, 560px) * 0.75); min-height: 0; }
+  #startOverlay .spacer { flex: 0 0 calc(var(--app-w) * 0.75); min-height: 0; }
   /* ---------- 오래된 WebView(Chrome 87 이하) 대비: aspect-ratio · inset · flex gap 이 없을 때의 대체 배치 ---------- */
   @supports not (aspect-ratio: 1 / 1) {
     #app, .overlay, #game, #flash, #notice, #rotate, #profile, #hud .hp-bar { top: 0; right: 0; bottom: 0; left: 0; }
-    #hud { height: calc(min(100vw, 560px) * 0.1031); }
-    #panel { height: calc(min(100vw, 560px) * 0.2572); }
-    #hudDrill { width: calc(min(100vw, 560px) * 0.0866); }
-    .zone { width: calc(min(100vw, 560px) * 0.218); }
-    .zone.bomb { width: calc(min(100vw, 560px) * 0.181); flex: 0 0 auto; }
+    #hud { height: calc(var(--app-w) * 0.1031); }
+    #panel { height: calc(var(--app-w) * 0.2572); }
+    #hudDrill { width: calc(var(--app-w) * 0.0866); }
+    .zone { width: calc(var(--app-w) * 0.218); }
+    .zone.bomb { width: calc(var(--app-w) * 0.181); flex: 0 0 auto; }
     #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { width: auto; }
-    #panel:not(.one) .zone.bomb { width: calc(min(100vw, 560px) * 0.217); }
+    #panel:not(.one) .zone.bomb { width: calc(var(--app-w) * 0.217); }
     #panel .buttons > * + * { margin-left: 1.5%; }
     .overlay > * + * { margin-top: 10px; }
     .row > * + *, #profLine > * + *, .start-btn > * + *, #profile .foot > * + * { margin-left: 8px; }
@@ -240,6 +240,28 @@
     .over-head > * + *, .prow > * + *, .over-btns > * + *, .war-row .top > * + * { margin-left: 6px; }
     #overOverlay > * + *, #startOverlay > * + * { margin-top: 7px; }
   }
+  /* ---------- 화면을 넓게: 시작 버튼 축소·위로, 탭 3개, 지도는 가로 꽉 채움 ---------- */
+  #startOverlay { gap: 6px; padding: 0 8px max(4px, env(safe-area-inset-bottom)); }
+  #startOverlay .spacer { flex: 0 0 calc(var(--app-w) * 0.715); }
+  .start-btn { width: min(58%, 250px); padding: 7px 12px; border-width: 2px; box-shadow: 0 4px 0 #062a55, 0 0 18px #2b9dff88, inset 0 1px 0 #cfeeff; }
+  .start-btn .t1 { font-size: clamp(16px, 5vw, 22px); }
+  .start-btn .arrow { font-size: 14px; }
+  .tabs, #recordBox, .over-btns { width: min(100%, 520px); }
+  .tabbar button { padding: 7px 2px; font-size: clamp(10px, 3.1vw, 13px); white-space: nowrap; overflow: hidden; }
+  .pane { padding: 5px 6px; }
+  .pane .war-map { margin: 0; }
+  .war-rows { margin-top: 3px; }
+  .war-row .pts { font-family: system-ui, sans-serif; }
+  .hall-pane { justify-content: flex-start; }
+  .hall-h { font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; color: #ffd77a; text-align: left; padding: 4px 4px 2px; }
+  .pane ul.lb.seasons { height: auto; display: block; }
+  .pane ul.lb.seasons li { display: grid; max-height: none; padding: 3px 4px; }
+  .hall-ic { width: 16px; height: 16px; vertical-align: -3px; }
+  #overOverlay { padding: 6px 8px; }
+  #hall { padding: 0; border-color: #8fd3ff; box-shadow: none; }
+  /* 언어·소리 버튼은 화면 모서리가 아니라 게임 상자 기준으로 놓는다 (PC 등 넓은 화면) */
+  #langBtn { left: calc(50% - var(--app-w) / 2 + 8px); top: calc(var(--app-top, 0px) + var(--app-w) * 0.103 + 6px); }
+  #soundBtns { right: calc(50% - var(--app-w) / 2 + 8px); top: calc(var(--app-top, 0px) + var(--app-w) * 0.103 + 6px); }
 </style>
 </head>
 <body>
@@ -295,11 +317,12 @@
       <div class="spacer"></div>
       <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
       <div class="tabs" id="hall">
-        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 바다 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 이번 주 TOP 10</button></div>
+        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 주간 TOP 10</button><button type="button" data-tab="hall" data-i18n="tab.hall">👑 명예의 전당</button></div>
         <div class="pane on" data-pane="war" id="warStart"></div>
         <div class="pane" data-pane="top" id="top3"><div class="note" data-i18n="loading">불러오는 중...</div></div>
+        <div class="pane hall-pane" data-pane="hall"></div>
       </div>
-      <div id="seasons" style="display:none"></div><div id="bestLine" style="display:none"></div>
+      <div id="bestLine" style="display:none"></div>
       <div class="credit" data-i18n="credit">Made with AI</div>
     </div>
 
@@ -317,9 +340,10 @@
         <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
       </div>
       <div class="tabs" id="tabsOver">
-        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 바다 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 이번 주 TOP 10</button></div>
+        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 주간 TOP 10</button><button type="button" data-tab="hall" data-i18n="tab.hall">👑 명예의 전당</button></div>
         <div class="pane on" data-pane="war" id="warOver"></div>
         <div class="pane" data-pane="top" id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div>
+        <div class="pane hall-pane" data-pane="hall"></div>
       </div>
     </div>
   </div>
@@ -336,8 +360,9 @@
 <!-- 테스트 빌드: 스크립트 오류를 화면 아래에 표시 (원인 파악용, 출시 전 제거) -->
 <script>
   window.addEventListener('error', function (e) {
+    if (e.target && e.target.getAttribute && e.target.getAttribute('data-opt')) return;   // 없어도 되는 온라인 자료
     var b = document.getElementById('__errbox');
-    if (!b) { b = document.createElement('div'); b.id = '__errbox'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;background:rgba(120,0,0,.92);color:#fff;font:11px/1.4 monospace;padding:6px 8px;max-height:40%;overflow:auto;white-space:pre-wrap'; b.textContent = 'WebView: ' + ((navigator.userAgent.match(/Chrome\/[\d.]+/) || [''])[0]) + '\n'; document.body.appendChild(b); }
+    if (!b) { b = document.createElement('div'); b.id = '__errbox'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;pointer-events:none;background:rgba(120,0,0,.92);color:#fff;font:11px/1.4 monospace;padding:6px 8px;max-height:40%;overflow:auto;white-space:pre-wrap'; b.textContent = 'WebView: ' + ((navigator.userAgent.match(/Chrome\/[\d.]+/) || [''])[0]) + '\n'; document.body.appendChild(b); }
     b.textContent += (e.message || 'load error') + ' @ ' + ((e.filename || (e.target && (e.target.src || e.target.href)) || '').split('/').pop()) + ':' + (e.lineno || '') + '\n';
   }, true);
 </script>
@@ -350,6 +375,8 @@
 <script>window.FLAG_BASE = "vendor/flags/";</script>
 <script src="firebase-config.js"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
+<!-- 명예의 전당(지난 주간 1위)은 웹의 season.js 를 온라인일 때만 받아온다 -->
+<script>(function () { var s = document.createElement('script'); s.async = true; s.setAttribute('data-opt', '1'); s.src = 'https://bluecfdc-spec.github.io/save-the-ocean/season.js?d=' + new Date().toISOString().slice(0, 10); s.onload = function () { if (window.LB) document.querySelectorAll('.hall-pane').forEach(function (el) { LB.renderSeasons(el); }); }; document.head.appendChild(s); })();</script>
 <script src="audio.js"></script>
 <script src="leaderboard.js"></script>
 <script src="war.js"></script>
