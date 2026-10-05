@@ -26,19 +26,24 @@
   WAR.assets = Promise.all(WAR.FACTIONS.map(f => f.ready).concat(mapImg));
 
   // ---- 해역(셀) : 고정된 씨앗 40개 ----
-  const COLS = 8, ROWS = 5, N = COLS * ROWS, GW = 176, GH = 110;
+  const COLS = 24, ROWS = 15, N = COLS * ROWS, GW = 352, GH = 220;
   let seed = 20261005; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
   const SEEDS = [];
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) SEEDS.push([(c + 0.5 + (rnd() - 0.5) * 0.7) / COLS, (r + 0.5 + (rnd() - 0.5) * 0.7) / ROWS]);
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) SEEDS.push([(c + 0.5 + (rnd() - 0.5) * 0.9) / COLS, (r + 0.5 + (rnd() - 0.5) * 0.9) / ROWS]);
   const ISLES = []; for (let i = 0; i < 7; i++) ISLES.push([0.1 + rnd() * 0.8, 0.12 + rnd() * 0.76, 0.02 + rnd() * 0.025]);
   let CELL = null;
   function cells() {
     if (CELL) return CELL;
-    CELL = new Uint8Array(GW * GH);
+    CELL = new Uint16Array(GW * GH);
     for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-      const u = (x + 0.5) / GW + Math.sin(y * 0.19) * 0.012, v = (y + 0.5) / GH + Math.sin(x * 0.15) * 0.018;
+      // 경계가 물결처럼 보이게 좌표를 살짝 흔든다
+      const u = (x + 0.5) / GW + Math.sin(y * 0.11) * 0.006 + Math.sin(y * 0.31 + x * 0.07) * 0.003, v = (y + 0.5) / GH + Math.sin(x * 0.09) * 0.009 + Math.sin(x * 0.27 + y * 0.05) * 0.004;
+      const gc = Math.floor(u * COLS), gr = Math.floor(v * ROWS);
       let best = 0, bd = 9;
-      for (let i = 0; i < N; i++) { const dx = (u - SEEDS[i][0]) * 1.6, dy = v - SEEDS[i][1], d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; } }
+      for (let r = gr - 2; r <= gr + 2; r++) for (let c = gc - 2; c <= gc + 2; c++) {
+        if (r < 0 || c < 0 || r >= ROWS || c >= COLS) continue;
+        const i = r * COLS + c, dx = (u - SEEDS[i][0]) * 1.6, dy = v - SEEDS[i][1], d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; }
+      }
       CELL[y * GW + x] = best;
     }
     return CELL;
@@ -71,13 +76,15 @@
     const owner = WAR.allocate(totals || []), cell = cells();
     const off = document.createElement('canvas'); off.width = GW; off.height = GH;
     const oc = off.getContext('2d'), im = oc.createImageData(GW, GH), d = im.data;
+    // 격자선 없이: 세력 색을 반투명으로 입히고, 세력이 맞닿는 전선만 밝은 선으로
+    const own = (x, y) => owner[cell[Math.min(GH - 1, Math.max(0, y)) * GW + Math.min(GW - 1, Math.max(0, x))]];
     for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-      const i = y * GW + x, id = cell[i], o = owner[id], p = i * 4;
-      const r = x + 1 < GW ? cell[i + 1] : id, b = y + 1 < GH ? cell[i + GW] : id;
-      const edge = r !== id || b !== id, front = edge && (owner[r] !== o || owner[b] !== o);
-      if (front) { d[p] = d[p + 1] = d[p + 2] = 255; d[p + 3] = 170; }
-      else if (o) { const f = WAR.byId(o).rgb; d[p] = f[0]; d[p + 1] = f[1]; d[p + 2] = f[2]; d[p + 3] = edge ? 105 : 135; }
-      else { d[p] = 150; d[p + 1] = 200; d[p + 2] = 255; d[p + 3] = edge ? 38 : 0; }
+      const p = (y * GW + x) * 4, o = own(x, y);
+      const front = own(x + 1, y) !== o || own(x, y + 1) !== o || own(x - 1, y) !== o || own(x, y - 1) !== o;
+      const near = !front && (own(x + 3, y) !== o || own(x - 3, y) !== o || own(x, y + 3) !== o || own(x, y - 3) !== o);
+      if (front) { d[p] = d[p + 1] = d[p + 2] = 255; d[p + 3] = 215; }
+      else if (o) { const f = WAR.byId(o).rgb; d[p] = f[0]; d[p + 1] = f[1]; d[p + 2] = f[2]; d[p + 3] = near ? 150 : 88; }
+      else { d[p + 3] = 0; }
     }
     oc.putImageData(im, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(off, 0, 0, w, h);
     if (!bg) { c.fillStyle = '#0a1522'; c.strokeStyle = 'rgba(190,225,255,.5)'; c.lineWidth = 1; ISLES.forEach(s => { c.beginPath(); c.ellipse(s[0] * w, s[1] * h, s[2] * w * 1.5, s[2] * w, s[0] * 9, 0, 6.3); c.fill(); c.stroke(); }); }
