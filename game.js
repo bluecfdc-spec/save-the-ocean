@@ -66,23 +66,29 @@
   let lastFinal = { score: 0, date: '' };
 
   // ───────────── 크기/배치 ─────────────
-  // 전장은 어느 기기에서나 같은 크기(가로 390 × 세로 600 논리 좌표)로 고정하고, 화면에 맞춰 통째로 확대·축소한다.
-  // → PC 처럼 세로로 긴 화면에서도 수심(폭탄이 떨어지는 깊이)이 모바일과 같다.
-  const FIELD_W = 390, FIELD_H = 600, APP_RATIO = 1.9;   // 앱 전체(점수판 + 전장 + 조작판)의 세로/가로 비
+  // 전장(게임이 벌어지는 영역)은 어느 기기에서나 같은 크기: 가로 390 × 세로 500 논리 좌표.
+  // 화면 가로를 꽉 채우도록 통째로 확대·축소하고, 세로가 남으면 위(하늘)·아래(해저)에 배경만 더 보여준다.
+  // → 화면이 길든 짧든 수심(폭탄이 떨어지는 깊이)과 잠수정이 다니는 범위는 같다.
+  const FIELD_W = 390, FIELD_H = 500;
+  const MIN_RATIO = 0.1031 + FIELD_H / FIELD_W + 0.2572 + 0.012;   // 앱 전체(점수판 + 전장 + 조작판)의 최소 세로/가로 비
+  const MAX_RATIO = 2.25;
   const appEl = document.getElementById('app');
+  let viewH = FIELD_H, offY = 0;      // 화면에 보이는 세로 길이(논리 좌표)와, 전장이 그 안에서 시작하는 위치
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     const vw = window.innerWidth, vh = window.innerHeight;
-    const aw = Math.max(200, Math.min(vw, 560, vh / APP_RATIO)), ah = aw * APP_RATIO;
-    appEl.style.width = aw + 'px'; appEl.style.height = ah + 'px'; appEl.style.bottom = 'auto';
-    appEl.style.top = Math.max(0, (vh - ah) * 0.4) + 'px';
+    const aw = Math.max(200, Math.min(vw, 560, vh / MIN_RATIO)), ah = Math.min(vh, aw * MAX_RATIO), top = Math.max(0, (vh - ah) / 2);
+    appEl.style.width = aw + 'px'; appEl.style.height = ah + 'px'; appEl.style.bottom = 'auto'; appEl.style.top = top + 'px';
     document.documentElement.style.setProperty('--app-w', aw + 'px');
-    document.documentElement.style.setProperty('--app-top', Math.max(0, (vh - ah) * 0.4) + 'px');
-    const r = wrap.getBoundingClientRect();
+    document.documentElement.style.setProperty('--app-top', top + 'px');
+    const r = wrap.getBoundingClientRect(), k = r.width / FIELD_W;
     W = FIELD_W; H = FIELD_H;
+    viewH = Math.max(FIELD_H, r.height / k); offY = Math.round((viewH - FIELD_H) * 0.4);
     canvas.width = Math.round(r.width * DPR); canvas.height = Math.round(r.height * DPR);
     canvas.style.width = r.width + 'px'; canvas.style.height = r.height + 'px';
-    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.width / W, 0, 0);
+    // 조작 방식 버튼(양손/한손)은 레이더 옆에 오도록, 아래 여백만큼 올린다
+    document.documentElement.style.setProperty('--ctl-bottom', Math.round((viewH - offY - FIELD_H) * k + 12) + 'px');
     // 배경 cover
     bgScale = Math.max(W / BG_W, H / BG_H);
     bgX = (W - BG_W * bgScale) / 2; bgY = (H - BG_H * bgScale) / 2;
@@ -266,9 +272,13 @@
     bubbles.push({ x: x + (Math.random() - 0.5) * 6, y, vy: -(18 + Math.random() * 28), life: 0.8 + Math.random() * 1.2, r: big ? 1.5 + Math.random() * 2.5 : 1 + Math.random() * 1.5 });
   }
   function popText(x, y, str, color) { texts.push({ x, y, str, color, t: 0 }); }
+  const ITEM_LIFE = 5;                 // 아이템이 떠 있는 시간(초). 마지막 2초는 빠르게 깜빡인다
   function spawnItem(type) {
-    const dir = Math.random() < 0.5 ? 1 : -1;
-    items.push({ type, x: dir === 1 ? -30 : W + 30, y: surfaceY, dir, speed: 34 + Math.random() * 10, t: 0 });
+    // 군함 바로 옆이 아닌 곳에 나타나게 해서, 먹으려면 직접 가야 한다
+    let x = 0, n = 0;
+    do { x = 30 + Math.random() * (W - 60); n++; } while (ship && Math.abs(x - ship.x) < 90 && n < 12);
+    items.push({ type, x, y: surfaceY, t: 0 });
+    for (let k = 0; k < 10; k++) bubbles.push({ x: x + (Math.random() - 0.5) * 22, y: surfaceY + 4, vy: -(40 + Math.random() * 80), life: 0.4 + Math.random() * 0.3, r: 1.5 + Math.random() * 2 });
   }
   function onKill(s) {
     kills++;
@@ -376,8 +386,8 @@
     // 아이템 (수면에 떠서 흘러감 → 군함이 닿으면 획득)
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
-      it.x += it.dir * it.speed * dt; it.t += dt;
-      if (it.x < -60 || it.x > W + 60) { items.splice(i, 1); continue; }
+      it.t += dt;
+      if (it.t > ITEM_LIFE) { items.splice(i, 1); continue; }
       if (state === 'play' && Math.abs(it.x - ship.x) < ship.w * 0.5 + 10) {
         items.splice(i, 1);
         SFX.pickup();
@@ -504,9 +514,17 @@
   function render() {
     ctx.save();
     if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    ctx.translate(0, offY);   // 전장은 화면 안에서 offY 만큼 내려간 곳에 그린다
     // 배경
-    if (IMG.bg.complete && IMG.bg.naturalWidth) ctx.drawImage(IMG.bg, bgX, bgY, BG_W * bgScale, BG_H * bgScale);
-    else { ctx.fillStyle = '#0b3a5e'; ctx.fillRect(0, 0, W, H); }
+    if (IMG.bg.complete && IMG.bg.naturalWidth) {
+      const bw = BG_W * bgScale, bh = BG_H * bgScale, below = viewH - offY - (bgY + bh);
+      // 세로가 남는 화면: 위는 하늘, 아래는 해저를 배경 가장자리에서 늘려 채운다 (게임 영역은 그대로)
+      if (offY + bgY > 0.5) { ctx.fillStyle = '#4194e6'; ctx.fillRect(0, -offY - 20, W, offY + bgY + 21); }
+      if (below > 0.5) { const gr = ctx.createLinearGradient(0, bgY + bh, 0, bgY + bh + below); gr.addColorStop(0, '#292928'); gr.addColorStop(1, '#04101c'); ctx.fillStyle = gr; ctx.fillRect(0, bgY + bh - 1, W, below + 21); }
+      ctx.drawImage(IMG.bg, bgX, bgY, bw, bh);
+      if (offY + bgY > 0.5) { const g1 = ctx.createLinearGradient(0, bgY, 0, bgY + 26); g1.addColorStop(0, '#4194e6'); g1.addColorStop(1, '#4194e600'); ctx.fillStyle = g1; ctx.fillRect(0, bgY - 1, W, 27); }
+      if (below > 0.5) { const g2 = ctx.createLinearGradient(0, bgY + bh - 30, 0, bgY + bh); g2.addColorStop(0, '#29292800'); g2.addColorStop(1, '#292928'); ctx.fillStyle = g2; ctx.fillRect(0, bgY + bh - 30, W, 31); }
+    } else { ctx.fillStyle = '#0b3a5e'; ctx.fillRect(0, -offY, W, viewH); }
 
     // 거품/물보라
     for (const b of bubbles) {
@@ -569,9 +587,11 @@
       const bob = Math.sin(it.t * 3) * 2.5;
       const im = it.type === 'shield' ? IMG.shield : IMG.drill;
       const w = it.type === 'shield' ? 30 : 18, h = it.type === 'shield' ? 32 : 42;
-      ctx.save(); ctx.globalAlpha = 0.85 + 0.15 * Math.sin(it.t * 6);
+      const left = ITEM_LIFE - it.t, blink = left < 2 ? (Math.sin(it.t * 22) > 0 ? 1 : 0.25) : 0.85 + 0.15 * Math.sin(it.t * 6);
+      const pop = Math.min(1, it.t / 0.18);   // 나타날 때 톡 튀어나오는 느낌
+      ctx.save(); ctx.globalAlpha = blink;
       ctx.shadowColor = it.type === 'shield' ? '#46c3ff' : '#ffb347'; ctx.shadowBlur = 14;
-      drawSprite(im, it.x, surfaceY - 8 + bob, w, h, false, Math.sin(it.t * 2) * 0.12);
+      drawSprite(im, it.x, surfaceY - 8 + bob, w * pop, h * pop, false, Math.sin(it.t * 2) * 0.12);
       ctx.restore();
       // 물결
       ctx.globalAlpha = 0.5; ctx.strokeStyle = '#eaf9ff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(it.x, surfaceY + 8, 14 + Math.sin(it.t * 3) * 3, 3, 0, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1;
