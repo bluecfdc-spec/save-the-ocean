@@ -1,20 +1,21 @@
-// 바다 점령전 — 세력 3개(산호·폭풍·태양)가 가상의 바다를 나눠 갖는 지도
-//  · 그림 파일이 있으면 자동으로 사용: assets/seamap.jpg, assets/faction_coral.png, faction_storm.png, faction_sun.png
+// 바다 점령전 — 세력 3개(파도·폭풍·태양)가 가상의 바다를 나눠 갖는 지도
+//  · 그림 파일이 있으면 자동으로 사용: assets/seamap.jpg, assets/faction_wave.png, faction_storm.png, faction_sun.png
 //  · 없으면 임시 도형으로 그립니다.
 (function () {
   const WAR = {};
   WAR.FACTIONS = [
-    { id: 1, key: 'coral', color: '#FF5A5F', rgb: [255, 90, 95], home: [0.13, 0.80], img: 'assets/faction_coral.png' },
+    { id: 1, key: 'wave', color: '#1FD1B8', rgb: [31, 209, 184], home: [0.13, 0.80], img: 'assets/faction_wave.png' },
     { id: 2, key: 'storm', color: '#8E5CF6', rgb: [142, 92, 246], home: [0.50, 0.14], img: 'assets/faction_storm.png' },
     { id: 3, key: 'sun', color: '#FFC531', rgb: [255, 197, 49], home: [0.87, 0.80], img: 'assets/faction_sun.png' }
   ];
   WAR.FLAGS = ['KR', 'JP', 'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'BR', 'IN'];
   WAR.byId = id => WAR.FACTIONS.find(f => f.id === Number(id)) || null;
-  WAR.flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1)) : '';
+  // 국기는 그림 파일로 표시 (PC 등 국기 이모지가 안 나오는 기기 대응)
+  WAR.flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? '<img class="flag" alt="' + cc + '" src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/' + cc.toLowerCase() + '.svg">' : '';
 
   // 임시 문장 (그림이 오기 전까지)
   const GLYPH = {
-    coral: '<path d="M12 20V11M12 14l-4-3V7M12 12l4-3V6M8 9L6 8M16 8l2-1" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+    wave: '<path d="M4 10c2.5-3 5-3 8 0s5.5 3 8 0M4 15.5c2.5-3 5-3 8 0s5.5 3 8 0" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>',
     storm: '<path d="M13 3L6 13h5l-1 8 8-11h-5z" fill="#fff"/>',
     sun: '<circle cx="12" cy="12" r="4.2" fill="#fff"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>'
   };

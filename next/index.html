@@ -167,6 +167,8 @@
   #profile .foot .btn { min-width: 0; flex: 1; padding: 12px 8px; }
   #toast { position: fixed; z-index: 60; top: 14%; max-width: 86vw; }
   #visits { display: none; }
+  img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+  #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -262,14 +264,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="next/i18n.js?v=n1"></script>
+<script src="next/i18n.js?v=n2"></script>
 <script>I18N.apply();</script>
 <script src="firebase-config.js?v=20261003a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261003a"></script>
-<script src="next/leaderboard.js?v=n1"></script>
-<script src="next/war.js?v=n1"></script>
+<script src="next/leaderboard.js?v=n2"></script>
+<script src="next/war.js?v=n2"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -284,6 +286,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="next/game.js?v=n1"></script>
+<script src="next/game.js?v=n2"></script>
 </body>
 </html>
