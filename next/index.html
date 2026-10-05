@@ -169,6 +169,15 @@
   #visits { display: none; }
   img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
   #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
+  /* 시작 화면 다듬기: 시작 버튼 축소, TOP 10 을 촘촘하게 */
+  #startOverlay .spacer { flex: 0 0 30vh; min-height: 180px; }
+  .start-btn { width: min(72%, 290px); padding: 10px 16px; border-radius: 12px; gap: 10px; }
+  .start-btn .t1 { font-size: clamp(19px, 6vw, 26px); }
+  .start-btn .arrow { font-size: 18px; }
+  #hall { padding: 8px 12px 6px; }
+  #hall h3 { font-size: clamp(14px, 4.2vw, 18px); }
+  ul.lb .lb-name { text-align: left; }
+  #hall ul.lb li, #board ul.lb li { padding: 2px 4px; font-size: 12.5px; }
 </style>
 </head>
 <body>
@@ -231,7 +240,7 @@
         <div id="seasons" style="display:none"></div>
         <div id="bestLine" class="note"></div>
       </div>
-      <div class="credit">AI로 제작되었으며, 비영리로 운영됩니다.</div>
+      <div class="credit" data-i18n="credit">Made with AI</div>
     </div>
 
     <div class="overlay hidden" id="overOverlay">
@@ -264,14 +273,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="next/i18n.js?v=n6"></script>
+<script src="next/i18n.js?v=n8"></script>
 <script>I18N.apply();</script>
 <script src="firebase-config.js?v=20261003a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261003a"></script>
-<script src="next/leaderboard.js?v=n6"></script>
-<script src="next/war.js?v=n6"></script>
+<script src="next/leaderboard.js?v=n8"></script>
+<script src="next/war.js?v=n8"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -286,6 +295,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="next/game.js?v=n6"></script>
+<script src="next/game.js?v=n8"></script>
 </body>
 </html>

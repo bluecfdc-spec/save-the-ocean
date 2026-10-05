@@ -117,5 +117,6 @@
   const BASE = (window.STO_CONFIG || {}).WAR_BASE || 30000;
   WAR.refresh = async function () { last = await LB.warTotals(); if (last) last.forEach(x => { x.w = x.total + BASE; }); WAR.repaint(); return last; };
   window.addEventListener('resize', () => WAR.repaint());
+  WAR.assets.then(() => WAR.repaint());   // 문장 그림이 늦게 로드돼도 목록 아이콘이 바뀌도록
   window.WAR = WAR;
 })();
