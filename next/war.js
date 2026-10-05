@@ -11,7 +11,7 @@
   WAR.FLAGS = ['KR', 'JP', 'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'BR', 'IN'];
   WAR.byId = id => WAR.FACTIONS.find(f => f.id === Number(id)) || null;
   // 국기는 그림 파일로 표시 (PC 등 국기 이모지가 안 나오는 기기 대응)
-  WAR.flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? '<img class="flag" alt="' + cc + '" src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/' + cc.toLowerCase() + '.svg">' : '';
+  WAR.flagEmoji = cc => /^[A-Z]{2}$/.test(cc || '') ? '<img class="flag" alt="' + cc + '" src="' + (window.FLAG_BASE || 'https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/') + cc.toLowerCase() + '.svg">' : '';
 
   // 임시 문장 (그림이 오기 전까지)
   const GLYPH = {

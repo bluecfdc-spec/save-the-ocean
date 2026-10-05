@@ -7,7 +7,9 @@
   const CFG = window.STO_CONFIG || {};
   const LOCAL_KEY = 'savetheocean_best';
   const P = 'savetheocean_next_';
-  const weekN = Number(((window.SEASON_SUFFIX || '').match(/_s(\d+)/) || [, 1])[1]);
+  // 주간 시즌 번호: 웹은 season.js(자동 갱신)를 따르고, 앱은 날짜로 계산 (시즌 1 = 2026-09-28 월요일 00:00 KST 시작)
+  const weekN = window.SEASON_SUFFIX ? Number((window.SEASON_SUFFIX.match(/_s(\d+)/) || [, 1])[1])
+    : Math.max(1, Math.floor((Date.now() - Date.UTC(2026, 8, 27, 15)) / (7 * 86400000)) + 1);
   const SUFFIX = '_s9' + String(weekN).padStart(3, '0');
   let db = null;
 
