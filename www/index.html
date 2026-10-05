@@ -101,12 +101,12 @@
   input.name { font-family: 'Orbitron', system-ui, sans-serif; font-size: 16px; text-align: center; padding: 10px 12px; width: 170px; border-radius: 8px; border: 2px solid #8fd3ff; background: #071a2e; color: #fff; letter-spacing: .08em; outline: none; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
   /* 게임 오버 */
-  #overOverlay { justify-content: flex-start; padding-top: 14px; overflow-y: auto; gap: 10px; }
+  #overOverlay { justify-content: flex-start; touch-action: pan-y; padding-top: 14px; overflow-y: auto; gap: 10px; }
   #overOverlay .score-line { font-family: system-ui, sans-serif; font-size: 14px; color: #cfe3f5; }
   #recordBox { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #8fd3ff; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
   #recordBox .msg { font-family: system-ui, sans-serif; font-size: 14px; color: #fff; line-height: 1.5; }
   #recordBox .msg small { display: block; font-size: 12px; color: #a9c3da; }
-  #board { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #ffd77a; border-radius: 12px; padding: 8px 12px; max-height: 40vh; overflow-y: auto; }
+  #board { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #ffd77a; border-radius: 12px; padding: 8px 12px; }
   #board h3 { margin: 0 0 4px; font-size: 15px; color: #ffd77a; letter-spacing: .06em; }
   /* 사운드 버튼 (시작 화면 위에도 보이도록) */
   #soundBtns { position: fixed; right: 8px; top: calc(min(100vw, 560px) * 0.103 + 6px); z-index: 25; display: flex; gap: 6px; }
@@ -126,35 +126,50 @@
   #flash { position: absolute; inset: 0; pointer-events: none; background: #ff2a1a; opacity: 0; z-index: 4; }
   #toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); padding: 6px 14px; background: rgba(0,0,0,.6); border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 6; font-family: system-ui, sans-serif; }
   #langBtn { position: fixed; left: 8px; top: calc(min(100vw, 560px) * 0.103 + 6px); z-index: 25; height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
-  #hallLock, #hallPremium { font-family: system-ui, sans-serif; font-size: 12px; color: #ffd77a; background: rgba(255,215,122,.12); border: 1px dashed rgba(255,215,122,.6); border-radius: 8px; padding: 6px 8px; margin-top: 6px; cursor: pointer; }
-  #premiumRow { flex-direction: column; }
-  #premiumBtn { border-color: #ffd77a; background: linear-gradient(#f0b429, #b57a0a); box-shadow: 0 5px 0 #5a3c00, 0 0 16px #ffc93c66; font-size: 14px; min-width: 240px; }
-  .linkish { font-family: system-ui, sans-serif; font-size: 12px; color: #a9c3da; background: none; border: none; text-decoration: underline; cursor: pointer; }
-  .btn.login { font-family: system-ui, sans-serif; font-size: 14px; letter-spacing: 0; min-width: 210px; padding: 12px 18px; }
-  .btn.login.apple { background: #000; border-color: #888; box-shadow: 0 5px 0 #222; }
-  .btn.login.google { background: #fff; color: #333; border-color: #ccc; box-shadow: 0 5px 0 #999; }
-  #paywall { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: rgba(2, 10, 20, .75); padding: 20px; }
-  #paywall.show { display: flex; }
-  #paywall .card { width: min(92%, 360px); background: linear-gradient(#0d2a48, #071a2e); border: 2px solid #ffd77a; border-radius: 16px; padding: 18px 16px 14px; box-shadow: 0 0 30px #ffc93c55; text-align: center; }
-  #paywall h3 { margin: 0 0 10px; font-size: 20px; color: #ffd77a; }
-  #paywall .body { font-family: system-ui, sans-serif; font-size: 14px; line-height: 1.7; color: #e6f2ff; white-space: pre-line; text-align: left; }
-  #paywall .foot { display: flex; flex-direction: column; gap: 8px; align-items: center; margin-top: 14px; }
   #mute { position: absolute; right: 8px; top: 8px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.7); color: #cfe3f5; font-size: 16px; cursor: pointer; }
+
+  /* ---------- 새 버전: 점령전 · 프로필 ---------- */
+  .fdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+  .war { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #8fd3ff; border-radius: 14px; padding: 10px 12px 8px; }
+  .war h3 { margin: 0 0 6px; font-size: clamp(14px, 4.2vw, 18px); color: #bfe6ff; letter-spacing: .04em; }
+  .war-map { display: block; width: 100%; border-radius: 10px; border: 1px solid rgba(160,220,255,.4); background: #061c33; }
+  .war-row { display: grid; grid-template-columns: 22px 1fr auto 6.5em; gap: 8px; align-items: center; font-family: system-ui, sans-serif; font-size: 13px; padding: 5px 4px; border-top: 1px solid rgba(255,255,255,.07); text-align: left; }
+  .war-row:first-child { border-top: 0; margin-top: 4px; }
+  .war-row.mine { background: rgba(255,255,255,.08); border-radius: 8px; }
+  .war-row img { width: 22px; height: 22px; display: block; }
+  .war-row .pct { font-family: 'Orbitron', sans-serif; font-weight: 800; color: #fff; }
+  .war-row .pts { font-family: 'Orbitron', sans-serif; font-size: 11px; color: #a9c3da; text-align: right; }
+  #testBadge { width: min(92%, 380px); font-family: system-ui, sans-serif; font-size: 11px; color: #ffe9a8; background: rgba(60,40,0,.6); border: 1px dashed #ffd77a; border-radius: 10px; padding: 5px 8px; }
+  #regRow { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+  #profLine { font-family: system-ui, sans-serif; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 6px; }
+  #profLine img { width: 18px; height: 18px; }
+  #regNote { font-family: system-ui, sans-serif; font-size: 12px; color: #a9c3da; }
+  .link { background: none; border: 0; color: #8fd3ff; font-family: system-ui, sans-serif; font-size: 12px; text-decoration: underline; cursor: pointer; padding: 4px; }
+  .btn:disabled { opacity: .5; }
+  #profile { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: rgba(2, 10, 20, .8); padding: 14px; }
+  #profile.show { display: flex; }
+  #profile .card { width: min(100%, 380px); max-height: 100%; overflow-y: auto; background: linear-gradient(#0d2a48, #071a2e); border: 2px solid #8fd3ff; border-radius: 16px; padding: 14px; text-align: center; touch-action: pan-y; }
+  #profile h3 { margin: 0 0 8px; font-size: 18px; color: #ffd77a; }
+  #profile .lab { font-family: system-ui, sans-serif; font-size: 12px; color: #a9c3da; margin: 10px 0 6px; text-align: left; }
+  #profile input.name { width: 100%; user-select: text; -webkit-user-select: text; }
+  #flagGrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  #flagGrid button { font-size: 24px; line-height: 1; padding: 7px 0; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,.07); cursor: pointer; }
+  #flagGrid button.on { border-color: #ffd77a; background: rgba(255,215,122,.2); }
+  #facGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #facGrid button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; border: 2px solid transparent; background: rgba(255,255,255,.07); color: #fff; font-family: system-ui, sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+  #facGrid button img { width: 44px; height: 44px; }
+  #facGrid button.on { border-color: #fff; background: rgba(255,255,255,.18); }
+  #facGrid.locked button:not(.on) { opacity: .3; }
+  #profile .foot { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+  #profile .foot .btn { min-width: 0; flex: 1; padding: 12px 8px; }
+  #toast { position: fixed; z-index: 60; top: 14%; max-width: 86vw; }
+  #visits { display: none; }
+  img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+  #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
 </style>
 </head>
 <body>
 <div id="rotate">📱<br><span data-i18n="rotate">세로로 돌려주세요</span><br><small data-i18n="rotate.sub">이 게임은 세로 화면 전용입니다</small></div>
-<div id="paywall" role="dialog" aria-modal="true">
-  <div class="card">
-    <h3 data-i18n="premium.title">🌍 프리미엄</h3>
-    <div class="body" data-i18n="premium.body"></div>
-    <div class="foot">
-      <button class="btn" id="pwBuy" style="border-color:#ffd77a;background:linear-gradient(#f0b429,#b57a0a);box-shadow:0 5px 0 #5a3c00"></button>
-      <button class="linkish" id="pwRestore" data-i18n="premium.restore">이미 구매했어요 (복원)</button>
-      <button class="linkish" id="pwCancel" data-i18n="premium.cancel">나중에</button>
-    </div>
-  </div>
-</div>
 <div id="notice" role="dialog" aria-modal="true">
   <div class="card">
     <h3 id="noticeTitle"></h3>
@@ -162,6 +177,21 @@
     <div class="foot">
       <button class="btn" id="noticeOk" data-i18n="notice.ok">확인</button>
       <label><input type="checkbox" id="noticeHide"> <span data-i18n="notice.hide">오늘 하루 보지 않기</span></label>
+    </div>
+  </div>
+</div>
+<div id="profile" role="dialog" aria-modal="true">
+  <div class="card">
+    <h3 data-i18n="prof.title">내 프로필</h3>
+    <div class="lab" data-i18n="prof.name">아이디 (8자까지)</div>
+    <input class="name" id="profName" maxlength="8" autocomplete="off" inputmode="text">
+    <div class="lab" data-i18n="prof.flag">국기</div>
+    <div id="flagGrid"></div>
+    <div class="lab" id="facLab" data-i18n="prof.faction">세력</div>
+    <div id="facGrid"></div>
+    <div class="foot">
+      <button class="btn red" id="profCancel" data-i18n="prof.cancel">취소</button>
+      <button class="btn" id="profOk" data-i18n="prof.ok">저장</button>
     </div>
   </div>
 </div>
@@ -190,15 +220,12 @@
       <div id="visits" data-i18n="visits.empty">오늘 – · 누적 –</div>
       <div class="spacer"></div>
       <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
+      <div id="testBadge" data-i18n="test.badge">🧪 새 버전 시험 중</div>
+      <div class="war" id="warStart"></div>
       <div id="hall">
-        <h3 data-i18n="hall">🏆 명예의 전당</h3>
-        <div class="part" data-i18n="hall.top3">⚓ 이번 시즌 TOP 3</div>
+        <h3 data-i18n="board.week">🏆 이번 주 TOP 10</h3>
         <div id="top3"><div class="note" data-i18n="loading">불러오는 중...</div></div>
-        <div id="hallLock" data-i18n="hall.locked">🔒 글로벌 순위판은 프리미엄에서 열려요</div>
-        <div id="hallPremium" data-i18n="premium.active" style="display:none">🌍 프리미엄 이용 중</div>
-        <div class="sep"></div>
-        <div class="part" data-i18n="hall.season">👑 시즌 1위</div>
-        <div id="seasons"></div>
+        <div id="seasons" style="display:none"></div>
         <div id="bestLine" class="note"></div>
       </div>
       <div class="credit" data-i18n="credit">Made with AI</div>
@@ -210,22 +237,16 @@
       <div class="big" id="finalScore">0</div>
       <div id="recordBox">
         <div class="msg" id="recordMsg" data-i18n="over.checking">순위 확인 중...</div>
-        <div class="row" id="nameRow" style="display:none">
-          <input class="name" id="nameInput" maxlength="8" data-i18n-ph="name.ph" placeholder="이름 입력" autocomplete="off" inputmode="text">
-          <button class="btn" id="submitBtn" data-i18n="submit" style="min-width:90px;padding:12px 18px">등록</button>
-        </div>
-        <div class="row" id="loginRow" style="display:none">
-          <div class="note" data-i18n="over.needLogin">순위 등록은 계정 로그인이 필요해요.</div>
-          <button class="btn login apple" id="loginApple" data-i18n="over.login.apple"> Apple로 로그인</button>
-          <button class="btn login google" id="loginGoogle" data-i18n="over.login.google">G  Google로 로그인</button>
-        </div>
-        <div class="row" id="premiumRow" style="display:none">
-          <button class="btn" id="premiumBtn">🌍 글로벌 순위판 열기</button>
-          <button class="linkish" id="restoreBtn" data-i18n="over.restore">구매 복원</button>
+        <div id="regRow">
+          <div id="profLine"></div>
+          <button class="btn" id="regBtn" data-i18n="reg.btn">🌊 기록 올리기</button>
+          <div id="regNote"></div>
+          <button class="link" id="profEdit" data-i18n="reg.edit">프로필 수정</button>
         </div>
       </div>
-      <div id="board"><h3 data-i18n="board">🏆 명예의 전당 TOP 10</h3><div id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div></div>
       <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
+      <div class="war" id="warOver"></div>
+      <div id="board"><h3 data-i18n="board.week">🏆 이번 주 TOP 10</h3><div id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div></div>
     </div>
   </div>
 
@@ -240,16 +261,16 @@
 
 <!-- 앱 내장 라이브러리 (CI 가 vendor/ 에 채움 — 오프라인에서도 로드됨) -->
 <script src="vendor/firebase-app-compat.js"></script>
-<script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
 <script src="vendor/native.js"></script>
 <script src="i18n.js"></script>
 <script>I18N.apply();</script>
-<script src="app-config.js"></script>
+<script>window.FLAG_BASE = "vendor/flags/";</script>
 <script src="firebase-config.js"></script>
+<script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script src="audio.js"></script>
 <script src="leaderboard.js"></script>
-<script src="premium.js"></script>
+<script src="war.js"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {

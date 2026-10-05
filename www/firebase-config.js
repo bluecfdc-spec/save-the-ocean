@@ -14,12 +14,7 @@ window.FIREBASE_CONFIG = {
 // 점수 컬렉션 기본 이름
 window.SCORES_COLLECTION = "scores";
 
-// 시즌 접미사 — 새 시즌을 시작하려면 "_s2", "_s3" 처럼 바꾸면
-// scores_s2 / plays_s2 컬렉션에 새로 쌓입니다 (이전 시즌 기록은 그대로 보존).
-window.SEASON_SUFFIX = "_s1";
-
-// 지난 시즌 1위 목록 — 시즌이 끝날 때마다 한 줄씩 추가
-// 예: { n: 1, range: "09.29 ~ 10.05", name: "바다의수호자", score: 12480 }
+// 주간 시즌 번호는 leaderboard.js 가 날짜로 계산합니다 (앱 업데이트 없이 매주 월요일 00:00 KST 에 넘어감)
 window.SEASONS_DATA = [];
 
 // 기본 공지 (Firebase 콘솔의 visits/notice_app 문서가 있으면 그 내용이 우선 — 웹의 notice 와 분리)

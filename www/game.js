@@ -49,6 +49,8 @@
   const DRILL_SHOTS = 5;                // 드릴 장전 수
   const DEEP_FRAC = 0.10;               // 잠수정 깊이 구간의 아래 10% = 심해 (격파 시 흰 500 / 빨강 1500)
   const DEEP_PTS = { white: 500, red: 1500 };
+  // 테스트 모드 (주소 뒤에 ?test): 심해 출몰 ↑, 3~5척 동시 등장, 드릴 자주, 어뢰 없음, 기록 저장 안 함
+  const TEST = new URLSearchParams(location.search).has('test');
   const DRILL_W = 15;
 
   // ───────────── 상태 ─────────────
@@ -91,7 +93,7 @@
     score = 0; hp = MAX_HP; time = 0; level = 0; spawnTimer = 0.8; shake = 0;
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
     ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0 };
-    streaks = []; items = []; kills = 0; drillTimer = 25 + Math.random() * 20;
+    streaks = []; items = []; kills = 0; drillTimer = TEST ? 2 : 25 + Math.random() * 20;
     updateHud();
   }
   function start() {
@@ -108,67 +110,82 @@
     SFX.sink(); SFX.stopAmbient(); SFX.seaStop();
     shake = 18;
     fx.push(explosion(ship.x, ship.y, 60, true));
-    LB.saveLocal(score);
+    if (!TEST) LB.saveLocal(score);
     lastFinal = { score: Math.floor(score), date: LB.formatToday() };
     setTimeout(showOver, 1300);
   }
-  let playRecorded = false;
-  const premiumRow = document.getElementById('premiumRow'), loginRow = document.getElementById('loginRow'), boardEl = document.getElementById('board');
+  // ───────────── 게임 오버 · 기록 올리기 ─────────────
+  const regRow = document.getElementById('regRow'), regBtn = document.getElementById('regBtn'), regNote = document.getElementById('regNote');
+  const profLine = document.getElementById('profLine'), profEdit = document.getElementById('profEdit');
+  function renderReg() {
+    const p = LB.profile(), f = p && WAR.byId(p.faction), left = LB.freeLeft();
+    regRow.style.display = TEST ? 'none' : '';
+    profLine.innerHTML = p ? WAR.flagEmoji(p.flag) + ' <b>' + LB.escape(p.name) + '</b> · <img src="' + f.icon + '" alt=""> <span style="color:' + f.color + '">' + t('f.' + f.key) + '</span>' : '';
+    profEdit.style.display = p ? '' : 'none';
+    const done = lastFinal.done, zero = lastFinal.score <= 0;
+    regBtn.style.display = done ? 'none' : '';
+    regBtn.disabled = zero || !LB.ready || left <= 0;
+    regBtn.textContent = left <= 0 ? t('reg.premium') : t('reg.btn');
+    regNote.textContent = !LB.ready ? t('reg.offline') : zero ? t('reg.zero') : left === Infinity ? t('reg.open') : left > 0 ? t('reg.left', { n: left }) : t('reg.none');
+  }
   async function showOver() {
     finalScore.textContent = I18N.num(lastFinal.score);
-    nameRow.style.display = 'none'; loginRow.style.display = 'none'; premiumRow.style.display = 'none'; playRecorded = false;
-    nameInput.value = LB.lastName();
-    overOverlay.classList.remove('hidden');
-    // 무명 기록은 무료/유료 모두 남김 (전체 순위 계산용)
-    if (LB.ready && !playRecorded) { playRecorded = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
-    if (!Premium.isPremium()) {
-      // 무료: 이 기기 최고 기록만 + 프리미엄 안내
-      boardEl.style.display = 'none';
-      recordMsg.innerHTML = t('over.free', { n: I18N.num(LB.localBest()) }) + '<small>' + t('over.free.sub') + '</small>';
-      document.getElementById('premiumBtn').textContent = t('over.premiumBtn', { price: Premium.price() });
-      premiumRow.style.display = '';
-      return;
-    }
-    boardEl.style.display = '';
-    recordMsg.textContent = LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) });
+    recordMsg.textContent = lastFinal.msg || (LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) }));
     top10El.innerHTML = '<div class="note">' + t('loading') + '</div>';
+    overOverlay.classList.remove('hidden'); overOverlay.scrollTop = 0;
+    renderReg();
+    if (TEST) { recordMsg.textContent = '🧪 TEST MODE — ' + ({ ko: '기록은 저장되지 않아요', ja: '記録は保存されません' }[I18N.lang] || 'nothing is saved'); top10El.innerHTML = ''; return; }
+    WAR.repaint();
     if (!LB.ready) { LB.renderList(top10El, null); return; }
-    const [rows, rank] = await Promise.all([LB.top(10), LB.rank(lastFinal.score)]);
-    LB.renderList(top10El, rows, null);
-    // 10위 안이면 이름 입력(로그인 필요), 아니면 등수만 안내
-    const inTop10 = rank !== null ? rank <= 10 : (rows !== null && (rows.length < 10 || lastFinal.score > rows[9].score));
-    if (inTop10) {
-      recordMsg.innerHTML = rank !== null ? t('over.top10', { rank }) : t('over.top10.norank');
-      showSubmitUI();
-    } else {
-      recordMsg.innerHTML = (rank > 1000 ? t('over.rank.far') : t('over.rank', { rank })) + '<small>' + t('over.rank.sub') + '</small>';
-    }
+    const cur = lastFinal;
+    const [rows, rank] = await Promise.all([LB.top(10), LB.rank(cur.score), WAR.refresh()]);
+    if (cur !== lastFinal) return;
+    LB.renderList(top10El, rows);
+    if (!cur.done && rank !== null) recordMsg.textContent = rank > 1000 ? t('over.rank.far') : t('over.rank', { rank });
   }
-  // 이름 등록 UI: 로그인 돼 있으면 이름 입력, 아니면 로그인 버튼
-  function showSubmitUI() {
-    if (Premium.isSignedIn()) { loginRow.style.display = 'none'; nameRow.style.display = ''; }
-    else { nameRow.style.display = 'none'; loginRow.style.display = ''; }
+  async function doSubmit() {
+    const cur = lastFinal; if (cur.done || cur.busy) return;
+    cur.busy = true; regBtn.disabled = true; regBtn.textContent = t('submitting');
+    const r = await LB.submit(cur.score, cur.date);
+    cur.busy = false;
+    if (r.ok) {
+      cur.done = true;
+      const f = WAR.byId(LB.profile().faction);
+      cur.msg = t('reg.done', { f: t('f.' + f.key), n: I18N.num(cur.score) }) + (r.best ? ' ' + t('reg.done.best') : '');
+      recordMsg.textContent = cur.msg; SFX.click && SFX.click();
+      renderReg();
+      const [rows] = await Promise.all([LB.top(10), WAR.refresh()]);
+      LB.renderList(top10El, rows); loadTop3();
+    } else { renderReg(); showToast(t('toast.submitFail')); }
   }
-  document.getElementById('premiumBtn').addEventListener('click', async () => {
-    const ok = await Premium.showPaywall();
-    if (ok) { applyPremiumUI(); showOver(); }
+
+  // ───────────── 프로필 (아이디 · 국기 · 세력) ─────────────
+  const profEl = document.getElementById('profile'), profName = document.getElementById('profName');
+  const flagGrid = document.getElementById('flagGrid'), facGrid = document.getElementById('facGrid');
+  let draft = null, afterProfile = null;
+  function openProfile(then) {
+    const p = LB.profile() || {}; afterProfile = then || null;
+    draft = { flag: p.flag || '', faction: p.faction || 0 };
+    profName.value = p.name || '';
+    const locked = LB.factionLocked();
+    flagGrid.innerHTML = WAR.FLAGS.map(c => '<button type="button" data-c="' + c + '"' + (c === draft.flag ? ' class="on"' : '') + '>' + WAR.flagEmoji(c) + '</button>').join('');
+    facGrid.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '"' + (f.id === draft.faction ? ' class="on"' : '') + '><img src="' + f.icon + '" alt=""><span style="color:' + f.color + '">' + t('f.' + f.key) + '</span></button>').join('');
+    facGrid.classList.toggle('locked', locked);
+    document.getElementById('facLab').textContent = locked ? t('prof.locked') : t('prof.faction');
+    profEl.classList.add('show');
+  }
+  flagGrid.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; draft.flag = b.dataset.c; flagGrid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); SFX.click && SFX.click(); });
+  facGrid.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || LB.factionLocked()) return; draft.faction = Number(b.dataset.f); facGrid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); SFX.click && SFX.click(); });
+  document.getElementById('profCancel').addEventListener('click', () => { profEl.classList.remove('show'); afterProfile = null; });
+  document.getElementById('profOk').addEventListener('click', () => {
+    const name = profName.value.trim();
+    if (!name || !draft.flag || !draft.faction) { showToast(t('prof.need')); return; }
+    LB.saveProfile({ name, flag: draft.flag, faction: draft.faction });
+    profEl.classList.remove('show'); renderReg(); WAR.repaint();
+    const next = afterProfile; afterProfile = null; if (next) next();
   });
-  document.getElementById('restoreBtn').addEventListener('click', async () => {
-    if (!Premium.isNative()) { showToast(t('toast.webOnly')); return; }
-    const r = await Premium.restore();
-    if (r.ok && r.found) { showToast(t('toast.restored')); applyPremiumUI(); showOver(); } else showToast(t('toast.restoreNone'));
-  });
-  async function doLogin(provider) {
-    const r = await Premium.signIn(provider);
-    if (r.ok) showSubmitUI(); else if (r.reason !== 'auth/popup-closed-by-user' && r.reason !== 'auth/cancelled-popup-request') showToast(t('toast.loginFail'));
-  }
-  document.getElementById('loginApple').addEventListener('click', () => doLogin('apple'));
-  document.getElementById('loginGoogle').addEventListener('click', () => doLogin('google'));
-  // iOS 는 Apple 로그인 필수 노출, Android 는 Google 만
-  (function () {
-    const p = Premium.platform();
-    if (p === 'android') document.getElementById('loginApple').style.display = 'none';
-  })();
+  regBtn.addEventListener('click', () => { if (LB.profile()) doSubmit(); else openProfile(doSubmit); });
+  profEdit.addEventListener('click', () => openProfile(null));
 
   // ───────────── 난이도 ─────────────
   // 원칙: 반응속도 싸움이 아니라, 리듬에 익숙해질 즈음 패턴이 꼬이게.
@@ -204,12 +221,13 @@
     // 이미 있는 잠수정과 깊이 겹치지 않게 시도
     let y = 0;
     for (let i = 0; i < 6; i++) {
-      y = minY + Math.random() * (maxY - minY);
+      // 테스트 모드: 60% 확률로 심해 구역에서 등장
+      y = (TEST && Math.random() < 0.6) ? deepLineY() + Math.random() * (maxY - deepLineY()) : minY + Math.random() * (maxY - minY);
       if (subs.every(s => Math.abs(s.y - y) > 26)) break;
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: red ? 3 : 1, fireCd: 0.15 + Math.random() * 0.3, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: Math.random() * 0.15, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -267,11 +285,13 @@
       if (ship.inv > 0) ship.inv -= dt;
       if (ship.shield > 0) { ship.shield -= dt; if (ship.shield <= 0) { ship.shield = 0; updateHud(); } }
       ship.mv = mv;
+      const atEdge = ship.x < ship.w * 0.9 || ship.x > W - ship.w * 0.9;
+      ship.campT = atEdge ? (ship.campT || 0) + dt : 0;
       // 드릴 아이템: 무작위 간격으로 등장 (장전 중이거나 이미 떠 있으면 대기)
       drillTimer -= dt;
       if (drillTimer <= 0) {
         if (ship.drill === 0 && !items.some(i => i.type === 'drill')) spawnItem('drill');
-        drillTimer = 30 + Math.random() * 25;
+        drillTimer = TEST ? 5 + Math.random() * 4 : 30 + Math.random() * 25;
       }
       // 출렁임: 움직이면 진행 방향으로 기울고(롤), 앞뒤로 까딱임(피치) — 시각 효과만
       const targetRoll = -mv * 0.16 + (mv ? Math.sin(time * 7) * 0.05 : 0);
@@ -293,10 +313,17 @@
     if (state === 'play') {
       spawnTimer -= dt;
       if (spawnTimer <= 0) {
-        spawnSub(d);
-        spawnTimer = d.spawnGap * (0.8 + Math.random() * 0.4);
-        // 꼬임 패턴: 가끔 반대 방향 2척 동시 등장
-        if (d.twist && Math.random() < 0.25) { spawnSub(d); }
+        if (TEST) {
+          // 테스트 모드: 3~5척 동시 등장, 1.5초 간격
+          const n = 3 + Math.floor(Math.random() * 3);
+          for (let k = 0; k < n; k++) spawnSub(d);
+          spawnTimer = 1.5;
+        } else {
+          spawnSub(d);
+          spawnTimer = d.spawnGap * (0.8 + Math.random() * 0.4);
+          // 꼬임 패턴: 가끔 반대 방향 2척 동시 등장
+          if (d.twist && Math.random() < 0.25) { spawnSub(d); }
+        }
       }
     }
 
@@ -309,12 +336,14 @@
       // 뒤쪽 거품
       if (s.x > -SUB_W && s.x < W + SUB_W && Math.random() < 0.5) addBubble(s.x - s.dir * s.w * 0.52, s.y + 2, false);
       // 발사: 화면 안에 있는 동안 무작위 시점에 (군함 위치와 무관). 남은 탄약을 화면을 지나는 동안 고르게 쓰도록 확률을 잡음
-      if (state === 'play' && s.ammo > 0 && s.x > s.w * 0.3 && s.x < W - s.w * 0.3) {
+      if (state === 'play' && s.ammo > 0 && s.x > 0 && s.x < W) {
         s.fireCd -= dt;
         if (s.fireCd <= 0 && torps.length < d.maxTorps) {
-          const remain = Math.max(0.3, (s.dir === 1 ? (W - s.w * 0.3 - s.x) : (s.x - s.w * 0.3)) / s.speed); // 화면을 벗어나기까지 남은 시간
+          const remain = Math.max(0.3, (s.dir === 1 ? (W - s.x) : s.x) / s.speed); // 화면을 벗어나기까지 남은 시간
           const barrage = d.maxTorps >= 18 && torps.length < d.maxTorps - 3;   // 최고조: 난사
           let rate = (s.ammo / remain) * (barrage ? 3 : 1.6);                  // 초당 발사 기대 횟수
+          // 구석 숨기 대응: 군함이 끝에 2.5초 이상 붙어 있으면, 군함 바로 아래를 지나는 잠수정은 즉시 발사
+          if (ship.campT > 3 && Math.abs(s.x - ship.x) < ship.w * 0.5) rate *= 2;
           // Y축 겹침 회피: 바로 위에 어뢰가 있으면 잠깐 미룸
           const crowded = torps.some(t => Math.abs(t.x - s.x) < 34 && t.y < s.y && s.y - t.y < 90);
           if (!crowded && Math.random() < rate * dt) {
@@ -710,24 +739,14 @@
 
   // 시작/재시작/랭킹
   document.getElementById('startBtn').addEventListener('click', start);
-  document.getElementById('retryBtn').addEventListener('click', start);
-  document.getElementById('submitBtn').addEventListener('click', async () => {
-    const name = nameInput.value.trim() || t('anon');
-    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = t('submitting');
-    const r = await LB.submit(name, lastFinal.score, lastFinal.date);
-    btn.disabled = false; btn.textContent = t('submit');
-    if (r.ok) {
-      nameRow.style.display = 'none'; recordMsg.textContent = t('submitted');
-      const rows = await LB.top(10); LB.renderList(top10El, rows, lastFinal);
-      loadTop3();
-    } else if (r.reason === 'need-login') { showToast(t('over.needLogin')); showSubmitUI(); }
-    else showToast(t('toast.submitFail'));
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    // 올리지 않고 넘어간 판은 순위 계산용 무명 기록으로만 남김
+    if (!TEST && lastFinal && !lastFinal.done && lastFinal.score > 0) { lastFinal.done = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
+    start();
   });
-  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('submitBtn').click(); });
 
   let toastTimer = 0;
   function showToast(msg) { toast.textContent = msg; toast.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.style.opacity = 0; }, 1600); }
-  window.__toast = showToast;
 
   // 화면 전환 시 입력 리셋
   document.addEventListener('visibilitychange', () => { input.left = input.right = false; });
@@ -741,26 +760,13 @@
   function renderBest() { const best = LB.localBest(); bestLine.textContent = best ? t('best', { n: I18N.num(best) }) : ''; }
   renderBest();
   const top3El = document.getElementById('top3');
-  async function loadTop3() {
-    if (!Premium.isPremium() && !(window.APP_CONFIG && APP_CONFIG.showTop3Teaser)) { top3El.innerHTML = '<div class="note">' + t('hall.locked') + '</div>'; return; }
-    LB.renderList(top3El, await LB.top(3), null);
-  }
-  // 프리미엄 여부에 따라 시작 화면 구성
-  function applyPremiumUI() {
-    const prem = Premium.isPremium();
-    document.getElementById('hallLock').style.display = prem ? 'none' : '';
-    document.getElementById('hallPremium').style.display = prem ? '' : 'none';
-    loadTop3();
-  }
-  document.getElementById('hallLock').addEventListener('click', async () => { const ok = await Premium.showPaywall(); if (ok) applyPremiumUI(); });
-  document.addEventListener('premium:change', applyPremiumUI);
-  document.addEventListener('premium:ready', applyPremiumUI);
-  Premium.init();
-  applyPremiumUI();
+  async function loadTop3() { LB.renderList(top3El, await LB.top(10)); }
+  WAR.mount(document.getElementById('warStart')); WAR.mount(document.getElementById('warOver')); WAR.refresh();
+  loadTop3();
   LB.renderSeasons(document.getElementById('seasons'));
-  // 언어 전환
+  // 언어 전환 (🌐): ko → en → ja
   document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); SFX.click && SFX.click(); });
-  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); if (state === 'over') showOver(); });
+  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); WAR.repaint(); if (state === 'over') showOver(); });
   // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
   LB.notice().then(n => {
     if (!n || !n.active) return;
@@ -778,6 +784,7 @@
     });
   });
   const visitsEl = document.getElementById('visits');
-  LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
+  if (TEST) { visitsEl.textContent = '🧪 TEST MODE'; document.getElementById('hall').style.display = 'none'; }
+  else if (false) LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();

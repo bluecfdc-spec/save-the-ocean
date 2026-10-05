@@ -2,7 +2,7 @@
   "name": "save-the-ocean",
   "version": "1.0.0",
   "private": true,
-  "description": "Save the Ocean — warship vs submarines (Capacitor app)",
+  "description": "Save the Ocean \u2014 warship vs submarines (Capacitor app)",
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
     "bundle": "esbuild src/native.js --bundle --format=iife --outfile=www/vendor/native.js --minify",
@@ -26,6 +26,7 @@
     "@capacitor/cli": "^8.0.0",
     "@fontsource/orbitron": "^5.0.0",
     "@trapezedev/configure": "^7.0.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "flag-icons": "^7.2.3"
   }
 }

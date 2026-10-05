@@ -3,7 +3,7 @@ import { mkdirSync, copyFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 const out = 'www/vendor', fonts = join(out, 'fonts');
 mkdirSync(fonts, { recursive: true });
-for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'])
+for (const f of ['firebase-app-compat.js', 'firebase-firestore-compat.js'])
   copyFileSync(join('node_modules/firebase', f), join(out, f));
 const src = 'node_modules/@fontsource/orbitron/files';
 const css = [];
@@ -13,4 +13,8 @@ for (const w of [600, 800]) {
   css.push(`@font-face{font-family:'Orbitron';font-style:normal;font-weight:${w};font-display:swap;src:url(${file}) format('woff2');}`);
 }
 writeFileSync(join(fonts, 'orbitron.css'), css.join('\n') + '\n');
+// 국기 그림 (프로필·순위판) — war.js 의 FLAGS 와 같은 목록
+const flags = join(out, 'flags'); mkdirSync(flags, { recursive: true });
+for (const c of ['kr', 'jp', 'us', 'gb', 'ca', 'au', 'de', 'fr', 'it', 'es', 'br', 'in'])
+  copyFileSync(join('node_modules/flag-icons/flags/4x3', c + '.svg'), join(flags, c + '.svg'));
 console.log('vendor ok');
