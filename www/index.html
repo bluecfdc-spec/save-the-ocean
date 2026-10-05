@@ -166,6 +166,15 @@
   #visits { display: none; }
   img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
   #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
+  /* 시작 화면 다듬기: 시작 버튼 축소, TOP 10 을 촘촘하게 */
+  #startOverlay .spacer { flex: 0 0 30vh; min-height: 180px; }
+  .start-btn { width: min(72%, 290px); padding: 10px 16px; border-radius: 12px; gap: 10px; }
+  .start-btn .t1 { font-size: clamp(19px, 6vw, 26px); }
+  .start-btn .arrow { font-size: 18px; }
+  #hall { padding: 8px 12px 6px; }
+  #hall h3 { font-size: clamp(14px, 4.2vw, 18px); }
+  ul.lb .lb-name { text-align: left; }
+  #hall ul.lb li, #board ul.lb li { padding: 2px 4px; font-size: 12.5px; }
 </style>
 </head>
 <body>
