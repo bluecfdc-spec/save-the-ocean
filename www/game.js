@@ -794,6 +794,6 @@
   });
   const visitsEl = document.getElementById('visits');
   if (TEST) { visitsEl.textContent = '🧪 TEST MODE'; document.getElementById('hall').style.display = 'none'; }
-  else if (false) LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
+  else LB.visit(); if (false) LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();

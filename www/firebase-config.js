@@ -27,3 +27,6 @@ window.DEFAULT_NOTICE = {
   button: "확인",
   en: { title: "🌊 Season 1 begins!", body: "Compete with players around the world.", button: "OK" }
 };
+
+// 앱 공지는 웹과 분리된 문서를 읽습니다 (Firestore visits/notice_app)
+window.NOTICE_DOC = "notice_app";

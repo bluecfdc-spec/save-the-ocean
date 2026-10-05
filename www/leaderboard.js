@@ -1,16 +1,15 @@
-// 새 버전(시험용) 순위판 — 국기 · 세력 · 바다 점령전
-//  · 주간 개인 순위 : scores_s9NNN / plays_s9NNN   (NNN = 현재 주간 시즌 번호, 시험용 게시판)
-//  · 월간 점령전    : scores_s9YYYYMMF              (F = 세력 1·2·3, 올린 점수 전부 누적)
-//  운영 중인 게시판(scores_sN)과 완전히 분리되어 있습니다.
+// 순위판 (웹 · 앱 공용) — 국기 · 세력 · 바다 점령전
+//  · 주간 개인 순위 : scores_sN / plays_sN   (N = 주간 시즌 번호, 매주 월요일 00:00 KST 에 +1)
+//  · 월간 점령전    : scores_sYYYYMMF        (F = 세력 1·2·3, 올린 점수 전부 누적)
+//  웹과 앱이 같은 게시판을 씁니다.
 (function () {
   const LB = {};
   const CFG = window.STO_CONFIG || {};
   const LOCAL_KEY = 'savetheocean_best';
   const P = 'savetheocean_next_';
-  // 주간 시즌 번호: 웹은 season.js(자동 갱신)를 따르고, 앱은 날짜로 계산 (시즌 1 = 2026-09-28 월요일 00:00 KST 시작)
-  const weekN = window.SEASON_SUFFIX ? Number((window.SEASON_SUFFIX.match(/_s(\d+)/) || [, 1])[1])
-    : Math.max(1, Math.floor((Date.now() - Date.UTC(2026, 8, 27, 15)) / (7 * 86400000)) + 1);
-  const SUFFIX = '_s9' + String(weekN).padStart(3, '0');
+  // 주간 시즌 번호는 날짜로 계산 (시즌 1 = 2026-09-28 월요일 00:00 KST 시작). 웹·앱이 같은 순간에 넘어간다.
+  const weekN = Math.max(1, Math.floor((Date.now() - Date.UTC(2026, 8, 27, 15)) / (7 * 86400000)) + 1);
+  const SUFFIX = '_s' + weekN;
   let db = null;
 
   LB.ready = false;
@@ -33,7 +32,7 @@
   const isoToday = () => { const d = new Date(); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); };
   // 점령전 시즌 = 한국 시간 기준 달
   LB.warMonth = function () { const k = new Date(Date.now() + 9 * 3600 * 1000); return { y: k.getUTCFullYear(), m: k.getUTCMonth() + 1, key: '' + k.getUTCFullYear() + z(k.getUTCMonth() + 1) }; };
-  const warCol = f => 'scores_s9' + LB.warMonth().key + f;
+  const warCol = f => 'scores_s' + LB.warMonth().key + f;
 
   LB.localBest = function () { return Number(localStorage.getItem(LOCAL_KEY) || 0); };
   LB.saveLocal = function (score) { if (score > LB.localBest()) localStorage.setItem(LOCAL_KEY, String(score)); };
@@ -122,15 +121,30 @@
     try { return await timeout(Promise.all([1, 2, 3].map(one)), 15000); } catch (e) { console.warn('war failed', e); return null; }
   };
 
+  // 방문자 카운트 (페이지 로드마다 1회)
   LB.visit = async function () {
     if (!LB.ready) return null;
     try {
-      const tRef = db.collection('visits').doc('total'), dRef = db.collection('visits').doc(isoToday());
-      const [a, d] = await timeout(Promise.all([tRef.get(), dRef.get()]), 10000) || [];
-      return a ? { total: (a.exists && a.data().count) | 0, today: (d.exists && d.data().count) | 0 } : null;
+      const inc = firebase.firestore.FieldValue.increment(1), key = isoToday();
+      const tRef = db.collection('visits').doc('total'), dRef = db.collection('visits').doc(key);
+      await timeout(Promise.all([tRef.set({ count: inc }, { merge: true }), dRef.set({ count: inc, date: key }, { merge: true })]), 10000);
+      return { ok: true };
     } catch (e) { return null; }
   };
-  LB.notice = async function () { return null; };   // 시험 주소에서는 공지 팝업 없음
+  // 공지: visits/notice 문서 (앱은 visits/notice_app) → 없으면 DEFAULT_NOTICE
+  LB.notice = async function () {
+    let def = window.DEFAULT_NOTICE || null;
+    if (def && window.I18N && def[I18N.lang]) def = Object.assign({}, def, def[I18N.lang]);
+    if (!LB.ready) return def;
+    try {
+      const d = await timeout(db.collection('visits').doc(window.NOTICE_DOC || 'notice').get(), 8000);
+      if (d && d.exists) {
+        const v = d.data(), L = window.I18N ? I18N.lang : 'ko', sfx = L === 'ko' ? '' : '_' + L;
+        return { active: !!v.active, title: v['title' + sfx] || v.title || '', body: v['body' + sfx] || v.body || '', button: v['button' + sfx] || v.button || t('notice.ok') };
+      }
+    } catch (e) {}
+    return def;
+  };
 
   LB.fmtCount = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
   LB.escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
