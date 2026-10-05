@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a1a2e">
-<title>SAVE THE OCEAN — 군함 vs 잠수정</title>
+<title>SAVE THE OCEAN: DEPTH WAR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -184,6 +184,9 @@
     filter: drop-shadow(0 2px 0 #3a1c00) drop-shadow(0 0 10px rgba(0, 20, 50, .9)); }
   #subtitle::before, #subtitle::after { content: ''; width: 28px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, #ffd24a); }
   #subtitle::after { transform: scaleX(-1); margin-left: -.3em; }
+  /* 새 타이틀 그림 (SAVE THE OCEAN · DEPTH WAR) — 로고가 화면 위 41% 를 차지 */
+  #startOverlay { background: #04101c url(assets/title2.jpg) center top / 100% auto no-repeat; }
+  #startOverlay .spacer { flex: 0 0 calc(min(100vw, 560px) * 0.75); min-height: 0; }
 </style>
 </head>
 <body>
@@ -237,7 +240,6 @@
     <div class="overlay" id="startOverlay">
       <div id="visits" data-i18n="visits.empty">오늘 – · 누적 –</div>
       <div class="spacer"></div>
-      <div id="subtitle">DEPTH WAR</div>
       <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
       <div id="testBadge" data-i18n="test.badge">🧪 새 버전 시험 중</div>
       <div class="war" id="warStart"></div>
@@ -280,14 +282,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="next/i18n.js?v=n9"></script>
+<script src="next/i18n.js?v=n10"></script>
 <script>I18N.apply();</script>
 <script src="firebase-config.js?v=20261003a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261003a"></script>
-<script src="next/leaderboard.js?v=n9"></script>
-<script src="next/war.js?v=n9"></script>
+<script src="next/leaderboard.js?v=n10"></script>
+<script src="next/war.js?v=n10"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -302,6 +304,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="next/game.js?v=n9"></script>
+<script src="next/game.js?v=n10"></script>
 </body>
 </html>
