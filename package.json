@@ -5,7 +5,7 @@
   "description": "Save the Ocean \u2014 warship vs submarines (Capacitor app)",
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
-    "bundle": "esbuild src/native.js --bundle --format=iife --outfile=www/vendor/native.js --minify",
+    "bundle": "esbuild src/native.js --bundle --format=iife --outfile=www/vendor/native.js --minify --target=es2017",
     "build": "npm run vendor && npm run bundle",
     "sync": "npm run build && cap sync",
     "assets": "capacitor-assets generate --iconBackgroundColor '#04101c' --splashBackgroundColor '#04101c' --iconBackgroundColorDark '#04101c' --splashBackgroundColorDark '#04101c'"
