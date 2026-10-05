@@ -99,18 +99,24 @@
   // 카드 하나(제목 + 지도 + 세력별 누적 점수)를 el 안에 만든다
   const mounts = []; let last;
   WAR.mount = function (el) {
-    el.innerHTML = '<h3 class="war-title"></h3><canvas class="war-map"></canvas><div class="war-rows"></div><div class="note war-note"></div>';
+    el.innerHTML = '<div class="war-title"></div><canvas class="war-map"></canvas><div class="war-rows"></div><div class="note war-note"></div>';
     mounts.push(el); paint(el);
   };
   function paint(el) {
+    if (!el.clientWidth) return;   // 숨겨진 탭은 건너뜀
     const m = LB.warMonth(), sum = last ? last.reduce((a, t) => a + t.w, 0) : 0, mine = (LB.profile() || {}).faction;
-    el.querySelector('.war-title').textContent = t('war.title', { ym: m.y + '.' + String(m.m).padStart(2, '0') });
-    WAR.draw(el.querySelector('.war-map'), last || []);
-    el.querySelector('.war-rows').innerHTML = WAR.FACTIONS.map(f => {
+    const title = el.querySelector('.war-title'), rows = el.querySelector('.war-rows'), cv = el.querySelector('.war-map'), note = el.querySelector('.war-note');
+    title.textContent = t('war.title', { ym: m.y + '.' + String(m.m).padStart(2, '0') });
+    rows.innerHTML = WAR.FACTIONS.map(f => {
       const row = last ? last.find(x => x.f === f.id) || {} : {}, tt = row.total || 0, w = row.w || 0;
-      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '"><img src="' + f.icon + '" alt=""><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div>';
+      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '"><div class="top"><img src="' + f.icon + '" alt=""><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span></div><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div>';
     }).join('');
-    el.querySelector('.war-note').textContent = last === null ? t('war.fail') : '';
+    note.textContent = last === null ? t('war.fail') : '';
+    // 지도는 탭 안에 남는 높이에 맞춰 크기를 정한다 (스크롤 없이 한 화면)
+    const cs = getComputedStyle(el), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    const availW = el.clientWidth - padX, availH = el.clientHeight - padY - title.offsetHeight - rows.offsetHeight - note.offsetHeight - 8;
+    cv.style.width = Math.max(120, Math.min(availW, availH > 60 ? availH * GW / GH : availW)) + 'px';
+    WAR.draw(cv, last || []);
   }
   WAR.repaint = () => mounts.forEach(paint);
   // 시즌은 3등분에서 시작: 세력마다 기본 점수(BASE)를 깔고, 올라온 점수만큼 전선이 밀린다

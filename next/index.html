@@ -204,6 +204,45 @@
     #regRow > * + *, #recordBox > * + *, #notice .foot > * + * { margin-top: 8px; }
     #facGrid button > * + * { margin-top: 4px; }
   }
+  /* ---------- 한 화면 배치: 스크롤 없이 탭으로 (점령전 / TOP 10) ---------- */
+  #startOverlay { overflow: hidden; gap: 8px; padding: 0 12px max(6px, env(safe-area-inset-bottom)); }
+  #startOverlay::before { height: 62%; }
+  .start-btn { flex: 0 0 auto; }
+  .tabs { width: min(100%, 420px); flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; background: rgba(6, 22, 40, .88); border: 2px solid #8fd3ff; border-radius: 14px; overflow: hidden; }
+  .tabbar { display: flex; flex: 0 0 auto; }
+  .tabbar button { flex: 1 1 0; padding: 8px 4px; border: 0; border-bottom: 2px solid rgba(143, 211, 255, .25); background: rgba(255, 255, 255, .04); color: #9fb9d2; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(11px, 3.4vw, 14px); letter-spacing: .02em; cursor: pointer; }
+  .tabbar button.on { color: #ffd77a; background: transparent; border-bottom-color: #ffd77a; }
+  .pane { flex: 1 1 0; min-height: 0; padding: 6px 10px; display: none; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  .pane.on { display: flex; }
+  .pane > * { width: 100%; }
+  .war-title { font-family: system-ui, sans-serif; font-size: 11px; color: #a9c3da; text-align: center; padding-bottom: 3px; }
+  .pane .war-map { width: 100%; margin: 0 auto; flex: 0 0 auto; }
+  .war-rows { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 5px; }
+  .war-row, .war-row:first-child { display: flex; flex-direction: column; align-items: center; border: 0; margin: 0; padding: 3px 2px; font-size: 12px; text-align: center; border-radius: 8px; }
+  .war-row .top { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .war-row img { width: 18px; height: 18px; }
+  .war-row .pts { font-size: 10px; text-align: center; }
+  .pane .note { text-align: center; }
+  .pane ul.lb { display: flex; flex-direction: column; height: 100%; }
+  .pane ul.lb li, #hall ul.lb li { flex: 1 1 0; min-height: 0; max-height: 30px; padding: 0 4px; }
+  .credit { flex: 0 0 auto; font-size: 10px; padding: 0; }
+  /* 게임 오버 */
+  #overOverlay { overflow: hidden; padding: 8px 12px; gap: 6px; touch-action: none; }
+  .over-head { display: flex; align-items: baseline; justify-content: center; gap: 12px; flex: 0 0 auto; }
+  .over-head h2 { margin: 0; font-size: clamp(16px, 5vw, 22px); }
+  .over-head .big { font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(22px, 7vw, 32px); color: #ffc93c; text-shadow: 0 0 10px #ff9d0088; }
+  #recordBox { width: min(100%, 420px); flex: 0 0 auto; padding: 6px 10px; gap: 4px; }
+  #recordBox .msg { font-size: 13px; line-height: 1.35; }
+  #regRow { gap: 2px; }
+  .prow { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #profLine { font-size: 13px; }
+  #regNote { font-size: 11px; }
+  .over-btns { width: min(100%, 420px); flex: 0 0 auto; flex-wrap: nowrap; }
+  .over-btns .btn { flex: 1 1 0; min-width: 0; padding: 11px 6px; font-size: clamp(12px, 3.8vw, 15px); letter-spacing: .02em; }
+  @supports not (aspect-ratio: 1 / 1) {
+    .over-head > * + *, .prow > * + *, .over-btns > * + *, .war-row .top > * + * { margin-left: 6px; }
+    #overOverlay > * + *, #startOverlay > * + * { margin-top: 7px; }
+  }
 </style>
 </head>
 <body>
@@ -258,33 +297,33 @@
       <div id="visits" data-i18n="visits.empty">오늘 – · 누적 –</div>
       <div class="spacer"></div>
       <button class="start-btn" id="startBtn" data-i18n-label="aria.start" aria-label="작전 시작"><span class="arrow">▶</span><span class="t1" data-i18n="start">작전 시작</span></button>
-      <div id="testBadge" data-i18n="test.badge">🧪 새 버전 시험 중</div>
-      <div class="war" id="warStart"></div>
-      <div id="hall">
-        <h3 data-i18n="board.week">🏆 이번 주 TOP 10</h3>
-        <div id="top3"><div class="note" data-i18n="loading">불러오는 중...</div></div>
-        <div id="seasons" style="display:none"></div>
-        <div id="bestLine" class="note"></div>
+      <div class="tabs" id="hall">
+        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 바다 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 이번 주 TOP 10</button></div>
+        <div class="pane on" data-pane="war" id="warStart"></div>
+        <div class="pane" data-pane="top" id="top3"><div class="note" data-i18n="loading">불러오는 중...</div></div>
       </div>
+      <div id="seasons" style="display:none"></div><div id="bestLine" style="display:none"></div>
       <div class="credit" data-i18n="credit">Made with AI</div>
     </div>
 
     <div class="overlay hidden" id="overOverlay">
-      <h2 data-i18n="over">침몰…</h2>
-      <div class="score-line" data-i18n="over.score">이번 점수</div>
-      <div class="big" id="finalScore">0</div>
+      <div class="over-head"><h2 data-i18n="over">침몰…</h2><div class="big" id="finalScore">0</div></div>
       <div id="recordBox">
         <div class="msg" id="recordMsg" data-i18n="over.checking">순위 확인 중...</div>
         <div id="regRow">
-          <div id="profLine"></div>
-          <button class="btn" id="regBtn" data-i18n="reg.btn">🌊 기록 올리기</button>
+          <div class="prow"><div id="profLine"></div><button class="link" id="profEdit" data-i18n="reg.edit">프로필 수정</button></div>
           <div id="regNote"></div>
-          <button class="link" id="profEdit" data-i18n="reg.edit">프로필 수정</button>
         </div>
       </div>
-      <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
-      <div class="war" id="warOver"></div>
-      <div id="board"><h3 data-i18n="board.week">🏆 이번 주 TOP 10</h3><div id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div></div>
+      <div class="row over-btns">
+        <button class="btn" id="regBtn" data-i18n="reg.btn">🌊 기록 올리기</button>
+        <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
+      </div>
+      <div class="tabs" id="tabsOver">
+        <div class="tabbar"><button type="button" class="on" data-tab="war" data-i18n="tab.war">🌊 바다 점령전</button><button type="button" data-tab="top" data-i18n="tab.top">🏆 이번 주 TOP 10</button></div>
+        <div class="pane on" data-pane="war" id="warOver"></div>
+        <div class="pane" data-pane="top" id="top10"><div class="note" data-i18n="loading">불러오는 중...</div></div>
+      </div>
     </div>
   </div>
 
@@ -299,14 +338,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="next/i18n.js?v=n11"></script>
+<script src="next/i18n.js?v=n12"></script>
 <script>I18N.apply();</script>
 <script src="firebase-config.js?v=20261003a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261003a"></script>
-<script src="next/leaderboard.js?v=n11"></script>
-<script src="next/war.js?v=n11"></script>
+<script src="next/leaderboard.js?v=n12"></script>
+<script src="next/war.js?v=n12"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -321,6 +360,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="next/game.js?v=n11"></script>
+<script src="next/game.js?v=n12"></script>
 </body>
 </html>
