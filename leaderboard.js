@@ -140,6 +140,7 @@
       const d = await timeout(db.collection('visits').doc(window.NOTICE_DOC || 'notice').get(), 8000);
       if (d && d.exists) {
         const v = d.data(), L = window.I18N ? I18N.lang : 'ko', sfx = L === 'ko' ? '' : '_' + L;
+        if ((window.NOTICE_REPLACES || []).indexOf(v.title) >= 0) return def;   // 옛 공지면 기본 공지로 대체
         return { active: !!v.active, title: v['title' + sfx] || v.title || '', body: v['body' + sfx] || v.body || '', button: v['button' + sfx] || v.button || t('notice.ok') };
       }
     } catch (e) {}
