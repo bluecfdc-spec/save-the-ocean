@@ -114,28 +114,87 @@
     lastFinal = { score: Math.floor(score), date: LB.formatToday() };
     setTimeout(showOver, 1300);
   }
-  let playRecorded = false;
+  // ───────────── 게임 오버 · 기록 올리기 ─────────────
+  const regRow = document.getElementById('regRow'), regBtn = document.getElementById('regBtn'), regNote = document.getElementById('regNote');
+  const profLine = document.getElementById('profLine'), profEdit = document.getElementById('profEdit');
+  function renderReg() {
+    const p = LB.profile(), f = p && WAR.byId(p.faction), left = LB.freeLeft();
+    regRow.style.display = TEST ? 'none' : '';
+    profLine.innerHTML = p ? WAR.flagEmoji(p.flag) + ' <b>' + LB.escape(p.name) + '</b> · <img src="' + f.icon + '" alt=""> <span style="color:' + f.color + '">' + t('f.' + f.key) + '</span>' : '';
+    profEdit.style.display = p ? '' : 'none';
+    const done = lastFinal.done, zero = lastFinal.score <= 0;
+    regBtn.style.display = done || TEST ? 'none' : '';
+    regBtn.disabled = zero || !LB.ready || left <= 0;
+    regBtn.textContent = left <= 0 ? t('reg.premium') : t('reg.btn');
+    regNote.textContent = !LB.ready ? t('reg.offline') : zero ? t('reg.zero') : left === Infinity ? t('reg.open') : left > 0 ? t('reg.left', { n: left }) : t('reg.none');
+  }
   async function showOver() {
     finalScore.textContent = I18N.num(lastFinal.score);
-    nameRow.style.display = 'none'; playRecorded = false;
-    recordMsg.textContent = LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) });
+    recordMsg.textContent = lastFinal.msg || (LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) }));
     top10El.innerHTML = '<div class="note">' + t('loading') + '</div>';
-    nameInput.value = LB.lastName();
     overOverlay.classList.remove('hidden');
+    renderReg();
     if (TEST) { recordMsg.textContent = '🧪 TEST MODE — ' + ({ ko: '기록은 저장되지 않아요', ja: '記録は保存されません' }[I18N.lang] || 'nothing is saved'); top10El.innerHTML = ''; return; }
+    WAR.repaint();
     if (!LB.ready) { LB.renderList(top10El, null); return; }
-    const [rows, rank] = await Promise.all([LB.top(10), LB.rank(lastFinal.score)]);
-    LB.renderList(top10El, rows, null);
-    // 10위 안이면 이름 입력, 아니면 등수만 안내 + 무명 기록
-    const inTop10 = rank !== null ? rank <= 10 : (rows !== null && (rows.length < 10 || lastFinal.score > rows[9].score));
-    if (inTop10) {
-      recordMsg.innerHTML = rank !== null ? t('over.top10', { rank }) : t('over.top10.norank');
-      nameRow.style.display = '';
-    } else {
-      recordMsg.innerHTML = (rank > 1000 ? t('over.rank.far') : t('over.rank', { rank })) + '<small>' + t('over.rank.sub') + '</small>';
-      if (!playRecorded) { playRecorded = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
-    }
+    const cur = lastFinal;
+    const [rows, rank] = await Promise.all([LB.top(10), LB.rank(cur.score), WAR.refresh()]);
+    if (cur !== lastFinal) return;
+    LB.renderList(top10El, rows);
+    if (!cur.done && rank !== null) recordMsg.textContent = rank > 1000 ? t('over.rank.far') : t('over.rank', { rank });
   }
+  async function doSubmit() {
+    const cur = lastFinal; if (cur.done || cur.busy) return;
+    cur.busy = true; regBtn.disabled = true; regBtn.textContent = t('submitting');
+    const r = await LB.submit(cur.score, cur.date);
+    cur.busy = false;
+    if (r.ok) {
+      cur.done = true;
+      const f = WAR.byId(LB.profile().faction);
+      cur.msg = t('reg.done', { f: t('f.' + f.key), n: I18N.num(cur.score) }) + (r.best ? ' ' + t('reg.done.best') : '');
+      recordMsg.textContent = cur.msg; SFX.click && SFX.click();
+      renderReg();
+      const [rows] = await Promise.all([LB.top(10), WAR.refresh()]);
+      LB.renderList(top10El, rows); loadTop3();
+    } else { renderReg(); showToast(t('toast.submitFail')); }
+  }
+
+  // ───────────── 프로필 (아이디 · 국기 · 세력) ─────────────
+  const profEl = document.getElementById('profile'), profName = document.getElementById('profName');
+  const flagGrid = document.getElementById('flagGrid'), facGrid = document.getElementById('facGrid');
+  let draft = null, afterProfile = null;
+  function openProfile(then) {
+    const p = LB.profile() || {}; afterProfile = then || null;
+    draft = { flag: p.flag || '', faction: p.faction || 0 };
+    profName.value = p.name || '';
+    const locked = LB.factionLocked();
+    flagGrid.innerHTML = WAR.FLAGS.map(c => '<button type="button" data-c="' + c + '"' + (c === draft.flag ? ' class="on"' : '') + '>' + WAR.flagEmoji(c) + '</button>').join('');
+    facGrid.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '"' + (f.id === draft.faction ? ' class="on"' : '') + '><img src="' + f.icon + '" alt=""><span style="color:' + f.color + '">' + t('f.' + f.key) + '</span></button>').join('');
+    facGrid.classList.toggle('locked', locked);
+    document.getElementById('facLab').textContent = locked ? t('prof.locked') : t('prof.faction');
+    profEl.classList.add('show');
+  }
+  flagGrid.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; draft.flag = b.dataset.c; flagGrid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); SFX.click && SFX.click(); });
+  facGrid.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || LB.factionLocked()) return; draft.faction = Number(b.dataset.f); facGrid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); SFX.click && SFX.click(); });
+  document.getElementById('profCancel').addEventListener('click', () => { profEl.classList.remove('show'); afterProfile = null; });
+  document.getElementById('profOk').addEventListener('click', () => {
+    const name = profName.value.trim();
+    if (!name || !draft.flag || !draft.faction) { showToast(t('prof.need')); return; }
+    LB.saveProfile({ name, flag: draft.flag, faction: draft.faction });
+    profEl.classList.remove('show'); renderReg(); WAR.repaint();
+    const next = afterProfile; afterProfile = null; if (next) next();
+  });
+  regBtn.addEventListener('click', () => { if (LB.profile()) doSubmit(); else openProfile(doSubmit); });
+  // 탭 (점령전 / TOP 10) — 시작 화면과 게임 오버 화면이 같은 탭을 본다
+  function setTab(name) {
+    document.querySelectorAll('.tabs').forEach(tb => {
+      tb.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x.dataset.tab === name));
+      tb.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === name));
+    });
+    WAR.repaint();
+  }
+  document.querySelectorAll('.tabbar').forEach(bar => bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setTab(b.dataset.tab); SFX.click && SFX.click(); } }));
+  profEdit.addEventListener('click', () => openProfile(null));
 
   // ───────────── 난이도 ─────────────
   // 원칙: 반응속도 싸움이 아니라, 리듬에 익숙해질 즈음 패턴이 꼬이게.
@@ -689,19 +748,11 @@
 
   // 시작/재시작/랭킹
   document.getElementById('startBtn').addEventListener('click', start);
-  document.getElementById('retryBtn').addEventListener('click', start);
-  document.getElementById('submitBtn').addEventListener('click', async () => {
-    const name = nameInput.value.trim() || t('anon');
-    const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = t('submitting');
-    const r = await LB.submit(name, lastFinal.score, lastFinal.date);
-    btn.disabled = false; btn.textContent = t('submit');
-    if (r.ok) {
-      nameRow.style.display = 'none'; recordMsg.textContent = t('submitted');
-      const rows = await LB.top(10); LB.renderList(top10El, rows, lastFinal);
-      loadTop3();
-    } else showToast(t('toast.submitFail'));
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    // 올리지 않고 넘어간 판은 순위 계산용 무명 기록으로만 남김
+    if (!TEST && lastFinal && !lastFinal.done && lastFinal.score > 0) { lastFinal.done = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
+    start();
   });
-  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('submitBtn').click(); });
 
   let toastTimer = 0;
   function showToast(msg) { toast.textContent = msg; toast.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.style.opacity = 0; }, 1600); }
@@ -718,12 +769,13 @@
   function renderBest() { const best = LB.localBest(); bestLine.textContent = best ? t('best', { n: I18N.num(best) }) : ''; }
   renderBest();
   const top3El = document.getElementById('top3');
-  async function loadTop3() { LB.renderList(top3El, await LB.top(3), null); }
+  async function loadTop3() { LB.renderList(top3El, await LB.top(10)); }
+  WAR.mount(document.getElementById('warStart')); WAR.mount(document.getElementById('warOver')); WAR.refresh();
   loadTop3();
   LB.renderSeasons(document.getElementById('seasons'));
   // 언어 전환 (🌐): ko → en → ja
   document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); SFX.click && SFX.click(); });
-  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); if (state === 'over') showOver(); });
+  document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); LB.renderSeasons(document.getElementById('seasons')); WAR.repaint(); if (state === 'over') showOver(); });
   // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
   LB.notice().then(n => {
     if (!n || !n.active) return;
@@ -742,6 +794,6 @@
   });
   const visitsEl = document.getElementById('visits');
   if (TEST) { visitsEl.textContent = '🧪 TEST MODE'; document.getElementById('hall').style.display = 'none'; }
-  else LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
+  else LB.visit(); if (false) LB.visit().then(v => { visitsEl.textContent = v ? t('visits', { today: LB.fmtCount(v.today), total: LB.fmtCount(v.total) }) : t('visits.empty'); });
   requestAnimationFrame(t => { lastT = t; loop(t); });
 })();

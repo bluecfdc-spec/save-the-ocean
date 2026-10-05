@@ -6,7 +6,8 @@
 - `index.html` — 화면 구성/스타일
 - `game.js` — 게임 로직 (이동·폭탄·어뢰·레이더·난이도·HP)
 - `audio.js` — 사운드 (Web Audio 합성, 음원 파일 없음)
-- `leaderboard.js` — Firestore 리더보드
+- `leaderboard.js` — Firestore 리더보드 (주간 개인 순위 + 월간 바다 점령전, 웹·앱 공용)
+- `war.js` — 바다 점령전 지도·세력
 - `firebase-config.js` — **Firebase 설정값 붙여넣는 곳**
 - `assets/` — 배경·스프라이트·패널 이미지
 

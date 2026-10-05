@@ -19,7 +19,7 @@ window.SCORES_COLLECTION = "scores";
 // 기본 공지 (Firebase 콘솔의 visits/notice 문서가 있으면 그 내용이 우선)
 //  · Firestore > visits 컬렉션 > 문서 ID "notice" > 필드: active(boolean), title(string), body(string), button(string)
 window.DEFAULT_NOTICE = {
-  active: true,
+  active: false,   // 베타 안내는 끝남. 공지는 Firestore visits/notice 문서로 띄웁니다
   title: "☕ 베타 테스트 중!",
   body: "지금은 베타 기간입니다.\n이번 주 금요일(10/2) 00시에 완성본을 배포할 예정이에요.\n\n그 전까지 의견을 주시는 분께는\n커피 쿠폰을 드립니다! ☕\n\n불편한 점, 아이디어, 버그 뭐든 환영합니다.",
   button: "확인",
