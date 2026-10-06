@@ -294,7 +294,7 @@
   .wr-txt .pct { font-size: clamp(13px, calc(var(--app-w) * 0.04), 18px); }
   .wr-txt .pts { font-size: 10px; }
   @supports not (aspect-ratio: 1 / 1) { .tabbar button + button { margin-left: 5px; } .war-row > img + .wr-txt { margin-left: 6px; } }
-  /* ---------- 조작판: 세로가 남는 화면에서는 버튼 영역을 최대 2배까지 키운다 (game.js 가 --panel-h 를 정함) ---------- */
+  /* ---------- 조작판: 세로가 남는 화면에서는 버튼 영역을 최대 1.65배까지 키운다 (game.js 가 --panel-h 를 정함) ---------- */
   #panel { aspect-ratio: auto; height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
   #panel .buttons, #panel:not(.one) .buttons, #panel.one .buttons, #panel.one.left-hand .buttons { padding-top: calc(var(--app-w) * 0.02); padding-bottom: calc(var(--app-w) * 0.02); }
   .zone, #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { aspect-ratio: auto; height: 100%; max-width: none; background-position: center; background-size: 100% min(100%, calc(var(--app-w) * 0.29)); border-radius: 14px; }
@@ -302,6 +302,11 @@
   #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { flex: 1 1 0; width: auto; }
   .zone.bomb, #panel:not(.one) .zone.bomb { height: 100%; transform: none; background-size: contain; width: clamp(calc(var(--app-w) * 0.19), calc(var(--panel-h, calc(var(--app-w) * 0.2572)) - var(--app-w) * 0.05), calc(var(--app-w) * 0.29)); }
   .zone.pressed, #panel:not(.one) .zone.bomb.pressed { transform: scale(.95); }
+  /* 한손 모드: 버튼 3개를 한쪽 60% 안에 모으고 나머지는 비운다 (좌수는 왼쪽, 우수는 오른쪽) */
+  #panel.one .zone { flex: 0 0 auto; width: calc(var(--app-w) * 0.19); background-size: 100% min(100%, calc(var(--app-w) * 0.27)); }
+  #panel.one .zone.bomb { width: calc(var(--app-w) * 0.185); background-size: contain; }
+  #panel.one .buttons { gap: calc(var(--app-w) * 0.012); padding-right: calc(var(--app-w) * 0.015); padding-left: 0; }
+  #panel.one.left-hand .buttons { padding-left: calc(var(--app-w) * 0.015); padding-right: 0; }
 </style>
 </head>
 <body>
