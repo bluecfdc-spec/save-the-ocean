@@ -57,32 +57,39 @@
 
   function weekBest() { try { const w = JSON.parse(localStorage.getItem(P + 'week') || 'null'); return w && w.s === SUFFIX ? w.score : -1; } catch (e) { return -1; } }
 
-  // 상위 N명 (한 사람은 최고 기록 하나만 보이게)
-  LB.top = async function (n) {
-    if (!LB.ready) return null;
-    try {
-      const snap = await timeout(db.collection(SCORES).orderBy('score', 'desc').limit(Math.min(n * 4, 60)).get(), 15000);
-      if (!snap) return null;
-      const rows = [], seen = {};
-      snap.forEach(d => {
-        const v = d.data(); const k = v.uid || d.id;
-        if (seen[k] || rows.length >= n) return; seen[k] = 1;
-        rows.push({ id: d.id, uid: v.uid || '', name: v.name || t('anon'), score: v.score | 0, date: v.date || '', flag: v.flag || '', faction: v.faction | 0 });
-      });
-      return rows;
-    } catch (e) { console.warn('top failed', e); return null; }
-  };
-
+  // ── 읽기 절약: 순위판과 점령전 합계는 한 번 불러오면 몇 분 동안 이 기기에 기억해 두고 다시 쓴다 ──
+  //  · 기억하는 시간(분): 공지 문서(visits/notice…)의 cacheMin 값 → 없으면 STO_CONFIG.CACHE_MIN → 없으면 5분
+  const ttlMs = () => { const v = Number(localStorage.getItem(P + 'ttl')) || Number((window.STO_CONFIG || {}).CACHE_MIN) || 5; return Math.max(1, Math.min(v, 240)) * 60000; };
+  const cget = k => { try { const c = JSON.parse(localStorage.getItem(P + 'c_' + k) || 'null'); return c && Date.now() - c.t < ttlMs() && Date.now() >= c.t ? c.v : null; } catch (e) { return null; } };
+  const cset = (k, v, keepTime) => { try { let t0 = Date.now(); if (keepTime) { const c = JSON.parse(localStorage.getItem(P + 'c_' + k) || 'null'); if (c) t0 = c.t; } localStorage.setItem(P + 'c_' + k, JSON.stringify({ t: t0, v })); } catch (e) {} };
+  const BOARD_DOCS = 60;
+  let boardJob = null;
+  // 이번 주 순위판 (한 사람은 최고 기록 하나만) → { rows, full }  full = 불러온 것보다 기록이 더 있을 수 있음
+  function board() {
+    const c = cget('board' + SUFFIX); if (c) return Promise.resolve(c);
+    if (boardJob) return boardJob;
+    boardJob = (async () => {
+      try {
+        const snap = await timeout(db.collection(SCORES).orderBy('score', 'desc').limit(BOARD_DOCS).get(), 15000);
+        if (!snap) return null;
+        const rows = [], seen = {}; let docs = 0;
+        snap.forEach(d => {
+          docs++; const v = d.data(); const k = v.uid || d.id;
+          if (seen[k]) return; seen[k] = 1;
+          rows.push({ id: d.id, uid: v.uid || '', name: v.name || t('anon'), score: v.score | 0, date: v.date || '', flag: v.flag || '', faction: v.faction | 0 });
+        });
+        const b = { rows, full: docs >= BOARD_DOCS }; cset('board' + SUFFIX, b); return b;
+      } catch (e) { console.warn('top failed', e); return null; }
+      finally { boardJob = null; }
+    })();
+    return boardJob;
+  }
+  LB.top = async function (n) { if (!LB.ready) return null; const b = await board(); return b ? b.rows.slice(0, n) : null; };
+  // 내 순위: 기억해 둔 순위판에서 계산 (추가로 읽지 않는다). 순위판 밖이면 9999
   LB.rank = async function (score) {
-    if (!LB.ready) return null;
-    try {
-      // 이번 주 순위판에서 내 점수보다 높은 사람 수 + 1 (집계 질의 대신 일반 조회: 어디서나 동작)
-      const snap = await timeout(db.collection(SCORES).where('score', '>', score).limit(1000).get(), 15000);
-      if (!snap) return null;
-      const seen = {}; let n = 0;
-      snap.forEach(d => { const v = d.data(), k = v.uid || d.id; if (!seen[k]) { seen[k] = 1; n++; } });
-      return n + 1;
-    } catch (e) { console.warn('rank failed', e); return null; }
+    if (!LB.ready) return null; const b = await board(); if (!b) return null;
+    const higher = b.rows.filter(r => r.score > score).length;
+    return higher >= b.rows.length && b.full ? 9999 : higher + 1;
   };
 
   // 기록 올리기: 세력 점수에는 항상 누적, 개인 순위에는 이번 주 내 최고 기록일 때만
@@ -105,6 +112,13 @@
       localStorage.setItem(P + 'submits', String(LB.submitCount() + 1));
       localStorage.setItem(P + 'warsub', LB.warMonth().key);
       if (best) localStorage.setItem(P + 'week', JSON.stringify({ s: SUFFIX, score }));
+      // 기억해 둔 순위판·점령전 합계에 내 기록을 바로 반영 (다시 읽지 않는다)
+      try {
+        const b = cget('board' + SUFFIX);
+        if (b && best) { b.rows = b.rows.filter(r => r.uid !== p.uid); b.rows.push({ id: 'me', uid: p.uid, name: p.name, score, date, flag: p.flag, faction: p.faction }); b.rows.sort((x, y) => y.score - x.score); cset('board' + SUFFIX, b, true); }
+        const w = cget('war' + LB.warMonth().key);
+        if (w) { w.forEach(x => { if (x.f === p.faction) { x.total += score; x.n += 1; } }); cset('war' + LB.warMonth().key, w, true); }
+      } catch (e) {}
       return { ok: true, best };
     } catch (e) { console.warn('submit failed', e); return { ok: false, reason: e && e.code || 'error' }; }
   };
@@ -118,6 +132,7 @@
   LB.warTotals = async function () {
     const cfg = window.FIREBASE_CONFIG || {};
     if (!cfg.projectId) return null;
+    const wk = 'war' + LB.warMonth().key, wc = cget(wk); if (wc) return wc;
     const url = 'https://firestore.googleapis.com/v1/projects/' + cfg.projectId + '/databases/(default)/documents:runAggregationQuery';
     const one = async f => {
       const body = { structuredAggregationQuery: { structuredQuery: { from: [{ collectionId: warCol(f) }] }, aggregations: [{ alias: 'total', sum: { field: { fieldPath: 'score' } } }, { alias: 'n', count: {} }] } };
@@ -127,7 +142,7 @@
       const num = v => v ? Number(v.integerValue || v.doubleValue || 0) : 0;
       return { f, total: num(g.total), n: num(g.n) };
     };
-    try { return await timeout(Promise.all([1, 2, 3].map(one)), 15000); } catch (e) { console.warn('war failed', e); return null; }
+    try { const r = await timeout(Promise.all([1, 2, 3].map(one)), 15000); if (r) cset(wk, r); return r; } catch (e) { console.warn('war failed', e); return null; }
   };
 
   // 방문자 카운트 (페이지 로드마다 1회)
@@ -149,6 +164,7 @@
       const d = await timeout(db.collection('visits').doc(window.NOTICE_DOC || 'notice').get(), 8000);
       if (d && d.exists) {
         const v = d.data(), L = window.I18N ? I18N.lang : 'ko', sfx = L === 'ko' ? '' : '_' + L;
+        try { if (Number(v.cacheMin) > 0) localStorage.setItem(P + 'ttl', String(Number(v.cacheMin))); else localStorage.removeItem(P + 'ttl'); } catch (e) {}
         if ((window.NOTICE_REPLACES || []).indexOf(v.title) >= 0) return def;   // 옛 공지면 기본 공지로 대체
         return { active: !!v.active, title: v['title' + sfx] || v.title || '', body: v['body' + sfx] || v.body || '', button: v['button' + sfx] || v.button || t('notice.ok') };
       }

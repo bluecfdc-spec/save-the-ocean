@@ -441,7 +441,7 @@
 <script>I18N.apply();</script>
 <script>window.FLAG_BASE = "vendor/flags/";</script>
 <script src="firebase-config.js"></script>
-<script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
+<script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000, CACHE_MIN: 5 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <!-- 명예의 전당(지난 주간 1위·점령전 우승 세력)은 웹의 season.js / war-seasons.js 를 온라인일 때만 받아온다 -->
 <script>['season.js', 'war-seasons.js'].forEach(function (f) { var s = document.createElement('script'); s.async = true; s.setAttribute('data-opt', '1'); s.src = 'https://bluecfdc-spec.github.io/save-the-ocean/' + f + '?d=' + new Date().toISOString().slice(0, 10); s.onload = function () { if (window.LB) document.querySelectorAll('.hall-pane').forEach(function (el) { LB.renderSeasons(el); }); }; document.head.appendChild(s); });</script>
 <script src="audio.js"></script>

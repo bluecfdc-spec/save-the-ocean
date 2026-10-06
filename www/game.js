@@ -172,7 +172,7 @@
     const [rows, rank] = await Promise.all([LB.top(10), LB.rank(cur.score), WAR.refresh()]);
     if (cur !== lastFinal) return;
     LB.renderList(top10El, rows);
-    if (!cur.done) recordMsg.textContent = rank === null ? '' : rank > 1000 ? t('over.rank.far') : t('over.rank', { rank });
+    if (!cur.done) recordMsg.textContent = rank === null ? '' : rank >= 9999 ? t('over.rank.far') : t('over.rank', { rank });
   }
   async function doSubmit() {
     const cur = lastFinal; if (cur.done || cur.busy) return;
