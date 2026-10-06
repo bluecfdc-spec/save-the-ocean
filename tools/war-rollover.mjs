@@ -53,7 +53,7 @@ fs.writeFileSync(FILE, `// =====================================================
 //  바다 점령전 지난 시즌 결과 — GitHub Actions(.github/workflows/war-season.yml)가
 //  매달 1일 00:10(KST)에 tools/war-rollover.mjs 로 자동 갱신합니다. 손으로 고쳐도 됩니다.
 // ============================================================================
-//  ym: 시즌(연.월) · f: 우승 세력(1 파도, 2 폭풍, 3 태양, 0 없음) · pct: 우승 세력 점유율 · totals: 세력별 누적 점수
+//  ym: 시즌(연.월) · f: 우승 세력(1 서지, 2 게일, 3 솔라, 0 없음) · pct: 우승 세력 점유율 · totals: 세력별 누적 점수
 window.WAR_SEASONS_DATA = ${JSON.stringify(data, null, 2)};
 `);
 console.log(`→ ${ym} 우승: ${win ? '세력' + win.f + ' (' + entry.pct + '%)' : '없음'}. war-seasons.js 갱신 완료.`);

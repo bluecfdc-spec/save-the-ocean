@@ -1,4 +1,4 @@
-// 바다 점령전 — 세력 3개(파도·폭풍·태양)가 가상의 바다를 나눠 갖는 지도
+// 바다 점령전 — 세력 3개(서지·게일·솔라)가 가상의 바다를 나눠 갖는 지도
 //  · 그림 파일이 있으면 자동으로 사용: assets/seamap.jpg, assets/faction_wave.png, faction_storm.png, faction_sun.png
 //  · 없으면 임시 도형으로 그립니다.
 (function () {
@@ -89,11 +89,12 @@
     oc.putImageData(im, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(off, 0, 0, w, h);
     if (!bg) { c.fillStyle = '#0a1522'; c.strokeStyle = 'rgba(190,225,255,.5)'; c.lineWidth = 1; ISLES.forEach(s => { c.beginPath(); c.ellipse(s[0] * w, s[1] * h, s[2] * w * 1.5, s[2] * w, s[0] * 9, 0, 6.3); c.fill(); c.stroke(); }); }
     const sum = (totals || []).reduce((a, t) => a + t.w, 0);
-    const s = Math.max(22, Math.min(w * 0.1, h * 0.26)), fs = Math.max(11, Math.min(w * 0.04, h * 0.11));
+    const s = Math.max(30, Math.min(w * 0.155, h * 0.36)), fs = Math.max(12, Math.min(w * 0.046, h * 0.12));   // 세력 문장은 큼직하게
     WAR.FACTIONS.forEach(f => {
       // 문장과 % 글자가 지도 밖으로 잘리지 않게 위아래를 맞춘다
       const x = f.home[0] * w, y = Math.max(s / 2 + 3, Math.min(f.home[1] * h, h - s / 2 - fs - 5));
-      c.save(); c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 6; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
+      c.save(); c.shadowColor = f.color; c.shadowBlur = s * 0.35; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
+      c.save(); c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = 5; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
       if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).w || 0; c.font = '800 ' + fs + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + fs); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + fs); }
     });
   };
@@ -111,7 +112,7 @@
     title.textContent = t('war.title', { ym: m.y + '.' + String(m.m).padStart(2, '0') });
     rows.innerHTML = WAR.FACTIONS.map(f => {
       const row = last ? last.find(x => x.f === f.id) || {} : {}, tt = row.total || 0, w = row.w || 0;
-      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '"><div class="top"><img src="' + f.icon + '" alt=""><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span></div><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div>';
+      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><div class="wr-txt"><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div></div>';
     }).join('');
     note.textContent = last === null ? t('war.fail') : '';
     // 지도는 탭 안에 남는 높이에 맞춰 크기를 정한다 (스크롤 없이 한 화면)

@@ -233,6 +233,7 @@
     document.querySelectorAll('.tabs').forEach(tb => {
       tb.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x.dataset.tab === name));
       tb.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === name));
+      tb.querySelector('.tabbar').style.setProperty('--tabc', { war: '#35c7ff', top: '#ffd24a', hall: '#ff8fd0' }[name]);
     });
     WAR.repaint();
   }
