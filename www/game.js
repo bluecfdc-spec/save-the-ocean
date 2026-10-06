@@ -67,7 +67,7 @@
 
   // ───────────── 크기/배치 ─────────────
   // 전장(게임이 벌어지는 영역)은 어느 기기에서나 같은 크기: 가로 390 × 세로 500 논리 좌표.
-  // 화면 가로를 꽉 채우도록 통째로 확대·축소하고, 세로가 남으면 위(하늘)·아래(해저)에 배경만 더 보여준다.
+  // 화면 가로를 꽉 채우도록 통째로 확대·축소하고, 세로가 남으면 위쪽에 하늘을 더 보여준다.
   // → 화면이 길든 짧든 수심(폭탄이 떨어지는 깊이)과 잠수정이 다니는 범위는 같다.
   const FIELD_W = 390, FIELD_H = 500;
   const MIN_RATIO = 0.1031 + FIELD_H / FIELD_W + 0.2572 + 0.012;   // 앱 전체(점수판 + 전장 + 조작판)의 최소 세로/가로 비
@@ -83,7 +83,7 @@
     document.documentElement.style.setProperty('--app-top', top + 'px');
     const r = wrap.getBoundingClientRect(), k = r.width / FIELD_W;
     W = FIELD_W; H = FIELD_H;
-    viewH = Math.max(FIELD_H, r.height / k); offY = Math.round((viewH - FIELD_H) * 0.4);
+    viewH = Math.max(FIELD_H, r.height / k); offY = Math.round(viewH - FIELD_H);   // 남는 세로는 전부 위쪽 하늘로 (아래는 조작판과 바로 맞닿게)
     canvas.width = Math.round(r.width * DPR); canvas.height = Math.round(r.height * DPR);
     canvas.style.width = r.width + 'px'; canvas.style.height = r.height + 'px';
     ctx.setTransform(canvas.width / W, 0, 0, canvas.width / W, 0, 0);
@@ -547,7 +547,7 @@
     if (IMG.bg.complete && IMG.bg.naturalWidth) {
       const bw = BG_W * bgScale, bh = BG_H * bgScale, below = viewH - offY - (bgY + bh);
       // 세로가 남는 화면: 위는 하늘, 아래는 해저를 배경 가장자리에서 늘려 채운다 (게임 영역은 그대로)
-      if (offY + bgY > 0.5) { ctx.fillStyle = '#4194e6'; ctx.fillRect(0, -offY - 20, W, offY + bgY + 21); }
+      if (offY + bgY > 0.5) { const sk = ctx.createLinearGradient(0, -offY, 0, bgY + 2); sk.addColorStop(0, '#1f5fb8'); sk.addColorStop(1, '#4194e6'); ctx.fillStyle = sk; ctx.fillRect(0, -offY - 20, W, offY + bgY + 21); }
       if (below > 0.5) { const gr = ctx.createLinearGradient(0, bgY + bh, 0, bgY + bh + below); gr.addColorStop(0, '#292928'); gr.addColorStop(1, '#04101c'); ctx.fillStyle = gr; ctx.fillRect(0, bgY + bh - 1, W, below + 21); }
       ctx.drawImage(IMG.bg, bgX, bgY, bw, bh);
       if (offY + bgY > 0.5) { const g1 = ctx.createLinearGradient(0, bgY, 0, bgY + 26); g1.addColorStop(0, '#4194e6'); g1.addColorStop(1, '#4194e600'); ctx.fillStyle = g1; ctx.fillRect(0, bgY - 1, W, 27); }
@@ -679,7 +679,7 @@
     ctx.shadowBlur = 0; ctx.globalAlpha = 1;
     ctx.restore();
 
-    drawRadar();
+    ctx.save(); ctx.translate(0, offY); drawRadar(); ctx.restore();   // 레이더도 전장과 함께 내려 그린다
     // 레벨 표시 (작게)
     if (state === 'play') {
       ctx.font = '600 10px Orbitron, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,230,255,.75)';
