@@ -3,10 +3,14 @@
 #   · ASC_KEY_P8      : App Store Connect API 키 파일(AuthKey_XXXX.p8)의 내용 전체
 #  필요한 저장소 변수 (같은 화면의 Variables 탭) 또는 아래 env 기본값:
 #   · ASC_KEY_ID, ASC_ISSUER_ID, APPLE_TEAM_ID
-#  실행: GitHub → Actions → "iOS TestFlight" → Run workflow
+#  실행: ios/testflight-trigger 파일을 고쳐서 push
 name: iOS TestFlight
 on:
   workflow_dispatch:
+  # ios/testflight-trigger 파일이 바뀌어 push 되면 실행 (수동 실행 버튼은 기본 브랜치에 있는 워크플로에만 보여서)
+  push:
+    branches: [app]
+    paths: ['ios/testflight-trigger']
 permissions:
   contents: read
 env:
