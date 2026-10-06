@@ -117,7 +117,7 @@
     note.textContent = last === null ? t('war.fail') : '';
     // 지도는 탭 안에 남는 높이에 맞춰 크기를 정한다 (스크롤 없이 한 화면)
     const cs = getComputedStyle(el), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-    const availW = el.clientWidth - padX, availH = el.clientHeight - padY - title.offsetHeight - rows.offsetHeight - note.offsetHeight - 8;
+    const availW = el.clientWidth - padX, availH = el.clientHeight - padY - title.offsetHeight - rows.offsetHeight - note.offsetHeight - 18;   // 지도와 범례 사이 여백 포함
     cv.style.width = availW + 'px';
     WAR.draw(cv, last || [], Math.max(90, Math.min(availH > 60 ? availH : availW * GH / GW, availW * 0.8)));
   }
