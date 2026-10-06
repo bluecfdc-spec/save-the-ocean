@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const out = 'www/vendor', fonts = join(out, 'fonts');
 mkdirSync(fonts, { recursive: true });
 // Firebase 는 최신 문법(?. ?? 등)을 써서 오래된 WebView(Chrome 79 이하)에서 읽지 못함 → es2017 로 낮춰서 내장
-for (const f of ['firebase-app-compat.js', 'firebase-firestore-compat.js'])
+for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'])
   writeFileSync(join(out, f), transformSync(readFileSync(join('node_modules/firebase', f), 'utf8'), { target: 'es2017', minify: true, legalComments: 'none' }).code);
 const src = 'node_modules/@fontsource/orbitron/files';
 const css = [];

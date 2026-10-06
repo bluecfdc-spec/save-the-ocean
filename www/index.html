@@ -33,9 +33,9 @@
   #hud .hp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(#8dff6a, #34c81e); box-shadow: 0 0 8px #6cff4a; transition: width .25s; }
   #hud .hp-fill.warn { background: linear-gradient(#ffd36a, #e89a1e); box-shadow: 0 0 8px #ffbb4a; }
   #hud .hp-fill.danger { background: linear-gradient(#ff7a6a, #d8281e); box-shadow: 0 0 8px #ff4a3a; }
-  #hud .hp-text { position: absolute; left: 31.5%; top: 44%; height: 40%; display: flex; align-items: center; font-size: clamp(9px, 2.7vw, 15px); color: #fff; text-shadow: 0 0 6px #000; }
-  #hud .score { position: absolute; left: 36%; width: 30%; top: 40%; height: 48%; display: flex; align-items: center; justify-content: center; font-size: clamp(13px, 4.3vw, 25px); color: #ffc93c; letter-spacing: .06em; text-shadow: 0 0 8px #ff9d00aa, 0 2px 0 #4b2a00; }
-  #hud .bombs { position: absolute; left: 83.5%; width: 13.5%; top: 42%; height: 46%; display: flex; align-items: center; justify-content: center; gap: .15em; font-size: clamp(10px, 3.4vw, 20px); color: #fff; text-shadow: 0 0 6px #000; }
+  #hud .hp-text { position: absolute; left: 31.5%; top: 44%; height: 40%; display: flex; align-items: center; font-size: clamp(9px, calc(var(--app-w) * 0.027), 15px); color: #fff; text-shadow: 0 0 6px #000; }
+  #hud .score { position: absolute; left: 38%; width: 28%; top: 40%; height: 48%; display: flex; align-items: center; justify-content: center; font-size: clamp(13px, calc(var(--app-w) * 0.043), 25px); color: #ffc93c; letter-spacing: .06em; text-shadow: 0 0 8px #ff9d00aa, 0 2px 0 #4b2a00; }
+  #hud .bombs { position: absolute; left: 83.5%; width: 13.5%; top: 42%; height: 46%; display: flex; align-items: center; justify-content: center; gap: .15em; font-size: clamp(10px, calc(var(--app-w) * 0.034), 20px); color: #fff; text-shadow: 0 0 6px #000; }
   #hud .bombs .n { color: #ffc93c; }
   #hud.drill .bombs .n { color: #ffb347; }
 
@@ -79,10 +79,10 @@
   #visits { position: fixed; right: 10px; top: max(8px, env(safe-area-inset-top)); z-index: 21; font-family: system-ui, sans-serif; font-size: 11px; color: #dbeeff; background: rgba(3, 14, 28, .62); border: 1px solid rgba(160,220,255,.35); border-radius: 20px; padding: 4px 10px; letter-spacing: .02em; }
   .start-btn { width: min(92%, 380px); padding: 16px 20px; border-radius: 14px; border: 3px solid #9fdcff; background: linear-gradient(#3c9cf0, #0e4f9e 60%, #0a3d7c); box-shadow: 0 6px 0 #062a55, 0 0 24px #2b9dff88, inset 0 1px 0 #cfeeff; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; font-family: 'Orbitron', system-ui, sans-serif; }
   .start-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #062a55; }
-  .start-btn .t1 { font-size: clamp(26px, 8.5vw, 38px); font-weight: 900; letter-spacing: .06em; text-shadow: 0 3px 0 #06305c, 0 0 12px #8fd3ff88; }
+  .start-btn .t1 { font-size: clamp(26px, calc(var(--app-w) * 0.085), 38px); font-weight: 900; letter-spacing: .06em; text-shadow: 0 3px 0 #06305c, 0 0 12px #8fd3ff88; }
   .start-btn .arrow { font-size: 26px; color: #cfeeff; }
   #hall { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #ffd77a; border-radius: 14px; padding: 10px 12px 8px; box-shadow: 0 0 20px rgba(255,200,80,.25); }
-  #hall h3 { margin: 0 0 4px; font-size: clamp(15px, 4.6vw, 20px); color: #ffd77a; letter-spacing: .06em; text-shadow: 0 0 10px #ffb03a88; }
+  #hall h3 { margin: 0 0 4px; font-size: clamp(15px, calc(var(--app-w) * 0.046), 20px); color: #ffd77a; letter-spacing: .06em; text-shadow: 0 0 10px #ffb03a88; }
   #hall .part { font-family: system-ui, sans-serif; font-size: 12px; color: #a9c3da; margin: 6px 0 2px; }
   #hall .sep { border-top: 1px dashed rgba(255,215,122,.45); margin: 8px 0 4px; }
   ul.lb { list-style: none; margin: 0; padding: 0; font-family: system-ui, sans-serif; font-size: 13px; }
@@ -131,7 +131,7 @@
   /* ---------- 새 버전: 점령전 · 프로필 ---------- */
   .fdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
   .war { width: min(92%, 380px); background: rgba(6, 22, 40, .84); border: 2px solid #8fd3ff; border-radius: 14px; padding: 10px 12px 8px; }
-  .war h3 { margin: 0 0 6px; font-size: clamp(14px, 4.2vw, 18px); color: #bfe6ff; letter-spacing: .04em; }
+  .war h3 { margin: 0 0 6px; font-size: clamp(14px, calc(var(--app-w) * 0.042), 18px); color: #bfe6ff; letter-spacing: .04em; }
   .war-map { display: block; width: 100%; border-radius: 10px; border: 1px solid rgba(160,220,255,.4); background: #061c33; }
   .war-row { display: grid; grid-template-columns: 22px 1fr auto 6.5em; gap: 8px; align-items: center; font-family: system-ui, sans-serif; font-size: 13px; padding: 5px 4px; border-top: 1px solid rgba(255,255,255,.07); text-align: left; }
   .war-row:first-child { border-top: 0; margin-top: 4px; }
@@ -162,21 +162,21 @@
   #facGrid.locked button:not(.on) { opacity: .3; }
   #profile .foot { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
   #profile .foot .btn { min-width: 0; flex: 1; padding: 12px 8px; }
-  #toast { position: fixed; z-index: 60; top: 14%; max-width: 86vw; }
+  #toast { position: fixed; z-index: 60; top: 14%; max-width: calc(var(--app-w) * 0.86); }
   #visits { display: none; }
   img.flag { height: 1em; width: auto; border-radius: 2px; vertical-align: -0.12em; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
   #flagGrid button img.flag { height: 24px; display: block; margin: 0 auto; }
   /* 시작 화면 다듬기: 시작 버튼 축소, TOP 10 을 촘촘하게 */
   #startOverlay .spacer { flex: 0 0 31vh; min-height: 190px; }
   .start-btn { width: min(72%, 290px); padding: 10px 16px; border-radius: 12px; gap: 10px; }
-  .start-btn .t1 { font-size: clamp(19px, 6vw, 26px); }
+  .start-btn .t1 { font-size: clamp(19px, calc(var(--app-w) * 0.06), 26px); }
   .start-btn .arrow { font-size: 18px; }
   #hall { padding: 8px 12px 6px; }
-  #hall h3 { font-size: clamp(14px, 4.2vw, 18px); }
+  #hall h3 { font-size: clamp(14px, calc(var(--app-w) * 0.042), 18px); }
   ul.lb .lb-name { text-align: left; }
   #hall ul.lb li, #board ul.lb li { padding: 2px 4px; font-size: 12.5px; }
   /* 부제 */
-  #subtitle { display: flex; align-items: center; gap: 10px; margin: -2px 0 2px; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(20px, 6.6vw, 30px); letter-spacing: .3em; padding-left: .3em; white-space: nowrap;
+  #subtitle { display: flex; align-items: center; gap: 10px; margin: -2px 0 2px; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(20px, calc(var(--app-w) * 0.066), 30px); letter-spacing: .3em; padding-left: .3em; white-space: nowrap;
     background: linear-gradient(#fff6c9 10%, #ffd24a 45%, #c9820e 80%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px rgba(60, 28, 0, .55);
     filter: drop-shadow(0 2px 0 #3a1c00) drop-shadow(0 0 10px rgba(0, 20, 50, .9)); }
   #subtitle::before, #subtitle::after { content: ''; width: 28px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, #ffd24a); }
@@ -207,7 +207,7 @@
   .start-btn { flex: 0 0 auto; }
   .tabs { width: min(100%, 420px); flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; background: rgba(6, 22, 40, .88); border: 2px solid #8fd3ff; border-radius: 14px; overflow: hidden; }
   .tabbar { display: flex; flex: 0 0 auto; }
-  .tabbar button { flex: 1 1 0; padding: 8px 4px; border: 0; border-bottom: 2px solid rgba(143, 211, 255, .25); background: rgba(255, 255, 255, .04); color: #9fb9d2; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(11px, 3.4vw, 14px); letter-spacing: .02em; cursor: pointer; }
+  .tabbar button { flex: 1 1 0; padding: 8px 4px; border: 0; border-bottom: 2px solid rgba(143, 211, 255, .25); background: rgba(255, 255, 255, .04); color: #9fb9d2; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(11px, calc(var(--app-w) * 0.034), 14px); letter-spacing: .02em; cursor: pointer; }
   .tabbar button.on { color: #ffd77a; background: transparent; border-bottom-color: #ffd77a; }
   .pane { flex: 1 1 0; min-height: 0; padding: 6px 10px; display: none; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
   .pane.on { display: flex; }
@@ -226,8 +226,8 @@
   /* 게임 오버 */
   #overOverlay { overflow: hidden; padding: 8px 12px; gap: 6px; touch-action: none; }
   .over-head { display: flex; align-items: baseline; justify-content: center; gap: 12px; flex: 0 0 auto; }
-  .over-head h2 { margin: 0; font-size: clamp(16px, 5vw, 22px); }
-  .over-head .big { font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(22px, 7vw, 32px); color: #ffc93c; text-shadow: 0 0 10px #ff9d0088; }
+  .over-head h2 { margin: 0; font-size: clamp(16px, calc(var(--app-w) * 0.05), 22px); }
+  .over-head .big { font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; font-size: clamp(22px, calc(var(--app-w) * 0.07), 32px); color: #ffc93c; text-shadow: 0 0 10px #ff9d0088; }
   #recordBox { width: min(100%, 420px); flex: 0 0 auto; padding: 6px 10px; gap: 4px; }
   #recordBox .msg { font-size: 13px; line-height: 1.35; }
   #regRow { gap: 2px; }
@@ -235,7 +235,7 @@
   #profLine { font-size: 13px; }
   #regNote { font-size: 11px; }
   .over-btns { width: min(100%, 420px); flex: 0 0 auto; flex-wrap: nowrap; }
-  .over-btns .btn { flex: 1 1 0; min-width: 0; padding: 11px 6px; font-size: clamp(12px, 3.8vw, 15px); letter-spacing: .02em; }
+  .over-btns .btn { flex: 1 1 0; min-width: 0; padding: 11px 6px; font-size: clamp(12px, calc(var(--app-w) * 0.038), 15px); letter-spacing: .02em; }
   @supports not (aspect-ratio: 1 / 1) {
     .over-head > * + *, .prow > * + *, .over-btns > * + *, .war-row .top > * + * { margin-left: 6px; }
     #overOverlay > * + *, #startOverlay > * + * { margin-top: 7px; }
@@ -244,10 +244,10 @@
   #startOverlay { gap: 6px; padding: 0 8px max(4px, env(safe-area-inset-bottom)); }
   #startOverlay .spacer { flex: 0 0 calc(var(--app-w) * 0.715); }
   .start-btn { width: min(58%, 250px); padding: 7px 12px; border-width: 2px; box-shadow: 0 4px 0 #062a55, 0 0 18px #2b9dff88, inset 0 1px 0 #cfeeff; }
-  .start-btn .t1 { font-size: clamp(16px, 5vw, 22px); }
+  .start-btn .t1 { font-size: clamp(16px, calc(var(--app-w) * 0.05), 22px); }
   .start-btn .arrow { font-size: 14px; }
   .tabs, #recordBox, .over-btns { width: min(100%, 520px); }
-  .tabbar button { padding: 7px 2px; font-size: clamp(10px, 3.1vw, 13px); white-space: nowrap; overflow: hidden; }
+  .tabbar button { padding: 7px 2px; font-size: clamp(10px, calc(var(--app-w) * 0.031), 13px); white-space: nowrap; overflow: hidden; }
   .pane { padding: 5px 6px; }
   .pane .war-map { margin: 0; }
   .war-rows { margin-top: 3px; }
@@ -262,6 +262,19 @@
   /* 언어·소리 버튼은 화면 모서리가 아니라 게임 상자 기준으로 놓는다 (PC 등 넓은 화면) */
   #langBtn { left: calc(50% - var(--app-w) / 2 + 8px); top: calc(var(--app-top, 0px) + var(--app-w) * 0.103 + 6px); }
   #soundBtns { right: calc(50% - var(--app-w) / 2 + 8px); top: calc(var(--app-top, 0px) + var(--app-w) * 0.103 + 6px); }
+  /* 점수판: 글자 크기를 게임 상자 폭 기준으로 (HP 숫자와 점수가 겹치던 문제) */
+  #hud .score { font-size: calc(var(--app-w) * 0.038); letter-spacing: .04em; }
+  #hud .hp-text { font-size: calc(var(--app-w) * 0.024); }
+  #hud .hp-wrap { width: 17%; }
+  #hud .hp-text { left: 30.5%; }
+  #notice .card { max-height: 94%; overflow-y: auto; touch-action: pan-y; }
+  #notice .body { font-size: 13px; line-height: 1.55; }
+  #notice h3 { font-size: 18px; }
+  .ctl { bottom: var(--ctl-bottom, 12px); }
+  .btn.login { font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0; min-width: 220px; padding: 12px 18px; border-radius: 10px; }
+  .btn.login.apple { background: #000; border-color: #777; box-shadow: 0 4px 0 #222; }
+  .btn.login.google { background: #fff; color: #333; border-color: #ccc; box-shadow: 0 4px 0 #999; }
+  #loginRow { flex: 0 0 auto; flex-direction: column; gap: 6px; }
 </style>
 </head>
 <body>
@@ -285,6 +298,7 @@
     <div id="flagGrid"></div>
     <div class="lab" id="facLab" data-i18n="prof.faction">세력</div>
     <div id="facGrid"></div>
+    <button class="link" id="acctDelete" style="display:none; margin-top:10px; color:#ff9a8f" data-i18n="acct.delete">계정 삭제</button>
     <div class="foot">
       <button class="btn red" id="profCancel" data-i18n="prof.cancel">취소</button>
       <button class="btn" id="profOk" data-i18n="prof.ok">저장</button>
@@ -335,6 +349,10 @@
           <div id="regNote"></div>
         </div>
       </div>
+      <div class="row" id="loginRow" style="display:none">
+        <div class="note" data-i18n="over.needLogin">기록을 올리려면 로그인이 필요해요.</div>
+        <button class="btn login apple" id="loginBtn"> Apple로 로그인</button>
+      </div>
       <div class="row over-btns">
         <button class="btn" id="regBtn" data-i18n="reg.btn">🌊 기록 올리기</button>
         <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
@@ -362,12 +380,13 @@
   window.addEventListener('error', function (e) {
     if (e.target && e.target.getAttribute && e.target.getAttribute('data-opt')) return;   // 없어도 되는 온라인 자료
     var b = document.getElementById('__errbox');
-    if (!b) { b = document.createElement('div'); b.id = '__errbox'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;pointer-events:none;background:rgba(120,0,0,.92);color:#fff;font:11px/1.4 monospace;padding:6px 8px;max-height:40%;overflow:auto;white-space:pre-wrap'; b.textContent = 'WebView: ' + ((navigator.userAgent.match(/Chrome\/[\d.]+/) || [''])[0]) + '\n'; document.body.appendChild(b); }
+    if (!b) { b = document.createElement('div'); b.id = '__errbox'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;pointer-events:none;background:rgba(120,0,0,.92);color:#fff;font:11px/1.4 monospace;padding:6px 8px;max-height:40%;overflow:auto;white-space:pre-wrap'; b.textContent = 'WebView: ' + ((navigator.userAgent.match(/Chrome\/[\d.]+|Version\/[\d.]+/) || [''])[0]) + '\n'; document.body.appendChild(b); }
     b.textContent += (e.message || 'load error') + ' @ ' + ((e.filename || (e.target && (e.target.src || e.target.href)) || '').split('/').pop()) + ':' + (e.lineno || '') + '\n';
   }, true);
 </script>
 <!-- 앱 내장 라이브러리 (CI 가 vendor/ 에 채움 — 오프라인에서도 로드됨) -->
 <script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
 <script src="vendor/native.js"></script>
 <script src="i18n.js"></script>
@@ -380,6 +399,7 @@
 <script src="audio.js"></script>
 <script src="leaderboard.js"></script>
 <script src="war.js"></script>
+<script src="auth.js"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {

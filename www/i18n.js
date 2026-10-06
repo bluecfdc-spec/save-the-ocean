@@ -6,6 +6,10 @@
 (function () {
   const DICT = {
     ko: {
+      'acct.delete': '계정 삭제',
+      'acct.delete.confirm': '정말 삭제할까요? 한 번 더 누르면 삭제돼요',
+      'acct.deleted': '계정을 삭제했어요.',
+      'acct.delete.fail': '삭제하지 못했어요. 잠시 후 다시 시도해주세요.',
       'tab.hall': '👑 명예의 전당',
       'hall.week': '👑 주간 1위',
       'hall.war': '🌊 점령전 우승 세력',
@@ -86,7 +90,7 @@
       'over.free.sub': '프리미엄이면 전 세계 순위와 비교하고 이름을 남길 수 있어요.',
       'over.premiumBtn': '🌍 글로벌 순위판 열기 · {price}',
       'over.restore': '구매 복원',
-      'over.needLogin': '순위 등록은 계정 로그인이 필요해요.',
+      'over.needLogin': '기록을 올리려면 로그인이 필요해요.',
       'over.login.apple': ' Apple로 로그인',
       'over.login.google': 'G  Google로 로그인',
       'name.ph': '이름 입력',
@@ -122,6 +126,10 @@
       'premium.active': '🌍 프리미엄 이용 중'
     },
     en: {
+      'acct.delete': 'Delete account',
+      'acct.delete.confirm': 'Really delete? Tap again to confirm',
+      'acct.deleted': 'Your account was deleted.',
+      'acct.delete.fail': 'Could not delete. Please try again later.',
       'tab.hall': '👑 Hall of Fame',
       'hall.week': '👑 Weekly champions',
       'hall.war': '🌊 Ocean War winners',
@@ -238,6 +246,10 @@
       'premium.active': '🌍 Premium active'
     },
     ja: {
+      'acct.delete': 'アカウント削除',
+      'acct.delete.confirm': '本当に削除しますか？もう一度押すと削除されます',
+      'acct.deleted': 'アカウントを削除しました。',
+      'acct.delete.fail': '削除できませんでした。しばらくしてからもう一度お試しください。',
       'tab.hall': '👑 殿堂',
       'hall.week': '👑 週間1位',
       'hall.war': '🌊 争奪戦の優勝勢力',
