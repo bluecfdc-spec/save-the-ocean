@@ -97,7 +97,113 @@
       c.save(); c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = 5; if (f.im) c.drawImage(f.im, x - s / 2, y - s / 2, s, s); c.restore();
       if (sum) { const tt = (totals.find(t => t.f === f.id) || {}).w || 0; c.font = '800 ' + fs + 'px Orbitron, system-ui, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.75)'; const txt = Math.round(tt / sum * 100) + '%'; c.strokeText(txt, x, y + s / 2 + fs); c.fillStyle = '#fff'; c.fillText(txt, x, y + s / 2 + fs); }
     });
+    // 애니메이션용: 지금 그린 정지 화면을 보관
+    const keep = document.createElement('canvas'); keep.width = canvas.width; keep.height = canvas.height; keep.getContext('2d').drawImage(canvas, 0, 0);
+    const sig = (totals || []).map(t => t.f + ':' + Math.round((t.w || 0) / (sum || 1) * 100)).join(',');
+    canvas._war = { base: keep, w, h, dpr, owner, sum, totals: totals || [], sig, ships: canvas._war && canvas._war.sig === sig && canvas._war.w === w ? canvas._war.ships : null, shots: canvas._war && canvas._war.sig === sig ? canvas._war.shots : [], fx: [] };
   };
+
+  // ---------- 지도 위 함대 애니메이션 (장식용: 점수와 무관) ----------
+  //  세력마다 점유율에 따라 1~3척이 자기 해역을 돌며 서로 포격한다. 맞으면 불꽃이 튀고, 가끔 침몰했다가 다시 나타난다.
+  const ownerAt = (st, u, v) => { if (u < 0 || v < 0 || u >= 1 || v >= 1) return -1; return st.owner[cells()[Math.min(GH - 1, Math.floor(v * GH)) * GW + Math.min(GW - 1, Math.floor(u * GW))]]; };
+  function findSpot(st, f, near) {
+    const home = WAR.byId(f).home; let best = null, bs = -1e9;
+    for (let i = 0; i < 70; i++) {
+      const u = near ? near[0] + (Math.random() - 0.5) * 0.16 : 0.06 + Math.random() * 0.88, v = near ? near[1] + (Math.random() - 0.5) * 0.2 : 0.1 + Math.random() * 0.8;
+      if (ownerAt(st, u, v) !== f) continue;
+      if (Math.hypot((u - home[0]) * 1.6, v - home[1]) < 0.3) continue;                       // 세력 문장을 가리지 않게
+      if ([[0.05, 0], [-0.05, 0], [0, 0.07], [0, -0.07]].some(o => ownerAt(st, u + o[0], v + o[1]) !== f)) continue;   // 경계선에서 조금 안쪽
+      let sc = -Math.hypot(u - 0.5, v - 0.5) * (near ? 0 : 1) + Math.random() * 0.25;        // 전선(가운데) 쪽을 선호
+      (st.ships || []).forEach(o => { const d = Math.hypot((u - o.x) * 1.6, v - o.y); if (d < 0.16) sc -= 2; });
+      if (sc > bs) { bs = sc; best = [u, v]; }
+    }
+    return best;
+  }
+  function makeFleet(st) {
+    st.ships = [];
+    st.totals.forEach(t => {
+      const share = st.sum ? t.w / st.sum : 0, n = share >= 0.4 ? 3 : share >= 0.24 ? 2 : share > 0 ? 1 : 0;
+      for (let i = 0; i < n; i++) { const p = findSpot(st, t.f); if (p) st.ships.push({ f: t.f, x: p[0], y: p[1], ax: p[0], ay: p[1], tx: p[0], ty: p[1], ang: Math.random() * 6.28, hp: 2, cd: 0.5 + Math.random() * 2.5, sink: 0, born: 0, hit: 0 }); }
+    });
+  }
+  function stepFleet(st, dt) {
+    if (!st.ships) makeFleet(st);
+    for (const s of st.ships) {
+      if (s.sink > 0) {                                   // 침몰 중 → 잠시 뒤 다른 곳에서 다시 출항
+        s.sink += dt;
+        if (s.sink > 4.5) { const p = findSpot(st, s.f) || [s.ax, s.ay]; Object.assign(s, { x: p[0], y: p[1], ax: p[0], ay: p[1], tx: p[0], ty: p[1], hp: 2, sink: 0, born: 0, cd: 1 + Math.random() * 2 }); }
+        continue;
+      }
+      s.born += dt; s.hit = Math.max(0, s.hit - dt);
+      if (Math.hypot(s.tx - s.x, s.ty - s.y) < 0.012) { const p = findSpot(st, s.f, [s.ax, s.ay]); if (p) { s.tx = p[0]; s.ty = p[1]; } }
+      const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy) || 1, sp = 0.022;
+      s.x += dx / d * sp * dt; s.y += dy / d * sp * dt;
+      let da = Math.atan2(dy * st.h, dx * st.w) - s.ang; da = Math.atan2(Math.sin(da), Math.cos(da)); s.ang += da * Math.min(1, dt * 2);
+      s.cd -= dt;
+      if (s.cd <= 0) {
+        const foes = st.ships.filter(o => o.f !== s.f && o.sink === 0 && o.born > 0.6).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y));
+        const tg = foes[Math.random() < 0.75 ? 0 : Math.floor(Math.random() * foes.length)];
+        s.cd = 1.1 + Math.random() * 2.4;
+        if (tg) {
+          const hit = Math.random() < 0.34, mx = hit ? 0 : (Math.random() - 0.5) * 0.09, my = hit ? 0 : (Math.random() - 0.5) * 0.11;
+          st.shots.push({ f: s.f, x0: s.x, y0: s.y, x1: tg.x + mx, y1: tg.y + my, t: 0, dur: 0.55 + Math.hypot(tg.x - s.x, tg.y - s.y) * 1.1, tg: hit ? tg : null });
+          st.fx.push({ k: 'muzzle', x: s.x, y: s.y, t: 0, dur: 0.18 });
+        }
+      }
+    }
+    for (let i = st.shots.length - 1; i >= 0; i--) {
+      const b = st.shots[i]; b.t += dt;
+      if (b.t >= b.dur) {
+        st.shots.splice(i, 1);
+        if (b.tg && b.tg.sink === 0) { b.tg.hp--; b.tg.hit = 0.5; st.fx.push({ k: 'boom', x: b.x1, y: b.y1, t: 0, dur: 0.55 }); if (b.tg.hp <= 0) { b.tg.sink = 0.001; st.fx.push({ k: 'boom', x: b.x1, y: b.y1, t: 0, dur: 0.9, big: 1 }); } }
+        else st.fx.push({ k: 'splash', x: b.x1, y: b.y1, t: 0, dur: 0.6 });
+      }
+    }
+    for (let i = st.fx.length - 1; i >= 0; i--) { st.fx[i].t += dt; if (st.fx[i].t >= st.fx[i].dur) st.fx.splice(i, 1); }
+  }
+  function drawFleet(canvas, st) {
+    const c = canvas.getContext('2d'), w = st.w, h = st.h, L = Math.max(17, Math.min(w * 0.078, h * 0.165));
+    c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(st.base, 0, 0); c.setTransform(st.dpr, 0, 0, st.dpr, 0, 0);
+    for (const s of st.ships || []) {
+      const f = WAR.byId(s.f), x = s.x * w, y = s.y * h, sk = s.sink > 0 ? Math.min(1, s.sink / 1.6) : 0;
+      if (s.sink > 1.6) { const k = (s.sink - 1.6) / 1.2; if (k < 1) { c.strokeStyle = 'rgba(255,255,255,' + (0.5 * (1 - k)) + ')'; c.lineWidth = 1.2; c.beginPath(); c.arc(x, y, L * (0.4 + k), 0, 6.283); c.stroke(); } continue; }
+      c.save(); c.translate(x, y); c.rotate(s.ang + sk * 0.9); c.globalAlpha = Math.min(1, s.born / 0.6) * (1 - sk * 0.85); c.scale(1 - sk * 0.35, 1 - sk * 0.35);
+      if (!sk) { c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-L * 0.5, -L * 0.12); c.lineTo(-L * 0.95, -L * 0.3); c.moveTo(-L * 0.5, L * 0.12); c.lineTo(-L * 0.95, L * 0.3); c.stroke(); }   // 항적
+      c.shadowColor = f.color; c.shadowBlur = 6;
+      c.beginPath(); c.moveTo(L * 0.55, 0); c.quadraticCurveTo(L * 0.3, -L * 0.27, -L * 0.42, -L * 0.22); c.lineTo(-L * 0.5, 0); c.lineTo(-L * 0.42, L * 0.22); c.quadraticCurveTo(L * 0.3, L * 0.27, L * 0.55, 0); c.closePath();
+      c.fillStyle = s.hit > 0 ? '#fff' : '#cfd8e3'; c.fill(); c.shadowBlur = 0; c.lineWidth = 1; c.strokeStyle = '#0b1826'; c.stroke();
+      c.fillStyle = f.color; c.fillRect(-L * 0.24, -L * 0.12, L * 0.4, L * 0.24);                      // 갑판(세력 색)
+      c.fillStyle = '#0b1826'; c.beginPath(); c.arc(L * 0.27, 0, L * 0.055, 0, 6.283); c.arc(-L * 0.3, 0, L * 0.05, 0, 6.283); c.fill();   // 포탑
+      c.restore();
+      if (sk) { c.fillStyle = 'rgba(255,255,255,' + (0.6 * (1 - sk)) + ')'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(x + Math.sin(i * 2.1 + s.sink * 6) * L * 0.4, y - sk * L * 0.3 + Math.cos(i * 1.7) * L * 0.25, 1.4, 0, 6.283); c.fill(); } }
+    }
+    for (const b of st.shots) {
+      const k = b.t / b.dur, x = (b.x0 + (b.x1 - b.x0) * k) * w, y = (b.y0 + (b.y1 - b.y0) * k) * h - Math.sin(k * Math.PI) * h * 0.07, f = WAR.byId(b.f);
+      const k2 = Math.max(0, k - 0.12), x2 = (b.x0 + (b.x1 - b.x0) * k2) * w, y2 = (b.y0 + (b.y1 - b.y0) * k2) * h - Math.sin(k2 * Math.PI) * h * 0.07;
+      c.strokeStyle = f.color; c.globalAlpha = 0.8; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x2, y2); c.lineTo(x, y); c.stroke(); c.globalAlpha = 1;
+      c.fillStyle = '#fff6d0'; c.beginPath(); c.arc(x, y, 1.9, 0, 6.283); c.fill();
+    }
+    for (const e of st.fx) {
+      const k = e.t / e.dur, x = e.x * w, y = e.y * h;
+      if (e.k === 'boom') { const r = L * (e.big ? 0.9 : 0.5) * (0.35 + k); const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(255,246,208,' + (1 - k) + ')'); g.addColorStop(0.4, 'rgba(255,179,71,' + (0.9 * (1 - k)) + ')'); g.addColorStop(1, 'rgba(255,90,40,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
+        c.fillStyle = 'rgba(255,210,122,' + (1 - k) + ')'; for (let i = 0; i < (e.big ? 9 : 5); i++) { const a = i * 1.4 + (e.big ? 0.4 : 0), d = r * (0.5 + k * 1.3); c.fillRect(x + Math.cos(a) * d - 1, y + Math.sin(a) * d - 1, 2, 2); } }
+      else if (e.k === 'splash') { c.strokeStyle = 'rgba(235,248,255,' + (0.8 * (1 - k)) + ')'; c.lineWidth = 1.3; c.beginPath(); c.arc(x, y, L * (0.12 + k * 0.38), 0, 6.283); c.stroke(); }
+      else { c.fillStyle = 'rgba(255,240,190,' + (1 - k) + ')'; c.beginPath(); c.arc(x, y, L * 0.22 * (0.6 + k), 0, 6.283); c.fill(); }
+    }
+  }
+  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lastTick = 0;
+  function tick(now) {
+    requestAnimationFrame(tick);
+    if (now - lastTick < 33 || document.hidden) return;                 // 초당 30장이면 충분
+    const dt = Math.min(0.1, (now - lastTick) / 1000); lastTick = now;
+    for (const el of mounts) {
+      const cv = el.querySelector('.war-map'), st = cv && cv._war;
+      if (!st || !st.sum || !cv.offsetParent || !cv.clientWidth) continue;   // 보이는 지도만
+      stepFleet(st, dt); drawFleet(cv, st);
+    }
+  }
+  if (!calm) requestAnimationFrame(tick);
 
   // 카드 하나(제목 + 지도 + 세력별 누적 점수)를 el 안에 만든다
   const mounts = []; let last;
