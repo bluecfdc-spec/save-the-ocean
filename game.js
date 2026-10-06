@@ -140,11 +140,13 @@
     profEdit.style.display = p ? '' : 'none';
     const done = lastFinal.done, zero = lastFinal.score <= 0;
     regBtn.style.display = done || TEST ? 'none' : '';
+    if (loginRow && (done || !needLogin())) loginRow.style.display = 'none';
     regBtn.disabled = zero || !LB.ready || left <= 0;
     regBtn.textContent = left <= 0 ? t('reg.premium') : t('reg.btn');
     regNote.textContent = !LB.ready ? t('reg.offline') : zero ? t('reg.zero') : left === Infinity ? t('reg.open') : left > 0 ? t('reg.left', { n: left }) : t('reg.none');
   }
   async function showOver() {
+    if (loginRow) loginRow.style.display = 'none';
     finalScore.textContent = I18N.num(lastFinal.score);
     recordMsg.textContent = lastFinal.msg || (LB.ready ? t('over.checking') : t('over.offline', { n: I18N.num(LB.localBest()) }));
     top10El.innerHTML = '<div class="note">' + t('loading') + '</div>';
@@ -188,6 +190,7 @@
     facGrid.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '"' + (f.id === draft.faction ? ' class="on"' : '') + '><img src="' + f.icon + '" alt=""><span style="color:' + f.color + '">' + t('f.' + f.key) + '</span></button>').join('');
     facGrid.classList.toggle('locked', locked);
     document.getElementById('facLab').textContent = locked ? t('prof.locked') : t('prof.faction');
+    delArmed = 0; delBtn.textContent = t('acct.delete'); delBtn.style.display = window.AUTH && AUTH.required() && AUTH.user() ? '' : 'none';
     profEl.classList.add('show');
   }
   flagGrid.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; draft.flag = b.dataset.c; flagGrid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); SFX.click && SFX.click(); });
@@ -200,7 +203,31 @@
     profEl.classList.remove('show'); renderReg(); WAR.repaint();
     const next = afterProfile; afterProfile = null; if (next) next();
   });
-  regBtn.addEventListener('click', () => { if (LB.profile()) doSubmit(); else openProfile(doSubmit); });
+  // 앱에서는 기록을 올리기 전에 스토어 계정 로그인이 필요하다 (웹은 window.AUTH 가 없어 그대로 진행)
+  const loginRow = document.getElementById('loginRow'), loginBtn = document.getElementById('loginBtn');
+  const needLogin = () => !!(window.AUTH && AUTH.required() && !AUTH.user());
+  function afterLogin() { loginRow.style.display = 'none'; LB.bindUser(); renderReg(); if (LB.profile()) doSubmit(); else openProfile(doSubmit); }
+  regBtn.addEventListener('click', () => {
+    if (needLogin()) {
+      loginBtn.textContent = t('over.login.' + AUTH.provider()); loginBtn.className = 'btn login ' + AUTH.provider();
+      loginRow.style.display = ''; regBtn.style.display = 'none'; return;
+    }
+    if (LB.profile()) doSubmit(); else openProfile(doSubmit);
+  });
+  loginBtn.addEventListener('click', async () => {
+    loginBtn.disabled = true;
+    const r = await AUTH.signIn();
+    loginBtn.disabled = false;
+    if (r.ok) afterLogin(); else showToast(t('toast.loginFail'));
+  });
+  // 계정 삭제: 한 번 누르면 확인 문구로 바뀌고, 다시 누르면 삭제
+  const delBtn = document.getElementById('acctDelete'); let delArmed = 0;
+  delBtn.addEventListener('click', async () => {
+    if (Date.now() - delArmed > 5000) { delArmed = Date.now(); delBtn.textContent = t('acct.delete.confirm'); return; }
+    delBtn.disabled = true; const r = await AUTH.deleteAccount(); delBtn.disabled = false; delArmed = 0;
+    if (r.ok) { LB.clearLocal(); profEl.classList.remove('show'); renderReg(); showToast(t('acct.deleted')); }
+    else { delBtn.textContent = t('acct.delete'); showToast(t('acct.delete.fail')); }
+  });
   // 탭 (점령전 / TOP 10) — 시작 화면과 게임 오버 화면이 같은 탭을 본다
   function setTab(name) {
     document.querySelectorAll('.tabs').forEach(tb => {

@@ -41,9 +41,13 @@
   LB.profile = function () { try { const p = JSON.parse(localStorage.getItem(P + 'profile') || 'null'); return p && p.name && p.flag && p.faction ? p : null; } catch (e) { return null; } };
   LB.saveProfile = function (p) {
     const old = LB.profile() || {};
-    const out = { name: String(p.name).trim().slice(0, 8), flag: p.flag, faction: p.faction, uid: old.uid || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)), fmonth: old.faction === p.faction && old.fmonth ? old.fmonth : LB.warMonth().key };
+    const out = { name: String(p.name).trim().slice(0, 8), flag: p.flag, faction: p.faction, uid: authUid() || old.uid || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)), fmonth: old.faction === p.faction && old.fmonth ? old.fmonth : LB.warMonth().key };
     localStorage.setItem(P + 'profile', JSON.stringify(out)); return out;
   };
+  // 로그인한 계정이 있으면 그 계정의 uid 를 이 기기의 프로필에 묶는다 (앱)
+  const authUid = () => { try { return (window.AUTH && AUTH.user() && AUTH.user().uid) || ''; } catch (e) { return ''; } };
+  LB.bindUser = function () { const u = authUid(), p = LB.profile(); if (u && p && p.uid !== u) { p.uid = u; localStorage.setItem(P + 'profile', JSON.stringify(p)); } };
+  LB.clearLocal = function () { ['profile', 'submits', 'warsub', 'week'].forEach(k => localStorage.removeItem(P + k)); };
   // 세력은 한 시즌(한 달) 동안 고정
   LB.factionLocked = function () { const p = LB.profile(); return !!(p && p.fmonth === LB.warMonth().key && localStorage.getItem(P + 'warsub') === p.fmonth); };
 
@@ -81,11 +85,13 @@
 
   // 기록 올리기: 세력 점수에는 항상 누적, 개인 순위에는 이번 주 내 최고 기록일 때만
   LB.submit = async function (score, date) {
-    const p = LB.profile(); score = Number(score) | 0;
+    let p = LB.profile(); score = Number(score) | 0;
     if (!p) return { ok: false, reason: 'no-profile' };
     if (!LB.ready) return { ok: false, reason: 'not-configured' };
     if (score <= 0) return { ok: false, reason: 'zero' };
     if (LB.freeLeft() <= 0) return { ok: false, reason: 'limit' };
+    if (window.AUTH && AUTH.required() && !AUTH.user()) return { ok: false, reason: 'login' };
+    LB.bindUser(); p = LB.profile();
     try {
       const base = { name: p.name, score, date, flag: p.flag, faction: p.faction, uid: p.uid };
       const jobs = [db.collection(warCol(p.faction)).add(base)];

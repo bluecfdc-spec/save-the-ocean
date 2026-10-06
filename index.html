@@ -272,6 +272,10 @@
   #notice .body { font-size: 13px; line-height: 1.55; }
   #notice h3 { font-size: 18px; }
   .ctl { bottom: var(--ctl-bottom, 12px); }
+  .btn.login { font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0; min-width: 220px; padding: 12px 18px; border-radius: 10px; }
+  .btn.login.apple { background: #000; border-color: #777; box-shadow: 0 4px 0 #222; }
+  .btn.login.google { background: #fff; color: #333; border-color: #ccc; box-shadow: 0 4px 0 #999; }
+  #loginRow { flex: 0 0 auto; flex-direction: column; gap: 6px; }
 </style>
 </head>
 <body>
@@ -295,6 +299,7 @@
     <div id="flagGrid"></div>
     <div class="lab" id="facLab" data-i18n="prof.faction">세력</div>
     <div id="facGrid"></div>
+    <button class="link" id="acctDelete" style="display:none; margin-top:10px; color:#ff9a8f" data-i18n="acct.delete">계정 삭제</button>
     <div class="foot">
       <button class="btn red" id="profCancel" data-i18n="prof.cancel">취소</button>
       <button class="btn" id="profOk" data-i18n="prof.ok">저장</button>
@@ -345,6 +350,10 @@
           <div id="regNote"></div>
         </div>
       </div>
+      <div class="row" id="loginRow" style="display:none">
+        <div class="note" data-i18n="over.needLogin">기록을 올리려면 로그인이 필요해요.</div>
+        <button class="btn login apple" id="loginBtn"> Apple로 로그인</button>
+      </div>
       <div class="row over-btns">
         <button class="btn" id="regBtn" data-i18n="reg.btn">🌊 기록 올리기</button>
         <button class="btn red" id="retryBtn" data-i18n="retry">다시 하기</button>
@@ -369,14 +378,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="i18n.js?v=20261005j"></script>
+<script src="i18n.js?v=20261006a"></script>
 <script>I18N.apply();</script>
-<script src="firebase-config.js?v=20261005j"></script>
+<script src="firebase-config.js?v=20261006a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script><script src="war-seasons.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
-<script src="audio.js?v=20261005j"></script>
-<script src="leaderboard.js?v=20261005j"></script>
-<script src="war.js?v=20261005j"></script>
+<script src="audio.js?v=20261006a"></script>
+<script src="leaderboard.js?v=20261006a"></script>
+<script src="war.js?v=20261006a"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -391,6 +400,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20261005j"></script>
+<script src="game.js?v=20261006a"></script>
 </body>
 </html>
