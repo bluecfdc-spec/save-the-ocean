@@ -295,15 +295,32 @@
   .wr-txt .pct { font-size: clamp(13px, calc(var(--app-w) * 0.04), 18px); }
   .wr-txt .pts { font-size: 10px; }
   @supports not (aspect-ratio: 1 / 1) { .tabbar button + button { margin-left: 5px; } .war-row > img + .wr-txt { margin-left: 6px; } }
-  /* ---------- 조작판: 버튼 폭은 웹 그대로, 세로가 남는 화면에서는 버튼을 아래로 늘린다 (game.js 가 --panel-h 를 정함) ---------- */
-  #panel { aspect-ratio: auto; box-sizing: border-box; height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
-  #panel .buttons, #panel:not(.one) .buttons { padding-top: calc(var(--app-w) * 0.02); padding-bottom: calc(var(--app-w) * 0.02); }
-  #panel.one .buttons, #panel.one.left-hand .buttons { padding-top: calc(var(--app-w) * 0.03); padding-bottom: calc(var(--app-w) * 0.03); }
-  .zone, #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { aspect-ratio: auto; height: 100%; max-width: none; background-size: 100% 100%; }
-  .zone { flex: 0 0 auto; width: calc(var(--app-w) * 0.2116); }
-  #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { flex: 1 1 0; width: auto; }
-  .zone.bomb { height: 100%; width: calc(var(--app-w) * 0.1744); background-size: contain; background-position: center; }
-  #panel:not(.one) .zone.bomb { width: calc(var(--app-w) * 0.2172); transform: scale(1.1); }
+  /* ---------- 조작판: 그림 한 장(양손 / 한손)을 깔고, 그 위에 투명한 터치 영역을 얹는다 (game.js 가 --panel-h 를 정함) ---------- */
+  #panel { aspect-ratio: auto; box-sizing: border-box; height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) + env(safe-area-inset-bottom, 0px)); padding: 0; border-top: 0; background: #04070d; overflow: hidden; }
+  #panel::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--panel-h, calc(var(--app-w) * 0.2572)); background: url(assets/panel_two.jpg) center / 100% 100% no-repeat; }
+  #panel.one::before { background-image: url(assets/panel_one.jpg); }
+  #panel.one.left-hand::before { transform: scaleX(-1); }
+  #panel .buttons, #panel:not(.one) .buttons, #panel.one .buttons, #panel.one.left-hand .buttons { position: static; padding: 0; }
+  .zone, .zone.bomb, #panel:not(.one) .zone.left, #panel:not(.one) .zone.right, #panel:not(.one) .zone.bomb { position: absolute; top: 0; height: var(--panel-h, calc(var(--app-w) * 0.2572)); max-width: none; aspect-ratio: auto; flex: none; margin: 0 !important; background: none; transform: none; border-radius: 16px; transition: background .05s; }
+  .zone.pressed, .zone.bomb.pressed, #panel:not(.one) .zone.bomb.pressed { transform: none; filter: none; background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(255,255,255,.18) 70%, transparent); }
+  #panel .zone:not(.pressed) { background: none; }
+  #panel .zone.pressed { background: radial-gradient(closest-side, rgba(255,255,255,.55), rgba(255,255,255,.18) 70%, transparent); }
+  .zone.left { left: 1%; width: 33%; } .zone.bomb { left: 35.5%; width: 29%; } .zone.right { left: 66%; width: 33%; }
+  #panel.one .zone.left { left: 24%; width: 24%; } #panel.one .zone.bomb { left: 48.6%; width: 23%; } #panel.one .zone.right { left: 72%; width: 24%; }
+  #panel.one.left-hand .zone.left { left: 4%; } #panel.one.left-hand .zone.bomb { left: 28.4%; } #panel.one.left-hand .zone.right { left: 52%; }
+  /* ---------- 게임 오버: 국기(왼쪽) · 이름과 안내(가운데) · 세력 마크(오른쪽, 크게) ---------- */
+  #recordBox.has-prof { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto auto; column-gap: 10px; row-gap: 2px; align-items: center; padding: 8px 12px; }
+  #recordBox.has-prof > * { margin: 0 !important; }
+  #recordBox.has-prof #regRow, #recordBox.has-prof .prow, #recordBox.has-prof #profLine { display: contents; }
+  #recordBox.has-prof .msg { grid-column: 2; grid-row: 1; text-align: center; }
+  #recordBox.has-prof .pf-name { grid-column: 2; grid-row: 2; text-align: center; font-family: system-ui, sans-serif; font-size: clamp(17px, calc(var(--app-w) * 0.05), 22px); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #recordBox.has-prof #regNote { grid-column: 2; grid-row: 3; text-align: center; }
+  #recordBox.has-prof .pf-flag { grid-column: 1; grid-row: 1 / 3; justify-self: center; margin: 0; }
+  #recordBox.has-prof .pf-flag img, #recordBox.has-prof .pf-flag .flag { width: clamp(40px, calc(var(--app-w) * 0.12), 54px); height: auto; border-radius: 5px; box-shadow: 0 0 0 1px rgba(255,255,255,.35), 0 2px 6px #000a; display: block; }
+  #recordBox.has-prof #profEdit { grid-column: 1; grid-row: 3; justify-self: center; font-size: 11px; white-space: nowrap; margin: 0; }
+  #recordBox.has-prof .pf-fac { grid-column: 3; grid-row: 1 / 4; display: flex; flex-direction: column; align-items: center; margin: 0; }
+  #recordBox.has-prof .pf-fac img { width: clamp(58px, calc(var(--app-w) * 0.17), 78px); height: clamp(58px, calc(var(--app-w) * 0.17), 78px); filter: drop-shadow(0 0 8px var(--fc)) drop-shadow(0 0 16px var(--fc)); }
+  #recordBox.has-prof .pf-fac i { font-style: normal; font-weight: 800; font-size: 13px; color: var(--fc); font-family: system-ui, sans-serif; margin-top: 1px; text-shadow: 0 0 8px var(--fc); }
   /* ---------- 시작 화면: 제목 그림을 줄이고 지도 자리를 넓힌다 ---------- */
   #startOverlay::after { content: ''; position: absolute; z-index: -1; left: 6%; width: 88%; top: calc(var(--app-w) * -0.05); height: calc(var(--app-w) * 1.5636); background: url(assets/title2.jpg) center / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); pointer-events: none; }
   #startOverlay .spacer { flex: 0 0 calc(var(--app-w) * 0.565); }
@@ -416,14 +433,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="i18n.js?v=20261006m"></script>
+<script src="i18n.js?v=20261007a"></script>
 <script>I18N.apply();</script>
-<script src="firebase-config.js?v=20261006m"></script>
+<script src="firebase-config.js?v=20261007a"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script><script src="war-seasons.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
-<script src="audio.js?v=20261006m"></script>
-<script src="leaderboard.js?v=20261006m"></script>
-<script src="war.js?v=20261006m"></script>
+<script src="audio.js?v=20261007a"></script>
+<script src="leaderboard.js?v=20261007a"></script>
+<script src="war.js?v=20261007a"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -438,6 +455,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20261006m"></script>
+<script src="game.js?v=20261007a"></script>
 </body>
 </html>
