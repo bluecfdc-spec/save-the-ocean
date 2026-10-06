@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 점수 (주간 scores_sN, 월간 점령전 scores_sYYYYMMF): 누구나 읽기, 로그인한 본인만 올리기. 수정·삭제 불가
+    match /{col}/{id} {
+      allow read: if col.matches('^(scores|plays)(_s[0-9]+)?$');
+
+      allow create: if col.matches('^scores(_s[0-9]+)?$')
+        && request.auth != null
+        && request.resource.data.keys().hasOnly(['name', 'score', 'date', 'flag', 'faction', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is int
+        && request.resource.data.score > 0 && request.resource.data.score <= 3000000
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 8
+        && request.resource.data.flag is string && request.resource.data.flag.size() <= 3
+        && request.resource.data.faction is int && request.resource.data.faction >= 1 && request.resource.data.faction <= 3
+        && request.resource.data.date is string && request.resource.data.date.size() <= 12;
+
+      // 플레이 기록(통계용): 점수와 날짜만
+      allow create: if col.matches('^plays(_s[0-9]+)?$')
+        && request.resource.data.keys().hasOnly(['score', 'date'])
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0 && request.resource.data.score <= 3000000
+        && request.resource.data.date is string && request.resource.data.date.size() <= 12;
+    }
+
+    // 방문자 수·공지: 누구나 읽기. 방문자 수는 1씩만 올릴 수 있고, 공지(notice…)는 콘솔에서만 수정
+    match /visits/{id} {
+      allow read: if true;
+      allow create: if !id.matches('^notice.*')
+        && request.resource.data.keys().hasOnly(['count', 'date'])
+        && request.resource.data.count == 1;
+      allow update: if !id.matches('^notice.*')
+        && request.resource.data.keys().hasOnly(['count', 'date'])
+        && request.resource.data.count == resource.data.count + 1;
+    }
+  }
+}

@@ -143,6 +143,7 @@
     profEdit.style.display = p ? '' : 'none';
     const done = lastFinal.done, zero = lastFinal.score <= 0;
     regBtn.style.display = done || TEST ? 'none' : '';
+    if (!(window.AUTH && AUTH.required())) { regBtn.style.display = 'none'; profEdit.style.display = 'none'; regNote.textContent = t('reg.app'); return; }   // 웹: 플레이와 순위 보기만 (기록 등록은 앱에서)
     if (loginRow && (done || !needLogin())) loginRow.style.display = 'none';
     regBtn.disabled = zero || !LB.ready || left <= 0;
     regBtn.textContent = left <= 0 ? t('reg.premium') : t('reg.btn');
