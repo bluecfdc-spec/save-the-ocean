@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>API_KEY</key><string>AIzaSyBZKvHoZeBovOURFrkT_H3BTcJ6495zUvM</string>
-<key>GCM_SENDER_ID</key><string>1047701817156</string>
-<key>PLIST_VERSION</key><string>1</string>
-<key>BUNDLE_ID</key><string>com.bluecfdc.savetheocean</string>
-<key>PROJECT_ID</key><string>save-the-ocean-a96f1</string>
-<key>STORAGE_BUCKET</key><string>save-the-ocean-a96f1.firebasestorage.app</string>
-<key>IS_ADS_ENABLED</key><false/><key>IS_ANALYTICS_ENABLED</key><false/><key>IS_APPINVITE_ENABLED</key><true/><key>IS_GCM_ENABLED</key><true/><key>IS_SIGNIN_ENABLED</key><true/>
-<key>GOOGLE_APP_ID</key><string>1:1047701817156:web:923b1374f715b79e787911</string>
-</dict></plist>
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCdIocQUaG3_A50SZ5I18XJdg8yt92tadA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1047701817156</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.bluecfdc.savetheocean</string>
+	<key>PROJECT_ID</key>
+	<string>save-the-ocean-a96f1</string>
+	<key>STORAGE_BUCKET</key>
+	<string>save-the-ocean-a96f1.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1047701817156:ios:c3c84d716194c40a787911</string>
+</dict>
+</plist>
