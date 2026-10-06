@@ -1,0 +1,24 @@
+# 글꼴·국기 파일 묶음을 Release(assets-pack)로 올린다 — 스토어 스크린샷 제작용 (수동 실행)
+name: Assets pack
+on:
+  workflow_dispatch:
+  push:
+    branches: [app]
+    paths: ['.github/workflows/assets-pack.yml']
+permissions:
+  contents: write
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: |
+          npm install --no-audit --no-fund
+          npm run vendor
+          cd www/vendor && zip -qr ../../assets-pack.zip fonts flags
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release delete assets-pack --yes --cleanup-tag 2>/dev/null || true
+          gh release create assets-pack assets-pack.zip --prerelease --title "글꼴·국기 묶음 (스크린샷 제작용)" --notes "자동 생성"
