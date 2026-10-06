@@ -413,15 +413,6 @@
   </div>
 </div>
 
-<!-- 테스트 빌드: 스크립트 오류를 화면 아래에 표시 (원인 파악용, 출시 전 제거) -->
-<script>
-  window.addEventListener('error', function (e) {
-    if (e.target && e.target.getAttribute && e.target.getAttribute('data-opt')) return;   // 없어도 되는 온라인 자료
-    var b = document.getElementById('__errbox');
-    if (!b) { b = document.createElement('div'); b.id = '__errbox'; b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;pointer-events:none;background:rgba(120,0,0,.92);color:#fff;font:11px/1.4 monospace;padding:6px 8px;max-height:40%;overflow:auto;white-space:pre-wrap'; b.textContent = 'WebView: ' + ((navigator.userAgent.match(/Chrome\/[\d.]+|Version\/[\d.]+/) || [''])[0]) + '\n'; document.body.appendChild(b); }
-    b.textContent += (e.message || 'load error') + ' @ ' + ((e.filename || (e.target && (e.target.src || e.target.href)) || '').split('/').pop()) + ':' + (e.lineno || '') + '\n';
-  }, true);
-</script>
 <!-- 앱 내장 라이브러리 (CI 가 vendor/ 에 채움 — 오프라인에서도 로드됨) -->
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>

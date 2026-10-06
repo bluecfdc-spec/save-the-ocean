@@ -92,6 +92,7 @@
     if (LB.freeLeft() <= 0) return { ok: false, reason: 'limit' };
     if (window.AUTH && AUTH.required() && !AUTH.user()) return { ok: false, reason: 'login' };
     LB.bindUser(); p = LB.profile();
+    if (!authUid()) return { ok: false, reason: 'login' };   // 서버 규칙: 로그인한 계정만 기록을 올릴 수 있다
     try {
       const base = { name: p.name, score, date, flag: p.flag, faction: p.faction, uid: p.uid };
       const jobs = [db.collection(warCol(p.faction)).add(base)];
