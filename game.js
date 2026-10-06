@@ -136,8 +136,16 @@
   // ───────────── 게임 오버 · 기록 올리기 ─────────────
   const regRow = document.getElementById('regRow'), regBtn = document.getElementById('regBtn'), regNote = document.getElementById('regNote');
   const profLine = document.getElementById('profLine'), profEdit = document.getElementById('profEdit');
+  // 한손 모드의 빈 칸에 내 세력 마크를 크게 보여 준다 (세력을 아직 안 골랐으면 원래 그림 그대로)
+  function panelFaction() {
+    const pn = document.getElementById('panel'), p = LB.profile(), f = p && WAR.byId(p.faction);
+    pn.classList.toggle('has-fac', !!f);
+    if (f) { pn.style.setProperty('--fac-img', 'url(' + (f.img || f.icon) + ')'); pn.style.setProperty('--fc', f.color); }
+  }
+  panelFaction();
   function renderReg() {
     const p = LB.profile(), f = p && WAR.byId(p.faction), left = LB.freeLeft();
+    panelFaction();
     regRow.style.display = TEST ? 'none' : '';
     profLine.innerHTML = p ? '<span class="pf-flag">' + WAR.flagEmoji(p.flag) + '</span><b class="pf-name">' + LB.escape(p.name) + '</b><span class="pf-fac" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><i>' + t('f.' + f.key) + '</i></span>' : '';
     document.getElementById('recordBox').classList.toggle('has-prof', !!p);
