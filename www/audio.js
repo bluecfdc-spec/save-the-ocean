@@ -20,10 +20,27 @@
   }
   document.addEventListener('touchend', iosUnmute, { passive: true });
   document.addEventListener('pointerdown', iosUnmute, { passive: true });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state === 'suspended') ctx.resume(); });
+  // 앱을 내렸다가 다시 열면(iOS) 오디오가 '중단' 상태로 남는다 → 화면이 다시 보일 때와 터치할 때마다 되살린다
+  let titleEl = null, titleOn = false;
+  function revive() {
+    try { if (ctx && ctx.state !== 'running') { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } } catch (e) {}
+    try { if (silentEl && silentEl.paused) { const p = silentEl.play(); if (p && p.catch) p.catch(() => {}); } } catch (e) {}
+    try { if (titleOn && titleEl && titleEl.paused && !document.hidden) { const p = titleEl.play(); if (p && p.catch) p.catch(() => {}); } } catch (e) {}
+  }
+  document.addEventListener('touchend', revive, { passive: true });
+  document.addEventListener('pointerdown', revive, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { if (titleEl) titleEl.pause(); } else revive(); });
+  window.addEventListener('pageshow', revive); window.addEventListener('focus', revive);
+  // 시작 화면 배경 음악 (음원 파일 반복 재생). 게임에 들어가면 끈다
+  S.titleStart = function () {
+    titleOn = true;
+    if (!titleEl) { titleEl = new Audio('assets/title_bgm.mp3'); titleEl.loop = true; titleEl.volume = 0.55; titleEl.setAttribute('playsinline', ''); titleEl.preload = 'auto'; }
+    titleEl.muted = bgmMuted; revive();
+  };
+  S.titleStop = function () { titleOn = false; if (titleEl) { titleEl.pause(); try { titleEl.currentTime = 0; } catch (e) {} } };
 
   function ensure() {
-    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return true; }
+    if (ctx) { if (ctx.state !== 'running') { try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} } return true; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
     ctx = new AC();
@@ -175,12 +192,12 @@
     o.connect(lp); lp.connect(g); g.connect(sfxBus); o.start(t + 0.2); o.stop(t + 2.4);
   };
 
-  S.click = function () {
+  S.click = function () {   // 버튼 '탁' 소리
     if (!ensure()) return;
     const t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 880;
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-    o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.07);
+    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(1100, t); o.frequency.exponentialRampToValueAtTime(260, t + 0.04);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.13, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.06);
   };
 
   // ── 파도/물살 : 수면 소리. 게임 중 상시 잔잔하게, 이동 시 커짐 ──
@@ -216,7 +233,7 @@
     sea.lp.frequency.linearRampToValueAtTime(on ? 900 : 520, t + 0.3);
   };
 
-  S.setBgmMuted = function (m) { bgmMuted = m; if (bgmBus) bgmBus.gain.value = m ? 0 : 1; };
+  S.setBgmMuted = function (m) { bgmMuted = m; if (titleEl) titleEl.muted = m; if (bgmBus) bgmBus.gain.value = m ? 0 : 1; };
   S.setSfxMuted = function (m) { sfxMuted = m; if (sfxBus) sfxBus.gain.value = m ? 0 : 1; };
   S.isBgmMuted = () => bgmMuted; S.isSfxMuted = () => sfxMuted;
 

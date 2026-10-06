@@ -83,7 +83,7 @@
     document.documentElement.style.setProperty('--app-top', top + 'px');
     // 세로가 남는 화면에서는 먼저 조작판(버튼 영역)을 최대 1.65배까지 키우고, 그래도 남으면 하늘로 돌린다
     const basePanel = aw * 0.2572, spare = ah - aw * 0.1031 - basePanel - aw * FIELD_H / FIELD_W;
-    document.documentElement.style.setProperty('--panel-h', Math.round(basePanel + Math.max(0, Math.min(spare * 0.4, aw * 0.13))) + 'px');
+    document.documentElement.style.setProperty('--panel-h', Math.round(basePanel + Math.max(0, Math.min(spare * 0.4, aw * 0.05))) + 'px');
     const r = wrap.getBoundingClientRect(), k = r.width / FIELD_W;
     W = FIELD_W; H = FIELD_H;
     viewH = Math.max(FIELD_H, r.height / k); offY = Math.round(viewH - FIELD_H);   // 남는 세로는 전부 위쪽 하늘로 (아래는 조작판과 바로 맞닿게)
@@ -116,7 +116,7 @@
     updateHud();
   }
   function start() {
-    SFX.unlock(); SFX.wake(false);
+    SFX.unlock(); SFX.wake(false); SFX.titleStop();
     document.getElementById('visits').style.display = 'none';
     resize(); reset();
     state = 'play';
@@ -139,7 +139,8 @@
   function renderReg() {
     const p = LB.profile(), f = p && WAR.byId(p.faction), left = LB.freeLeft();
     regRow.style.display = TEST ? 'none' : '';
-    profLine.innerHTML = p ? WAR.flagEmoji(p.flag) + ' <b>' + LB.escape(p.name) + '</b> · <img src="' + f.icon + '" alt=""> <span style="color:' + f.color + '">' + t('f.' + f.key) + '</span>' : '';
+    profLine.innerHTML = p ? '<span class="pf-flag">' + WAR.flagEmoji(p.flag) + '</span><b class="pf-name">' + LB.escape(p.name) + '</b><span class="pf-fac" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><i>' + t('f.' + f.key) + '</i></span>' : '';
+    document.getElementById('recordBox').classList.toggle('has-prof', !!p);
     profEdit.style.display = p ? '' : 'none';
     const done = lastFinal.done, zero = lastFinal.score <= 0;
     regBtn.style.display = done || TEST ? 'none' : '';
@@ -163,7 +164,7 @@
     const [rows, rank] = await Promise.all([LB.top(10), LB.rank(cur.score), WAR.refresh()]);
     if (cur !== lastFinal) return;
     LB.renderList(top10El, rows);
-    if (!cur.done && rank !== null) recordMsg.textContent = rank > 1000 ? t('over.rank.far') : t('over.rank', { rank });
+    if (!cur.done) recordMsg.textContent = rank === null ? '' : rank > 1000 ? t('over.rank.far') : t('over.rank', { rank });
   }
   async function doSubmit() {
     const cur = lastFinal; if (cur.done || cur.busy) return;
@@ -836,7 +837,10 @@
   loadTop3();
   document.querySelectorAll('.hall-pane').forEach(el => LB.renderSeasons(el));
   // 언어 전환 (🌐): ko → en → ja
-  document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); SFX.click && SFX.click(); });
+  document.getElementById('langBtn').addEventListener('click', () => { I18N.toggle(); });
+  // 모든 버튼: 누를 때 '탁' 소리 / 시작 화면에서는 배경 음악
+  document.addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('button')) SFX.click(); }, true);
+  SFX.titleStart();
   document.addEventListener('i18n:change', () => { applyCtl(); renderBest(); loadTop3(); document.querySelectorAll('.hall-pane').forEach(el => LB.renderSeasons(el)); WAR.repaint(); if (state === 'over') showOver(); });
   // 공지 팝업 (오늘 하루 보지 않기: 내용 해시 + 날짜로 기억)
   LB.notice().then(n => {

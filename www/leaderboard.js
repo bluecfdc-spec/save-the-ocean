@@ -76,10 +76,12 @@
   LB.rank = async function (score) {
     if (!LB.ready) return null;
     try {
-      const c = col => timeout(db.collection(col).where('score', '>', score).count().get().then(s => s.data().count), 15000);
-      const [a, b] = await Promise.all([c(SCORES), c(PLAYS)]);
-      if (a === null) return null;
-      return a + (b === null ? 0 : b) + 1;
+      // 이번 주 순위판에서 내 점수보다 높은 사람 수 + 1 (집계 질의 대신 일반 조회: 어디서나 동작)
+      const snap = await timeout(db.collection(SCORES).where('score', '>', score).limit(1000).get(), 15000);
+      if (!snap) return null;
+      const seen = {}; let n = 0;
+      snap.forEach(d => { const v = d.data(), k = v.uid || d.id; if (!seen[k]) { seen[k] = 1; n++; } });
+      return n + 1;
     } catch (e) { console.warn('rank failed', e); return null; }
   };
 
