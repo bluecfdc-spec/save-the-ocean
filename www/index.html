@@ -294,19 +294,25 @@
   .wr-txt .pct { font-size: clamp(13px, calc(var(--app-w) * 0.04), 18px); }
   .wr-txt .pts { font-size: 10px; }
   @supports not (aspect-ratio: 1 / 1) { .tabbar button + button { margin-left: 5px; } .war-row > img + .wr-txt { margin-left: 6px; } }
-  /* ---------- 조작판: 세로가 남는 화면에서는 버튼 영역을 최대 1.65배까지 키운다 (game.js 가 --panel-h 를 정함) ---------- */
-  #panel { aspect-ratio: auto; height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
-  #panel .buttons, #panel:not(.one) .buttons, #panel.one .buttons, #panel.one.left-hand .buttons { padding-top: calc(var(--app-w) * 0.02); padding-bottom: calc(var(--app-w) * 0.02); }
-  .zone, #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { aspect-ratio: auto; height: 100%; max-width: none; background-position: center; background-size: 100% min(100%, calc(var(--app-w) * 0.29)); border-radius: 14px; }
-  .zone { flex: 0 0 auto; width: clamp(calc(var(--app-w) * 0.218), calc((var(--panel-h, calc(var(--app-w) * 0.2572)) - var(--app-w) * 0.06) * 1.108), calc(var(--app-w) * 0.30)); }
+  /* ---------- 조작판: 버튼 폭은 웹 그대로, 세로가 남는 화면에서는 버튼을 아래로 늘린다 (game.js 가 --panel-h 를 정함) ---------- */
+  #panel { aspect-ratio: auto; box-sizing: border-box; height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #panel .buttons, #panel:not(.one) .buttons { padding-top: calc(var(--app-w) * 0.02); padding-bottom: calc(var(--app-w) * 0.02); }
+  #panel.one .buttons, #panel.one.left-hand .buttons { padding-top: calc(var(--app-w) * 0.03); padding-bottom: calc(var(--app-w) * 0.03); }
+  .zone, #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { aspect-ratio: auto; height: 100%; max-width: none; background-size: 100% 100%; }
+  .zone { flex: 0 0 auto; width: calc(var(--app-w) * 0.2116); }
   #panel:not(.one) .zone.left, #panel:not(.one) .zone.right { flex: 1 1 0; width: auto; }
-  .zone.bomb, #panel:not(.one) .zone.bomb { height: 100%; transform: none; background-size: contain; width: clamp(calc(var(--app-w) * 0.19), calc(var(--panel-h, calc(var(--app-w) * 0.2572)) - var(--app-w) * 0.05), calc(var(--app-w) * 0.29)); }
-  .zone.pressed, #panel:not(.one) .zone.bomb.pressed { transform: scale(.95); }
-  /* 한손 모드: 버튼 3개를 한쪽 60% 안에 모으고 나머지는 비운다 (좌수는 왼쪽, 우수는 오른쪽) */
-  #panel.one .zone { flex: 0 0 auto; width: calc(var(--app-w) * 0.19); background-size: 100% min(100%, calc(var(--app-w) * 0.27)); }
-  #panel.one .zone.bomb { width: calc(var(--app-w) * 0.185); background-size: contain; }
-  #panel.one .buttons { gap: calc(var(--app-w) * 0.012); padding-right: calc(var(--app-w) * 0.015); padding-left: 0; }
-  #panel.one.left-hand .buttons { padding-left: calc(var(--app-w) * 0.015); padding-right: 0; }
+  .zone.bomb { height: 100%; width: calc(var(--app-w) * 0.1744); background-size: contain; background-position: center; }
+  #panel:not(.one) .zone.bomb { width: calc(var(--app-w) * 0.2172); transform: scale(1.1); }
+  /* ---------- 시작 화면: 제목 그림을 줄이고 지도 자리를 넓힌다 ---------- */
+  #startOverlay::after { content: ''; position: absolute; z-index: -1; left: 6%; width: 88%; top: calc(var(--app-w) * -0.05); height: calc(var(--app-w) * 1.5636); background: url(assets/title2.jpg) center / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); pointer-events: none; }
+  #startOverlay .spacer { flex: 0 0 calc(var(--app-w) * 0.565); }
+  /* ---------- 시작 버튼: 그림 버튼 ---------- */
+  .start-btn { width: min(88%, 380px); aspect-ratio: 900 / 300; padding: 0; border: 0; border-radius: 0; background: url(assets/start_btn.png) center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 4px 10px #000a) drop-shadow(0 0 14px #ffcb3b77); animation: goldPulse 1.8s ease-in-out infinite; }
+  .start-btn:active { transform: scale(.95); box-shadow: none; }
+  .start-btn .t1, .start-btn .arrow { display: none; }
+  @keyframes goldPulse { 0%, 100% { filter: drop-shadow(0 4px 10px #000a) drop-shadow(0 0 10px #ffcb3b55) brightness(1); } 50% { filter: drop-shadow(0 4px 10px #000a) drop-shadow(0 0 20px #ffcb3bcc) brightness(1.12); } }
+  @supports not (aspect-ratio: 1 / 1) { .start-btn { height: calc(min(88vw, 380px) / 3); } }
+  @media (prefers-reduced-motion: reduce) { .start-btn { animation: none; } }
 </style>
 </head>
 <body>

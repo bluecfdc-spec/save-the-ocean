@@ -83,7 +83,7 @@
     document.documentElement.style.setProperty('--app-top', top + 'px');
     // 세로가 남는 화면에서는 먼저 조작판(버튼 영역)을 최대 1.65배까지 키우고, 그래도 남으면 하늘로 돌린다
     const basePanel = aw * 0.2572, spare = ah - aw * 0.1031 - basePanel - aw * FIELD_H / FIELD_W;
-    document.documentElement.style.setProperty('--panel-h', Math.round(basePanel + Math.max(0, Math.min(spare, basePanel * 0.65))) + 'px');
+    document.documentElement.style.setProperty('--panel-h', Math.round(basePanel + Math.max(0, Math.min(spare * 0.4, aw * 0.13))) + 'px');
     const r = wrap.getBoundingClientRect(), k = r.width / FIELD_W;
     W = FIELD_W; H = FIELD_H;
     viewH = Math.max(FIELD_H, r.height / k); offY = Math.round(viewH - FIELD_H);   // 남는 세로는 전부 위쪽 하늘로 (아래는 조작판과 바로 맞닿게)
