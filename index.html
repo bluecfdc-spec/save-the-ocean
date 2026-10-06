@@ -312,7 +312,7 @@
   #recordBox.has-prof { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto auto; column-gap: 10px; row-gap: 2px; align-items: center; padding: 8px 12px; }
   #recordBox.has-prof > * { margin: 0 !important; }
   #recordBox.has-prof #regRow, #recordBox.has-prof .prow, #recordBox.has-prof #profLine { display: contents; }
-  #recordBox.has-prof .msg { grid-column: 2; grid-row: 1; text-align: center; }
+  #recordBox.has-prof .msg { grid-column: 2; grid-row: 1; text-align: center; min-height: 1.2em; }
   #recordBox.has-prof .pf-name { grid-column: 2; grid-row: 2; text-align: center; font-family: system-ui, sans-serif; font-size: clamp(17px, calc(var(--app-w) * 0.05), 22px); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #recordBox.has-prof #regNote { grid-column: 2; grid-row: 3; text-align: center; }
   #recordBox.has-prof .pf-flag { grid-column: 1; grid-row: 1 / 3; justify-self: center; margin: 0; }
@@ -433,14 +433,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
-<script src="i18n.js?v=20261007a"></script>
+<script src="i18n.js?v=20261007b"></script>
 <script>I18N.apply();</script>
-<script src="firebase-config.js?v=20261007a"></script>
+<script src="firebase-config.js?v=20261007b"></script>
 <script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script><script src="war-seasons.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
-<script src="audio.js?v=20261007a"></script>
-<script src="leaderboard.js?v=20261007a"></script>
-<script src="war.js?v=20261007a"></script>
+<script src="audio.js?v=20261007b"></script>
+<script src="leaderboard.js?v=20261007b"></script>
+<script src="war.js?v=20261007b"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -455,6 +455,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20261007a"></script>
+<script src="game.js?v=20261007b"></script>
 </body>
 </html>
