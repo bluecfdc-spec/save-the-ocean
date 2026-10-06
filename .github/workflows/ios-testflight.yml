@@ -28,13 +28,31 @@ jobs:
         env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
         run: |
           [ -n "$P8" ] || { echo "::error::시크릿 ASC_KEY_P8 이 없습니다"; exit 1; }
-          [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$APPLE_TEAM_ID" ] || { echo "::error::ASC_KEY_ID / ASC_ISSUER_ID / APPLE_TEAM_ID 가 비어 있습니다"; exit 1; }
+          [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] || { echo "::error::ASC_KEY_ID / ASC_ISSUER_ID 가 비어 있습니다"; exit 1; }
           mkdir -p "$RUNNER_TEMP/keys"
           # 파일 내용을 그대로 붙였든 base64 로 붙였든 받아준다
           if printf '%s' "$P8" | grep -q "BEGIN PRIVATE KEY"; then printf '%s\n' "$P8" > "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"
           else printf '%s' "$P8" | tr -d ' \n\r' | base64 --decode > "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"; fi
           grep -q "BEGIN PRIVATE KEY" "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" || { echo "::error::ASC_KEY_P8 내용이 올바른 .p8 형식이 아닙니다"; exit 1; }
           echo "KEY_PATH=$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" >> "$GITHUB_ENV"
+      - name: 팀 ID 확인 (비어 있으면 App Store Connect 에서 번들 ID 로 찾아온다)
+        run: |
+          if [ -z "$APPLE_TEAM_ID" ]; then
+            python3 -m pip install --quiet --break-system-packages 'pyjwt[crypto]' requests 2>/dev/null || python3 -m pip install --quiet 'pyjwt[crypto]' requests
+            TEAM=$(python3 - <<'PY'
+          import jwt, time, os, requests
+          tok = jwt.encode({'iss': os.environ['ASC_ISSUER_ID'], 'iat': int(time.time()), 'exp': int(time.time()) + 600, 'aud': 'appstoreconnect-v1'},
+                           open(os.environ['KEY_PATH']).read(), algorithm='ES256', headers={'kid': os.environ['ASC_KEY_ID']})
+          r = requests.get('https://api.appstoreconnect.apple.com/v1/bundleIds', params={'filter[identifier]': 'com.bluecfdc.savetheocean'}, headers={'Authorization': 'Bearer ' + tok}, timeout=30)
+          if r.status_code != 200: raise SystemExit('App Store Connect 응답 %s: %s' % (r.status_code, r.text[:300]))
+          d = [x for x in r.json().get('data', []) if x['attributes']['identifier'] == 'com.bluecfdc.savetheocean']
+          if not d: raise SystemExit('번들 ID com.bluecfdc.savetheocean 을 찾지 못했습니다')
+          print(d[0]['attributes']['seedId'])
+          PY
+            )
+            [ -n "$TEAM" ] || { echo "::error::팀 ID 를 찾지 못했습니다"; exit 1; }
+            echo "APPLE_TEAM_ID=$TEAM" >> "$GITHUB_ENV"; echo "팀 ID: $TEAM" >> $GITHUB_STEP_SUMMARY
+          fi
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Web build + cap sync
