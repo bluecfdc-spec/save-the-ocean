@@ -200,7 +200,7 @@
       renderReg();
       const [rows] = await Promise.all([LB.top(10), WAR.refresh()]);
       LB.renderList(top10El, rows); loadTop3();
-    } else { renderReg(); showToast(t('toast.submitFail')); }
+    } else { renderReg(); showToast(r.reason === 'cooldown' || r.reason === 'permission-denied' ? t('toast.tooFast') : t('toast.submitFail')); }
   }
 
   // ───────────── 프로필 (아이디 · 국기 · 세력) ─────────────
