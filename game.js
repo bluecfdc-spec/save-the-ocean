@@ -30,6 +30,8 @@
   // ───────────── 이미지 ─────────────
   const IMG = {};
   const files = { bg: 'assets/bg.jpg', ship: 'assets/ship.png', subW: 'assets/sub_white.png', subR: 'assets/sub_red.png', bomb: 'assets/bomb.png', torpedo: 'assets/torpedo.png', radar: 'assets/radar_frame.png', drill: 'assets/item_drill.png', shield: 'assets/item_shield.png' };
+  // 세력별 그림: 1 서지(파랑) · 2 게일(보라) · 3 솔라(금색) — 군함 ship_fN, 일반 잠수함 sub_nN, 보스 잠수함 sub_bN
+  for (const n of [1, 2, 3]) { files['ship_f' + n] = 'assets/ship_f' + n + '.png'; files['sub_n' + n] = 'assets/sub_n' + n + '.png'; files['sub_b' + n] = 'assets/sub_b' + n + '.png'; }
   let loaded = 0; const total = Object.keys(files).length;
   for (const k in files) { const im = new Image(); im.src = files[k]; im.onload = im.onerror = () => { loaded++; }; IMG[k] = im; }
 
@@ -295,7 +297,9 @@
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    subs.push({ x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: Math.random() * 0.15, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
+    // 적 잠수함: 내 세력이 있으면 나머지 두 세력 중 하나 (보스는 그 세력의 보스 잠수함)
+    const mf = myFac(), foes = [1, 2, 3].filter(n => n !== mf), fac = mf ? foes[Math.floor(Math.random() * 2)] : 0;
+    subs.push({ fac, x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: Math.random() * 0.15, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
   function fireTorp(s) {
@@ -545,6 +549,16 @@
   }
 
   // ───────────── 그리기 ─────────────
+  // 내 세력 (아직 안 골랐으면 0 → 원래 그림)
+  function myFac() { try { const p = LB.profile(); return (p && p.faction | 0) || 0; } catch (e) { return 0; } }
+  function okImg(im) { return im && im.complete && im.naturalWidth; }
+  // 군함: 세력이 있으면 세력 군함. 높이는 그림 비율대로, 흘수선(아래 끝)은 원래 군함과 같은 위치
+  function drawShip(cy, flip, rot) {
+    const f = myFac(), im = f && IMG['ship_f' + f];
+    if (!okImg(im)) { drawSprite(IMG.ship, ship.x, cy, ship.w, ship.h, flip, rot); return; }
+    const h = ship.w * im.naturalHeight / im.naturalWidth;
+    drawSprite(im, ship.x, cy + ship.h * 0.5 - h * 0.5, ship.w, h, flip, rot);
+  }
   function drawSprite(im, x, y, w, h, flip, rot) {
     if (!im.complete || !im.naturalWidth) return;
     ctx.save(); ctx.translate(x, y);
@@ -592,7 +606,9 @@
     for (const s of subs) {
       if (s.x < -s.w || s.x > W + s.w) continue;
       const yy = s.y + Math.sin(s.wobble) * 2;
-      drawSprite(s.red ? IMG.subR : IMG.subW, s.x, yy, s.w, s.h, s.dir === -1, 0);
+      const sim = s.fac && IMG[(s.red ? 'sub_b' : 'sub_n') + s.fac];
+      if (okImg(sim)) drawSprite(sim, s.x, yy, s.w, s.w * sim.naturalHeight / sim.naturalWidth, s.dir === -1, 0);
+      else drawSprite(s.red ? IMG.subR : IMG.subW, s.x, yy, s.w, s.h, s.dir === -1, 0);
       // 남은 어뢰 표시 (등 위에 작은 어뢰 아이콘)
       if (s.ammo > 0 && IMG.torpedo.complete && IMG.torpedo.naturalWidth) {
         const tw = 4, th = 13, gap = 2, n = s.ammo;
@@ -649,7 +665,7 @@
     if (ship && state !== 'over') {
       const bob = Math.sin(time * 2.2) * 1.5 + (ship.mv ? Math.sin(time * 9) * 1.2 : 0) + ship.pitch * 0.3;
       const rot = Math.sin(time * 2.2) * 0.02 + ship.roll * (ship.dir === -1 ? -1 : 1);
-      if (!(ship.inv > 0 && Math.floor(time * 20) % 2 === 0)) drawSprite(IMG.ship, ship.x, ship.y - ship.h * 0.35 + bob, ship.w, ship.h, ship.dir === -1, rot);
+      if (!(ship.inv > 0 && Math.floor(time * 20) % 2 === 0)) drawShip(ship.y - ship.h * 0.35 + bob, ship.dir === -1, rot);
       // 쉴드 보호막
       if (ship.shield > 0) {
         const ending = ship.shield < 2 && Math.floor(time * 8) % 2 === 0;
@@ -665,7 +681,7 @@
       }
     } else if (ship && state === 'over') {
       const sink = Math.min(1, (fx.length ? 0.4 : 1));
-      drawSprite(IMG.ship, ship.x, ship.y - ship.h * 0.35 + sink * 30, ship.w, ship.h, ship.dir === -1, 0.35 * sink);
+      drawShip(ship.y - ship.h * 0.35 + sink * 30, ship.dir === -1, 0.35 * sink);
     }
 
     // 폭발
