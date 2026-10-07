@@ -31,7 +31,7 @@
   const IMG = {};
   const files = { bg: 'assets/bg.jpg', ship: 'assets/ship.png', subW: 'assets/sub_white.png', subR: 'assets/sub_red.png', bomb: 'assets/bomb.png', torpedo: 'assets/torpedo.png', radar: 'assets/radar_frame.png', drill: 'assets/item_drill.png', shield: 'assets/item_shield.png' };
   // 세력별 그림: 1 서지(파랑) · 2 게일(보라) · 3 솔라(금색) — 군함 ship_fN, 일반 잠수함 sub_nN, 보스 잠수함 sub_bN
-  for (const n of [1, 2, 3]) { files['ship_f' + n] = 'assets/ship_f' + n + '.png'; files['sub_n' + n] = 'assets/sub_n' + n + '.png'; files['sub_b' + n] = 'assets/sub_b' + n + '.png'; }
+  for (const n of [1, 2, 3]) { files['ship_f' + n] = 'assets/ship_f' + n + '.png?v=2'; files['sub_n' + n] = 'assets/sub_n' + n + '.png?v=2'; files['sub_b' + n] = 'assets/sub_b' + n + '.png?v=2'; }
   let loaded = 0; const total = Object.keys(files).length;
   for (const k in files) { const im = new Image(); im.src = files[k]; im.onload = im.onerror = () => { loaded++; }; IMG[k] = im; }
 
@@ -554,12 +554,11 @@
   // 내 세력 (아직 안 골랐으면 0 → 원래 그림)
   function myFac() { try { const p = LB.profile(); return (p && p.faction | 0) || 0; } catch (e) { return 0; } }
   function okImg(im) { return im && im.complete && im.naturalWidth; }
-  // 군함: 세력이 있으면 세력 군함. 높이는 그림 비율대로, 흘수선(아래 끝)은 원래 군함과 같은 위치
+  // 군함: 세력이 있으면 세력 군함
   function drawShip(cy, flip, rot) {
     const f = myFac(), im = f && IMG['ship_f' + f];
     if (!okImg(im)) { drawSprite(IMG.ship, ship.x, cy, ship.w, ship.h, flip, rot); return; }
-    const h = ship.w * im.naturalHeight / im.naturalWidth;
-    drawSprite(im, ship.x, cy + ship.h * 0.5 - h * 0.5, ship.w, h, flip, rot);
+    drawSprite(im, ship.x, cy, ship.w, ship.h, flip, rot);   // 원래 군함과 같은 크기·자리 (판정 그대로)
   }
   function drawSprite(im, x, y, w, h, flip, rot) {
     if (!im.complete || !im.naturalWidth) return;
@@ -609,7 +608,7 @@
       if (s.x < -s.w || s.x > W + s.w) continue;
       const yy = s.y + Math.sin(s.wobble) * 2;
       const sim = s.fac && IMG[(s.red ? 'sub_b' : 'sub_n') + s.fac];
-      if (okImg(sim)) drawSprite(sim, s.x, yy, s.w, s.w * sim.naturalHeight / sim.naturalWidth, s.dir === -1, 0);
+      if (okImg(sim)) drawSprite(sim, s.x, yy, s.w, s.h, s.dir === -1, 0);   // 원래 잠수함과 같은 크기
       else drawSprite(s.red ? IMG.subR : IMG.subW, s.x, yy, s.w, s.h, s.dir === -1, 0);
       // 남은 어뢰 표시 (등 위에 작은 어뢰 아이콘)
       if (s.ammo > 0 && IMG.torpedo.complete && IMG.torpedo.naturalWidth) {
