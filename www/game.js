@@ -1016,8 +1016,9 @@
 
   // 조작 방식: 양손(기본) / 한손, 한손일 때 좌수·우수
   const ctlMode = document.getElementById('ctlMode'), ctlHand = document.getElementById('ctlHand');
+  // 조작은 한손 모드만 (양손 모드 없앰). 기본은 우수, 버튼으로 좌수 전환
   function applyCtl() {
-    const one = localStorage.getItem('savetheocean_ctrl') === 'one';
+    const one = true;
     const left = localStorage.getItem('savetheocean_lefthand') === '1';
     panel.classList.toggle('one', one); panel.classList.toggle('left-hand', one && left);
     ctlMode.textContent = one ? t('ctl.one') : t('ctl.two');
@@ -1026,7 +1027,6 @@
     if (typeof renderSkill === 'function') renderSkill();
   }
   applyCtl();
-  ctlMode.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const one = localStorage.getItem('savetheocean_ctrl') === 'one'; localStorage.setItem('savetheocean_ctrl', one ? 'two' : 'one'); applyCtl(); SFX.click(); showToast(one ? t('toast.two') : t('toast.one')); });
   ctlHand.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const left = localStorage.getItem('savetheocean_lefthand') === '1'; localStorage.setItem('savetheocean_lefthand', left ? '0' : '1'); applyCtl(); SFX.click(); showToast(left ? t('toast.right') : t('toast.left')); });
 
   // 사운드: 배경음(바다·심해) / 효과음 따로

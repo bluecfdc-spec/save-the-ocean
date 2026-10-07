@@ -64,7 +64,7 @@
   /* 조작 방식 전환 (레이더 양옆) */
   .ctl { position: absolute; bottom: 2.4%; z-index: 3; height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid #7fb6e0; background: rgba(4, 22, 40, .78); color: #dbeeff; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: .02em; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   .ctl:active { filter: brightness(1.4); }
-  #ctlMode { left: 8px; }
+  #ctlMode { display: none !important; }   /* 양손 모드 없앰 */
   #ctlHand { right: 8px; display: none; }
   #ctlHand.show { display: flex; }
 
