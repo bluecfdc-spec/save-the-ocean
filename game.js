@@ -331,7 +331,7 @@
   }
   function onKill(s) {
     kills++;
-    if (kills % SHIELD_EVERY === 0) spawnItem('shield');
+    // 방어막 아이템은 더 이상 나오지 않는다 (방어막 효과 코드는 필살기용으로 남겨 둠)
   }
   function launch() {
     if (state !== 'play' || bombs.length >= MAX_BOMBS) return;
