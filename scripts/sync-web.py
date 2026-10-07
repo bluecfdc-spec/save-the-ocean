@@ -9,8 +9,8 @@ import re, shutil, sys, os
 M = sys.argv[1].rstrip('/') + '/'; A = os.path.join(os.path.dirname(__file__), '..', 'www') + '/'
 for f in ['game.js', 'war.js', 'leaderboard.js', 'i18n.js', 'audio.js', 'auth.js']:
     shutil.copy(M + f, A + f)
-for f in os.listdir(M + 'assets'):
-    shutil.copy(M + 'assets/' + f, A + 'assets/' + f)
+# 그림 폴더 통째로 (assets/fx 같은 하위 폴더 포함)
+shutil.copytree(M + 'assets', A + 'assets', dirs_exist_ok=True)
 h = open(M + 'index.html', encoding='utf8').read()
 def rep(a, b):
     global h

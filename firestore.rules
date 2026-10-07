@@ -1,35 +1,58 @@
 rules_version = '2';
-// Save the Ocean — 앱 버전 규칙
-//  · 모든 접근은 Firebase 로그인 필요 (앱은 시작 시 익명 로그인)
-//  · 이름 있는 기록(scores*)은 Apple/Google 로그인 사용자만, 본인 uid 로만 생성
-//  · 무명 기록(plays*)은 익명도 가능 (순위 계산용)
-//  · App Check 를 콘솔에서 '적용'으로 켜면 앱 밖에서 오는 요청은 추가로 차단됨
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function realUser() { return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
-    function validScore() {
-      return request.resource.data.score is int
-          && request.resource.data.score >= 0
-          && request.resource.data.score <= 999999;
+
+    // ── 공통 조건 ──
+    // Apple 또는 Google 계정으로 로그인한 사용자만 (익명 로그인·이메일 가입 등은 불가)
+    function storeUser() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider in ['apple.com', 'google.com'];
     }
-    match /{col}/{doc} {
-      allow read: if signedIn() && col.matches('^(scores|plays)(_s[0-9]+)?$');
+    // 이번 요청에서 users/{uid} 의 마지막 등록 시각을 "지금"으로 같이 기록했는지
+    //  → 기록은 반드시 users 문서와 한 묶음(batch)으로만 올릴 수 있고, users 문서는 20초에 한 번만 바뀔 수 있다
+    function stampedNow() {
+      return getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.last == request.time;
+    }
+
+    // ── 계정별 마지막 등록 시각 (연속 등록 막기) ──
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if storeUser() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['last'])
+        && request.resource.data.last == request.time;
+      allow update: if storeUser() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['last'])
+        && request.resource.data.last == request.time
+        && request.time > resource.data.last + duration.value(20, 's');
+    }
+
+    // ── 점수 (주간 scores_sN, 월간 점령전 scores_sYYYYMMF): 누구나 읽기, 로그인한 본인만 올리기. 수정·삭제 불가 ──
+    match /{col}/{id} {
+      allow read: if col.matches('^(scores|plays)(_s[0-9]+)?$');
+
       allow create: if col.matches('^scores(_s[0-9]+)?$')
-                    && realUser()
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.name is string
-                    && request.resource.data.name.size() >= 1
-                    && request.resource.data.name.size() <= 8
-                    && validScore();
-      allow update, delete: if false;
+        && storeUser()
+        && stampedNow()
+        && request.resource.data.keys().hasOnly(['name', 'score', 'date', 'flag', 'faction', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is int
+        && request.resource.data.score > 0 && request.resource.data.score <= 3000000
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 8
+        && request.resource.data.flag is string && request.resource.data.flag.size() <= 3
+        && request.resource.data.faction is int && request.resource.data.faction >= 1 && request.resource.data.faction <= 3
+        && request.resource.data.date is string && request.resource.data.date.size() <= 12;
+      // plays(판별 통계)는 더 이상 쓰지 않음 → 쓰기 불가
     }
-    match /{col}/{doc} {
-      allow create: if col.matches('^plays(_s[0-9]+)?$') && signedIn() && validScore();
-    }
-    match /visits/{doc} {
-      allow read: if signedIn();
-      allow create, update: if signedIn() && !doc.matches('^notice.*') && request.resource.data.count is int;
+
+    // ── 방문자 수·공지: 누구나 읽기. 방문자 수는 1씩만 올릴 수 있고, 공지(notice…)는 콘솔에서만 수정 ──
+    match /visits/{id} {
+      allow read: if true;
+      allow create: if !id.matches('^notice.*')
+        && request.resource.data.keys().hasOnly(['count', 'date'])
+        && request.resource.data.count == 1;
+      allow update: if !id.matches('^notice.*')
+        && request.resource.data.keys().hasOnly(['count', 'date'])
+        && request.resource.data.count == resource.data.count + 1;
     }
   }
 }

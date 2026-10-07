@@ -24,7 +24,7 @@
   } catch (e) { console.warn('Firebase init failed', e); }
 
   const SCORES = 'scores' + SUFFIX;
-  const PLAYS = 'plays' + SUFFIX;
+  const COOLDOWN_SEC = 20;   // 한 계정의 연속 등록 최소 간격(초) — firestore.rules 와 같은 값
   const timeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
   const z = n => String(n).padStart(2, '0');
 
@@ -58,11 +58,11 @@
   function weekBest() { try { const w = JSON.parse(localStorage.getItem(P + 'week') || 'null'); return w && w.s === SUFFIX ? w.score : -1; } catch (e) { return -1; } }
 
   // ── 읽기 절약: 순위판과 점령전 합계는 한 번 불러오면 몇 분 동안 이 기기에 기억해 두고 다시 쓴다 ──
-  //  · 기억하는 시간(분): 공지 문서(visits/notice…)의 cacheMin 값 → 없으면 STO_CONFIG.CACHE_MIN → 없으면 5분
-  const ttlMs = () => { const v = Number(localStorage.getItem(P + 'ttl')) || Number((window.STO_CONFIG || {}).CACHE_MIN) || 5; return Math.max(1, Math.min(v, 240)) * 60000; };
+  //  · 기억하는 시간(분): 공지 문서(visits/notice…)의 cacheMin 값 → 없으면 STO_CONFIG.CACHE_MIN → 없으면 10분
+  const ttlMs = () => { const v = Number(localStorage.getItem(P + 'ttl')) || Number((window.STO_CONFIG || {}).CACHE_MIN) || 10; return Math.max(1, Math.min(v, 240)) * 60000; };
   const cget = k => { try { const c = JSON.parse(localStorage.getItem(P + 'c_' + k) || 'null'); return c && Date.now() - c.t < ttlMs() && Date.now() >= c.t ? c.v : null; } catch (e) { return null; } };
   const cset = (k, v, keepTime) => { try { let t0 = Date.now(); if (keepTime) { const c = JSON.parse(localStorage.getItem(P + 'c_' + k) || 'null'); if (c) t0 = c.t; } localStorage.setItem(P + 'c_' + k, JSON.stringify({ t: t0, v })); } catch (e) {} };
-  const BOARD_DOCS = 60;
+  const BOARD_DOCS = 40;   // 순위판 한 번 불러올 때 읽는 문서 수 (읽기 1회 = 1건)
   let boardJob = null;
   // 이번 주 순위판 (한 사람은 최고 기록 하나만) → { rows, full }  full = 불러온 것보다 기록이 더 있을 수 있음
   function board() {
@@ -102,13 +102,20 @@
     if (window.AUTH && AUTH.required() && !AUTH.user()) return { ok: false, reason: 'login' };
     LB.bindUser(); p = LB.profile();
     if (!authUid()) return { ok: false, reason: 'login' };   // 서버 규칙: 로그인한 계정만 기록을 올릴 수 있다
+    // 연속 등록 막기: 한 계정은 COOLDOWN_SEC 초에 한 번만 (서버 규칙도 같은 간격을 검사)
+    const lastAt = Number(localStorage.getItem(P + 'lastsub') || 0);
+    if (Date.now() - lastAt < COOLDOWN_SEC * 1000) return { ok: false, reason: 'cooldown' };
     try {
       const base = { name: p.name, score, date, flag: p.flag, faction: p.faction, uid: p.uid };
-      const jobs = [db.collection(warCol(p.faction)).add(base)];
       const best = score > weekBest();
-      if (best) jobs.push(db.collection(SCORES).add(base));
-      const r = await timeout(Promise.all(jobs).then(() => true), 15000);
+      // 한 묶음(batch)으로 저장: 계정 기록(users/uid 의 마지막 등록 시각) + 점령전 + (주간 최고면) 개인 순위
+      const batch = db.batch();
+      batch.set(db.collection('users').doc(p.uid), { last: firebase.firestore.FieldValue.serverTimestamp() });
+      batch.set(db.collection(warCol(p.faction)).doc(), base);
+      if (best) batch.set(db.collection(SCORES).doc(), base);
+      const r = await timeout(batch.commit().then(() => true), 15000);
       if (!r) return { ok: false, reason: 'timeout' };
+      localStorage.setItem(P + 'lastsub', String(Date.now()));
       localStorage.setItem(P + 'submits', String(LB.submitCount() + 1));
       localStorage.setItem(P + 'warsub', LB.warMonth().key);
       if (best) localStorage.setItem(P + 'week', JSON.stringify({ s: SUFFIX, score }));
@@ -123,10 +130,8 @@
     } catch (e) { console.warn('submit failed', e); return { ok: false, reason: e && e.code || 'error' }; }
   };
 
-  LB.recordPlay = function (score, date) {
-    if (!LB.ready) return;
-    try { db.collection(PLAYS).add({ score: Number(score) | 0, date }).catch(() => {}); } catch (e) {}
-  };
+  // 판마다 남기던 통계 기록은 쓰기 사용량을 아끼려고 끔 (게임 오버마다 1건씩 쓰던 것)
+  LB.recordPlay = function () {};
 
   // 세력별 이번 달 누적 점수 → [{f, total, n}] 또는 null
   LB.warTotals = async function () {
@@ -146,8 +151,10 @@
   };
 
   // 방문자 카운트 (페이지 로드마다 1회)
+  // 방문자 수: 한 기기에서 하루 한 번만 센다 (쓰기 사용량 절약)
   LB.visit = async function () {
     if (!LB.ready) return null;
+    try { if (localStorage.getItem(P + 'visited') === isoToday()) return null; localStorage.setItem(P + 'visited', isoToday()); } catch (e) {}
     try {
       const inc = firebase.firestore.FieldValue.increment(1), key = isoToday();
       const tRef = db.collection('visits').doc('total'), dRef = db.collection('visits').doc(key);

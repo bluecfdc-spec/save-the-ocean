@@ -112,6 +112,9 @@
   #soundBtns { position: fixed; right: 8px; top: calc(var(--app-w) * 0.103 + 6px); z-index: 25; display: flex; gap: 6px; }
   #soundBtns button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #7fb6e0; background: rgba(4,22,40,.72); color: #cfe3f5; font-size: 15px; cursor: pointer; line-height: 1; }
   #soundBtns button.off { opacity: .45; text-decoration: line-through; }
+  #quitBtn { display: none; }
+  body.playing #quitBtn { display: block; }
+  #quitBtn.armed { background: #c0392b; border-color: #ffb3a8; box-shadow: 0 0 10px #ff5a4a; }
   /* 공지 팝업 */
   #notice { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; background: rgba(2, 10, 20, .7); padding: 20px; }
   #notice.show { display: flex; }
@@ -309,6 +312,43 @@
   #panel.one.left-hand .zone.left { left: 4%; } #panel.one.left-hand .zone.bomb { left: 28.4%; } #panel.one.left-hand .zone.right { left: 52%; }
   #panel.one.has-fac::after { content: ''; position: absolute; left: 1.5%; width: 21%; top: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) * 0.06); height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) * 0.88); background: var(--fac-img) center / contain no-repeat, radial-gradient(closest-side, rgba(4,10,20,.92) 60%, rgba(4,10,20,0)); filter: drop-shadow(0 0 6px var(--fc)) drop-shadow(0 0 14px var(--fc)); pointer-events: none; }
   #panel.one.left-hand.has-fac::after { left: 77.5%; }
+  /* ---------- 게임 오버: 조작판 자리에 세력 변경 ---------- */
+  #facSwitch { display: none; position: absolute; left: 0; right: 0; top: 0; height: var(--panel-h, calc(var(--app-w) * 0.2572)); z-index: 3; flex-direction: column; justify-content: center; align-items: center; gap: 2px; background: linear-gradient(rgba(3,10,20,.80), rgba(3,10,20,.92)); }
+  body.over #facSwitch { display: flex; }
+  body.over #panel .zone { visibility: hidden; }
+  body.over #panel.has-fac::after { display: none; }
+  #facSwitch .fs-title { font-family: system-ui, sans-serif; font-weight: 800; font-size: clamp(11px, calc(var(--app-w) * 0.032), 14px); color: #cfe3f5; letter-spacing: .04em; }
+  #facSwitch .fs-row { display: flex; gap: calc(var(--app-w) * 0.03); width: 94%; justify-content: center; }
+  #facSwitch button { flex: 1 1 0; max-width: 32%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 4px 6px; border-radius: 12px; border: 2px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: var(--fc); font-family: system-ui, sans-serif; font-weight: 800; font-size: clamp(12px, calc(var(--app-w) * 0.036), 16px); cursor: pointer; }
+  #facSwitch button img { width: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) * 0.5); height: calc(var(--panel-h, calc(var(--app-w) * 0.2572)) * 0.5); filter: drop-shadow(0 0 6px var(--fc)); }
+  #facSwitch button.on { border-color: var(--fc); background: rgba(255,255,255,.12); box-shadow: 0 0 12px var(--fc); }
+  #facSwitch button.armed { border-color: #fff; animation: fsPulse .5s ease-in-out infinite alternate; }
+  #facSwitch button:disabled { opacity: .4; }
+  @keyframes fsPulse { from { box-shadow: 0 0 6px var(--fc); } to { box-shadow: 0 0 20px var(--fc); } }
+  /* ---------- 특수기술 ---------- */
+  #hud .hp-fill.gold { background: linear-gradient(#fff2a8, #ffc531 55%, #d18b00); box-shadow: 0 0 10px #ffc531, 0 0 3px #fff; }
+  #skillBtn { display: none; position: absolute; z-index: 4; right: calc(var(--app-w) * 0.05); bottom: calc(var(--ctl-bottom, 12px) - 6px); width: calc(var(--app-w) * 0.17); height: calc(var(--app-w) * 0.17); border-radius: 50%; border: 2px solid var(--fc); background: radial-gradient(closest-side, rgba(0,0,0,.15), rgba(4,12,24,.85)), var(--fac-img) center / 84% no-repeat; background-blend-mode: normal; box-shadow: 0 0 14px var(--fc), inset 0 0 12px var(--fc); cursor: pointer; animation: skPulse 1.1s ease-in-out infinite alternate; padding: 0; }
+  #skillBtn { background: var(--fac-img) center / 84% no-repeat, radial-gradient(closest-side, rgba(255,255,255,.12), rgba(4,12,24,.9)); }
+  #skillBtn.show { display: block; }
+  #skillBtn.busy, #panel.skill-busy #skillPanel { filter: grayscale(.85) brightness(.6); animation: none; }
+  @keyframes skPulse { from { box-shadow: 0 0 8px var(--fc), inset 0 0 8px var(--fc); transform: scale(1); } to { box-shadow: 0 0 22px var(--fc), inset 0 0 14px var(--fc); transform: scale(1.06); } }
+  #skillPanel { display: none; position: absolute; z-index: 2; left: 1.5%; width: 21%; top: 0; height: var(--panel-h, calc(var(--app-w) * 0.2572)); cursor: pointer; animation: skPulse2 1.1s ease-in-out infinite alternate; }
+  #panel.one.has-fac #skillPanel { display: block; }
+  #panel.one.left-hand #skillPanel { left: 77.5%; }
+  #panel.one.has-fac::after { animation: skPulse2 1.1s ease-in-out infinite alternate; }
+  #panel.one.skill-busy::after { filter: grayscale(.85) brightness(.6); animation: none; }
+  @keyframes skPulse2 { from { filter: drop-shadow(0 0 4px var(--fc)); } to { filter: drop-shadow(0 0 16px var(--fc)) brightness(1.15); } }
+  #facPick { position: fixed; inset: 0; z-index: 45; display: none; align-items: center; justify-content: center; background: rgba(2, 8, 18, .82); padding: 14px; }
+  #facPick.show { display: flex; }
+  #facPick .fp-card { width: min(100%, calc(var(--app-w) * 0.92), 460px); background: linear-gradient(#0d2440, #061527); border: 2px solid #8fd3ff; border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: 0 0 30px #2b9dff55; }
+  #facPick h3 { margin: 0 0 4px; font-family: system-ui, sans-serif; font-size: 19px; color: #fff; }
+  #facPick p { margin: 0 0 10px; font-family: system-ui, sans-serif; font-size: 12px; color: #a9c3da; line-height: 1.4; }
+  #facPick .fp-list { display: flex; flex-direction: column; gap: 8px; }
+  #facPick .fp-list button { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--fc); background: rgba(255,255,255,.05); color: #fff; cursor: pointer; text-align: left; box-shadow: 0 0 10px color-mix(in srgb, var(--fc) 40%, transparent); }
+  #facPick .fp-list button:active { transform: scale(.97); background: rgba(255,255,255,.12); }
+  #facPick .fp-list img { width: 58px; height: 58px; flex: 0 0 auto; filter: drop-shadow(0 0 8px var(--fc)); }
+  #facPick .fp-txt b { display: block; font-family: system-ui, sans-serif; font-size: 18px; color: var(--fc); }
+  #facPick .fp-txt small { display: block; font-family: system-ui, sans-serif; font-size: 12px; color: #cfe3f5; line-height: 1.35; }
   /* ---------- 게임 오버: 국기(왼쪽) · 이름과 안내(가운데) · 세력 마크(오른쪽, 크게) ---------- */
   #recordBox.has-prof { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto auto; column-gap: 10px; row-gap: 2px; align-items: center; padding: 8px 12px; }
   #recordBox.has-prof > * { margin: 0 !important; }
@@ -362,7 +402,9 @@
     </div>
   </div>
 </div>
+<div id="facPick"><div class="fp-card"><h3 data-i18n="fp.title">⚔️ 세력을 선택하세요</h3><p data-i18n="fp.sub">적은 다른 두 세력의 잠수함으로 나와요. 게임이 끝나면 언제든 바꿀 수 있어요.</p><div class="fp-list"></div></div></div>
 <div id="soundBtns">
+  <button id="quitBtn" data-i18n-label="quit.label" aria-label="게임 그만하기">🏳️</button>
   <button id="bgmBtn" data-i18n-label="sound.bgm" aria-label="배경음 켜기/끄기">🌊</button>
   <button id="sfxBtn" data-i18n-label="sound.sfx" aria-label="효과음 켜기/끄기">💥</button>
 </div>
@@ -380,6 +422,7 @@
     <canvas id="game"></canvas>
     <div id="flash"></div>
     <button class="ctl" id="ctlMode" data-i18n-label="aria.ctl" aria-label="조작 방식 전환">🤲 양손</button>
+    <button id="skillBtn" type="button" aria-label="special"></button>
     <button class="ctl" id="ctlHand" data-i18n-label="aria.hand" aria-label="사용 손 전환">▶ 우수</button>
     <div id="toast"></div>
 
@@ -429,6 +472,8 @@
       <div class="zone bomb"  id="zBomb"  role="button" data-i18n-label="aria.bomb" aria-label="폭탄 투하"></div>
       <div class="zone right" id="zRight" role="button" data-i18n-label="aria.right" aria-label="오른쪽으로 이동"></div>
     </div>
+    <div id="skillPanel" role="button" aria-label="special"></div>
+    <div id="facSwitch"><div class="fs-title" data-i18n="fs.title">⚔️ 세력 변경</div><div class="fs-row"></div></div>
   </div>
 </div>
 
@@ -441,7 +486,7 @@
 <script>I18N.apply();</script>
 <script>window.FLAG_BASE = "vendor/flags/";</script>
 <script src="firebase-config.js"></script>
-<script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000, CACHE_MIN: 5 };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
+<script>window.STO_CONFIG = { FREE_SUBMITS: 3, OPEN_UNLIMITED: true, WAR_BASE: 30000, CACHE_MIN: 5, FACTION_SWITCH: 'free' };  // 결제 도입 시 OPEN_UNLIMITED 를 false 로</script>
 <!-- 명예의 전당(지난 주간 1위·점령전 우승 세력)은 웹의 season.js / war-seasons.js 를 온라인일 때만 받아온다 -->
 <script>['season.js', 'war-seasons.js'].forEach(function (f) { var s = document.createElement('script'); s.async = true; s.setAttribute('data-opt', '1'); s.src = 'https://bluecfdc-spec.github.io/save-the-ocean/' + f + '?d=' + new Date().toISOString().slice(0, 10); s.onload = function () { if (window.LB) document.querySelectorAll('.hall-pane').forEach(function (el) { LB.renderSeasons(el); }); }; document.head.appendChild(s); });</script>
 <script src="audio.js"></script>
