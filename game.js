@@ -124,10 +124,12 @@
     state = 'play';
     startOverlay.classList.add('hidden'); overOverlay.classList.add('hidden');
     document.body.classList.add('playing');
+    document.body.classList.remove('over');
     SFX.startAmbient(); SFX.seaStart();
   }
   function gameOver() {
     state = 'over';
+    document.body.classList.add('over'); renderFacSwitch();
     document.body.classList.remove('playing'); quitBtn.classList.remove('armed');
     SFX.wake(false);
     SFX.sink(); SFX.stopAmbient(); SFX.seaStop();
@@ -217,7 +219,7 @@
     const name = profName.value.trim();
     if (!name || !draft.flag || !draft.faction) { showToast(t('prof.need')); return; }
     LB.saveProfile({ name, flag: draft.flag, faction: draft.faction });
-    profEl.classList.remove('show'); renderReg(); WAR.repaint();
+    profEl.classList.remove('show'); renderReg(); WAR.repaint(); if (state === 'over') renderFacSwitch();
     const next = afterProfile; afterProfile = null; if (next) next();
   });
   // 앱에서는 기록을 올리기 전에 스토어 계정 로그인이 필요하다 (웹은 window.AUTH 가 없어 그대로 진행)
@@ -242,7 +244,7 @@
   delBtn.addEventListener('click', async () => {
     if (Date.now() - delArmed > 5000) { delArmed = Date.now(); delBtn.textContent = t('acct.delete.confirm'); return; }
     delBtn.disabled = true; const r = await AUTH.deleteAccount(); delBtn.disabled = false; delArmed = 0;
-    if (r.ok) { LB.clearLocal(); profEl.classList.remove('show'); renderReg(); showToast(t('acct.deleted')); }
+    if (r.ok) { LB.clearLocal(); profEl.classList.remove('show'); renderReg(); if (state === 'over') renderFacSwitch(); showToast(t('acct.deleted')); }
     else { delBtn.textContent = t('acct.delete'); showToast(t('acct.delete.fail')); }
   });
   // 탭 (점령전 / TOP 10) — 시작 화면과 게임 오버 화면이 같은 탭을 본다
@@ -844,6 +846,28 @@
   });
 
   let toastTimer = 0;
+  // ───────────── 게임 오버 화면의 세력 변경 (조작판 자리) ─────────────
+  //  STO_CONFIG.FACTION_SWITCH: 'free' = 지금은 누구나 바꿀 수 있음(시험용) / 'off' = 잠금 (나중에 결제·기록 보상으로 열 예정)
+  const fsRow = document.querySelector('#facSwitch .fs-row'); let fsArmed = 0, fsT = 0;
+  function renderFacSwitch() {
+    const p = LB.profile(), cur = p ? p.faction : 0, open = (window.STO_CONFIG || {}).FACTION_SWITCH !== 'off';
+    fsRow.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '" style="--fc:' + f.color + '" class="' + (f.id === cur ? 'on' : '') + (f.id === fsArmed ? ' armed' : '') + '"' + (open ? '' : ' disabled') + '><img src="' + f.icon + '" alt=""><span>' + t('f.' + f.key) + '</span></button>').join('');
+  }
+  fsRow.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled || state !== 'over') return;
+    const n = Number(b.dataset.f), p = LB.profile();
+    if (!p) { openProfile(); return; }                       // 프로필이 없으면 프로필 만들기부터
+    if (n === p.faction) { fsArmed = 0; renderFacSwitch(); return; }
+    if (fsArmed !== n) {                                      // 실수로 바뀌지 않게: 한 번 더 눌러야 바뀐다
+      fsArmed = n; renderFacSwitch(); showToast(t('fs.confirm', { f: t('f.' + WAR.byId(n).key) }));
+      clearTimeout(fsT); fsT = setTimeout(() => { fsArmed = 0; renderFacSwitch(); }, 2500); return;
+    }
+    clearTimeout(fsT); fsArmed = 0;
+    LB.saveProfile(Object.assign({}, p, { faction: n }));
+    renderFacSwitch(); renderReg(); WAR.repaint();
+    showToast(t('fs.done', { f: t('f.' + WAR.byId(n).key) }));
+  });
+  document.addEventListener('i18n:change', () => { if (state === 'over') renderFacSwitch(); });
   // 게임 그만하기: 한 번 누르면 확인, 2초 안에 한 번 더 누르면 바로 게임 오버(점수 등록 화면)
   const quitBtn = document.getElementById('quitBtn'); let quitT = 0;
   quitBtn.addEventListener('click', e => {
