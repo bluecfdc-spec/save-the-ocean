@@ -121,10 +121,12 @@
     resize(); reset();
     state = 'play';
     startOverlay.classList.add('hidden'); overOverlay.classList.add('hidden');
+    document.body.classList.add('playing');
     SFX.startAmbient(); SFX.seaStart();
   }
   function gameOver() {
     state = 'over';
+    document.body.classList.remove('playing'); quitBtn.classList.remove('armed');
     SFX.wake(false);
     SFX.sink(); SFX.stopAmbient(); SFX.seaStop();
     shake = 18;
@@ -696,7 +698,7 @@
     // 레벨 표시 (작게)
     if (state === 'play') {
       ctx.font = '600 10px Orbitron, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,230,255,.75)';
-      ctx.fillText('LV ' + (level + 1), W - 92, 20);
+      ctx.fillText('LV ' + (level + 1), W - 132, 20);
     }
   }
 
@@ -826,6 +828,14 @@
   });
 
   let toastTimer = 0;
+  // 게임 그만하기: 한 번 누르면 확인, 2초 안에 한 번 더 누르면 바로 게임 오버(점수 등록 화면)
+  const quitBtn = document.getElementById('quitBtn'); let quitT = 0;
+  quitBtn.addEventListener('click', e => {
+    e.stopPropagation(); if (state !== 'play') return;
+    if (quitBtn.classList.contains('armed')) { clearTimeout(quitT); quitBtn.classList.remove('armed'); gameOver(); return; }
+    quitBtn.classList.add('armed'); showToast(t('quit.confirm'));
+    clearTimeout(quitT); quitT = setTimeout(() => quitBtn.classList.remove('armed'), 2000);
+  });
   function showToast(msg) { toast.textContent = msg; toast.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.style.opacity = 0; }, 1600); }
 
   // 화면 전환 시 입력 리셋
