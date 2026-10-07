@@ -31,6 +31,10 @@
   const IMG = {};
   const files = { bg: 'assets/bg.jpg', ship: 'assets/ship.png', subW: 'assets/sub_white.png', subR: 'assets/sub_red.png', bomb: 'assets/bomb.png', torpedo: 'assets/torpedo.png', radar: 'assets/radar_frame.png', drill: 'assets/item_drill.png', shield: 'assets/item_shield.png' };
   // 세력별 그림: 1 서지(파랑) · 2 게일(보라) · 3 솔라(금색) — 군함 ship_fN, 일반 잠수함 sub_nN, 보스 잠수함 sub_bN
+  // 특수기술 그림 (검은 배경 그림은 '더하기' 합성으로 빛만 겹친다)
+  ['banner_1', 'banner_2', 'banner_3', 'solar_dome'].forEach(k => { files['fx_' + k] = 'assets/fx/' + k + '.png'; });
+  ['surge_vortex', 'surge_spout', 'gale_bolt1', 'gale_bolt2', 'gale_bolt3', 'gale_bolt4', 'gale_burst', 'solar_rays'].forEach(k => { files['fx_' + k] = 'assets/fx/' + k + '.jpg'; });
+  files.fac1 = 'assets/faction_wave.png'; files.fac2 = 'assets/faction_storm.png'; files.fac3 = 'assets/faction_sun.png';
   for (const n of [1, 2, 3]) { files['ship_f' + n] = 'assets/ship_f' + n + '.png?v=2'; files['sub_n' + n] = 'assets/sub_n' + n + '.png?v=2'; files['sub_b' + n] = 'assets/sub_b' + n + '.png?v=2'; }
   let loaded = 0; const total = Object.keys(files).length;
   for (const k in files) { const im = new Image(); im.src = files[k]; im.onload = im.onerror = () => { loaded++; }; IMG[k] = im; }
@@ -46,7 +50,9 @@
   const BOMB_W = 17;
   const TORP_W = 8;
   const WORLD_MARGIN = 1.0;             // 화면 밖 확장 폭 (화면 폭의 배수, 양쪽 각각)
-  const SHIELD_EVERY = 20;              // 잠수정 20척 격파마다 쉴드 아이템
+  const SHIELD_EVERY = 20;              // 잠수정 20척 격파마다 특수기술 아이템 (예전 쉴드 자리)
+  const SKILL = { 1: { dur: 8, pull: 2, slow: 0.2 }, 2: { dur: 5 }, 3: { dur: 10 } };   // 서지 · 게일 · 솔라
+  const SKILL_PRE = 0.6;                // 배너가 뜨는 동안 화면이 느려지는 시간(실제 초)
   const SHIELD_TIME = 10;               // 쉴드 지속(초)
   const DRILL_SHOTS = 5;                // 드릴 장전 수
   const DEEP_FRAC = 0.10;               // 잠수정 깊이 구간의 아래 10% = 심해 (격파 시 흰 500 / 빨강 1500)
@@ -65,6 +71,7 @@
   let spawnTimer = 0, shake = 0, radarAngle = 0, lastT = 0;
   let input = { left: false, right: false };
   let kills = 0, items = [], drillTimer = 0;
+  let sk = null, banner = null, bolts = [], bursts = [], galeT = 0;   // 발동 중인 특수기술, 배너, 번개·폭발 연출
   let lastFinal = { score: 0, date: '' };
 
   // ───────────── 크기/배치 ─────────────
@@ -113,7 +120,8 @@
   function reset() {
     score = 0; hp = MAX_HP; time = 0; level = 0; spawnTimer = 0.8; shake = 0;
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
-    ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0 };
+    ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0, skill: 0, gold: false };
+    sk = null; banner = null; bolts = []; bursts = []; galeT = 0;
     streaks = []; items = []; kills = 0; drillTimer = TEST ? 2 : 25 + Math.random() * 20;
     updateHud();
   }
@@ -126,10 +134,11 @@
     document.body.classList.add('playing');
     document.body.classList.remove('over');
     SFX.startAmbient(); SFX.seaStart();
+    renderSkill();
   }
   function gameOver() {
-    state = 'over';
-    document.body.classList.add('over'); renderFacSwitch();
+    state = 'over'; sk = null; banner = null;
+    document.body.classList.add('over'); renderFacSwitch(); renderSkill();
     document.body.classList.remove('playing'); quitBtn.classList.remove('armed');
     SFX.wake(false);
     SFX.sink(); SFX.stopAmbient(); SFX.seaStop();
@@ -143,11 +152,7 @@
   const regRow = document.getElementById('regRow'), regBtn = document.getElementById('regBtn'), regNote = document.getElementById('regNote');
   const profLine = document.getElementById('profLine'), profEdit = document.getElementById('profEdit');
   // 한손 모드의 빈 칸에 내 세력 마크를 크게 보여 준다 (세력을 아직 안 골랐으면 원래 그림 그대로)
-  function panelFaction() {
-    const pn = document.getElementById('panel'), p = LB.profile(), f = p && WAR.byId(p.faction);
-    pn.classList.toggle('has-fac', !!f);
-    if (f) { pn.style.setProperty('--fac-img', 'url(' + (f.img || f.icon) + ')'); pn.style.setProperty('--fc', f.color); }
-  }
+  function panelFaction() { renderSkill(); }
   panelFaction();
   function renderReg() {
     const p = LB.profile(), f = p && WAR.byId(p.faction), left = LB.freeLeft();
@@ -326,12 +331,13 @@
     // 군함 바로 옆이 아닌 곳에 나타나게 해서, 먹으려면 직접 가야 한다
     let x = 0, n = 0;
     do { x = 30 + Math.random() * (W - 60); n++; } while (ship && Math.abs(x - ship.x) < 90 && n < 12);
-    items.push({ type, x, y: surfaceY, t: 0 });
+    items.push({ type, x, y: surfaceY, t: 0, f: type === 'fac' ? myFac() : 0 });
     for (let k = 0; k < 10; k++) bubbles.push({ x: x + (Math.random() - 0.5) * 22, y: surfaceY + 4, vy: -(40 + Math.random() * 80), life: 0.4 + Math.random() * 0.3, r: 1.5 + Math.random() * 2 });
   }
   function onKill(s) {
     kills++;
-    // 방어막 아이템은 더 이상 나오지 않는다 (방어막 효과 코드는 필살기용으로 남겨 둠)
+    // 특수기술 아이템: 내 세력이 있을 때만, 20척마다 (세력이 없으면 드릴만 나온다)
+    if (kills % SHIELD_EVERY === 0 && myFac() && !items.some(i => i.type === 'fac')) spawnItem('fac');
   }
   function launch() {
     if (state !== 'play' || bombs.length >= MAX_BOMBS) return;
@@ -361,7 +367,7 @@
       SFX.wake(mv !== 0);
       ship.x = Math.max(ship.w * 0.45, Math.min(W - ship.w * 0.45, ship.x));
       if (ship.inv > 0) ship.inv -= dt;
-      if (ship.shield > 0) { ship.shield -= dt; if (ship.shield <= 0) { ship.shield = 0; updateHud(); } }
+      if (ship.shield > 0) { ship.shield -= dt; if (ship.shield <= 0) { ship.shield = 0; ship.gold = true; updateHud(); popText(ship.x, ship.y - 34, 'GOLD GUARD +1', '#ffd77a'); } }
       ship.mv = mv;
       const atEdge = ship.x < ship.w * 0.9 || ship.x > W - ship.w * 0.9;
       ship.campT = atEdge ? (ship.campT || 0) + dt : 0;
@@ -408,8 +414,12 @@
     // 잠수정 이동/발사
     for (let i = subs.length - 1; i >= 0; i--) {
       const s = subs[i];
-      s.x += s.dir * s.speed * dt;
-      s.wobble += dt * 2;
+      if (sk && sk.f === 1 && sk.t >= 0) {
+        // 서지: 처음 2초는 화면 가운데 세로줄로 끌려가고(1.3배), 남은 6초는 원래 방향으로 1/5 속도
+        if (sk.t < SKILL[1].pull) { const dx = W / 2 + (s.cx || 0) - s.x; if (s.cx === undefined) s.cx = (Math.random() - 0.5) * 24; s.x += Math.sign(dx) * Math.min(Math.abs(dx), s.speed * 1.3 * dt); }
+        else s.x += s.dir * s.speed * SKILL[1].slow * dt;
+      } else s.x += s.dir * s.speed * dt;
+      s.wobble += dt * (sk && sk.f === 1 && sk.t >= 0 ? 6 : 2);
       if (s.x < -W * WORLD_MARGIN - SUB_W * 2 || s.x > W + W * WORLD_MARGIN + SUB_W * 2) { subs.splice(i, 1); continue; }
       // 뒤쪽 거품
       if (s.x > -SUB_W && s.x < W + SUB_W && Math.random() < 0.5) addBubble(s.x - s.dir * s.w * 0.52, s.y + 2, false);
@@ -432,6 +442,8 @@
       }
     }
 
+    updateSkill(dt);
+
     // 아이템 (수면에 떠서 흘러감 → 군함이 닿으면 획득)
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
@@ -440,7 +452,13 @@
       if (state === 'play' && Math.abs(it.x - ship.x) < ship.w * 0.5 + 10) {
         items.splice(i, 1);
         SFX.pickup();
-        if (it.type === 'shield') { ship.shield = SHIELD_TIME; SFX.shieldOn(); popText(ship.x, ship.y - 34, 'SHIELD!', '#8fe3ff'); }
+        if (it.type === 'fac') {
+          const f = it.f || myFac(), fc = WAR.byId(f);
+          if (ship.skill) { score += 1000; popText(ship.x, ship.y - 34, '+1000', '#ffd77a'); }   // 이미 하나 저장돼 있으면 점수로
+          else { ship.skill = f; SFX.skillStore(); popText(ship.x, ship.y - 34, SKILL_NAME[f] + ' READY', fc ? fc.color : '#fff'); }
+          renderSkill();
+        }
+        else if (it.type === 'shield') { ship.shield = SHIELD_TIME; SFX.shieldOn(); popText(ship.x, ship.y - 34, 'SHIELD!', '#8fe3ff'); }
         else { ship.drill = DRILL_SHOTS; popText(ship.x, ship.y - 34, 'DRILL x' + DRILL_SHOTS, '#ffb347'); }
         updateHud();
       }
@@ -492,9 +510,10 @@
       if (state === 'play' && t.alive && Math.abs(t.y - ship.y) < ship.h * 0.5 && Math.abs(t.x - ship.x) < ship.w * 0.42) {
         // 군함 피격
         t.alive = false; torps.splice(i, 1);
-        if (ship.shield > 0) {
-          // 쉴드에 튕겨나감
-          SFX.deflect();
+        if (ship.shield > 0 || ship.gold) {
+          // 솔라 보호막(10초) 또는 금빛 추가 보호막(1회)에 막힘
+          if (ship.shield <= 0) { ship.gold = false; updateHud(); popText(ship.x, ship.y - 30, 'GUARD!', '#ffd77a'); }
+          if (sk && sk.f === 3 || ship.shield <= 0) SFX.goldPing(); else SFX.deflect();
           fx.push(explosion(t.x, ship.y + 6, 16, false));
           for (let k = 0; k < 10; k++) bubbles.push({ x: t.x + (Math.random() - 0.5) * 10, y: ship.y + 4, vy: -(60 + Math.random() * 100), vx: (Math.random() - 0.5) * 120, life: 0.5, r: 1.5 + Math.random() * 2, foam: true, grav: true });
           continue;
@@ -536,6 +555,167 @@
     if (bubbles.length > 400) bubbles.splice(0, bubbles.length - 400);
   }
 
+
+  // ───────────── 특수기술 (세력별) ─────────────
+  const SKILL_NAME = { 1: 'SURGE', 2: 'GALE', 3: 'SOLAR' };
+  function renderSkill() {
+    const skillBtn = document.getElementById('skillBtn');
+    const f = ship && ship.skill, fc = f && WAR.byId(f), busy = !!sk, pn = document.getElementById('panel');
+    pn.classList.toggle('has-fac', !!f && state !== 'over');
+    pn.classList.toggle('skill-busy', !!f && busy);
+    if (fc) { pn.style.setProperty('--fac-img', 'url(' + fc.img + ')'); pn.style.setProperty('--fc', fc.color); }
+    skillBtn.classList.toggle('show', !!f && state === 'play' && !pn.classList.contains('one'));
+    skillBtn.classList.toggle('busy', !!f && busy);
+    if (fc) { skillBtn.style.setProperty('--fac-img', 'url(' + fc.img + ')'); skillBtn.style.setProperty('--fc', fc.color); }
+  }
+  function useSkill() {
+    if (state !== 'play' || !ship.skill || sk) return;
+    const f = ship.skill; ship.skill = 0;
+    sk = { f, t: -SKILL_PRE, dur: SKILL[f].dur };
+    banner = { f, t: 0 };
+    SFX.skillBanner(); shake = Math.max(shake, 6);
+    flash.style.transition = 'none'; flash.style.opacity = 0.35;
+    requestAnimationFrame(() => { flash.style.transition = 'opacity .6s'; flash.style.opacity = 0; });
+    renderSkill();
+  }
+  // 배너가 끝나고 실제 효과가 시작되는 순간
+  function beginSkill() {
+    if (!sk) return;
+    if (sk.f === 1) { SFX.surge(sk.dur); subs.forEach(s => { s.cx = undefined; }); }
+    if (sk.f === 2) { SFX.zap(true); galeT = 0; }
+    if (sk.f === 3) { SFX.solar(); ship.shield = SKILL[3].dur; updateHud(); }
+  }
+  function killSub(s, viaGale) {
+    const i = subs.indexOf(s); if (i < 0) return;
+    subs.splice(i, 1);
+    const deep = isDeep(s), pts = deep ? (s.red ? DEEP_PTS.red : DEEP_PTS.white) : (s.red ? 300 : 100);
+    score += pts; updateHud();
+    const onScreen = s.x > -s.w && s.x < W + s.w;
+    if (onScreen) {
+      fx.push(explosion(s.x, s.y, s.red ? 46 : 36, s.red));
+      popText(s.x, s.y - 20, '+' + pts + (deep ? ' DEEP' : ''), deep ? '#ffd77a' : '#e4c8ff');
+      if (viaGale) { bursts.push({ x: s.x, y: s.y, t: 0, dur: 0.55, size: 90 + Math.random() * 30 }); bolts.push({ x: s.x, y: s.y, t: 0, dur: 0.4, k: Math.floor(Math.random() * 4) + 1, w: 46 + Math.random() * 18 }); }
+      for (let k = 0; k < 10; k++) addBubble(s.x + (Math.random() - 0.5) * 40, s.y, true);
+      SFX.boom(s.red);
+    }
+    onKill(s);
+  }
+  function updateSkill(dt) {
+    for (let i = bolts.length - 1; i >= 0; i--) { bolts[i].t += dt; if (bolts[i].t > bolts[i].dur) bolts.splice(i, 1); }
+    for (let i = bursts.length - 1; i >= 0; i--) { bursts[i].t += dt; if (bursts[i].t > bursts[i].dur) bursts.splice(i, 1); }
+    if (!sk || sk.t < 0) return;
+    sk.t += dt;
+    if (sk.f === 1) {
+      // 소용돌이로 빨려 드는 거품
+      if (Math.random() < 0.9) { const side = Math.random() < 0.5 ? -1 : 1; bubbles.push({ x: W / 2 + side * (60 + Math.random() * 140), y: subMinY() + Math.random() * (subMaxY() - subMinY()), vy: -(10 + Math.random() * 20), vx: -side * (60 + Math.random() * 80), life: 0.8 + Math.random() * 0.6, r: 1 + Math.random() * 2.2 }); }
+    }
+    if (sk.f === 2) {
+      // 게일: 5초 동안 화면 안팎의 적과 어뢰를 잇달아 격침 (한 프레임에 몰리지 않게 조금씩 시차)
+      galeT -= dt;
+      for (const s of subs.slice()) { if (s.zap === undefined) s.zap = Math.random() * 0.35; s.zap -= dt; if (s.zap <= 0) killSub(s, true); }
+      for (let i = torps.length - 1; i >= 0; i--) {
+        const tp = torps[i]; if (tp.zap === undefined) tp.zap = Math.random() * 0.3; tp.zap -= dt;
+        if (tp.zap <= 0) { torps.splice(i, 1); bursts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.4, size: 50 }); if (tp.y > surfaceY) bolts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.3, k: Math.floor(Math.random() * 4) + 1, w: 34 }); }
+      }
+      if (galeT <= 0) {   // 배경 번개
+        galeT = 0.12 + Math.random() * 0.18;
+        bolts.push({ x: 20 + Math.random() * (W - 40), y: subMinY() + Math.random() * (seabedY - subMinY()), t: 0, dur: 0.28 + Math.random() * 0.2, k: Math.floor(Math.random() * 4) + 1, w: 40 + Math.random() * 40 });
+        if (Math.random() < 0.5) SFX.zap(false);
+        if (Math.random() < 0.35) { flash.style.transition = 'none'; flash.style.opacity = 0.18; requestAnimationFrame(() => { flash.style.transition = 'opacity .25s'; flash.style.opacity = 0; }); }
+      }
+    }
+    if (sk.t >= sk.dur) { sk = null; renderSkill(); }
+  }
+  // 전장 뒤쪽(배경 위, 잠수함 아래) 연출
+  function drawSkillBack() {
+    if (!sk || sk.t < 0) return;
+    const k = sk.t, fadeIn = Math.min(1, k / 0.4), fadeOut = Math.min(1, (sk.dur - k) / 0.8), a = Math.max(0, Math.min(fadeIn, fadeOut));
+    const top = surfaceY, bot = seabedY + 40;
+    ctx.save();
+    if (sk.f === 1) {
+      ctx.globalAlpha = 0.28 * a; ctx.fillStyle = '#0aa7c9'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, top, W, bot - top);
+      ctx.globalCompositeOperation = 'lighter';
+      const im = IMG.fx_surge_vortex;
+      if (okImg(im)) {
+        const pull = k < SKILL[1].pull, rows = 3;
+        for (let r = 0; r < rows; r++) {
+          const cy = subMinY() + (subMaxY() - subMinY()) * (r + 0.5) / rows, sz = W * (pull ? 1.15 : 0.95) * (1 - r * 0.08);
+          ctx.save(); ctx.translate(W / 2, cy); ctx.scale(1, 0.32); ctx.rotate(k * (pull ? 3.2 : 1.1) * (r % 2 ? -1 : 1) + r);
+          ctx.globalAlpha = a * (pull ? 0.85 : 0.55); ctx.drawImage(im, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+        }
+      }
+    }
+    if (sk.f === 2) {
+      ctx.globalAlpha = 0.6 * a; ctx.fillStyle = '#3a1080'; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, -offY, W, viewH);
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.14 + 0.14 * Math.random()) * a; ctx.fillStyle = '#7b3cff'; ctx.fillRect(0, top, W, bot - top);
+    }
+    if (sk.f === 3) {
+      ctx.globalAlpha = 0.35 * a; ctx.fillStyle = '#ffb000'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, -offY, W, viewH);
+      const im = IMG.fx_solar_rays;
+      if (okImg(im)) {
+        // 햇살은 물속에만 (하늘은 그대로 두어 군함 위 보호막이 잘 보이게)
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath(); ctx.rect(0, top + 2, W, bot - top + 200); ctx.clip();
+        const rw = W * 1.3, rh = Math.max(rw * im.naturalHeight / im.naturalWidth, bot - top + 160), sway = Math.sin(k * 0.8) * 12;
+        ctx.globalAlpha = a * (0.5 + 0.12 * Math.sin(k * 3)); ctx.drawImage(im, (W - rw) / 2 + sway, top - 150, rw, rh);
+      }
+    }
+    ctx.restore();
+  }
+  // 전장 앞쪽(폭발 위) 연출
+  function drawSkillFront() {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (sk && sk.f === 1 && sk.t >= 0 && sk.t < SKILL[1].pull + 0.6 && okImg(IMG.fx_surge_spout)) {
+      // 물기둥 3개가 솟구쳤다가 가라앉음
+      const im = IMG.fx_surge_spout, k = sk.t;
+      [[-0.28, 0], [0, 0.15], [0.28, 0.3]].forEach(([ox, d]) => {
+        const p = Math.max(0, Math.min(1, (k - d) / 0.5)), q = Math.max(0, Math.min(1, (SKILL[1].pull + 0.6 - k) / 0.6));
+        const h = (seabedY - surfaceY + 40) * p, w = h * im.naturalWidth / im.naturalHeight * 0.85;
+        ctx.globalAlpha = 0.6 * q; if (h > 4) ctx.drawImage(im, W / 2 + ox * W - w / 2, seabedY + 20 - h, w, h);
+      });
+    }
+    for (const b of bolts) {
+      const im = IMG['fx_gale_bolt' + b.k]; if (!okImg(im)) continue;
+      const p = b.t / b.dur, y0 = surfaceY - 70, h = b.y + 26 - y0;
+      ctx.globalAlpha = (p < 0.15 ? 1 : 1 - (p - 0.15) / 0.85) * (0.75 + Math.random() * 0.25);
+      ctx.drawImage(im, b.x - b.w / 2, y0, b.w, h);
+    }
+    for (const e of bursts) {
+      const im = IMG.fx_gale_burst; if (!okImg(im)) continue;
+      const p = e.t / e.dur, s = e.size * (0.5 + p * 0.8);
+      ctx.globalAlpha = 1 - p; ctx.drawImage(im, e.x - s / 2, e.y - s / 2, s, s);
+    }
+    ctx.restore();
+  }
+  // 발동 배너: 커지며 등장 → 잠깐 머묾 → 사라짐 (실제 시간 기준)
+  function drawBanner() {
+    if (!banner) return;
+    const im = IMG['fx_banner_' + banner.f]; if (!okImg(im)) return;
+    const t = banner.t, ein = Math.min(1, t / 0.22), out = t > 1.5 ? Math.max(0, 1 - (t - 1.5) / 0.4) : 1;
+    const ease = 1 - Math.pow(1 - ein, 3), sc = 1.5 - 0.5 * ease, w = W * 0.92 * sc, h = w * im.naturalHeight / im.naturalWidth;
+    const cy = surfaceY + 64;
+    ctx.save();
+    ctx.globalAlpha = ein * out; ctx.drawImage(im, W / 2 - w / 2, cy - h / 2, w, h);
+    // 빛이 스치는 효과
+    const sx = -W * 0.3 + (t / 0.9) * W * 1.6;
+    if (t < 0.9) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createLinearGradient(sx - 40, 0, sx + 40, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = gr; ctx.globalAlpha = out; ctx.fillRect(W / 2 - w / 2, cy - h / 2, w, h); }
+    ctx.restore();
+  }
+  document.getElementById('skillBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); useSkill(); });
+  document.getElementById('skillPanel').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); useSkill(); });
+
+  // ───────────── 처음 시작: 세력 고르기 ─────────────
+  const facPick = document.getElementById('facPick');
+  function tryStart() {
+    if (myFac()) { start(); return; }
+    facPick.querySelector('.fp-list').innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><span class="fp-txt"><b>' + t('f.' + f.key) + '</b><small>' + t('fp.d' + f.id) + '</small></span></button>').join('');
+    facPick.classList.add('show');
+  }
+  facPick.addEventListener('click', e => {
+    const b = e.target.closest('button[data-f]'); if (!b) return;
+    setFac(Number(b.dataset.f)); facPick.classList.remove('show'); start();
+  });
+
   // ───────────── HUD ─────────────
   function updateHud() {
     scoreText.textContent = String(Math.min(score, 999999)).padStart(6, '0');
@@ -544,15 +724,18 @@
     hudDrill.style.display = drillMode ? '' : 'none';
     bombN.textContent = drillMode ? ship.drill : (MAX_BOMBS - bombs.length);
     bombMax.textContent = drillMode ? DRILL_SHOTS : MAX_BOMBS;
-    hpFill.style.boxShadow = (ship && ship.shield > 0) ? '0 0 12px #46c3ff, 0 0 4px #fff' : '';
+    hpFill.style.boxShadow = '';
     hpFill.style.width = hp + '%';
-    hpFill.className = 'hp-fill' + (hp <= 25 ? ' danger' : hp <= 50 ? ' warn' : '');
+    hpFill.className = 'hp-fill' + (ship && (ship.gold || ship.shield > 0) ? ' gold' : hp <= 25 ? ' danger' : hp <= 50 ? ' warn' : '');
     hpText.textContent = hp + '%';
   }
 
   // ───────────── 그리기 ─────────────
   // 내 세력 (아직 안 골랐으면 0 → 원래 그림)
-  function myFac() { try { const p = LB.profile(); return (p && p.faction | 0) || 0; } catch (e) { return 0; } }
+  // 프로필이 없어도 시작할 때 고른 세력(PFAC)으로 플레이한다
+  const PFAC = 'savetheocean_next_pfac';
+  function myFac() { try { const p = LB.profile(); if (p && p.faction) return p.faction | 0; return Number(localStorage.getItem(PFAC)) || 0; } catch (e) { return 0; } }
+  function setFac(n) { try { localStorage.setItem(PFAC, String(n)); const p = LB.profile(); if (p && p.faction !== n) LB.saveProfile(Object.assign({}, p, { faction: n })); } catch (e) {} }
   function okImg(im) { return im && im.complete && im.naturalWidth; }
   // 군함: 세력이 있으면 세력 군함
   function drawShip(cy, flip, rot) {
@@ -584,6 +767,7 @@
       if (below > 0.5) { const g2 = ctx.createLinearGradient(0, bgY + bh - 30, 0, bgY + bh); g2.addColorStop(0, '#29292800'); g2.addColorStop(1, '#292928'); ctx.fillStyle = g2; ctx.fillRect(0, bgY + bh - 30, W, 31); }
     } else { ctx.fillStyle = '#0b3a5e'; ctx.fillRect(0, -offY, W, viewH); }
 
+    drawSkillBack();
     // 거품/물보라
     for (const b of bubbles) {
       ctx.globalAlpha = Math.max(0, Math.min(1, b.life)) * (b.dust ? 0.5 : 0.85);
@@ -645,12 +829,13 @@
     // 아이템 (수면)
     for (const it of items) {
       const bob = Math.sin(it.t * 3) * 2.5;
-      const im = it.type === 'shield' ? IMG.shield : IMG.drill;
-      const w = it.type === 'shield' ? 30 : 18, h = it.type === 'shield' ? 32 : 42;
+      const isFac = it.type === 'fac', fcol = isFac && WAR.byId(it.f) ? WAR.byId(it.f).color : '#46c3ff';
+      const im = isFac ? IMG['fac' + it.f] : it.type === 'shield' ? IMG.shield : IMG.drill;
+      const w = isFac ? 32 : it.type === 'shield' ? 30 : 18, h = isFac ? 32 : it.type === 'shield' ? 32 : 42;
       const left = ITEM_LIFE - it.t, blink = left < 2 ? (Math.sin(it.t * 22) > 0 ? 1 : 0.25) : 0.85 + 0.15 * Math.sin(it.t * 6);
       const pop = Math.min(1, it.t / 0.18);   // 나타날 때 톡 튀어나오는 느낌
       ctx.save(); ctx.globalAlpha = blink;
-      ctx.shadowColor = it.type === 'shield' ? '#46c3ff' : '#ffb347'; ctx.shadowBlur = 14;
+      ctx.shadowColor = isFac ? fcol : it.type === 'shield' ? '#46c3ff' : '#ffb347'; ctx.shadowBlur = isFac ? 20 : 14;
       drawSprite(im, it.x, surfaceY - 8 + bob, w * pop, h * pop, false, Math.sin(it.t * 2) * 0.12);
       ctx.restore();
       // 물결
@@ -667,8 +852,14 @@
       const bob = Math.sin(time * 2.2) * 1.5 + (ship.mv ? Math.sin(time * 9) * 1.2 : 0) + ship.pitch * 0.3;
       const rot = Math.sin(time * 2.2) * 0.02 + ship.roll * (ship.dir === -1 ? -1 : 1);
       if (!(ship.inv > 0 && Math.floor(time * 20) % 2 === 0)) drawShip(ship.y - ship.h * 0.35 + bob, ship.dir === -1, rot);
-      // 쉴드 보호막
-      if (ship.shield > 0) {
+      // 솔라 보호막 (금빛 돔)
+      if (ship.shield > 0 && okImg(IMG.fx_solar_dome)) {
+        const ending = ship.shield < 2 && Math.floor(time * 8) % 2 === 0, dw = ship.w * 1.7, dh = dw * IMG.fx_solar_dome.naturalHeight / IMG.fx_solar_dome.naturalWidth;
+        ctx.save(); ctx.shadowColor = '#ffc531'; ctx.shadowBlur = 16; ctx.globalAlpha = ending ? 0.35 : 0.72 + 0.18 * Math.sin(time * 5);
+        ctx.drawImage(IMG.fx_solar_dome, ship.x - dw / 2, ship.y + 6 - dh, dw, dh); ctx.restore();
+        ctx.font = '700 9px Orbitron, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe9a0';
+        ctx.fillText('SOLAR ' + Math.ceil(ship.shield), ship.x, ship.y - dh - 2);
+      } else if (ship.shield > 0) {
         const ending = ship.shield < 2 && Math.floor(time * 8) % 2 === 0;
         const r = ship.w * 0.62;
         ctx.save(); ctx.globalAlpha = ending ? 0.25 : 0.55 + 0.15 * Math.sin(time * 6);
@@ -679,6 +870,10 @@
         ctx.restore();
         ctx.font = '700 9px Orbitron, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#bfefff';
         ctx.fillText('SHIELD ' + Math.ceil(ship.shield), ship.x, ship.y - ship.h - 8);
+      }
+      if (ship.gold && ship.shield <= 0) {
+        ctx.save(); ctx.globalAlpha = 0.35 + 0.15 * Math.sin(time * 4); ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 1.5; ctx.shadowColor = '#ffc531'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.ellipse(ship.x, ship.y - 6, ship.w * 0.62, ship.w * 0.32, 0, Math.PI, 0); ctx.stroke(); ctx.restore();
       }
     } else if (ship && state === 'over') {
       const sink = Math.min(1, (fx.length ? 0.4 : 1));
@@ -701,6 +896,7 @@
     }
     ctx.globalAlpha = 1;
 
+    drawSkillFront();
     // 점수 팝업
     ctx.font = '800 16px Orbitron, sans-serif'; ctx.textAlign = 'center';
     for (const t of texts) {
@@ -711,7 +907,7 @@
     ctx.shadowBlur = 0; ctx.globalAlpha = 1;
     ctx.restore();
 
-    ctx.save(); ctx.translate(0, offY); drawRadar(); ctx.restore();   // 레이더도 전장과 함께 내려 그린다
+    ctx.save(); ctx.translate(0, offY); drawRadar(); drawBanner(); ctx.restore();   // 레이더도 전장과 함께 내려 그린다
     // 레벨 표시 (작게)
     if (state === 'play') {
       ctx.font = '600 10px Orbitron, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(200,230,255,.75)';
@@ -778,7 +974,9 @@
 
   // ───────────── 루프 ─────────────
   function loop(t) {
-    const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
+    let dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
+    if (banner) { banner.t += dt; if (banner.t > 1.9) banner = null; }
+    if (sk && sk.t < 0) { sk.t += dt; dt *= 0.25; if (sk.t >= 0) beginSkill(); }   // 배너가 뜨는 0.6초는 느린 화면
     if (state !== 'idle') update(dt); else radarAngle += dt * 1.6;
     render();
     requestAnimationFrame(loop);
@@ -806,7 +1004,8 @@
     if (e.key === 'ArrowLeft' || e.key === 'a') input.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd') input.right = true;
     if (e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); if (state === 'play') dropBomb(); }
-    if (e.key === 'Enter' && state === 'idle') start();
+    if (e.key === 'Enter' && state === 'idle') tryStart();
+    if ((e.key === 's' || e.key === 'S') && state === 'play') useSkill();
   });
   window.addEventListener('keyup', e => {
     if (e.key === 'ArrowLeft' || e.key === 'a') input.left = false;
@@ -822,6 +1021,7 @@
     ctlMode.textContent = one ? t('ctl.one') : t('ctl.two');
     ctlHand.textContent = left ? t('ctl.left') : t('ctl.right');
     ctlHand.classList.toggle('show', one);
+    if (typeof renderSkill === 'function') renderSkill();
   }
   applyCtl();
   ctlMode.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const one = localStorage.getItem('savetheocean_ctrl') === 'one'; localStorage.setItem('savetheocean_ctrl', one ? 'two' : 'one'); applyCtl(); SFX.click(); showToast(one ? t('toast.two') : t('toast.one')); });
@@ -837,7 +1037,7 @@
   sfxBtn.addEventListener('click', () => { applySfx(!SFX.isSfxMuted()); showToast(SFX.isSfxMuted() ? t('toast.sfxOff') : t('toast.sfxOn')); });
 
   // 시작/재시작/랭킹
-  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('startBtn').addEventListener('click', tryStart);
   document.getElementById('retryBtn').addEventListener('click', () => {
     // 올리지 않고 넘어간 판은 순위 계산용 무명 기록으로만 남김
     if (!TEST && lastFinal && !lastFinal.done && lastFinal.score > 0) { lastFinal.done = true; LB.recordPlay(lastFinal.score, lastFinal.date); }
@@ -849,20 +1049,19 @@
   //  STO_CONFIG.FACTION_SWITCH: 'free' = 지금은 누구나 바꿀 수 있음(시험용) / 'off' = 잠금 (나중에 결제·기록 보상으로 열 예정)
   const fsRow = document.querySelector('#facSwitch .fs-row'); let fsArmed = 0, fsT = 0;
   function renderFacSwitch() {
-    const p = LB.profile(), cur = p ? p.faction : 0, open = (window.STO_CONFIG || {}).FACTION_SWITCH !== 'off';
+    const cur = myFac(), open = (window.STO_CONFIG || {}).FACTION_SWITCH !== 'off';
     fsRow.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '" style="--fc:' + f.color + '" class="' + (f.id === cur ? 'on' : '') + (f.id === fsArmed ? ' armed' : '') + '"' + (open ? '' : ' disabled') + '><img src="' + f.icon + '" alt=""><span>' + t('f.' + f.key) + '</span></button>').join('');
   }
   fsRow.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled || state !== 'over') return;
-    const n = Number(b.dataset.f), p = LB.profile();
-    if (!p) { openProfile(); return; }                       // 프로필이 없으면 프로필 만들기부터
-    if (n === p.faction) { fsArmed = 0; renderFacSwitch(); return; }
+    const n = Number(b.dataset.f), cur = myFac();
+    if (n === cur) { fsArmed = 0; renderFacSwitch(); return; }
     if (fsArmed !== n) {                                      // 실수로 바뀌지 않게: 한 번 더 눌러야 바뀐다
       fsArmed = n; renderFacSwitch(); showToast(t('fs.confirm', { f: t('f.' + WAR.byId(n).key) }));
       clearTimeout(fsT); fsT = setTimeout(() => { fsArmed = 0; renderFacSwitch(); }, 2500); return;
     }
     clearTimeout(fsT); fsArmed = 0;
-    LB.saveProfile(Object.assign({}, p, { faction: n }));
+    setFac(n);
     renderFacSwitch(); renderReg(); WAR.repaint();
     showToast(t('fs.done', { f: t('f.' + WAR.byId(n).key) }));
   });
@@ -881,7 +1080,7 @@
   document.addEventListener('visibilitychange', () => { input.left = input.right = false; });
 
   // 테스트용 훅
-  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, spawnItem, giveDrill() { ship.drill = DRILL_SHOTS; updateHud(); }, giveShield() { ship.shield = SHIELD_TIME; updateHud(); }, cheat(s, t) { score = s; time = t; updateHud(); }, get torps() { return torps.length; }, get subs() { return subs.length; }, get state() { return state; } };
+  window.__savetheocean = { forceOver() { if (state === 'play') { hp = 0; updateHud(); gameOver(); } }, spawnItem, giveDrill() { ship.drill = DRILL_SHOTS; updateHud(); }, giveShield() { ship.shield = SHIELD_TIME; updateHud(); }, giveSkill(f) { ship.skill = f || myFac(); renderSkill(); }, useSkill() { useSkill(); }, get sk() { return sk; }, cheat(s, t) { score = s; time = t; updateHud(); }, get torps() { return torps.length; }, get subs() { return subs.length; }, get state() { return state; } };
 
   // ───────────── 초기화 ─────────────
   resize();

@@ -281,6 +281,72 @@
     const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
     o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.95);
   };
+  // ───────────── 특수기술 효과음 ─────────────
+  function env(g, t, a0, peak, att, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + att + dec); }
+  // 배너: 묵직한 '쿵' + 금속 '챙~'
+  S.skillBanner = function () {
+    if (!ensure()) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.7);
+    const g = ctx.createGain(); env(g, t, 0, 0.55, 0.01, 0.8); o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.9);
+    [523, 784, 1046, 1568, 2093].forEach((f, i) => {
+      const p = ctx.createOscillator(); p.type = i % 2 ? 'triangle' : 'sine'; p.frequency.value = f * (1 + (Math.random() - 0.5) * 0.004);
+      const pg = ctx.createGain(); env(pg, t + 0.03, 0, 0.09 / (1 + i * 0.4), 0.01, 1.6 - i * 0.15); p.connect(pg); pg.connect(sfxBus); p.start(t); p.stop(t + 1.9);
+    });
+    const n = ctx.createBufferSource(); n.buffer = noiseBuffer(0.6);
+    const hp = ctx.createBiquadFilter(); hp.type = 'bandpass'; hp.Q.value = 0.8; hp.frequency.setValueAtTime(400, t); hp.frequency.exponentialRampToValueAtTime(5000, t + 0.5);
+    const ng = ctx.createGain(); env(ng, t, 0, 0.16, 0.25, 0.3); n.connect(hp); hp.connect(ng); ng.connect(sfxBus); n.start(t); n.stop(t + 0.6);
+  };
+  // 서지: 휘감기는 물 회오리 (dur 초)
+  S.surge = function (dur) {
+    if (!ensure()) return;
+    const t = ctx.currentTime;
+    const n = ctx.createBufferSource(); n.buffer = noiseBuffer(3); n.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4; bp.frequency.value = 500;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 1.6; const lg = ctx.createGain(); lg.gain.value = 320; lfo.connect(lg); lg.connect(bp.frequency);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.45, t + 0.6); g.gain.setValueAtTime(0.45, t + 2); g.gain.linearRampToValueAtTime(0.16, t + 2.6); g.gain.setValueAtTime(0.16, t + dur - 1); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    lfo.frequency.setValueAtTime(2.6, t); lfo.frequency.linearRampToValueAtTime(0.5, t + 2.5);
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(48, t + dur);
+    const og = ctx.createGain(); og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.22, t + 0.8); og.gain.linearRampToValueAtTime(0.0001, t + dur);
+    n.connect(bp); bp.connect(g); g.connect(sfxBus); o.connect(og); og.connect(sfxBus);
+    n.start(t); lfo.start(t); o.start(t); n.stop(t + dur + 0.1); lfo.stop(t + dur + 0.1); o.stop(t + dur + 0.1);
+  };
+  // 게일: '치직' 번개
+  S.zap = function (big) {
+    if (!ensure()) return;
+    const t = ctx.currentTime, d = big ? 0.5 : 0.22;
+    const n = ctx.createBufferSource(); n.buffer = noiseBuffer(d);
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = big ? 900 : 1800;
+    const g = ctx.createGain(); g.gain.setValueAtTime(big ? 0.5 : 0.22, t);
+    for (let k = 1; k < 8; k++) g.gain.setValueAtTime((big ? 0.5 : 0.22) * (Math.random() < 0.5 ? 0.15 : 1) * (1 - k / 8), t + d * k / 8);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    n.connect(hp); hp.connect(g); g.connect(sfxBus); n.start(t); n.stop(t + d);
+    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(big ? 220 : 900, t); o.frequency.exponentialRampToValueAtTime(big ? 40 : 120, t + d);
+    const og = ctx.createGain(); env(og, t, 0, big ? 0.12 : 0.05, 0.005, d); o.connect(og); og.connect(sfxBus); o.start(t); o.stop(t + d + 0.05);
+  };
+  // 솔라: 웅장한 빛의 화음
+  S.solar = function () {
+    if (!ensure()) return;
+    const t = ctx.currentTime;
+    [261.6, 329.6, 392, 523.3, 659.3, 784].forEach((f, i) => {
+      const o = ctx.createOscillator(); o.type = i < 3 ? 'triangle' : 'sine'; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08, t + 0.5 + i * 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+      const tr = ctx.createOscillator(); tr.frequency.value = 5 + i; const tg = ctx.createGain(); tg.gain.value = 0.02; tr.connect(tg); tg.connect(g.gain);
+      o.connect(g); g.connect(sfxBus); o.start(t); tr.start(t); o.stop(t + 3.3); tr.stop(t + 3.3);
+    });
+  };
+  // 솔라 보호막에 어뢰가 막힐 때: 맑은 '팅'
+  S.goldPing = function () {
+    if (!ensure()) return;
+    const t = ctx.currentTime;
+    [1760, 2637].forEach((f, i) => { const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f; const g = ctx.createGain(); env(g, t, 0, 0.16 / (i + 1), 0.005, 0.6); o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.7); });
+  };
+  // 특수템 저장
+  S.skillStore = function () {
+    if (!ensure()) return;
+    const t = ctx.currentTime;
+    [660, 880, 1320].forEach((f, i) => { const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f; const g = ctx.createGain(); env(g, t + i * 0.07, 0, 0.12, 0.01, 0.3); o.connect(g); g.connect(sfxBus); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.35); });
+  };
   S.unlock = ensure;
 
   window.SFX = S;
