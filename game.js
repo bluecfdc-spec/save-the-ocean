@@ -71,6 +71,7 @@
   let spawnTimer = 0, shake = 0, radarAngle = 0, lastT = 0;
   let input = { left: false, right: false };
   let kills = 0, items = [], drillTimer = 0;
+  let foeFac = 0;   // 이번 판의 적 세력: 서지→게일, 게일→솔라, 솔라→서지·게일 중 판마다 하나
   let sk = null, banner = null, bolts = [], bursts = [], galeT = 0;   // 발동 중인 특수기술, 배너, 번개·폭발 연출
   let lastFinal = { score: 0, date: '' };
 
@@ -122,6 +123,7 @@
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
     ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0, skill: 0, gold: false };
     sk = null; banner = null; bolts = []; bursts = []; galeT = 0;
+    { const mf = myFac(); foeFac = mf === 1 ? 2 : mf === 2 ? 3 : mf === 3 ? (Math.random() < 0.5 ? 1 : 2) : 0; ship.skill = mf; }   // 특수기술 1개를 갖고 시작
     streaks = []; items = []; kills = 0; drillTimer = TEST ? 2 : 25 + Math.random() * 20;
     updateHud();
   }
@@ -304,8 +306,8 @@
     }
     const red = Math.random() < d.redChance;
     let speed = Math.min(d.subSpeed * (red ? 1.35 : 1) * (0.9 + Math.random() * 0.25), W / 1.8);
-    // 적 잠수함: 내 세력이 있으면 나머지 두 세력 중 하나 (보스는 그 세력의 보스 잠수함)
-    const mf = myFac(), foes = [1, 2, 3].filter(n => n !== mf), fac = mf ? foes[Math.floor(Math.random() * 2)] : 0;
+    // 적 잠수함: 이번 판의 적 세력 하나만 (보스는 그 세력의 보스 잠수함)
+    const fac = foeFac;
     subs.push({ fac, x: startX, y, dir, red, speed, w: SUB_W, h: SUB_W * 0.43, ammo: TEST ? 0 : (red ? 3 : 1), fireCd: Math.random() * 0.15, hp: 1, wobble: Math.random() * 6.28, phase: 0 });
   }
   function dropBomb() { launch(); }
