@@ -2,7 +2,7 @@
 # 세로 고정, 앱 이름, 로컬라이즈, Sign in with Apple 권한
 vars:
   APP_NAME:
-    default: Depth War
+    default: Ocean Rumble
   VERSION:
     default: 1.0.0
 
@@ -46,8 +46,8 @@ platforms:
         text: |
           <?xml version='1.0' encoding='utf-8'?>
           <resources>
-              <string name="app_name">Depth War</string>
-              <string name="title_activity_main">Depth War</string>
+              <string name="app_name">Ocean Rumble</string>
+              <string name="title_activity_main">Ocean Rumble</string>
               <string name="package_name">com.bluecfdc.savetheocean</string>
               <string name="custom_url_scheme">com.bluecfdc.savetheocean</string>
           </resources>
