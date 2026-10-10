@@ -3,7 +3,7 @@
    rooms/tk_CODE/players/{uid} {name, ready, over, msg, adv, joined, t}
    rooms/tk_CODE/inbox/{uid}/{push} {x, t}   ← 상대가 보낸 보병(열 번호). 받는 쪽이 읽고 지운다
 */
-window.NET = (function () {
+window.REALNET = window.NET = (function () {
   'use strict';
   var CFG = { databaseURL: 'https://space-survivor-c7efe-default-rtdb.asia-southeast1.firebasedatabase.app', apiKey: 'AIzaSyCdo9ftAg6FdHUd2M0EKbwANrtfm4qlP6w', authDomain: 'space-survivor-c7efe.firebaseapp.com', projectId: 'space-survivor-c7efe' };
   var $ = function (id) { return document.getElementById(id); };
@@ -176,7 +176,7 @@ window.NET = (function () {
   function esc(s) { return String(s || '').replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); }
 
   // ---------- 버튼 ----------
-  $('vsBtn').addEventListener('click', openLobby);
+  $('vsBtn').addEventListener('click', function () { if (window.BOT) BOT.stop(); window.NET = window.REALNET; openLobby(); });
   $('mkBtn').addEventListener('click', create);
   $('joinBtn').addEventListener('click', function () { join($('code').value); });
   $('lbBack').addEventListener('click', function () { show('ov'); });
@@ -187,5 +187,5 @@ window.NET = (function () {
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
   try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
-  return { opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
+  return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();
