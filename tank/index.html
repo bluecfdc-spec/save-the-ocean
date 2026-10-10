@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>TANK RUMBLE (test)</title>
+<link rel="icon" href="assets/icon_64.png">
+<link rel="apple-touch-icon" href="assets/icon_180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -14,7 +16,10 @@
   html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   body { display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', system-ui, sans-serif; }
   #c { display: block; background: #0b0d0a; }
-  #ov { background: radial-gradient(ellipse at 50% 30%, rgba(43,51,33,.55) 0%, rgba(11,13,10,.92) 70%), url(assets/title_bg.jpg) center/cover no-repeat; }
+  #ov { background: url(assets/title.jpg) center/cover no-repeat; justify-content: flex-end; padding-bottom: 36px; }
+  #ov h1 { display: none; }
+  #ov p { background: rgba(0,0,0,.55); border: 1px solid rgba(255,212,81,.35); border-radius: 10px; padding: 10px 14px; font-size: 12px; backdrop-filter: blur(3px); }
+  #lobby, #room, #count, #result { background: linear-gradient(rgba(8,10,6,.82), rgba(8,10,6,.9)), url(assets/title.jpg) center/cover no-repeat; }
   .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 30%, #2b3321 0%, #0b0d0a 70%); color: #f3efe0; text-align: center; padding: 24px; box-sizing: border-box; }
   .ov h1 { font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
   .ov h1 small { display: block; font-size: 12px; color: #b9c7a0; letter-spacing: 6px; margin-top: 6px; }
@@ -85,7 +90,7 @@
 </div>
 
 <script src="sfx.js?v=13"></script>
-<script src="tank.js?v=14"></script>
+<script src="tank.js?v=15"></script>
 <script src="net.js?v=14"></script>
 </body>
 </html>

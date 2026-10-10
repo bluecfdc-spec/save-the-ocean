@@ -39,9 +39,9 @@
   // ---------- 상태 ----------
   var G = null;
   // ---------- 그림 (시안 시트에서 잘라낸 조각) ----------
-  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'blk_plain', 'blk_fuel', 'blk_scout', 'blk_scout2', 'blk_missile', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
-  IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (n.indexOf('u_') === 0 ? '' : 'c_') + n + '.png?v=2'; });
-  var BLK_IMG = { 1: 'blk_plain', 2: 'blk_fuel', 3: 'blk_scout2', 4: 'blk_missile', 5: 'blk_scout' };   // 정찰 = 정찰기, 보병 = 파란 병사
+  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'b_plain', 'b_fuel', 'b_scout', 'b_missile', 'b_inf', 'b_ground', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
+  IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (n.indexOf('u_') === 0 || n.indexOf('b_') === 0 ? '' : 'c_') + n + '.png?v=3'; });
+  var BLK_IMG = { 1: 'b_plain', 2: 'b_fuel', 3: 'b_scout', 4: 'b_missile', 5: 'b_inf' };   // 정찰 = 정찰기, 보병 = 파란 병사
   function fitImg(img, cx, cy, w, h, alpha, rot) {              // 비율 유지해서 (cx,cy) 중심, w×h 안에 맞춰 그림
     var r = Math.min(w / img.width, h / img.height), dw = img.width * r, dh = img.height * r;
     ctx.save(); if (alpha != null) ctx.globalAlpha = alpha; ctx.translate(cx, cy); if (rot) ctx.rotate(rot); ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh); ctx.restore();
@@ -232,6 +232,7 @@
   // ---------- 그리기 ----------
   function BX(x) { return x * S; }
   function BYY(y) { return BY + y * S; }
+  var groundImg = null;
   var ground = (function () {                            // 땅 무늬(한 번만 만들어 둠)
     var c = document.createElement('canvas'); c.width = COLS * S; c.height = ROWS * S; var g = c.getContext('2d');
     g.fillStyle = '#4a3f2b'; g.fillRect(0, 0, c.width, c.height);
@@ -251,7 +252,7 @@
   function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
   function drawBlock(px, py, s, r, alpha) {
     var im = IMG[BLK_IMG[r]];
-    if (im) { fitImg(im, px + s / 2, py + s / 2, s - 2, s - 2, alpha == null ? 1 : alpha); return; }
+    if (im) { fitImg(im, px + s / 2, py + s / 2, s - 1, s - 1, alpha == null ? 1 : alpha); return; }
     ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha;
     var g = ctx.createLinearGradient(px, py, px, py + s); g.addColorStop(0, '#8d9a62'); g.addColorStop(1, '#4f5a33');
     rr(px + 2, py + 2, s - 4, s - 4, 7); ctx.fillStyle = g; ctx.fill();
@@ -288,8 +289,9 @@
     ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
     ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
-    // 땅
-    ctx.drawImage(ground, 0, BY);
+    // 땅: 칸마다 흙 타일
+    if (IMG.b_ground) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
+    else ctx.drawImage(ground, 0, BY);
     // 안개(적 진영 + 점령된 줄)
     var fogRows = EROWS + G.adv, scouting = t < G.scoutUntil, fr = front();
     ctx.save(); ctx.globalAlpha = scouting ? 0.55 : 1;
@@ -378,7 +380,7 @@
     function btn(b, icon, n, label, on) {
       var gg = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h); gg.addColorStop(0, on ? '#ffe284' : '#6b6f60'); gg.addColorStop(1, on ? '#e8a21a' : '#3e4138');
       rr(b.x, b.y, b.w, b.h, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke();
-      var bim = IMG[{ '🔭': 'blk_scout2', '🚀': 'blk_missile', '🪖': 'blk_scout' }[icon]];
+      var bim = IMG[{ '🔭': 'b_scout', '🚀': 'b_missile', '🪖': 'b_inf' }[icon]];
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
       if (bim) fitImg(bim, b.x + 24, b.y + b.h / 2, b.h - 8, b.h - 8, on ? 1 : 0.5); else { ctx.font = '24px system-ui'; ctx.fillText(icon, b.x + 10, b.y + b.h / 2 + 1); }
       ctx.font = '800 22px Orbitron'; ctx.fillStyle = on ? '#2a1a00' : '#aaa'; ctx.fillText('×' + n, b.x + 44, b.y + b.h / 2 + 1);
