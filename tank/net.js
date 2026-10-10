@@ -75,10 +75,9 @@ window.NET = (function () {
     var o = opp();
     if (started && o) window.__tank.setOpp(o);                                  // 상대 탱크 위치·내 보병 목록(상대가 보는 그대로)
     if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); if (o.fire.s) window.__tank.incomingShot(o.fire.x | 0); }
-    if (started && isHost() && o && (o.wipes | 0) > oppWipes) { var dw = (o.wipes | 0) - oppWipes; oppWipes = o.wipes | 0; hostLine(dw); }   // 상대가 내 보병 최전방을 전멸시킴 → 전선이 내 쪽으로
     if (started && o) {                                               // 상대 쪽 변화 알림
       var G0 = window.__tank.get();
-      if (prevOpp.inf != null && (o.inf || 0) < prevOpp.inf) window.__tank.notice('상대가 내 보병을 잡았다');
+      if (prevOpp.inf != null && (o.inf || 0) < prevOpp.inf) window.__tank.notice('적 보병 격파!');
       if (prevOpp.tank != null && o.tank !== prevOpp.tank && !window.__tank.get().scoutUntil) { }
       if (prevOpp.hp != null && o.hp != null && o.hp < prevOpp.hp) window.__tank.notice('명중! 상대 체력 ' + o.hp);
       prevOpp = { inf: o.inf || 0, hp: o.hp == null ? 3 : o.hp, tank: o.tank };
@@ -96,25 +95,27 @@ window.NET = (function () {
     }
   }
   function isHost() { return meta.host === uid; }
-  var lineTimer = null, oppWipes = 0, myWipes = 0;
+  var lineTimer = null;
   function hostLine(delta) {                                                     // 방장: 전선 이동. delta>0 = 내 쪽으로(내가 밀림), <0 = 상대 쪽으로
     var L = (meta.line | 0) + delta; L = Math.max(-8, Math.min(9, L));
     ref.child('meta').update({ line: L, nextTick: snow() + 30000 });
   }
-  function hostTick() {                                                          // 방장: 30초마다 — 최전방 보병이 있는 쪽이 한 줄 민다
+  function hostTick() {                                                          // 방장: 30초마다 교전 — 최전방 보병이 많은 쪽이 민다(차이 3 이상이면 2줄). 같으면 교착
     if (!started || !isHost()) return; var G = window.__tank.get(), o = opp() || {};
-    var theirPush = G.soldiers.some(function (e) { return e.d === 1; }) ? 1 : 0;   // 내 앞의 적 보병 → 내 쪽으로
-    var myPush = (o.front | 0) > 0 ? 1 : 0;                                       // 상대 앞의 내 보병 → 상대 쪽으로
-    hostLine(theirPush - myPush);
+    var h = G.mySol.filter(function (e) { return e.d === 1; }).length, of = o.front | 0, diff = h - of;
+    var delta = diff === 0 ? 0 : (Math.abs(diff) >= 3 ? 2 : 1) * (diff > 0 ? -1 : 1);   // 음수 = 상대 쪽으로(방장이 전진)
+    ref.child('meta').update({ clash: { at: snow(), h: h, o: of, d: delta } });
+    setTimeout(function () { if (started) hostLine(delta); }, 2600);
   }
-  function wiped() { if (!ref || !started) return; if (isHost()) hostLine(-1); else { myWipes++; ref.child('players/' + uid + '/wipes').set(myWipes); } }
+  var lastClash = 0;
   function onMeta(s) {
     meta = s.val() || {};
+    if (started && meta.clash && meta.clash.at && meta.clash.at !== lastClash) { lastClash = meta.clash.at; var c = meta.clash; window.__tank.clash(isHost() ? c.h : c.o, isHost() ? c.o : c.h, isHost() ? c.d : -c.d); }
     if (started && meta.line != null) window.__tank.applyLine(isHost() ? (meta.line | 0) : -(meta.line | 0), meta.nextTick ? meta.nextTick - snow() : null);   // line 은 방장 기준(+ = 방장 쪽으로 밀림) → 상대는 부호 반대
     if (meta.state === 'play' && meta.startAt && meta.startAt !== lastStart) {
       lastStart = meta.startAt; resultUp = false;
-      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, hp: 3, wipes: 0, front: 0, enemy: '', tank: '3,6' }); lastFire = 0; oppWipes = 0; myWipes = 0;
-      if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000 });
+      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, hp: 3, front: 0, sol: '', tank: '3,6' }); lastFire = 0; lastClash = 0;
+      if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
       show('count'); lastPub = ''; prevOpp = {}; tick();
     }
@@ -142,9 +143,9 @@ window.NET = (function () {
   var lastPub = '';
   function pub(force) {                                                        // 바뀔 때만: 체력 · 내 탱크 위치 · 내 앞의 적 보병(상대에겐 '보낸 보병' 목록) · 최전방 수
     if (!ref || !started) return; var G = window.__tank.get();
-    var enemy = G.soldiers.map(function (e) { return e.x + ':' + e.d; }).join(';'), front = G.soldiers.filter(function (e) { return e.d === 1; }).length;
-    var k = G.tank.x + ',' + G.tank.y + '/' + enemy + '/' + G.tank.hp; if (k === lastPub && !force) return; lastPub = k;
-    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, enemy: enemy, front: front, inf: G.soldiers.length, hp: G.tank.hp });
+    var sol = G.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';'), front = G.mySol.filter(function (e) { return e.d === 1; }).length;
+    var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp; if (k === lastPub && !force) return; lastPub = k;
+    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp });
   }   // 바뀔 때만 보냄
   function over(m) {
     if (!ref) return; var G = window.__tank.get();
@@ -184,5 +185,5 @@ window.NET = (function () {
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
   try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
-  return { opp: opp, sendInf: sendInf, fired: fired, wiped: wiped, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
+  return { opp: opp, sendInf: sendInf, fired: fired, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();

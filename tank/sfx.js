@@ -152,6 +152,11 @@ window.SFX = (function () {
     burst(0.8, 0.12, 8000, 2000, t + 0.85);
   };
   S.drum = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sine', 95, 45, 0.35, 0.5, t); burst(0.12, 0.3, 900, 60, t); tone('sine', 95, 45, 0.3, 0.35, t + 0.22); };
+  S.clash = function () {                                          // 전선 교전: 2.5초 총격·함성 느낌 (노이즈 따닥 + 낮은 북)
+    if (!ensure()) return; var t = ctx.currentTime;
+    for (var i = 0; i < 18; i++) { var tt = t + Math.random() * 2.2; burst(0.05, 0.16, 3500, 500, tt, sfx, 2); if (i % 3 === 0) tone('square', 160 + Math.random() * 60, 90, 0.08, 0.05, tt); }
+    for (var k = 0; k < 5; k++) tone('sine', 80, 40, 0.3, 0.3, t + k * 0.5);
+  };
   S.count = function () { if (!ensure()) return; tone('square', 660, 660, 0.12, 0.12); };
   S.go = function () { if (!ensure()) return; var t = ctx.currentTime; tone('square', 1047, 1047, 0.45, 0.16, t); tone('square', 1319, 1319, 0.45, 0.1, t); };
   S.ambientStart = function () {                                   // 전장 배경음: 바람 + 멀리서 포성
