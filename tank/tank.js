@@ -505,7 +505,7 @@
       var tr = S * (0.9 + 0.15 * Math.sin(t / 110)); ctx.strokeStyle = 'rgba(120,255,140,.8)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, tr, 0, 7); ctx.stroke(); ctx.setLineDash([]);   // 내 탱크 주변 초록 점선 링(탐색당하는 중)
       ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(e0[0] + 16, e0[1] + 44, 30, 9, 0, 0, 7); ctx.fill();
       if (IMG.u_plane) { ctx.save(); ctx.translate(e0[0], e0[1]); ctx.rotate(ehead + Math.PI / 2); fitImg(IMG.u_plane, 0, 0, 78, 60, 1, 0); ctx.globalCompositeOperation = 'source-atop'; ctx.restore(); ctx.fillStyle = 'rgba(90,255,120,.3)'; ctx.beginPath(); ctx.arc(e0[0], e0[1], 34, 0, 7); ctx.fill(); }
-      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#b8ffc4'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', e0[0], e0[1] + 36); ctx.restore();
+      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#b8ffc4'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', Math.max(58, Math.min(W - 58, e0[0])), e0[1] + 36); ctx.restore();
     }
     // 대전: 전선 교전 연출
     if (G.clash) {
@@ -595,7 +595,7 @@
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 10, BY + 40, PW - 20, 1);
     block(BY + 52, '나', IMG.u_tank_p, G.tank.hp, myEmpty, '#9be37a', true);
     // 내 보드 축소판: 어디가 비었는지 한눈에
-    var my0 = BY + 52 + 112 + 110 + 34, cs = Math.min((PW - 16) / COLS, Math.max(3, (HY - my0 - 24) / ROWS)), mx0 = x0 + (PW - cs * COLS) / 2, tp = top();
+    var my0 = BY + 52 + 112 + 110 + 54, cs = Math.min((PW - 16) / COLS, Math.max(3, (HY - my0 - 24) / ROWS)), mx0 = x0 + (PW - cs * COLS) / 2, tp = top();
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '700 9px system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('내 보드', x0 + PW / 2, my0 - 12);
     for (var my = 0; my < ROWS; my++) for (var mx = 0; mx < COLS; mx++) {
       var v = my < tp ? -1 : G.board[my][mx];
