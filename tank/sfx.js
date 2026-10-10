@@ -134,6 +134,7 @@ window.SFX = (function () {
     n.forEach(function (f, i) { var d = i === 5 ? 0.9 : 0.16; tone('square', f, f, d, 0.14, t + i * 0.17); tone('triangle', f / 2, f / 2, d, 0.12, t + i * 0.17); tone('sine', f * 2, f * 2, d, 0.04, t + i * 0.17); });
     burst(0.8, 0.12, 8000, 2000, t + 0.85);
   };
+  S.drum = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sine', 95, 45, 0.35, 0.5, t); burst(0.12, 0.3, 900, 60, t); tone('sine', 95, 45, 0.3, 0.35, t + 0.22); };
   S.count = function () { if (!ensure()) return; tone('square', 660, 660, 0.12, 0.12); };
   S.go = function () { if (!ensure()) return; var t = ctx.currentTime; tone('square', 1047, 1047, 0.45, 0.16, t); tone('square', 1319, 1319, 0.45, 0.1, t); };
   S.ambientStart = function () {                                   // 전장 배경음: 바람 + 멀리서 포성

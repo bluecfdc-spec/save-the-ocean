@@ -47,7 +47,7 @@
 <!-- 시작 / 혼자 하기 결과 -->
 <div id="ov" class="ov">
   <h1>TANK RUMBLE<small>TEST BUILD</small></h1>
-  <p id="ovText">블록을 끌어다 놓아 줄을 지우면 연료·정찰·미사일을 얻는다.<br>연료로 탱크를 옮기고, 정찰로 최전방 병사를 찾고, 같은 세로줄이면 미사일로 잡아라.<br>40초마다 적이 한 줄씩 밀고 내려오고(3분마다 5초씩 빨라짐), 최전방 병사를 다 잡으면 한 줄 물러난다.</p>
+  <p id="ovText">블록을 끌어다 놓아 줄을 지우면 연료·정찰·미사일을 얻는다.<br>연료로 탱크를 옮기고, 정찰로 최전방 병사를 찾고, 같은 세로줄이면 미사일로 잡아라.<br>30초마다 적이 한 줄씩 밀고 내려오고(3분마다 5초씩 빨라짐), 최전방 병사를 다 잡으면 한 줄 물러난다.</p>
   <div id="ovScore" class="score hidden"></div>
   <div class="row"><button id="startBtn" class="btn">혼자 하기</button><button id="vsBtn" class="btn sub">1:1 대전</button></div>
 </div>
@@ -69,7 +69,7 @@
   <div id="roomCode" class="code">----</div>
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
-  <p class="hint">둘 다 [준비!]를 누르면 3초 뒤 동시에 시작해요.<br>줄을 지워 🪖보병을 얻고 🪖 버튼을 끌어서 원하는 세로줄에 놓으면 그 줄 최전방(상대 쪽 안개)에 보병이 서요. 상대 보병이 있을 때만 40초마다 내 줄이 밀려요. 정찰로 찾아 미사일로 잡으면 한 줄 물러나요. 상대 탱크를 먼저 쓸어버리면 승리.</p>
+  <p class="hint">둘 다 [준비!]를 누르면 3초 뒤 동시에 시작해요.<br>줄을 지워 🪖보병을 얻고 🪖 버튼을 끌어서 원하는 세로줄에 놓으면 그 줄 최전방(상대 쪽 안개)에 보병이 서요. 상대 보병이 있을 때만 30초마다 내 줄이 밀려요. 정찰로 찾아 미사일로 잡으면 한 줄 물러나요. 상대 탱크를 먼저 쓸어버리면 승리.</p>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
 </div>
@@ -84,8 +84,8 @@
   <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
 </div>
 
-<script src="sfx.js?v=12"></script>
-<script src="tank.js?v=12"></script>
+<script src="sfx.js?v=13"></script>
+<script src="tank.js?v=13"></script>
 <script src="net.js?v=9"></script>
 </body>
 </html>
