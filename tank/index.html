@@ -13,7 +13,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
-  html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+  body { position: fixed; inset: 0; width: 100%; }
+  #c { touch-action: none; }
   body { display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', system-ui, sans-serif; }
   #c { display: block; background: #0b0d0a; }
   #ov { background: url(assets/title.jpg) center/cover no-repeat; justify-content: flex-end; padding-bottom: 36px; }
@@ -89,8 +91,9 @@
   <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
 </div>
 
+<script>document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script src="sfx.js?v=17"></script>
-<script src="tank.js?v=17"></script>
+<script src="tank.js?v=18"></script>
 <script src="net.js?v=16"></script>
 </body>
 </html>
