@@ -31,12 +31,13 @@
     [[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 0], [0, 1]], [[0, 0], [0, 1], [1, 1]], [[1, 0], [0, 1], [1, 1]]
   ];
 
-  var cv = document.getElementById('c'), ctx = cv.getContext('2d'), scale = 1, dpr = 1;
-  function fit() {
+  var cv = document.getElementById('c'), ctx = cv.getContext('2d'), scale = 1, scaleY = 1, dpr = 1;
+  function fit() {                                             // 화면을 가로·세로 따로 늘려 꽉 채움(그림이 조금 늘어나도 됨). 차이가 1.3배를 넘으면 그만 늘림
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    scale = Math.min(window.innerWidth / W, window.innerHeight / H);
-    cv.style.width = (W * scale) + 'px'; cv.style.height = (H * scale) + 'px';
-    cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+    var sx = window.innerWidth / W, sy = window.innerHeight / H, base = Math.min(sx, sy);
+    scale = Math.min(sx, base * 1.3); scaleY = Math.min(sy, base * 1.3);
+    cv.style.width = (W * scale) + 'px'; cv.style.height = (H * scaleY) + 'px';
+    cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scaleY * dpr);
   }
   window.addEventListener('resize', fit); fit();
   function rowC(y) { return BYY(y) + (y >= 0 ? S : FS) / 2; }      // 줄 y 의 세로 중심
@@ -328,7 +329,7 @@
     ctx.restore();
   }
   function draw(t) {
-    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0);
     ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 칸마다 흙 타일
@@ -508,7 +509,7 @@
   function best() { try { return +localStorage.getItem('tank_best') || 0; } catch (e) { return 0; } }
 
   // ---------- 입력 ----------
-  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scale }; }
+  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scaleY }; }
   function inB(b, p) { return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
