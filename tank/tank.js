@@ -490,7 +490,7 @@
       function ppos(q) { return [-70 + (W + 140) * q, EY + fh * 0.5 + Math.sin(q * Math.PI * 2.2) * fh * 0.32]; }
       var p0 = ppos(sp), p1 = ppos(Math.min(1, sp + 0.01)), head = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]), bank = Math.cos(sp * Math.PI * 2.2) * 0.35;
       ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(p0[0] + 16, p0[1] + 44, 30, 9, 0, 0, 7); ctx.fill();
-      if (IMG.u_plane) { ctx.save(); ctx.translate(p0[0], p0[1]); ctx.rotate(head + Math.PI / 2); ctx.scale(1 - Math.abs(bank) * 0.35, 1); fitImg(IMG.u_plane, 0, 0, 78, 60, 1, 0); ctx.restore(); }
+      if (IMG.u_plane) { ctx.save(); ctx.translate(p0[0], p0[1]); ctx.rotate(head + Math.PI / 2); ctx.scale(1 - Math.abs(bank) * 0.35, 1); fitImg(IMG.u_plane, 0, 0, 120, 92, 1, 0); ctx.restore(); }
       else { ctx.fillStyle = '#eaf7ff'; ctx.beginPath(); ctx.arc(pxp, pyp, 12, 0, 7); ctx.fill(); }
     }
     // 진격 임박: 안개가 붉게 물듦(10초 전부터)
@@ -582,8 +582,8 @@
             var sl2 = ctx.createRadialGradient(e0[0], e0[1], S * 0.4, e0[0], e0[1], S * 2.2); sl2.addColorStop(0, 'rgba(255,70,50,.22)'); sl2.addColorStop(1, 'rgba(255,70,50,0)'); ctx.fillStyle = sl2; ctx.fillRect(e0[0] - S * 2.3, e0[1] - S * 2.3, S * 4.6, S * 4.6);   // 탐색 서치라이트(초록)
       var tr = S * (0.9 + 0.15 * Math.sin(t / 110)); ctx.strokeStyle = 'rgba(255,80,60,.85)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, tr, 0, 7); ctx.stroke(); ctx.setLineDash([]);   // 내 탱크 주변 붉은 점선 링(탐색당하는 중)
       ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(e0[0] + 16, e0[1] + 44, 30, 9, 0, 0, 7); ctx.fill();
-      var pe = enemyPlane(); if (pe) { ctx.save(); ctx.translate(e0[0], e0[1]); ctx.rotate(ehead + Math.PI / 2); fitImg(pe, 0, 0, 78, 60, 1, 0); ctx.restore(); }
-      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffb3a8'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', Math.max(58, Math.min(W - 58, e0[0])), e0[1] + 36); ctx.restore();
+      var pe = enemyPlane(); if (pe) { ctx.save(); ctx.translate(e0[0], e0[1]); ctx.rotate(ehead + Math.PI / 2); fitImg(pe, 0, 0, 120, 92, 1, 0); ctx.restore(); }
+      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffb3a8'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', Math.max(58, Math.min(W - 58, e0[0])), e0[1] + 52); ctx.restore();
     }
     // 대전: 전선 교전 연출
     if (G.clash) {
@@ -678,7 +678,7 @@
       var ca = t - G.crash.at, cp = Math.min(1, ca / 1600), cx0 = W * 0.3 + cp * W * 0.25, cy0 = BYY(G.adv) - 20 - Math.sin(Math.min(1, ca / 500) * Math.PI / 2) * 60 + Math.max(0, ca - 500) * 0.18;
       if (ca > 350 && ca < 900) drawBolt(Math.floor(cx0 / S), cy0, ca - 350);
       ctx.save(); ctx.globalAlpha = 1 - Math.max(0, (ca - 1200) / 400); ctx.translate(cx0, cy0); ctx.rotate(ca > 400 ? (ca - 400) / 120 : 0);
-      if (IMG.u_plane) fitImg(IMG.u_plane, 0, 0, 70 * (1 - cp * 0.4), 54 * (1 - cp * 0.4), 1, 0); ctx.restore();
+      if (IMG.u_plane) fitImg(IMG.u_plane, 0, 0, 110 * (1 - cp * 0.4), 84 * (1 - cp * 0.4), 1, 0); ctx.restore();
       if (ca > 400) { ctx.fillStyle = 'rgba(80,80,80,' + (0.5 - cp * 0.3) + ')'; for (var i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(cx0 - i * 9 - ca / 40, cy0 - i * 7 - 10, 6 + i * 2, 0, 7); ctx.fill(); } }
     }
     if (G.ultFx && t - G.ultFx.at < 700) { var ua = 1 - (t - G.ultFx.at) / 700; ctx.fillStyle = G.ultFx.col; ctx.save(); ctx.globalAlpha = 0.35 * ua; ctx.fillRect(0, EY, W, HY - EY); ctx.restore(); }
