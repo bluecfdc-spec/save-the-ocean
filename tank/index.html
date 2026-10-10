@@ -8,29 +8,82 @@
 <title>TANK RUMBLE (test)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   body { display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', system-ui, sans-serif; }
   #c { display: block; background: #0b0d0a; }
-  #ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 30%, #2b3321 0%, #0b0d0a 70%); color: #f3efe0; text-align: center; padding: 24px; box-sizing: border-box; }
-  #ov h1 { font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
-  #ov h1 small { display: block; font-size: 12px; color: #b9c7a0; letter-spacing: 6px; margin-top: 6px; }
-  #ov p { font: 500 13px/1.7 system-ui, sans-serif; max-width: 340px; margin: 0; color: #d7dcc6; }
-  #ov .score { font-size: 30px; color: #fff; }
+  .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 30%, #2b3321 0%, #0b0d0a 70%); color: #f3efe0; text-align: center; padding: 24px; box-sizing: border-box; }
+  .ov h1 { font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
+  .ov h1 small { display: block; font-size: 12px; color: #b9c7a0; letter-spacing: 6px; margin-top: 6px; }
+  .ov h2 { font-size: 22px; letter-spacing: 2px; margin: 0; color: #ffd451; }
+  .ov p { font: 500 13px/1.7 system-ui, sans-serif; max-width: 340px; margin: 0; color: #d7dcc6; }
+  .ov .score { font-size: 30px; color: #fff; }
   .btn { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 2px; padding: 14px 34px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; cursor: pointer; }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a5a00; }
-  .btn.sub { font-size: 14px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; }
+  .btn:disabled { opacity: .45; }
+  .btn.sub { font-size: 14px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
+  input::placeholder { color: #6b7a52; letter-spacing: 0; }
+  .code { font-size: 44px; letter-spacing: 10px; color: #ffd451; text-shadow: 0 0 14px #ff9a1f66; }
+  .pl { font: 600 15px system-ui; padding: 8px 14px; border-radius: 8px; background: #1b1d16; border: 1px solid #3a3e32; min-width: 240px; margin: 4px 0; }
+  .pl.rd { border-color: #9bbd55; color: #cfe8a0; }
+  .pl.dim { color: #8a9477; font-weight: 500; }
+  #countNum { font-size: 120px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f; }
+  #resTitle { font-size: 40px; letter-spacing: 4px; }
+  #resTitle.win { color: #ffd451; text-shadow: 0 0 20px #ff9a1f; }
+  #resTitle.lose { color: #ff6a5a; text-shadow: 0 0 20px #a01000; }
+  #resTitle.draw { color: #cfd6bf; }
+  .hint { font: 500 12px/1.6 system-ui; color: #8a9477; max-width: 320px; }
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="ov">
+
+<!-- 시작 / 혼자 하기 결과 -->
+<div id="ov" class="ov">
   <h1>TANK RUMBLE<small>TEST BUILD</small></h1>
   <p id="ovText">블록을 끌어다 놓아 줄을 지우면 연료·정찰·미사일을 얻는다.<br>연료로 탱크를 옮기고, 정찰로 최전방 병사를 찾고, 같은 세로줄이면 미사일로 잡아라.<br>40초마다 적이 한 줄씩 밀고 내려오고(3분마다 5초씩 빨라짐), 최전방 병사를 다 잡으면 한 줄 물러난다.</p>
   <div id="ovScore" class="score hidden"></div>
-  <button id="startBtn" class="btn">START</button>
+  <div class="row"><button id="startBtn" class="btn">혼자 하기</button><button id="vsBtn" class="btn sub">1:1 대전</button></div>
 </div>
-<script src="tank.js?v=4"></script>
+
+<!-- 대전 로비 -->
+<div id="lobby" class="ov hidden">
+  <h2>1:1 대전</h2>
+  <p>이름을 정하고, 방을 만들어 친구에게 코드(또는 링크)를 보내거나 받은 코드로 들어가세요.</p>
+  <input id="nm" maxlength="10" placeholder="이름">
+  <div class="row"><button id="mkBtn" class="btn">방 만들기</button></div>
+  <div class="row"><input id="code" maxlength="4" placeholder="코드 4글자" autocapitalize="characters"><button id="joinBtn" class="btn sub">참가</button></div>
+  <p id="lbMsg" class="hint"></p>
+  <button id="lbBack" class="btn sub">뒤로</button>
+</div>
+
+<!-- 방 -->
+<div id="room" class="ov hidden">
+  <h2>방 코드</h2>
+  <div id="roomCode" class="code">----</div>
+  <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
+  <div id="plist"></div>
+  <p class="hint">둘 다 [준비!]를 누르면 3초 뒤 동시에 시작해요.<br>줄을 지워 🪖보병을 얻고 [SEND]를 누르면 내 탱크 세로줄 앞(상대 쪽 안개)에 보병이 서요. 상대 보병이 있을 때만 40초마다 내 줄이 밀려요. 정찰로 찾아 미사일로 잡으면 한 줄 물러나요. 상대 탱크를 먼저 쓸어버리면 승리.</p>
+  <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
+  <p id="roomMsg" class="hint"></p>
+</div>
+
+<!-- 카운트다운 -->
+<div id="count" class="ov hidden"><h2>동시 시작</h2><div id="countNum">3</div></div>
+
+<!-- 대전 결과 -->
+<div id="result" class="ov hidden">
+  <div id="resTitle"></div>
+  <p id="resText"></p>
+  <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
+</div>
+
+<script src="tank.js?v=5"></script>
+<script src="net.js?v=5"></script>
 </body>
 </html>
