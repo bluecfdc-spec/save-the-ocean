@@ -29,7 +29,7 @@ window.BOT = (function () {
     if (!active) return;
     T.setOpp({ tank: bot.tank.x + ',' + bot.tank.y, sol: bot.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';') });
   }
-  function opp() { if (!bot) return null; return { name: 'CPU', hp: bot.tank.hp, over: bot.over, front: bot.mySol.filter(function (e) { return e.d === 1; }).length, inf: bot.mySol.length, tank: bot.tank.x + ',' + bot.tank.y }; }
+  function opp() { if (!bot) return null; var empty = 0; for (var y = Math.max(0, bot.adv); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!bot.board[y][x]) empty++; return { name: 'CPU', empty: empty, hp: bot.tank.hp, over: bot.over, front: bot.mySol.filter(function (e) { return e.d === 1; }).length, inf: bot.mySol.length, tank: bot.tank.x + ',' + bot.tank.y }; }
   // ---------- 봇 한 수 ----------
   function step() {
     if (!active || !me || me.over || bot.over) return;

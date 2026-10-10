@@ -146,8 +146,9 @@ window.REALNET = window.NET = (function () {
   function pub(force) {                                                        // 바뀔 때만: 체력 · 내 탱크 위치 · 내 앞의 적 보병(상대에겐 '보낸 보병' 목록) · 최전방 수
     if (!ref || !started) return; var G = window.__tank.get();
     var sol = G.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';'), front = G.mySol.filter(function (e) { return e.d === 1; }).length;
-    var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp; if (k === lastPub && !force) return; lastPub = k;
-    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp });
+    var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp + '/' + G.board.map(function (r) { return r.filter(Boolean).length; }).join(''); if (k === lastPub && !force) return; lastPub = k;
+    var empty = 0; for (var y = Math.max(0, G.adv); y < 9; y++) for (var x = 0; x < 7; x++) if (!G.board[y][x]) empty++;
+    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp, empty: empty });
   }   // 바뀔 때만 보냄
   function over(m) {
     if (!ref) return; var G = window.__tank.get();

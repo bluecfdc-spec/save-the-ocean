@@ -12,10 +12,10 @@
   'use strict';
   var COLS = 7, ROWS = 9, EROWS = 4, S = 68, FOG_MAX = 9;  // 7×9. 혼자: 칸 68, 안개 4줄. 대전: 칸 60, 위쪽은 상대 진영 9줄(한 줄 26px) — 한 전장을 위아래로 나눠 씀
   var W = COLS * S, TOP = 22, HUD = 26, TRAY = 96, BBAR = 48, FS = 44;   // FS: 위쪽(적진) 한 줄 높이       // 위: 진격 타이머 띠. 보드 아래: 연료·점수 한 줄(HUD) → 블록 받침(TRAY) → 맨 바닥 넓고 얇은 버튼 띠(BBAR)
-  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13;            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
+  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13, PW = 72, WT;   // PW: 오른쪽 정보 패널 폭, WT: 전체 폭            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
   function layout(vs) {
-    if (vs) { S = 60; FS = 26; EROWS = 9; TOP = 20; HUD = 24; TRAY = 80; BBAR = 44; } else { S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 96; BBAR = 48; }
-    W = COLS * S; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
+    if (vs) { S = 60; FS = 40; EROWS = 9; TOP = 20; HUD = 24; TRAY = 80; BBAR = 44; } else { S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 96; BBAR = 48; }
+    W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
   layout(false);
   var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, ADV_MS = 30000, ADV_STEP = 5000, ADV_FLOOR = 20000, ADV_EVERY = 180000, HP_MAX = 3;
   function advMs(t) { return G.vs ? ADV_MS : Math.max(ADV_FLOOR, ADV_MS - ADV_STEP * Math.floor((t - G.start) / ADV_EVERY)); }   // 3분마다 5초씩 빨라짐, 최저 20초
@@ -32,12 +32,11 @@
   ];
 
   var cv = document.getElementById('c'), ctx = cv.getContext('2d'), scale = 1, scaleY = 1, dpr = 1;
-  function fit() {                                             // 화면을 가로·세로 따로 늘려 꽉 채움(그림이 조금 늘어나도 됨). 차이가 1.3배를 넘으면 그만 늘림
+  function fit() {                                             // 비율 유지. 게임판 오른쪽에 정보 패널(PW)을 붙여 전체를 화면에 맞춤
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var sx = window.innerWidth / W, sy = window.innerHeight / H, base = Math.min(sx, sy);
-    scale = Math.min(sx, base * 1.3); scaleY = Math.min(sy, base * 1.3);
-    cv.style.width = (W * scale) + 'px'; cv.style.height = (H * scaleY) + 'px';
-    cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scaleY * dpr);
+    scale = Math.min(window.innerWidth / WT, window.innerHeight / H); scaleY = scale;
+    cv.style.width = (WT * scale) + 'px'; cv.style.height = (H * scale) + 'px';
+    cv.width = Math.round(WT * scale * dpr); cv.height = Math.round(H * scale * dpr);
   }
   window.addEventListener('resize', fit); fit();
   function rowC(y) { return BYY(y) + (y >= 0 ? S : FS) / 2; }      // 줄 y 의 세로 중심
@@ -350,7 +349,7 @@
   }
   function draw(t) {
     ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0);
-    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, WT, H);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 칸마다 흙 타일
     if (IMG.b_ground) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
@@ -484,13 +483,39 @@
       else if (f.t === 'boom') { var r = (f.big ? 50 : 26) * Math.min(1, a / 250), al = 1 - a / 700; ctx.fillStyle = 'rgba(255,140,30,' + al * 0.8 + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,240,180,' + al + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r * 0.45, 0, 7); ctx.fill(); }
       else if (f.t === 'pop') { ctx.save(); ctx.globalAlpha = 1 - Math.max(0, (a - 700) / 600); ctx.font = (f.big ? '800 26px' : '600 20px') + ' Orbitron, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 5; ctx.strokeStyle = '#2a1a00'; ctx.strokeText(f.text, f.x, f.y - a / 30); ctx.fillStyle = '#ffd451'; ctx.fillText(f.text, f.x, f.y - a / 30); ctx.restore(); }
     });
-    drawHud(t); drawTray(t);
+    drawHud(t); drawTray(t); drawPanel(t);
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
     if (G.dragInf) {
       var di = G.dragInf;
       if (di.col != null) { ctx.fillStyle = 'rgba(160,255,160,.22)'; ctx.fillRect(BX(di.col) + 2, EY, S - 4, HY - EY); ctx.fillStyle = 'rgba(255,230,120,.5)'; ctx.fillRect(BX(di.col) + 2, EY, S - 4, 6); }
       ctx.save(); ctx.globalAlpha = 0.9; drawSoldier(di.px - S / 2, di.py - S - 20, S, true); ctx.restore();
     }
+  }
+  function drawPanel(t) {                                       // 오른쪽 정보 패널: 상대 탱크 체력·상대 빈 칸 / 내 체력·내 빈 칸
+    var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, 0, PW, H);
+    ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0, 0, 2, H);
+    var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, oempty = o.empty == null ? ROWS * COLS : o.empty;
+    var myEmpty = 0; for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x]) myEmpty++;
+    function block(y0, title, img, hp, empty, col, mine) {
+      ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '700 11px system-ui'; ctx.fillStyle = col; ctx.fillText(title, x0 + PW / 2, y0);
+      if (img) fitImg(img, x0 + PW / 2, y0 + 48, PW - 16, 52, 1, 0);
+      for (var i = 0; i < HP_MAX; i++) { ctx.fillStyle = i < hp ? '#ff5050' : 'rgba(0,0,0,.55)'; rr(x0 + 10 + i * ((PW - 20) / 3), y0 + 80, (PW - 20) / 3 - 4, 8, 3); ctx.fill(); }
+      ctx.font = '600 9px system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('체력 ' + hp + '/' + HP_MAX, x0 + PW / 2, y0 + 92);
+      var bh = 110, by0 = y0 + 112, fr = Math.max(0, Math.min(1, empty / (ROWS * COLS)));
+      ctx.fillStyle = '#0b0c08'; rr(x0 + PW / 2 - 12, by0, 24, bh, 5); ctx.fill();
+      ctx.fillStyle = fr < 0.25 ? '#ff5050' : fr < 0.5 ? '#ffb13d' : '#9be37a'; rr(x0 + PW / 2 - 12, by0 + bh * (1 - fr), 24, bh * fr, 5); ctx.fill();
+      ctx.strokeStyle = '#4a4e40'; ctx.lineWidth = 1; rr(x0 + PW / 2 - 12, by0, 24, bh, 5); ctx.stroke();
+      ctx.font = '800 14px Orbitron, system-ui'; ctx.fillStyle = '#fff'; ctx.fillText(String(empty), x0 + PW / 2, by0 + bh + 6);
+      ctx.font = '600 9px system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('빈 칸', x0 + PW / 2, by0 + bh + 24);
+      if (!mine && fr < 0.25) { ctx.fillStyle = '#ff8a7a'; ctx.font = '700 9px system-ui'; ctx.fillText('곧 막힘!', x0 + PW / 2, by0 + bh + 38); }
+      ctx.restore();
+    }
+    block(EY + 6, '상대 ' + (o.name || ''), IMG.u_tank_e, ohp, oempty, '#ff8a7a', false);
+    ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 10, BY + 40, PW - 20, 1);
+    block(BY + 52, '나', IMG.u_tank_p, G.tank.hp, myEmpty, '#9be37a', true);
+    var line = G.adv > 0 ? '전선\n내 땅\n' + G.adv + '줄 밀림' : G.adv < 0 ? '전선\n상대 땅\n' + (-G.adv) + '줄 차지' : '전선\n중앙';
+    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '700 10px system-ui'; ctx.fillStyle = G.adv > 0 ? '#ff8a7a' : G.adv < 0 ? '#9be37a' : '#cfd6bf';
+    line.split('\n').forEach(function (l, i) { ctx.fillText(l, x0 + PW / 2, HY - 56 + i * 14); }); ctx.restore();
   }
   var BTN = {};
   function layoutBtns() {
@@ -558,7 +583,7 @@
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
     if (!G || G.over || G.sweep) return;
-    var p = pos(ev); down = p; cv.setPointerCapture(ev.pointerId);
+    var p = pos(ev); if (p.x >= W) return; down = p; cv.setPointerCapture(ev.pointerId);
     if (inB(BTN.scout, p)) { if (G.scout <= 0) sfx('bad'); useScout(); down = null; return; }
     if (inB(BTN.missile, p)) { if (G.missile <= 0) { sfx('bad'); down = null; return; } useMissile(); down = null; return; }
     if (G.vs && inB(BTN.inf, p)) { if (G.inf <= 0) { sfx('bad'); down = null; return; } useInfantry(); down = null; return; }
