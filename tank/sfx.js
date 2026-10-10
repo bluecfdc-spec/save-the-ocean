@@ -41,7 +41,17 @@ window.SFX = (function () {
     s.connect(f); f.connect(h); h.connect(g); g.connect(dest || sfx); s.start(t); s.stop(t + dur + 0.1); return { f: f, g: g };
   }
   var S = {};
-  S.mute = function (on) { muted = on; if (master) master.gain.value = on ? 0 : 0.9; };
+  // 배경음악 (mp3 반복). 첫 터치 때 켜고, 화면을 내렸다 올리면 되살림
+  var bgmEl = null, bgmOn = false;
+  S.bgmStart = function () {
+    bgmOn = true;
+    if (!bgmEl) { bgmEl = new Audio('assets/bgm.mp3'); bgmEl.loop = true; bgmEl.volume = 0.45; bgmEl.setAttribute('playsinline', ''); bgmEl.preload = 'auto'; }
+    bgmEl.muted = muted; var p = bgmEl.play(); if (p && p.catch) p.catch(function () { });
+  };
+  S.bgmStop = function () { bgmOn = false; if (bgmEl) bgmEl.pause(); };
+  document.addEventListener('pointerdown', function () { if (!bgmOn) S.bgmStart(); else if (bgmEl && bgmEl.paused) S.bgmStart(); }, { passive: true });
+  document.addEventListener('visibilitychange', function () { if (!bgmEl) return; if (document.hidden) bgmEl.pause(); else if (bgmOn) { var p = bgmEl.play(); if (p && p.catch) p.catch(function () { }); } });
+  S.mute = function (on) { muted = on; if (master) master.gain.value = on ? 0 : 0.9; if (bgmEl) bgmEl.muted = on; };
   S.click = function () { if (!ensure()) return; tone('square', 900, 700, 0.06, 0.08); };
   S.pick = function () { if (!ensure()) return; tone('triangle', 500, 760, 0.07, 0.12); };
   S.place = function () {                                          // 묵직한 "쿵"
