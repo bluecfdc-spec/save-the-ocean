@@ -57,7 +57,7 @@
       fuel: 2 * FUEL_PER, scout: 1, missile: 1,
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
       missiles: [], fx: [],
-      tray: [makePiece(), makePiece(), makePiece()], drag: null, reach: null
+      tray: [makePiece(), makePiece(), makePiece()], drag: null, reach: null, sweep: false
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     spawnFront();
@@ -144,7 +144,7 @@
   function checkFit() {
     var live = G.tray.filter(Boolean);
     if (!live.length) { G.tray = [makePiece(), makePiece(), makePiece()]; live = G.tray; }
-    if (!live.some(anyFit)) { G.over = true; G.overMsg = '놓을 곳이 없다'; setTimeout(showOver, 900); }
+    if (!live.some(anyFit) && !G.sweep) { G.sweep = true; G.nextAdv = now() + 900; G.fx.push({ t: 'pop', text: '놓을 곳이 없다!', x: W / 2, y: BY + ROWS * S / 2, at: now(), big: true }); }
   }
 
   // ---------- 진행 ----------
@@ -177,13 +177,13 @@
     });
     // 진격
     if (t >= G.nextAdv) {
-      G.nextAdv = t + ADV_MS;
+      G.nextAdv = t + (G.sweep ? 420 : ADV_MS);
       var y = G.adv; G.adv++;
       if (y >= 0) for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
-      G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true });
-      if (y >= 0 && tk.y === y) { killTank('적에게 밟혔다'); return; }
+      if (!G.sweep) G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true });
+      if (y >= 0 && tk.y === y) { killTank(G.sweep ? '놓을 곳이 없어 쓸려 나갔다' : '적에게 밟혔다'); return; }
       if (G.adv >= ROWS) { G.over = true; G.overMsg = '전장을 잃었다'; setTimeout(showOver, 900); return; }
-      calcReach(); checkFit();
+      if (!G.sweep) { calcReach(); checkFit(); }
     }
     G.fx = G.fx.filter(function (f) { return t - f.at < (f.t === 'pop' ? 1300 : 700); });
   }
@@ -258,7 +258,7 @@
     // 블록
     for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
     // 갈 수 있는 칸
-    if (!G.drag && !G.tank.path.length && !G.over) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','); ctx.fillStyle = 'rgba(160,255,160,.28)'; ctx.beginPath(); ctx.arc(BX(+c[0]) + S / 2, BYY(+c[1]) + S / 2, 4, 0, 7); ctx.fill(); }
+    if (!G.drag && !G.tank.path.length && !G.over && !G.sweep) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','); ctx.fillStyle = 'rgba(160,255,160,.28)'; ctx.beginPath(); ctx.arc(BX(+c[0]) + S / 2, BYY(+c[1]) + S / 2, 4, 0, 7); ctx.fill(); }
     // 드래그 미리보기
     if (G.drag) {
       var d = G.drag, ok = d.gx != null && canPlace(d.p, d.gx, d.gy);
@@ -302,7 +302,7 @@
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / ADV_MS;
     ctx.fillStyle = '#111'; ctx.fillRect(0, HUD - 9, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, HUD - 9, W * p, 6);
-    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 진격까지 ' + Math.ceil(left / 1000) + 's  ·  최전방 병사 ' + G.soldiers.length, W / 2, EY + 14); ctx.shadowBlur = 0;
+    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '⚠ 적군 돌파!' : ('적 진격까지 ' + Math.ceil(left / 1000) + 's  ·  최전방 병사 ' + G.soldiers.length), W / 2, EY + 14); ctx.shadowBlur = 0;
   }
   function traySlot(i) { return { x: 20 + i * 150, y: BY + ROWS * S + 10, w: 130, h: TRAY - 20 }; }
   function drawTray(t) {
@@ -323,7 +323,7 @@
   function inB(b, p) { return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
-    if (!G || G.over) return;
+    if (!G || G.over || G.sweep) return;
     var p = pos(ev); down = p; cv.setPointerCapture(ev.pointerId);
     if (inB(BTN.scout, p)) { useScout(); down = null; return; }
     if (inB(BTN.missile, p)) { useMissile(); down = null; return; }
@@ -361,5 +361,5 @@
   function loop() { var t = now(); if (G) { update(t); draw(t); } requestAnimationFrame(loop); }
   newGame(); G.over = true;   // 시작 전 배경 표시용
   loop();
-  window.__tank = { get: function () { return G; }, newGame: newGame, place: place, canPlace: canPlace, moveTank: moveTank, useScout: useScout, useMissile: useMissile, makePiece: makePiece };
+  window.__tank = { get: function () { return G; }, newGame: newGame, place: place, canPlace: canPlace, moveTank: moveTank, useScout: useScout, useMissile: useMissile, makePiece: makePiece, checkFit: checkFit };
 })();
