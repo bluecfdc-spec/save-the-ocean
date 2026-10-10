@@ -98,11 +98,11 @@ window.NET = (function () {
   function tick() {
     var left = meta.startAt - snow();
     if (left <= 0) { startGame(); return; }
-    $('countNum').textContent = Math.ceil(left / 1000);
+    var c = Math.ceil(left / 1000); if ($('countNum').textContent != c) { $('countNum').textContent = c; try { SFX.count(); } catch (e) { } }
     startTimer = setTimeout(tick, 100);
   }
   function startGame() {
-    started = true; show('none'); window.__tank.newGame(true);
+    started = true; show('none'); window.__tank.newGame(true); try { SFX.go(); SFX.ambientStart(); } catch (e) { }
     clearInterval(pubTimer); pubTimer = setInterval(pub, 1000);
   }
   function onInbox(s) {
@@ -121,6 +121,7 @@ window.NET = (function () {
   function finish(r, detail) {
     resultUp = true; started = false; clearInterval(pubTimer);
     var G = window.__tank.get(); G.over = true; if (r === 'win') G.overMsg = '승리';
+    try { SFX.sweepStop(); SFX.ambientStop(); setTimeout(function () { SFX[r === 'win' ? 'win' : 'over'](); }, 400); } catch (e) { }
     $('resTitle').textContent = r === 'win' ? 'VICTORY' : r === 'lose' ? 'DEFEAT' : 'DRAW';
     $('resTitle').className = r;
     $('resText').textContent = detail + ' · 지운 줄 ' + G.lines + ' · 격파 ' + G.kills + ' · 보낸 보병 ' + G.sent;

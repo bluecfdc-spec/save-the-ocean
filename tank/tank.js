@@ -38,6 +38,7 @@
 
   // ---------- 상태 ----------
   var G = null;
+  function sfx(n, a) { try { if (window.SFX && SFX[n]) SFX[n](a); } catch (e) { } }
   function rnd(n) { return Math.floor(Math.random() * n); }
   function now() { return performance.now(); }
   function makePiece() {
@@ -71,7 +72,7 @@
     G.soldiers.forEach(function (e) { if (e.x === xm) d = Math.max(d, e.d + 1); });
     G.soldiers.push({ x: xm, d: d });
     if (G.soldiers.length === 1) G.nextAdv = now() + ADV_MS;   // 보병이 처음 생기면 그때부터 40초
-    G.fx.push({ t: 'pop', text: '⚠ 적 보병 출현', x: W / 2, y: EY + EROWS * S / 2, at: now(), big: true });
+    G.fx.push({ t: 'pop', text: '⚠ 적 보병 출현', x: W / 2, y: EY + EROWS * S / 2, at: now(), big: true }); sfx('inf');
   }
   function spawnFront() {                                 // 최전방 줄(adv-1)에 병사 1~2명, 열은 고정
     var n = 1 + rnd(2), xs = [];
@@ -119,6 +120,7 @@
       var msg = '+' + pts + (got[2] ? '  ⛽' + got[2] : '') + (got[3] ? '  🔭' + got[3] : '') + (got[4] ? '  🚀' + got[4] : '') + (got[5] ? '  🪖' + got[5] : '');
       G.fx.push({ t: 'pop', text: msg, x: W / 2, y: BY + (top() + ROWS) / 2 * S, at: now(), big: n > 1 });
       G.fx.push({ t: 'flash', at: now(), rows: rows, cols: cols });
+      sfx('clear', n); [2, 3, 4, 5].forEach(function (k, i) { if (got[k]) setTimeout(function () { sfx('gain', k); }, 350 + i * 120); });
     }
     calcReach();
   }
@@ -141,27 +143,27 @@
     if (!n || !n.d) return;
     var path = [], c = [x, y];
     while (c && !(c[0] === G.tank.x && c[1] === G.tank.y)) { path.unshift(c); c = G.reach[c[0] + ',' + c[1]].from; }
-    G.fuel -= path.length; G.tank.path = path; G.tank.moveAt = now();
+    G.fuel -= path.length; G.tank.path = path; G.tank.moveAt = now(); sfx('step');
   }
-  function useScout() { if (G.scout <= 0 || G.over) return; G.scout--; G.scoutUntil = now() + SCOUT_MS; G.fx.push({ t: 'pop', text: '🔭 정찰!', x: W / 2, y: EY + EROWS * S / 2, at: now(), big: true }); }
+  function useScout() { if (G.scout <= 0 || G.over) return; G.scout--; G.scoutUntil = now() + SCOUT_MS; sfx('scout'); G.fx.push({ t: 'pop', text: '🔭 정찰!', x: W / 2, y: EY + EROWS * S / 2, at: now(), big: true }); }
   function useMissile() {
     if (G.missile <= 0 || G.over || G.tank.path.length) return;
     G.missile--;
     var tx = G.tank.x, best = null;
     G.soldiers.forEach(function (e) { if (e.x === tx && (!best || e.d < best.d)) best = e; });
-    G.missiles.push({ x: tx, y: G.tank.y, target: best, at: now() });
+    G.missiles.push({ x: tx, y: G.tank.y, target: best, at: now() }); sfx('launch');
   }
   function useInfantry() {
     if (!G.vs || G.inf <= 0 || G.over) return;
     G.inf--; G.sent++;
-    if (window.NET) NET.sendInf(G.tank.x);
+    if (window.NET) NET.sendInf(G.tank.x); sfx('send');
     G.fx.push({ t: 'pop', text: '🪖 보병 출격!', x: BX(G.tank.x) + S / 2, y: BYY(G.tank.y) - 10, at: now(), big: true });
   }
-  function killTank(msg) { if (G.over) return; G.over = true; G.overMsg = msg; G.fx.push({ t: 'boom', x: G.tank.x, y: G.tank.y, at: now(), big: true }); setTimeout(showOver, 1200); }
+  function killTank(msg) { if (G.over) return; G.over = true; G.overMsg = msg; G.fx.push({ t: 'boom', x: G.tank.x, y: G.tank.y, at: now(), big: true }); sfx('sweepStop'); sfx('boom', true); sfx('ambientStop'); setTimeout(function () { if (!G.vs) sfx('over'); }, 600); setTimeout(showOver, 1200); }
   function checkFit() {
     var live = G.tray.filter(Boolean);
     if (!live.length) { G.tray = [makePiece(), makePiece(), makePiece()]; live = G.tray; }
-    if (!live.some(anyFit) && !G.sweep) { G.sweep = true; G.nextAdv = now() + 900; G.fx.push({ t: 'pop', text: '놓을 곳이 없다!', x: W / 2, y: BY + ROWS * S / 2, at: now(), big: true }); }
+    if (!live.some(anyFit) && !G.sweep) { G.sweep = true; G.nextAdv = now() + 900; sfx('sweepStart'); G.fx.push({ t: 'pop', text: '놓을 곳이 없다!', x: W / 2, y: BY + ROWS * S / 2, at: now(), big: true }); }
   }
 
   // ---------- 진행 ----------
@@ -169,7 +171,7 @@
     if (G.over) return;
     var tk = G.tank;
     if (tk.path.length && t - tk.moveAt >= 110) {
-      var c = tk.path.shift(); tk.x = c[0]; tk.y = c[1]; tk.moveAt = t;
+      var c = tk.path.shift(); tk.x = c[0]; tk.y = c[1]; tk.moveAt = t; if (tk.path.length) sfx('step');
       if (!tk.path.length) calcReach();
     }
     if (tk.path.length) { var p = Math.min(1, (t - tk.moveAt) / 110); tk.fx = tk.x + (tk.path[0][0] - tk.x) * p; tk.fy = tk.y + (tk.path[0][1] - tk.y) * p; }
@@ -182,13 +184,13 @@
       if (m.target && G.soldiers.indexOf(m.target) >= 0 && m.y <= ty) {
         G.soldiers.splice(G.soldiers.indexOf(m.target), 1);
         G.score += 300; G.kills++;
-        G.fx.push({ t: 'boom', x: m.target.x, y: ty, at: t, big: true });
+        G.fx.push({ t: 'boom', x: m.target.x, y: ty, at: t, big: true }); sfx('boom', false);
         G.fx.push({ t: 'pop', text: '+300', x: BX(m.target.x) + S / 2, y: BYY(ty), at: t, big: true });
         if (!G.soldiers.some(function (e) { return e.d === 1; })) {   // 최전방 줄 전멸 → 한 줄 후퇴, 뒷줄이 앞으로
           if (G.adv > ADV_MIN) { G.adv--; G.nextAdv = Math.max(G.nextAdv, t + 8000); calcReach(); }
           G.soldiers.forEach(function (e) { e.d--; });
           if (!G.vs) spawnFront();
-          G.fx.push({ t: 'pop', text: '적 후퇴!', x: W / 2, y: BYY(front()) + S / 2, at: t + 300, big: true });
+          G.fx.push({ t: 'pop', text: '적 후퇴!', x: W / 2, y: BYY(front()) + S / 2, at: t + 300, big: true }); setTimeout(function () { sfx('retreat'); }, 250);
         }
         return false;
       }
@@ -200,12 +202,13 @@
       G.nextAdv = t + (G.sweep ? 420 : advMs(t));
       var y = G.adv; G.adv++;
       if (y >= 0) for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
-      if (!G.sweep) G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true });
+      if (!G.sweep) { G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true }); sfx('advance'); } else sfx('place');
       if (y >= 0 && tk.y === y) { killTank(G.sweep ? '놓을 곳이 없어 쓸려 나갔다' : '적에게 밟혔다'); return; }
-      if (G.adv >= ROWS) { G.over = true; G.overMsg = '전장을 잃었다'; setTimeout(showOver, 900); return; }
+      if (G.adv >= ROWS) { G.over = true; G.overMsg = '전장을 잃었다'; sfx('sweepStop'); sfx('ambientStop'); sfx('over'); setTimeout(showOver, 900); return; }
       if (G.vs && window.NET) NET.pub();
       if (!G.sweep) { calcReach(); checkFit(); }
     }
+    if (!G.sweep && !(G.vs && !G.soldiers.length) && G.nextAdv - t < 6000 && Math.floor((G.nextAdv - t) / 1000) !== G.warnSec) { G.warnSec = Math.floor((G.nextAdv - t) / 1000); if (G.warnSec % 2 === 1) sfx('warn'); }
     G.fx = G.fx.filter(function (f) { return t - f.at < (f.t === 'pop' ? 1300 : 700); });
   }
 
@@ -349,10 +352,10 @@
   cv.addEventListener('pointerdown', function (ev) {
     if (!G || G.over || G.sweep) return;
     var p = pos(ev); down = p; cv.setPointerCapture(ev.pointerId);
-    if (inB(BTN.scout, p)) { useScout(); down = null; return; }
-    if (inB(BTN.missile, p)) { useMissile(); down = null; return; }
-    if (G.vs && inB(BTN.inf, p)) { useInfantry(); down = null; return; }
-    for (var i = 0; i < 3; i++) if (G.tray[i] && inB(traySlot(i), p)) { G.drag = { i: i, p: G.tray[i], px: null }; dragTo(p); return; }
+    if (inB(BTN.scout, p)) { if (G.scout <= 0) sfx('bad'); useScout(); down = null; return; }
+    if (inB(BTN.missile, p)) { if (G.missile <= 0) sfx('bad'); useMissile(); down = null; return; }
+    if (G.vs && inB(BTN.inf, p)) { if (G.inf <= 0) sfx('bad'); useInfantry(); down = null; return; }
+    for (var i = 0; i < 3; i++) if (G.tray[i] && inB(traySlot(i), p)) { G.drag = { i: i, p: G.tray[i], px: null }; dragTo(p); sfx('pick'); return; }
   });
   function dragTo(p) {
     var d = G.drag; d.px = p.x; d.py = p.y;
@@ -366,7 +369,8 @@
     var p = pos(ev);
     if (G.drag) {
       var d = G.drag; G.drag = null;
-      if (d.gx != null && canPlace(d.p, d.gx, d.gy)) { G.tray[d.i] = null; place(d.p, d.gx, d.gy); checkFit(); }
+      if (d.gx != null && canPlace(d.p, d.gx, d.gy)) { G.tray[d.i] = null; sfx('place'); place(d.p, d.gx, d.gy); checkFit(); }
+      else if (d.gx != null && d.gy >= 0 && d.gy < ROWS) sfx('bad');
       return;
     }
     if (down && Math.abs(p.x - down.x) < 12 && Math.abs(p.y - down.y) < 12 && p.y >= BY && p.y < BY + ROWS * S) moveTank(Math.floor(p.x / S), Math.floor((p.y - BY) / S));
@@ -383,7 +387,8 @@
     ovScore.textContent = G.score; ovScore.classList.remove('hidden');
     startBtn.textContent = 'RETRY'; ov.classList.remove('hidden');
   }
-  startBtn.addEventListener('click', function () { ov.classList.add('hidden'); newGame(false); });
+  startBtn.addEventListener('click', function () { ov.classList.add('hidden'); newGame(false); sfx('go'); sfx('ambientStart'); });
+  document.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { sfx('click'); }); });
   function loop() { var t = now(); if (G) { update(t); draw(t); } requestAnimationFrame(loop); }
   newGame(false); G.over = true;   // 시작 전 배경 표시용
   loop();
