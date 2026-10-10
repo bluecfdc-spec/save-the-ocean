@@ -42,7 +42,7 @@
   // ---------- 상태 ----------
   var G = null;
   // ---------- 그림 (시안 시트에서 잘라낸 조각) ----------
-  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'b_plain', 'b_fuel', 'b_scout', 'b_missile', 'b_inf', 'b_ground', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
+  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'b_plain', 'b_fuel', 'b_scout', 'b_missile', 'b_inf', 'b_ground', 'b_forest', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
   IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (n.indexOf('u_') === 0 || n.indexOf('b_') === 0 ? '' : 'c_') + n + '.png?v=3'; });
   var BLK_IMG = { 1: 'b_plain', 2: 'b_fuel', 3: 'b_scout', 4: 'b_missile', 5: 'b_inf' };   // 정찰 = 정찰기, 보병 = 파란 병사
   function fitImg(img, cx, cy, w, h, alpha, rot) {              // 비율 유지해서 (cx,cy) 중심, w×h 안에 맞춰 그림
@@ -74,6 +74,8 @@
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
+    G.terrain = []; for (var ty = 0; ty < ROWS; ty++) { G.terrain.push([]); for (var tx = 0; tx < COLS; tx++) G.terrain[ty].push(Math.random() < 0.22 ? 1 : 0); }   // 숲 타일 22%
+    groundImg = null;
     G.tray = [makePiece(), makePiece(), makePiece()];      // 모드가 정해진 뒤 다시 뽑음(대전이면 보병 자원 포함)
     if (!G.vs) spawnFront();
     calcReach();
@@ -318,7 +320,7 @@
     ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 칸마다 흙 타일
-    if (IMG.b_ground) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
+    if (IMG.b_ground && IMG.b_forest) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(G.terrain[gy][gx] ? IMG.b_forest : IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
     else ctx.drawImage(ground, 0, BY);
     // 안개(적 진영 + 점령된 줄)
     var fogRows = EROWS + G.adv, scouting = t < G.scoutUntil, fr = front();
@@ -331,9 +333,11 @@
     ctx.restore();
     if (scouting) {
       ctx.fillStyle = 'rgba(120,255,140,' + (0.05 + 0.04 * Math.sin(t / 120)) + ')'; ctx.fillRect(0, EY, W, fogRows * S);
-      var sp = 1 - (G.scoutUntil - t) / SCOUT_MS, pxp = -60 + (W + 120) * sp, pyp = EY + 30 + Math.sin(sp * 6) * 10;   // 정찰기 왼쪽→오른쪽
-      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(pxp + 14, pyp + 40, 34, 10, 0, 0, 7); ctx.fill();
-      if (IMG.u_plane) fitImg(IMG.u_plane, pxp, pyp, 92, 70, 1, Math.PI / 2);
+      var sp = 1 - (G.scoutUntil - t) / SCOUT_MS, fh = fogRows * S;                 // 정찰기: S자로 지형을 훑으며 기수를 돌림
+      function ppos(q) { return [-70 + (W + 140) * q, EY + fh * 0.5 + Math.sin(q * Math.PI * 2.2) * fh * 0.32]; }
+      var p0 = ppos(sp), p1 = ppos(Math.min(1, sp + 0.01)), head = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]), bank = Math.cos(sp * Math.PI * 2.2) * 0.35;
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(p0[0] + 16, p0[1] + 44, 30, 9, 0, 0, 7); ctx.fill();
+      if (IMG.u_plane) { ctx.save(); ctx.translate(p0[0], p0[1]); ctx.rotate(head + Math.PI / 2); ctx.scale(1 - Math.abs(bank) * 0.35, 1); fitImg(IMG.u_plane, 0, 0, 92, 70, 1, 0); ctx.restore(); }
       else { ctx.fillStyle = '#eaf7ff'; ctx.beginPath(); ctx.arc(pxp, pyp, 12, 0, 7); ctx.fill(); }
     }
     // 진격 임박: 안개가 붉게 물듦(10초 전부터)
@@ -389,10 +393,15 @@
     G.missiles.forEach(function (m) {
       var p = Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(0.01, m.y0 - m.y1))), h = Math.sin(p * Math.PI), px = BX(m.x) + S / 2;
       var py = G.vs ? (BYY(m.y0) + S / 2) + (slotY(m.dist) - (BYY(m.y0) + S / 2)) * p : BYY(m.y) + S / 2;
-      ctx.fillStyle = 'rgba(0,0,0,' + (0.4 * (1 - h * 0.7)) + ')'; ctx.beginPath(); ctx.ellipse(px, py + 6, 6 + 14 * (1 - h), 3 + 5 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자(높이 올라갈수록 작고 옅게)
-      ctx.strokeStyle = 'rgba(255,120,60,' + (0.5 * h) + ')'; ctx.lineWidth = 2 + 6 * h; ctx.beginPath(); ctx.moveTo(px, py - h * 80 + S * 0.6 * (0.45 + h * 1.9)); ctx.lineTo(px, py - h * 80 + S * 0.6 * (0.45 + h * 1.9) + 30 + 40 * h); ctx.stroke();   // 꼬리 불꽃
-      var lift = h * 80, sc = 0.45 + h * 1.9, tilt = (0.5 - p) * 0.6;      // 멀리서 작게 → 가까이 크게 → 다시 작게 (원근)
-      if (IMG.missile_up) fitImg(IMG.missile_up, px, py - lift, S * 0.55 * sc, S * 1.3 * sc, 1, tilt);
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.4 * (1 - h * 0.7)) + ')'; ctx.beginPath(); ctx.ellipse(px + h * 28, py + 8 + h * 10, 6 + 10 * (1 - h), 3 + 4 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자: 높이 오를수록 옆으로 비껴가고 작아짐
+      // (꼬리 불꽃은 기수 뒤 번짐으로 대체)
+      var lift = h * 60, sc = 0.45 + h * 1.9, tilt = (0.5 - p) * 0.5, flat = 1 - h * 0.72;   // 위에서 보면: 오를수록 커지고 기수 쪽만 보여 납작해짐
+      if (IMG.missile_up) {
+        ctx.save(); ctx.translate(px, py - lift); ctx.rotate(tilt); ctx.scale(1, flat);
+        var gl = ctx.createRadialGradient(0, 0, 0, 0, 0, S * 0.5 * sc); gl.addColorStop(0, 'rgba(255,140,60,' + (0.45 * h) + ')'); gl.addColorStop(1, 'rgba(255,80,30,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, S * 0.5 * sc, 0, 7); ctx.fill();   // 뒤쪽 화염 번짐(기수 방향에서 봄)
+        fitImg(IMG.missile_up, 0, 0, S * 0.55 * sc, S * 1.3 * sc, 1, 0);
+        ctx.restore();
+      }
       else { ctx.save(); ctx.translate(px, py - lift); ctx.rotate(tilt); ctx.scale(sc, sc); ctx.fillStyle = 'rgba(255,170,60,.5)'; ctx.beginPath(); ctx.arc(0, 18, 10, 0, 7); ctx.fill(); ctx.fillStyle = '#5ab4ff'; rr(-6, -16, 12, 30, 6); ctx.fill(); ctx.restore(); }
     });
     // 효과

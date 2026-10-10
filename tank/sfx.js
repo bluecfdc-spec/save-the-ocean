@@ -92,15 +92,17 @@ window.SFX = (function () {
     burst(0.08, 0.4, 8000, 2000, t);
     if (big) tone('square', 60, 35, 0.9, 0.2, t + 0.05);
   };
-  S.warn = function () {                                           // 진격 임박 경보 (삐-삐)
+  S.warn = function () {                                           // 진격 임박: 낮은 북 + 쇠붙이 긁힘 (엄숙하게)
     if (!ensure()) return; var t = ctx.currentTime;
-    for (var i = 0; i < 2; i++) { tone('square', 880, 880, 0.16, 0.08, t + i * 0.24); tone('square', 660, 660, 0.16, 0.06, t + i * 0.24 + 0.08); }
+    tone('sine', 110, 50, 0.4, 0.4, t); burst(0.08, 0.25, 700, 80, t);
+    var m = burst(0.35, 0.08, 5000, 1800, t + 0.05, sfx, 6); m.f.frequency.setValueAtTime(2200, t + 0.05); m.f.frequency.exponentialRampToValueAtTime(900, t + 0.4);
   };
-  S.advance = function () {                                        // 적 진격: 땅울림 + 철조망 찢기는 소리
+  S.advance = function () {                                        // 적 진격: 전차가 밀고 지나가는 땅울림 + 캐터필러 + 낮은 단조 화음
     if (!ensure()) return; var t = ctx.currentTime;
-    tone('sine', 80, 40, 0.9, 0.6, t); tone('sawtooth', 55, 45, 0.8, 0.15, t);
-    var b = burst(0.7, 0.4, 1200, 60, t); b.f.frequency.setValueAtTime(1500, t); b.f.frequency.exponentialRampToValueAtTime(200, t + 0.7);
-    burst(0.2, 0.25, 6000, 1200, t + 0.1, sfx, 3);
+    tone('sine', 60, 26, 1.6, 0.8, t, sfx, 0.03);                                                     // 지반 울림
+    var r = burst(1.8, 0.45, 260, 30, t, sfx, 0.8); r.f.frequency.setValueAtTime(140, t); r.f.frequency.linearRampToValueAtTime(320, t + 0.9); r.f.frequency.linearRampToValueAtTime(120, t + 1.8);   // 구르는 소음
+    for (var i = 0; i < 9; i++) burst(0.05, 0.14, 2200, 400, t + 0.15 + i * 0.17);                     // 캐터필러 철컥
+    [[110, 0.0], [130.8, 0.05], [164.8, 0.1], [82.4, 0.0]].forEach(function (n) { tone('triangle', n[0], n[0] * 0.985, 1.7, 0.09, t + n[1], sfx, 0.25); tone('sawtooth', n[0] / 2, n[0] / 2 * 0.985, 1.7, 0.025, t + n[1], sfx, 0.3); });   // Am 저음 화음
   };
   S.retreat = function () {                                        // 적 후퇴: 짧은 팡파르
     if (!ensure()) return; var t = ctx.currentTime, n = [392, 523, 659, 784];
