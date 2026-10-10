@@ -97,6 +97,17 @@ window.SFX = (function () {
     tone('sine', 110, 50, 0.4, 0.4, t); burst(0.08, 0.25, 700, 80, t);
     var m = burst(0.35, 0.08, 5000, 1800, t + 0.05, sfx, 6); m.f.frequency.setValueAtTime(2200, t + 0.05); m.f.frequency.exponentialRampToValueAtTime(900, t + 0.4);
   };
+  S.radar = function () {                                          // 적 정찰기 출현: 부드러운 탐지기 핑 2번 (경보 아님)
+    if (!ensure()) return; var t = ctx.currentTime;
+    tone('sine', 1200, 1150, 0.35, 0.1, t, sfx, 0.01); tone('sine', 1200, 1150, 0.35, 0.07, t + 0.45, sfx, 0.01);
+    tone('triangle', 600, 1400, 0.6, 0.04, t, sfx, 0.05);
+  };
+  S.siren = function () {                                          // 적 포격 경보: 공습 사이렌(오르내림) 두 번
+    if (!ensure()) return; var t = ctx.currentTime;
+    for (var i = 0; i < 2; i++) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; var t0 = t + i * 0.55;
+      o.frequency.setValueAtTime(500, t0); o.frequency.linearRampToValueAtTime(900, t0 + 0.28); o.frequency.linearRampToValueAtTime(520, t0 + 0.55);
+      env(g, t0, 0.03, 0.12, 0.55); var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200; o.connect(f); f.connect(g); g.connect(sfx); o.start(t0); o.stop(t0 + 0.65); }
+  };
   S.advance = function () {                                        // 적 진격: 전차가 밀고 지나가는 땅울림 + 캐터필러 + 낮은 단조 화음
     if (!ensure()) return; var t = ctx.currentTime;
     tone('sine', 60, 26, 1.6, 0.8, t, sfx, 0.03);                                                     // 지반 울림
