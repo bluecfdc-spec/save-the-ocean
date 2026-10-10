@@ -226,8 +226,7 @@
     var vict = null; G.mySol.forEach(function (e) { if (e.x === mx && (!vict || e.d < vict.d)) vict = e; });
     var landY = vict ? myRow(vict.d) : (G.tank.x === mx ? G.tank.y : Math.max(top(), 1));                 // 떨어질 칸(판정과 같은 규칙)
     var hitTank = !vict && G.tank.x === mx;
-    if (hitTank) { G.tank.path = []; G.tank.fx = G.tank.x; G.tank.fy = G.tank.y; G.sel = false; G.lockUntil = now() + 900; }   // 조준당함: 탱크가 그 자리에 묶인다(이동 불가)
-    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: hitTank });   // 판정은 쏜 순간에 확정
+    G.incoming.push({ x: mx, at: now() + 380, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: hitTank });   // 판정은 쏜 순간에 확정
     G.fx.push({ t: 'pop', text: '적 포격! 포탄 날아온다', x: W / 2, y: 0, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
     G.alarmUntil = now() + 900;
   }
