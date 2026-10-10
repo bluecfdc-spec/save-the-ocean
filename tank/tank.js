@@ -180,7 +180,9 @@
   function incomingShot(x) {                                // 대전: 상대 미사일이 내 세로줄로 날아옴. 0.9초 뒤 그 줄 맨 앞 내 보병이 죽고, 보병이 없으면 거기 내 탱크가 있을 때 피격
     if (!G.vs || G.over) return;
     var mx = COLS - 1 - x;
-    G.incoming.push({ x: mx, at: now() + 900 });
+    var vict = null; G.mySol.forEach(function (e) { if (e.x === mx && (!vict || e.d < vict.d)) vict = e; });
+    var landY = vict ? myRow(vict.d) : (G.tank.x === mx ? G.tank.y : Math.max(top(), 1));                 // 떨어질 칸(판정과 같은 규칙)
+    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [] });
     G.fx.push({ t: 'pop', text: '⚠ 적 포격! 포탄 날아온다', x: W / 2, y: BYY(top()) + S * 2, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
     G.alarmUntil = now() + 900;
   }
@@ -516,11 +518,11 @@
       if (t - cl.at > 1500) { ctx.strokeText(res, W / 2, ly + 30); ctx.fillStyle = cl.delta < 0 ? '#9be37a' : cl.delta > 0 ? '#ff8a7a' : '#ffd451'; ctx.fillText(res, W / 2, ly + 30); }
       ctx.restore();
     }
-    // 미사일
-    G.missiles.forEach(function (m) {
+    // 미사일 (내 것 + 적진에서 날아오는 것)
+    function drawMissile(m, p, t, enemy) {
       // 곡사포를 위에서 내려다봄: 발사 직후 작게 → 꼭대기에서 가장 크게(카메라에 가까움) → 떨어지며 작아짐.
       // 오르는 동안은 꼬리 불꽃이 아래로(m_up), 정점을 지나면 기수가 땅을 향해 꽂히는 모습(m_down, 불꽃이 위)으로 바뀜.
-      var p = Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(0.01, m.y0 - m.y1))), h = Math.sin(p * Math.PI), px = BX(m.x) + S / 2;
+      var h = Math.sin(p * Math.PI), px = BX(m.x) + S / 2;
       var gy0 = rowC(m.y0), gy1 = rowC(m.y1), gy = gy0 + (gy1 - gy0) * p;   // 땅 위의 위치(그림자 자리)
       var sc = 0.3 + h * 1.05, lift = h * 60, ry = gy - lift;
       m.trail = m.trail || []; if (!m.lastT || t - m.lastT > 40) { m.trail.push({ x: px + (Math.random() - 0.5) * 4, y: ry + 10 * sc, s: sc, at: t }); m.lastT = t; }
@@ -528,9 +530,15 @@
       m.trail.forEach(function (q) { var a = 1 - (t - q.at) / 700; ctx.fillStyle = 'rgba(150,140,130,' + (0.35 * a) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, (6 + (1 - a) * 14) * q.s, 0, 7); ctx.fill(); });   // 연기 꼬리
       ctx.fillStyle = 'rgba(0,0,0,' + (0.45 - h * 0.3) + ')'; ctx.beginPath(); ctx.ellipse(px + h * 22, gy + 6 + h * 8, 5 + 9 * (1 - h), 3 + 4 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자
       var img = p < 0.55 ? IMG.m_big : IMG.m_down;   // 오를 땐 큰 해상도 그림(m_big), 정점 지나면 기수가 땅을 향함(m_down)
-      if (img) fitImg(img, px, ry, S * 0.7 * sc, S * 1.7 * sc, 1, (0.5 - p) * 0.25);
+      if (enemy) {                                      // 적 포탄: 떨어질 자리에 붉은 표적이 점점 또렷해진다
+        ctx.save(); ctx.globalAlpha = 0.25 + 0.65 * p; ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.arc(BX(m.x) + S / 2, BYY(m.y1) + S / 2, S * (0.5 - 0.15 * p), 0, 7); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(BX(m.x) + S / 2 - 8, BYY(m.y1) + S / 2); ctx.lineTo(BX(m.x) + S / 2 + 8, BYY(m.y1) + S / 2); ctx.moveTo(BX(m.x) + S / 2, BYY(m.y1) + S / 2 - 8); ctx.lineTo(BX(m.x) + S / 2, BYY(m.y1) + S / 2 + 8); ctx.stroke(); ctx.restore();
+      }
+      if (img) fitImg(img, px, ry, S * 0.7 * sc, S * 1.7 * sc, 1, (0.5 - p) * 0.25 + (enemy && p < 0.55 ? Math.PI : 0));   // 적 포탄은 기수가 늘 내 쪽(아래)
       else { ctx.fillStyle = '#c33'; ctx.beginPath(); ctx.arc(px, ry, 8 * sc, 0, 7); ctx.fill(); }
-    });
+    }
+    G.missiles.forEach(function (m) { drawMissile(m, Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(0.01, m.y0 - m.y1))), t, false); });
+    G.incoming.forEach(function (m) { if (m.start) drawMissile(m, Math.max(0, Math.min(1, (t - m.start) / (m.at - m.start))), t, true); });
     // 효과
     G.fx.forEach(function (f) {
       var a = Math.max(0, t - f.at);
