@@ -35,7 +35,7 @@ window.BOT = (function () {
     if (!active || !me || me.over || bot.over) return;
     bot.soldiers = me.mySol.map(function (e) { return { x: mirror(e.x), d: e.d }; });   // 봇 눈에 보이는 내 보병
     withBot(function () {
-      if (bot.sweep) return;
+      if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
       if (bot.sweep) return;
       // 정찰: 내 위치를 모르거나 오래됐으면
@@ -104,11 +104,14 @@ window.BOT = (function () {
     for (var x2 = 0; x2 < COLS; x2++) { var k2 = 0; for (var y2 = top; y2 < ROWS; y2++) if (b[y2][x2] || cells[x2 + ',' + y2]) k2++; if (k2 >= ROWS - top - 1) n++; }
     return n;
   }
-  function botCollapse() {                                 // CPU 보드 붕괴: 블록 전부 비우고 전선이 CPU 쪽으로 2줄 (내 쪽 applyLine 은 음수)
-    var F = T.fns;
-    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0;
-    bot.tray = [F.makePiece(), F.makePiece(), F.makePiece()]; F.calcReach();
-    setTimeout(function () { if (!active) return; T.notice('💥 CPU 보드 붕괴! 전선 전진'); shiftLine(-2); }, 0);
+  function botCollapse() {                                 // CPU 보드 붕괴: 3초 경보 → 전선이 CPU 쪽으로 한 줄씩 두 번 → 블록 전부 비움 (사람 쪽과 같은 순서)
+    if (bot.collapsing) return; bot.collapsing = true; var g = bot;
+    setTimeout(function () { if (active && bot === g) T.notice('⚠ CPU 보드 붕괴 임박! (3초)'); }, 0);
+    setTimeout(function () { if (active && bot === g) shiftLine(-1); }, 3000);
+    setTimeout(function () { if (active && bot === g) shiftLine(-1); }, 3800);
+    setTimeout(function () { if (!active || bot !== g) return;
+      withBot(function () { var F = T.fns; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0; bot.tray = [F.makePiece(), F.makePiece(), F.makePiece()]; F.calcReach(); });
+      bot.collapsing = false; T.notice('💥 CPU 보드 붕괴! 전선 전진'); }, 4700);
   }
   function shiftLine(delta) {                              // 내 기준 delta(음수 = 내가 전진). 봇 쪽은 반대로
     if (!active) return;
@@ -119,7 +122,7 @@ window.BOT = (function () {
     if (badv >= ROWS) { bot.over = true; end('win', 'CPU 가 전장을 잃었다'); return; }
     syncToPlayer();
   }
-  function collapsed() { if (!active) return; shiftLine(2); }   // 내 보드 붕괴 → 전선이 내 쪽으로 2줄
+  function collapsed() { if (!active) return; shiftLine(0); }   // 내 보드 붕괴: 전선은 내 쪽(tank.js)이 이미 두 줄 밀었으니 봇 쪽만 맞춘다
   function lines(p, gx, gy) {                              // 이 자리에 놓으면 지워지는 줄 수
     var b = bot.board, top = T.fns.top(), n = 0, cells = {}; p.cells.forEach(function (c) { cells[(gx + c.dx) + ',' + (gy + c.dy)] = 1; });
     for (var y = top; y < ROWS; y++) { var full = true; for (var x = 0; x < COLS; x++) if (!b[y][x] && !cells[x + ',' + y]) { full = false; break; } if (full) n++; }
