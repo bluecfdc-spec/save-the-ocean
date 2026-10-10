@@ -2,8 +2,9 @@
    규칙 요약
    - 보드 8×10. 위 4줄은 적 진영(안개). 블록을 끌어 놓고 가로/세로 줄을 채우면 지워진다(탱크 칸은 채워진 것으로 친다).
    - 지워진 칸의 자원 아이콘을 얻는다: ⛽연료(1개=3칸, 최대 15칸) 🔭정찰(5초 전체 공개) 🚀미사일(탱크 세로줄 위 가장 가까운 적 1대)
-   - 탱크는 빈 칸으로만, 가고 싶은 칸을 누르면 최단 경로로 이동(칸 수만큼 연료 소모). 적은 같은 세로줄이면 6초마다 포격(피할 수 있음). 체력 3.
-   - 40초마다 적이 한 줄씩 밀고 내려온다: 그 줄의 블록은 사라지고 탱크가 있으면 격파.
+   - 탱크는 빈 칸으로만, 가고 싶은 칸을 누르면 최단 경로로 이동(칸 수만큼 연료 소모). 병사는 쏘지 않는다.
+   - 최전방 줄에 병사 1~2명이 정해진 열에 서 있다(좌우 이동 없음). 40초마다 줄 전체가 한 칸 내려온다: 그 줄의 블록은 사라지고 탱크가 있으면 격파.
+   - 최전방 줄의 병사를 전부 잡으면 줄이 한 칸 뒤로 물러나고 새 병사가 선다.
    - 게임오버: 남은 블록을 놓을 곳이 없거나, 탱크 격파.
    - 점수: 줄 100, 여러 줄 동시에 +100씩 추가, 적 격파 300.
 */
@@ -12,7 +13,7 @@
   var COLS = 8, ROWS = 10, EROWS = 4, S = 60;              // 칸 크기 60
   var W = 480, HUD = 70, TRAY = 130;
   var EY = HUD, BY = HUD + EROWS * S, H = BY + ROWS * S + TRAY;
-  var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, FIRE_MS = 6000, ADV_MS = 40000, HP_MAX = 3;
+  var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, ADV_MS = 40000, HP_MAX = 3, ADV_MIN = -(EROWS - 1);
   var SCOUT_MAX = 5, MISSILE_MAX = 5;
   var RES = { 0: null, 1: null, 2: '⛽', 3: '🔭', 4: '🚀' };     // 칸 값: 0 빈칸 1 블록 2 연료 3 정찰 4 미사일
   var SHAPES = [
@@ -52,44 +53,42 @@
     G = {
       board: [], adv: 0, score: 0, lines: 0, kills: 0, over: false, overMsg: '',
       tank: { x: 3, y: 7, hp: HP_MAX, path: [], moveAt: 0, fx: 3, fy: 7 },
+      soldiers: [],
       fuel: 2 * FUEL_PER, scout: 1, missile: 1,
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
-      enemies: [], shells: [], missiles: [], fx: [],
+      missiles: [], fx: [],
       tray: [makePiece(), makePiece(), makePiece()], drag: null, reach: null
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
-    for (var i = 0; i < 4; i++) spawnEnemy(t, true);
+    spawnFront();
     calcReach();
   }
-  function spawnEnemy(t, init) {
-    var tries = 50;
-    while (tries--) {
-      var x = rnd(COLS), y = rnd(EROWS);
-      if (G.enemies.some(function (e) { return e.alive && e.x === x && e.y === y; })) continue;
-      G.enemies.push({ x: x, y: y, alive: true, nextMove: t + 1500 + rnd(2500), nextFire: t + (init ? 3000 : 2000) + rnd(FIRE_MS), flash: 0, respawn: 0 });
-      return;
-    }
+  function spawnFront() {                                 // 최전방 줄(adv-1)에 병사 1~2명, 열은 고정
+    var n = 1 + rnd(2), xs = [];
+    while (xs.length < n) { var x = rnd(COLS); if (xs.indexOf(x) < 0) xs.push(x); }
+    G.soldiers = xs.map(function (x) { return { x: x }; });
   }
-  function erow(e) { return G.adv - EROWS + e.y; }          // 적의 보드 기준 줄(음수 = 보드 위)
+  function front() { return G.adv - 1; }                  // 최전방 줄(보드 기준, 음수 = 보드 위)
+  function top() { return Math.max(0, G.adv); }           // 블록을 놓을 수 있는 첫 줄
   function cellFilled(x, y) { return G.board[y][x] !== 0 || (G.tank.x === x && G.tank.y === y); }
   function canPlace(p, gx, gy) {
     for (var i = 0; i < p.cells.length; i++) {
       var x = gx + p.cells[i].dx, y = gy + p.cells[i].dy;
-      if (x < 0 || x >= COLS || y < G.adv || y >= ROWS) return false;
+      if (x < 0 || x >= COLS || y < top() || y >= ROWS) return false;
       if (cellFilled(x, y)) return false;
     }
     return true;
   }
   function anyFit(p) {
-    for (var y = G.adv; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(p, x, y)) return true;
+    for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(p, x, y)) return true;
     return false;
   }
   function place(p, gx, gy) {
     p.cells.forEach(function (c) { G.board[gy + c.dy][gx + c.dx] = c.r; });
     // 줄 검사
     var rows = [], cols = [], y, x, full;
-    for (y = G.adv; y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!cellFilled(x, y)) { full = false; break; } if (full) rows.push(y); }
-    for (x = 0; x < COLS; x++) { full = true; for (y = G.adv; y < ROWS; y++) if (!cellFilled(x, y)) { full = false; break; } if (full) cols.push(x); }
+    for (y = top(); y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!cellFilled(x, y)) { full = false; break; } if (full) rows.push(y); }
+    for (x = 0; x < COLS; x++) { full = true; for (y = top(); y < ROWS; y++) if (!cellFilled(x, y)) { full = false; break; } if (full) cols.push(x); }
     var n = rows.length + cols.length;
     if (n) {
       var got = { 2: 0, 3: 0, 4: 0 }, cleared = {};
@@ -100,14 +99,14 @@
         G.fx.push({ t: 'cell', x: x, y: y, at: now() });
       }
       rows.forEach(function (y) { for (var x = 0; x < COLS; x++) clr(x, y); });
-      cols.forEach(function (x) { for (var y = G.adv; y < ROWS; y++) clr(x, y); });
+      cols.forEach(function (x) { for (var y = top(); y < ROWS; y++) clr(x, y); });
       var pts = n * 100 + (n - 1) * 100;
       G.score += pts; G.lines += n;
       G.fuel = Math.min(FUEL_MAX, G.fuel + got[2] * FUEL_PER);
       G.scout = Math.min(SCOUT_MAX, G.scout + got[3]);
       G.missile = Math.min(MISSILE_MAX, G.missile + got[4]);
       var msg = '+' + pts + (got[2] ? '  ⛽' + got[2] : '') + (got[3] ? '  🔭' + got[3] : '') + (got[4] ? '  🚀' + got[4] : '');
-      G.fx.push({ t: 'pop', text: msg, x: W / 2, y: BY + (G.adv + ROWS) / 2 * S, at: now(), big: n > 1 });
+      G.fx.push({ t: 'pop', text: msg, x: W / 2, y: BY + (top() + ROWS) / 2 * S, at: now(), big: n > 1 });
       G.fx.push({ t: 'flash', at: now(), rows: rows, cols: cols });
     }
     calcReach();
@@ -119,7 +118,7 @@
       if (d >= G.fuel) continue;
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (v) {
         var x = c[0] + v[0], y = c[1] + v[1], k = x + ',' + y;
-        if (x < 0 || x >= COLS || y < G.adv || y >= ROWS || G.board[y][x] !== 0 || r[k]) return;
+        if (x < 0 || x >= COLS || y < top() || y >= ROWS || G.board[y][x] !== 0 || r[k]) return;
         r[k] = { d: d + 1, from: c }; q.push([x, y]);
       });
     }
@@ -138,7 +137,7 @@
     if (G.missile <= 0 || G.over || G.tank.path.length) return;
     G.missile--;
     var tx = G.tank.x, best = null;
-    G.enemies.forEach(function (e) { if (e.alive && e.x === tx && (!best || erow(e) > erow(best))) best = e; });
+    G.soldiers.forEach(function (e) { if (e.x === tx) best = e; });
     G.missiles.push({ x: tx, y: G.tank.y, target: best, at: now() });
   }
   function killTank(msg) { if (G.over) return; G.over = true; G.overMsg = msg; G.fx.push({ t: 'boom', x: G.tank.x, y: G.tank.y, at: now(), big: true }); setTimeout(showOver, 1200); }
@@ -158,49 +157,31 @@
     }
     if (tk.path.length) { var p = Math.min(1, (t - tk.moveAt) / 110); tk.fx = tk.x + (tk.path[0][0] - tk.x) * p; tk.fy = tk.y + (tk.path[0][1] - tk.y) * p; }
     else { tk.fx = tk.x; tk.fy = tk.y; }
-    // 적
-    G.enemies.forEach(function (e) {
-      if (!e.alive) { if (t >= e.respawn) { e.alive = true; e.x = rnd(COLS); e.y = rnd(2); e.nextFire = t + 2000 + rnd(FIRE_MS); e.nextMove = t + 1500; } return; }
-      if (t >= e.nextMove) {
-        e.nextMove = t + 1800 + rnd(2200);
-        var nx = e.x + (Math.random() < 0.5 ? -1 : 1);
-        if (nx >= 0 && nx < COLS && !G.enemies.some(function (o) { return o !== e && o.alive && o.x === nx && o.y === e.y; })) e.x = nx;
-      }
-      if (t >= e.nextFire) {
-        e.nextFire = t + FIRE_MS + rnd(1500);
-        if (e.x === tk.x) { e.flash = t; G.shells.push({ x: e.x, y: erow(e), v: 4.5, at: t }); }
-      }
-    });
-    // 포탄
-    var dt = 1 / 60;
-    G.shells = G.shells.filter(function (s) {
-      var py = s.y; s.y += s.v * dt;
-      if (s.x === tk.x && py <= tk.y && s.y >= tk.y) {
-        tk.hp--; G.fx.push({ t: 'boom', x: tk.x, y: tk.y, at: t, big: false });
-        if (tk.hp <= 0) killTank('탱크 격파');
-        return false;
-      }
-      return s.y < ROWS;
-    });
     // 미사일
+    var dt = 1 / 60, fr = front();
     G.missiles = G.missiles.filter(function (m) {
       m.y -= 11 * dt;
-      if (m.target && m.target.alive && m.y <= erow(m.target)) {
-        m.target.alive = false; m.target.respawn = t + 5000 + rnd(3000);
+      if (m.target && G.soldiers.indexOf(m.target) >= 0 && m.y <= fr) {
+        G.soldiers.splice(G.soldiers.indexOf(m.target), 1);
         G.score += 300; G.kills++;
-        G.fx.push({ t: 'boom', x: m.target.x, y: erow(m.target), at: t, big: true });
-        G.fx.push({ t: 'pop', text: '+300', x: BX(m.target.x) + S / 2, y: BYY(erow(m.target)), at: t, big: true });
+        G.fx.push({ t: 'boom', x: m.target.x, y: fr, at: t, big: true });
+        G.fx.push({ t: 'pop', text: '+300', x: BX(m.target.x) + S / 2, y: BYY(fr), at: t, big: true });
+        if (!G.soldiers.length) {                               // 최전방 전멸 → 한 줄 후퇴, 새 병사
+          if (G.adv > ADV_MIN) { G.adv--; G.nextAdv = Math.max(G.nextAdv, t + 8000); calcReach(); }
+          spawnFront();
+          G.fx.push({ t: 'pop', text: '적 후퇴!', x: W / 2, y: BYY(front()) + S / 2, at: t + 300, big: true });
+        }
         return false;
       }
-      return m.y > G.adv - EROWS - 1;
+      return m.y > -EROWS - 1;
     });
     // 진격
     if (t >= G.nextAdv) {
       G.nextAdv = t + ADV_MS;
       var y = G.adv; G.adv++;
-      for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
+      if (y >= 0) for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
       G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true });
-      if (tk.y === y) { killTank('적에게 밟혔다'); return; }
+      if (y >= 0 && tk.y === y) { killTank('적에게 밟혔다'); return; }
       if (G.adv >= ROWS) { G.over = true; G.overMsg = '전장을 잃었다'; setTimeout(showOver, 900); return; }
       calcReach(); checkFit();
     }
@@ -248,13 +229,22 @@
     if (hp != null) for (var h = 0; h < HP_MAX; h++) { ctx.fillStyle = h < hp ? '#ff5050' : 'rgba(0,0,0,.5)'; ctx.fillRect(-s * 0.27 + h * s * 0.2, s * 0.38, s * 0.16, s * 0.08); }
     ctx.restore();
   }
+  function drawSoldier(px, py, s) {
+    ctx.save(); ctx.translate(px + s / 2, py + s / 2);
+    ctx.fillStyle = '#7a2a2a'; rr(-s * 0.16, -s * 0.05, s * 0.32, s * 0.4, 6); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(s * 0.14, s * 0.05); ctx.lineTo(s * 0.14, s * 0.44); ctx.stroke();
+    ctx.fillStyle = '#e8c39e'; ctx.beginPath(); ctx.arc(0, -s * 0.2, s * 0.13, 0, 7); ctx.fill();
+    ctx.fillStyle = '#5a1f1f'; ctx.beginPath(); ctx.arc(0, -s * 0.24, s * 0.16, Math.PI, 0); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -s * 0.2, s * 0.13, 0, 7); ctx.stroke();
+    ctx.restore();
+  }
   function draw(t) {
     ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
     ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
     // 땅
     ctx.drawImage(ground, 0, BY);
     // 안개(적 진영 + 점령된 줄)
-    var fogRows = EROWS + G.adv, scouting = t < G.scoutUntil;
+    var fogRows = EROWS + G.adv, scouting = t < G.scoutUntil, fr = front();
     ctx.save(); ctx.globalAlpha = scouting ? 0.55 : 1;
     ctx.drawImage(fogC, 0, ((t / 60) % S) | 0, COLS * S, fogRows * S, 0, EY, COLS * S, fogRows * S);
     ctx.restore();
@@ -263,17 +253,10 @@
     var left = G.nextAdv - t;
     if (left < 6000 && !G.over) { ctx.fillStyle = 'rgba(255,40,40,' + (0.25 + 0.25 * Math.sin(t / 90)) + ')'; ctx.fillRect(0, BYY(G.adv), W, S); }
     ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(0, BYY(G.adv)); ctx.lineTo(W, BYY(G.adv)); ctx.stroke(); ctx.setLineDash([]);
-    // 적
-    G.enemies.forEach(function (e) {
-      if (!e.alive) return;
-      var vis = scouting || t - e.flash < 500;
-      if (!vis) return;
-      var py = BYY(erow(e));
-      drawTank(BX(e.x), py, S, ['#8a2d2d', '#c94b3c'], false, null);
-      if (t - e.flash < 300) { ctx.fillStyle = 'rgba(255,220,80,' + (1 - (t - e.flash) / 300) + ')'; ctx.beginPath(); ctx.arc(BX(e.x) + S / 2, py + S, 14, 0, 7); ctx.fill(); }
-    });
+    // 최전방 병사 (정찰 중에만 보임)
+    if (scouting) G.soldiers.forEach(function (e) { drawSoldier(BX(e.x), BYY(fr), S); });
     // 블록
-    for (var y = G.adv; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
+    for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
     // 갈 수 있는 칸
     if (!G.drag && !G.tank.path.length && !G.over) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','); ctx.fillStyle = 'rgba(160,255,160,.28)'; ctx.beginPath(); ctx.arc(BX(+c[0]) + S / 2, BYY(+c[1]) + S / 2, 4, 0, 7); ctx.fill(); }
     // 드래그 미리보기
@@ -282,9 +265,8 @@
       if (d.gx != null) d.p.cells.forEach(function (c) { var x = d.gx + c.dx, y = d.gy + c.dy; if (x >= 0 && x < COLS && y >= 0 && y < ROWS) { ctx.fillStyle = ok ? 'rgba(255,230,120,.35)' : 'rgba(255,60,60,.35)'; ctx.fillRect(BX(x) + 3, BYY(y) + 3, S - 6, S - 6); } });
     }
     // 탱크
-    drawTank(BX(G.tank.fx), BYY(G.tank.fy), S, ['#5f7a3a', '#9bbd55'], true, G.tank.hp);
-    // 포탄·미사일
-    G.shells.forEach(function (s) { ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(BX(s.x) + S / 2, BYY(s.y) + S / 2, 7, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,120,40,.4)'; ctx.beginPath(); ctx.arc(BX(s.x) + S / 2, BYY(s.y) + S / 2 - 14, 9, 0, 7); ctx.fill(); });
+    drawTank(BX(G.tank.fx), BYY(G.tank.fy), S, ['#5f7a3a', '#9bbd55'], true, null);
+    // 미사일
     G.missiles.forEach(function (m) { var px = BX(m.x) + S / 2, py = BYY(m.y) + S / 2; ctx.fillStyle = 'rgba(255,170,60,.5)'; ctx.beginPath(); ctx.arc(px, py + 18, 10, 0, 7); ctx.fill(); ctx.fillStyle = '#5ab4ff'; rr(px - 6, py - 16, 12, 30, 6); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(px, py - 22); ctx.lineTo(px - 6, py - 12); ctx.lineTo(px + 6, py - 12); ctx.fill(); });
     // 효과
     G.fx.forEach(function (f) {
@@ -320,7 +302,7 @@
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / ADV_MS;
     ctx.fillStyle = '#111'; ctx.fillRect(0, HUD - 9, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, HUD - 9, W * p, 6);
-    ctx.textAlign = 'center'; ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#fff'; ctx.fillText('적 진격까지 ' + Math.ceil(left / 1000) + 's', W / 2, HUD - 16);
+    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 진격까지 ' + Math.ceil(left / 1000) + 's  ·  최전방 병사 ' + G.soldiers.length, W / 2, EY + 14); ctx.shadowBlur = 0;
   }
   function traySlot(i) { return { x: 20 + i * 150, y: BY + ROWS * S + 10, w: 130, h: TRAY - 20 }; }
   function drawTray(t) {
