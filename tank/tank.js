@@ -13,7 +13,8 @@
   var COLS = 8, ROWS = 10, EROWS = 4, S = 60;              // 칸 크기 60
   var W = 480, HUD = 70, TRAY = 130;
   var EY = HUD, BY = HUD + EROWS * S, H = BY + ROWS * S + TRAY;
-  var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, ADV_MS = 40000, HP_MAX = 3, ADV_MIN = -(EROWS - 1);
+  var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, ADV_MS = 40000, ADV_STEP = 5000, ADV_FLOOR = 20000, ADV_EVERY = 180000, HP_MAX = 3, ADV_MIN = -(EROWS - 1);
+  function advMs(t) { return Math.max(ADV_FLOOR, ADV_MS - ADV_STEP * Math.floor((t - G.start) / ADV_EVERY)); }   // 3분마다 5초씩 빨라짐, 최저 20초
   var SCOUT_MAX = 5, MISSILE_MAX = 5;
   var RES = { 0: null, 1: null, 2: '⛽', 3: '🔭', 4: '🚀' };     // 칸 값: 0 빈칸 1 블록 2 연료 3 정찰 4 미사일
   var SHAPES = [
@@ -177,7 +178,7 @@
     });
     // 진격
     if (t >= G.nextAdv) {
-      G.nextAdv = t + (G.sweep ? 420 : ADV_MS);
+      G.nextAdv = t + (G.sweep ? 420 : advMs(t));
       var y = G.adv; G.adv++;
       if (y >= 0) for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
       if (!G.sweep) G.fx.push({ t: 'pop', text: '⚠ 적 진격!', x: W / 2, y: BYY(y) + S / 2, at: t, big: true });
@@ -300,9 +301,9 @@
     ctx.textAlign = 'right'; ctx.font = '800 24px Orbitron'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, 22);
     ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10, 46);
     // 진격 타이머
-    var left = Math.max(0, G.nextAdv - t), p = left / ADV_MS;
+    var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
     ctx.fillStyle = '#111'; ctx.fillRect(0, HUD - 9, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, HUD - 9, W * p, 6);
-    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '⚠ 적군 돌파!' : ('적 진격까지 ' + Math.ceil(left / 1000) + 's  ·  최전방 병사 ' + G.soldiers.length), W / 2, EY + 14); ctx.shadowBlur = 0;
+    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '⚠ 적군 돌파!' : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  최전방 병사 ' + G.soldiers.length), W / 2, EY + 14); ctx.shadowBlur = 0;
   }
   function traySlot(i) { return { x: 20 + i * 150, y: BY + ROWS * S + 10, w: 130, h: TRAY - 20 }; }
   function drawTray(t) {
