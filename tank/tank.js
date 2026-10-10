@@ -683,7 +683,7 @@
     }
     if (G.ultFx && t - G.ultFx.at < 700) { var ua = 1 - (t - G.ultFx.at) / 700; ctx.fillStyle = G.ultFx.col; ctx.save(); ctx.globalAlpha = 0.35 * ua; ctx.fillRect(0, EY, W, HY - EY); ctx.restore(); }
   }
-  var ULTB = null;                                                // 내 문장(필살기 버튼) 영역
+  var ULTB = null, HELPB = null;                                  // 내 문장(필살기 버튼) 영역 / 도움말 버튼
   function drawPanel(t) {                                         // 오른쪽 정보 패널: [상대] 탱크+체력 / 문장 게이지 · 전선 게이지 · [나] 탱크+체력 / 문장 게이지(버튼)
     var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, -OFFY, PW, HL);
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0, -OFFY, 2, HL);
@@ -736,6 +736,9 @@
     ctx.strokeText(myPct + '%', x0 + PW / 2, my1); ctx.fillStyle = '#c8f5b0'; ctx.fillText(myPct + '%', x0 + PW / 2, my1);
     ctx.restore();
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 8, BY + 44, PW - 16, 1);
+    HELPB = { x: x0 + PW - 26, y: -OFFY + 4, w: 22, h: 22 };                                   // ? 도움말
+    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.strokeStyle = '#8a9477'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(HELPB.x + 11, HELPB.y + 11, 10, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.font = '800 13px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('?', HELPB.x + 11, HELPB.y + 12); ctx.restore();
     // 내 카드 (문장 = 필살기 버튼)
     var mH = HY - (BY + 54) - 64;                                       // 내 카드는 패널 바닥까지(문장이 크게)
     ULTB = card(BY + 54, mH, '나 · ' + fac().name, IMG.u_tank_p, G.tank.hp, G.shield, fac(), G.ult, true, '#9be37a');
@@ -808,7 +811,7 @@
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
     if (!G || G.over || G.sweep || G.collapsing) return;
-    var p = pos(ev); if (p.x >= W) { if (G.vs && ULTB && inB(ULTB, p)) useUlt(); return; } down = p; cv.setPointerCapture(ev.pointerId);
+    var p = pos(ev); if (p.x >= W) { if (HELPB && inB(HELPB, p) && window.showTut) { showTut(); return; } if (G.vs && ULTB && inB(ULTB, p)) useUlt(); return; } down = p; cv.setPointerCapture(ev.pointerId);
     if (inB(BTN.scout, p)) { if (G.scout <= 0) sfx('bad'); useScout(); down = null; return; }
     if (inB(BTN.missile, p)) { if (G.missile <= 0) { sfx('bad'); down = null; return; } useMissile(); down = null; return; }
     if (G.vs && inB(BTN.inf, p)) { if (G.inf <= 0) { sfx('bad'); down = null; return; } useInfantry(); down = null; return; }
