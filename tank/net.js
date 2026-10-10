@@ -73,6 +73,7 @@ window.NET = (function () {
     players = s.val() || {};
     renderRoom();
     var o = opp();
+    if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); }
     // 둘 다 준비 → 방장이 시작 시각을 정한다
     if (meta.host === uid && meta.state === 'lobby' && o && o.ready && me().ready) {
       ref.child('meta').update({ state: 'play', startAt: snow() + 4000, round: (meta.round || 0) + 1 });
@@ -89,7 +90,7 @@ window.NET = (function () {
     meta = s.val() || {};
     if (meta.state === 'play' && meta.startAt && meta.startAt !== lastStart) {
       lastStart = meta.startAt; resultUp = false;
-      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', adv: 0, t: 0 });
+      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', adv: 0, t: 0, fire: null }); lastFire = 0;
       ref.child('inbox/' + uid).remove();
       show('count'); tick();
     }
@@ -110,6 +111,8 @@ window.NET = (function () {
     if (!started) return; var G = window.__tank.get(); if (G.over) return;
     window.__tank.addEnemyInf(v.x | 0);
   }
+  var lastFire = 0;
+  function fired(x, y) { if (ref) ref.child('players/' + uid + '/fire').set({ x: x, y: y, t: firebase.database.ServerValue.TIMESTAMP }); }
   function sendInf(x) { var o = oppId(); if (ref && o) ref.child('inbox/' + o).push({ x: x, t: firebase.database.ServerValue.TIMESTAMP }); }
   function pub() { if (!ref || !started) return; var G = window.__tank.get(); ref.child('players/' + uid + '/adv').set(G.adv); }
   function over(m) {
@@ -150,5 +153,5 @@ window.NET = (function () {
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
   try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
-  return { opp: opp, sendInf: sendInf, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
+  return { opp: opp, sendInf: sendInf, fired: fired, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();
