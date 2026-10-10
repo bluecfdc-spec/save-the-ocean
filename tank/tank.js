@@ -84,7 +84,7 @@
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
       missiles: [], fx: [],
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null,
-      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: ULT_MAX,   // 테스트: 필살기 게이지 가득 찬 채로 시작 (정식에선 0) shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
+      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: ULT_MAX, /* 테스트: 필살기 게이지 가득 찬 채로 시작 (정식에선 0) */ shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     groundImg = null;
@@ -224,7 +224,7 @@
     var mx = COLS - 1 - x;
     var vict = null; G.mySol.forEach(function (e) { if (e.x === mx && (!vict || e.d < vict.d)) vict = e; });
     var landY = vict ? myRow(vict.d) : (G.tank.x === mx ? G.tank.y : Math.max(top(), 1));                 // 떨어질 칸(판정과 같은 규칙)
-    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [] });
+    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: !vict && G.tank.x === mx });   // 판정은 쏜 순간에 확정 — 날아오는 동안 움직여도 못 피한다
     G.fx.push({ t: 'pop', text: '적 포격! 포탄 날아온다', x: W / 2, y: 0, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
     G.alarmUntil = now() + 900;
   }
@@ -337,8 +337,8 @@
     // 날아오는 상대 포탄 착탄
     G.incoming = G.incoming.filter(function (sh) {
       if (t < sh.at) return true;
-      var vict = null; G.mySol.forEach(function (e) { if (e.x === sh.x && (!vict || e.d < vict.d)) vict = e; });
-      if (vict) {                                                     // 맨 앞 내 보병이 대신 맞는다
+      var vict = sh.vict && G.mySol.indexOf(sh.vict) >= 0 ? sh.vict : null;
+      if (vict) {                                                     // 맨 앞 내 보병이 대신 맞는다 (발사 순간에 정해진 보병)
         G.mySol.splice(G.mySol.indexOf(vict), 1);
         G.fx.push({ t: 'boom', x: sh.x, y: myRow(vict.d), at: t, big: false }); sfx('boom', false);
         G.fx.push({ t: 'pop', text: '보병 전사', x: BX(sh.x) + S / 2, y: rowC(myRow(vict.d)) - 20, at: t, big: false });
@@ -346,11 +346,11 @@
         if (window.NET) NET.pub(true);
         return false;
       }
-      var hy = tk.x === sh.x ? tk.y : Math.max(top(), 1);
-      G.fx.push({ t: 'boom', x: sh.x, y: hy, at: t, big: true }); sfx('boom', true); G.shake = 10; G.shakeUntil = t + 300;
-      if (tk.x === sh.x && G.shield > 0) { G.shield--; G.fx.push({ t: 'shieldHit', at: t }); G.fx.push({ t: 'pop', text: G.shield ? '태양 방패가 막아냈다! (1겹 남음)' : '태양 방패가 깨졌다', x: W / 2, y: 0, at: t, big: true, col: '#ffd451' }); sfx('shieldHit'); if (window.NET) NET.pub(true); return false; }
-      if (tk.x === sh.x) { tk.hp--; G.fx.push({ t: 'pop', text: '탱크 피격! 체력 ' + tk.hp, x: W / 2, y: 0, at: t, big: true, col: '#ff5a4a' }); if (window.NET) NET.pub(true); if (tk.hp <= 0) killTank('상대 미사일에 격파'); }
-      else G.fx.push({ t: 'pop', text: '빗나감', x: BX(sh.x) + S / 2, y: BYY(hy) - 10, at: t, big: false });
+      var hitT = sh.hitTank, hy = hitT ? tk.y : Math.max(top(), 1), hx = hitT ? tk.x : sh.x;   // 탱크가 표적이었으면 지금 어디 있든 맞는다
+      G.fx.push({ t: 'boom', x: hx, y: hy, at: t, big: true }); sfx('boom', true); G.shake = 10; G.shakeUntil = t + 300;
+      if (hitT && G.shield > 0) { G.shield--; G.fx.push({ t: 'shieldHit', at: t }); G.fx.push({ t: 'pop', text: G.shield ? '태양 방패가 막아냈다! (1겹 남음)' : '태양 방패가 깨졌다', x: W / 2, y: 0, at: t, big: true, col: '#ffd451' }); sfx('shieldHit'); if (window.NET) NET.pub(true); return false; }
+      if (hitT) { tk.hp--; G.fx.push({ t: 'pop', text: '탱크 피격! 체력 ' + tk.hp, x: W / 2, y: 0, at: t, big: true, col: '#ff5a4a' }); if (window.NET) NET.pub(true); if (tk.hp <= 0) killTank('상대 미사일에 격파'); }
+      else G.fx.push({ t: 'pop', text: '빗나감', x: BX(hx) + S / 2, y: BYY(hy) - 10, at: t, big: false });
       return false;
     });
     // 진격 (대전: 전선은 방장이 30초마다 계산해 내려줌 → applyLine. 여기서는 혼자 모드와 '놓을 곳 없음' 쓸림만)
@@ -613,7 +613,7 @@
       else { ctx.fillStyle = '#c33'; ctx.beginPath(); ctx.arc(px, ry, 8 * sc, 0, 7); ctx.fill(); }
     }
     G.missiles.forEach(function (m) { drawMissile(m, Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(0.01, m.y0 - m.y1))), t, false); });
-    G.incoming.forEach(function (m) { if (m.start) drawMissile(m, Math.max(0, Math.min(1, (t - m.start) / (m.at - m.start))), t, true); });
+    G.incoming.forEach(function (m) { if (m.start) { if (m.hitTank) { m.x = G.tank.x; m.y1 = G.tank.y; } drawMissile(m, Math.max(0, Math.min(1, (t - m.start) / (m.at - m.start))), t, true); } });   // 탱크 표적이면 포탄이 탱크를 따라감
     // 효과
     G.fx.forEach(function (f) {
       var a = Math.max(0, t - f.at);
