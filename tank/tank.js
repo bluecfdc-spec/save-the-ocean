@@ -73,7 +73,7 @@
       vs: !!vs, board: [], adv: 0, score: 0, lines: 0, kills: 0, over: false, overMsg: '', result: '', sent: 0,
       tank: { x: 3, y: 6, hp: HP_MAX, path: [], moveAt: 0, fx: 3, fy: 6 }, combo: 0, shake: 0, shakeUntil: 0, aim: null, incoming: [], sweepUnits: null,
       soldiers: [], mySol: [], oppTank: null, clash: null, missileReady: 0, enemyScoutUntil: 0,
-      fuel: 2 * FUEL_PER, scout: 1, missile: 1, inf: vs ? 1 : 0,
+      fuel: 2 * FUEL_PER, scout: 1, missile: 0, inf: 0,
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
       missiles: [], fx: [],
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null
@@ -187,9 +187,17 @@
     G.fx.push({ t: 'pop', text: '적 포격! 포탄 날아온다', x: W / 2, y: 0, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
     G.alarmUntil = now() + 900;
   }
+  var planeE = null;
+  function enemyPlane() {                                   // 적 정찰기: 비행기 그림을 붉게 물들인 사본(한 번만 생성)
+    if (planeE || !IMG.u_plane) return planeE;
+    var c = document.createElement('canvas'); c.width = IMG.u_plane.width; c.height = IMG.u_plane.height; var g = c.getContext('2d');
+    g.drawImage(IMG.u_plane, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,40,30,.62)'; g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgba(255,120,100,.5)'; g.fillRect(0, 0, c.width, c.height);
+    return planeE = c;
+  }
   function enemyScout() {                                   // 대전: 상대 정찰기가 내 진영 위를 돈다 → 내 위치가 발각됨
     if (!G.vs || G.over) return; G.enemyScoutUntil = now() + SCOUT_MS; sfx('radar');
-    G.fx.push({ t: 'pop', text: '적 정찰기 출현 — 탐색 중', x: W / 2, y: BYY(top()) + S * 1.5, at: now(), big: false, col: '#b8ffc4' });
+    G.fx.push({ t: 'pop', text: '적 정찰기 출현 — 탐색 중', x: W / 2, y: BYY(top()) + S * 1.5, at: now(), big: false, col: '#ffb3a8' });
   }
   function myRow(d) { return G.adv + d - 1; }                // 내 보병 d(1=최전방) 가 서는 내 보드 줄
   function startClash(mine, theirs, delta) {                // 대전: 전선 교전 연출 (2.5초) — 최전방 보병 수 비교, 많은 쪽이 민다
@@ -508,11 +516,11 @@
       var esp = 1 - (G.enemyScoutUntil - t) / SCOUT_MS, bh = ROWS * S, by0 = BY;
       function epos(q) { return [W + 70 - (W + 140) * q, by0 + bh * 0.45 + Math.sin(q * Math.PI * 2.2) * bh * 0.3]; }   // 오른쪽→왼쪽(상대 쪽에서 날아옴)
       var e0 = epos(esp), e1 = epos(Math.min(1, esp + 0.01)), ehead = Math.atan2(e1[1] - e0[1], e1[0] - e0[0]);
-            var sl2 = ctx.createRadialGradient(e0[0], e0[1], S * 0.4, e0[0], e0[1], S * 2.2); sl2.addColorStop(0, 'rgba(120,255,140,.22)'); sl2.addColorStop(1, 'rgba(120,255,140,0)'); ctx.fillStyle = sl2; ctx.fillRect(e0[0] - S * 2.3, e0[1] - S * 2.3, S * 4.6, S * 4.6);   // 탐색 서치라이트(초록)
-      var tr = S * (0.9 + 0.15 * Math.sin(t / 110)); ctx.strokeStyle = 'rgba(120,255,140,.8)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, tr, 0, 7); ctx.stroke(); ctx.setLineDash([]);   // 내 탱크 주변 초록 점선 링(탐색당하는 중)
+            var sl2 = ctx.createRadialGradient(e0[0], e0[1], S * 0.4, e0[0], e0[1], S * 2.2); sl2.addColorStop(0, 'rgba(255,70,50,.22)'); sl2.addColorStop(1, 'rgba(255,70,50,0)'); ctx.fillStyle = sl2; ctx.fillRect(e0[0] - S * 2.3, e0[1] - S * 2.3, S * 4.6, S * 4.6);   // 탐색 서치라이트(초록)
+      var tr = S * (0.9 + 0.15 * Math.sin(t / 110)); ctx.strokeStyle = 'rgba(255,80,60,.85)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, tr, 0, 7); ctx.stroke(); ctx.setLineDash([]);   // 내 탱크 주변 붉은 점선 링(탐색당하는 중)
       ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(e0[0] + 16, e0[1] + 44, 30, 9, 0, 0, 7); ctx.fill();
-      if (IMG.u_plane) { ctx.save(); ctx.translate(e0[0], e0[1]); ctx.rotate(ehead + Math.PI / 2); fitImg(IMG.u_plane, 0, 0, 78, 60, 1, 0); ctx.globalCompositeOperation = 'source-atop'; ctx.restore(); ctx.fillStyle = 'rgba(90,255,120,.3)'; ctx.beginPath(); ctx.arc(e0[0], e0[1], 34, 0, 7); ctx.fill(); }
-      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#b8ffc4'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', Math.max(58, Math.min(W - 58, e0[0])), e0[1] + 36); ctx.restore();
+      var pe = enemyPlane(); if (pe) { ctx.save(); ctx.translate(e0[0], e0[1]); ctx.rotate(ehead + Math.PI / 2); fitImg(pe, 0, 0, 78, 60, 1, 0); ctx.restore(); }
+      ctx.save(); ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffb3a8'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('적 정찰기 (탐색 중)', Math.max(58, Math.min(W - 58, e0[0])), e0[1] + 36); ctx.restore();
     }
     // 대전: 전선 교전 연출
     if (G.clash) {
