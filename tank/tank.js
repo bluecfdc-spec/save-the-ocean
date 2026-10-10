@@ -176,7 +176,8 @@
     var ty0 = best ? G.adv - best.d : (G.vs && G.oppTank && COLS - 1 - G.oppTank.x === tx) ? -1 - G.oppTank.y : -EROWS;
     G.missile--;
     G.missiles.push({ x: tx, y: G.tank.y, y0: G.tank.y, y1: ty0, target: best, pred: G.vs && !!best, at: now() }); sfx('launch');
-    if (G.vs && window.NET) NET.fired(tx, G.tank.y, true);              // 대전: 명중 판정은 맞는 쪽(병사·탱크 주인)이 한다
+    if (G.vs && window.NET) { NET.fired(tx, G.tank.y, true);              // 대전: 명중 판정은 맞는 쪽(병사·탱크 주인)이 한다
+      var o0 = NET.opp() || {}; G.shotWait = { at: now(), until: now() + 1000 + 2500, hp: o0.hp == null ? HP_MAX : o0.hp, sol: G.soldiers.length, x: tx }; }   // 결과(상대 체력·보병 수 변화)를 기다렸다가 명중/빗나감 표시
   }
   function incomingShot(x) {                                // 대전: 상대 미사일이 내 세로줄로 날아옴. 0.9초 뒤 그 줄 맨 앞 내 보병이 죽고, 보병이 없으면 거기 내 탱크가 있을 때 피격
     if (!G.vs || G.over) return;
@@ -331,6 +332,12 @@
       if (myE < 12 && !G.warnMe) { G.warnMe = true; G.fx.push({ t: 'pop', text: '내 보드 붕괴 임박', x: W / 2, y: 0, at: t, big: true, col: '#ff8a7a' }); sfx('warn'); } else if (myE >= 18) G.warnMe = false;
     }
     if (G.collapsing) collapseTick(t);
+    if (G.shotWait && t > G.shotWait.at + 1000) {                       // 내가 쏜 결과: 착탄 뒤 상대 쪽 판정이 오면 표시
+      var sw = G.shotWait, o2 = (window.NET && NET.opp()) || {}, ohp2 = o2.hp == null ? HP_MAX : o2.hp;
+      if (ohp2 < sw.hp) { G.shotWait = null; G.fx.push({ t: 'pop', text: '상대 탱크 명중! 체력 ' + ohp2, x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); sfx('gain'); }
+      else if (G.soldiers.length < sw.sol) { G.shotWait = null; G.fx.push({ t: 'pop', text: '명중! 적 보병 격파', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); }
+      else if (t > sw.until) { G.shotWait = null; G.fx.push({ t: 'pop', text: '빗나감', x: BX(sw.x) + S / 2, y: BYY(G.adv) - 14, at: t, big: false, col: '#cfd6bf' }); }
+    }
     // 큰 팝업은 큐로 모아 한 번에 하나씩 띠 배너로(겹침 방지). 밀리면 오래된 건 버림
     G.msgQ = G.msgQ || [];
     G.fx = G.fx.filter(function (f) { if (f.t === 'pop' && f.big) { G.msgQ.push(f); return false; } return true; });
