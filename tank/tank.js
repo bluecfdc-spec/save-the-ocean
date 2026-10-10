@@ -713,7 +713,7 @@
       return { x: ex - E / 2 - 6, y: ey - E / 2 - 6, w: E + 12, h: E + 26 };
     }
     // 상대 카드
-    var oH = Math.min(170, BY + 36 - EY - 120);
+    var oH = Math.min(250, BY + 36 - EY - 125);                       // 상대 카드도 내 카드처럼 문장이 크게
     card(EY + 6, oH, '상대 ' + (o.name || ''), IMG.u_tank_e, ohp, o.shield | 0, of, oult, false, '#ff8a7a');
     // 전선 게이지
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 8, EY + 6 + oH + 6, PW - 16, 1);
