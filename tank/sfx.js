@@ -108,6 +108,20 @@ window.SFX = (function () {
       o.frequency.setValueAtTime(500, t0); o.frequency.linearRampToValueAtTime(900, t0 + 0.28); o.frequency.linearRampToValueAtTime(520, t0 + 0.55);
       env(g, t0, 0.03, 0.12, 0.55); var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200; o.connect(f); f.connect(g); g.connect(sfx); o.start(t0); o.stop(t0 + 0.65); }
   };
+  S.ultReady = function () {                                       // 필살기 준비: 밝은 상승 아르페지오
+    if (!ensure()) return; var t = ctx.currentTime; [523, 659, 784, 1047].forEach(function (fq, i) { tone('triangle', fq, fq, 0.35, 0.14, t + i * 0.09, sfx, 0.01); });
+  };
+  S.ult = function (k) {                                           // 발동: 세력별
+    if (!ensure()) return; var t = ctx.currentTime;
+    if (k === 'surge') { var b = burst(2.2, 0.35, 900, 200, t, sfx, 1); b.f.frequency.setValueAtTime(300, t); b.f.frequency.exponentialRampToValueAtTime(1800, t + 1.2); tone('sine', 60, 40, 1.5, 0.3, t); }
+    else if (k === 'gale') { for (var i = 0; i < 3; i++) { var t0 = t + i * 0.22; burst(0.06, 0.5, 9000, 3000, t0); var c = burst(0.5, 0.3, 2500, 100, t0 + 0.03); c.f.frequency.setValueAtTime(4000, t0); c.f.frequency.exponentialRampToValueAtTime(120, t0 + 0.5); tone('sawtooth', 90, 40, 0.5, 0.2, t0 + 0.02); } }
+    else { tone('sine', 440, 880, 0.6, 0.18, t, sfx, 0.02); tone('sine', 660, 1320, 0.6, 0.12, t + 0.1, sfx, 0.02); tone('triangle', 1760, 1760, 0.8, 0.08, t + 0.25, sfx, 0.05); }
+  };
+  S.ultIn = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sawtooth', 220, 110, 0.5, 0.18, t); tone('sawtooth', 233, 117, 0.5, 0.12, t + 0.05); burst(0.3, 0.2, 1200, 200, t); };
+  S.crash = function () {                                          // 정찰기 추락: 번개 + 엔진 꺼지며 하강
+    if (!ensure()) return; var t = ctx.currentTime; burst(0.08, 0.5, 9000, 3000, t + 0.35); tone('sawtooth', 700, 120, 1.1, 0.16, t + 0.4, sfx, 0.02); var c = burst(0.6, 0.3, 2000, 100, t + 0.4); c.f.frequency.setValueAtTime(3000, t + 0.4); c.f.frequency.exponentialRampToValueAtTime(100, t + 1.0); tone('sine', 120, 35, 0.5, 0.35, t + 1.2);
+  };
+  S.shieldHit = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sine', 1400, 900, 0.3, 0.2, t, sfx, 0.005); tone('triangle', 2100, 1500, 0.4, 0.1, t + 0.02, sfx, 0.01); burst(0.15, 0.15, 6000, 1500, t); };
   S.advance = function () {                                        // 적 진격: 전차가 밀고 지나가는 땅울림 + 캐터필러 + 낮은 단조 화음
     if (!ensure()) return; var t = ctx.currentTime;
     tone('sine', 60, 26, 1.6, 0.8, t, sfx, 0.03);                                                     // 지반 울림

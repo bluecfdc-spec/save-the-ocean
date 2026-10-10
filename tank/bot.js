@@ -14,7 +14,7 @@ window.BOT = (function () {
   // ---------- 시작/종료 ----------
   function start() {
     stop(); active = true; window.NET = BOT;
-    T.newGame(true); bot = T.get(); bot.bot = true; bot.name = 'CPU';   // 먼저 만든 판이 봇, 두 번째가 나
+    T.newGame(true); bot = T.get(); bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 0; bot.shield = 0;   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
     T.newGame(true); me = T.get();
     known = null; nextTick = now() + 30000;
     T.applyLine(0, 30000);
@@ -29,7 +29,7 @@ window.BOT = (function () {
     if (!active) return;
     T.setOpp({ tank: bot.tank.x + ',' + bot.tank.y, sol: bot.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';') });
   }
-  function opp() { if (!bot) return null; var empty = 0; for (var y = Math.max(0, bot.adv); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!bot.board[y][x]) empty++; return { name: 'CPU', empty: empty, hp: bot.tank.hp, over: bot.over, front: bot.mySol.filter(function (e) { return e.d === 1; }).length, inf: bot.mySol.length, tank: bot.tank.x + ',' + bot.tank.y }; }
+  function opp() { if (!bot) return null; var empty = 0; for (var y = Math.max(0, bot.adv); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!bot.board[y][x]) empty++; return { name: 'CPU', empty: empty, hp: bot.tank.hp, over: bot.over, front: bot.mySol.filter(function (e) { return e.d === 1; }).length, inf: bot.mySol.length, tank: bot.tank.x + ',' + bot.tank.y, fac: bot.fac, ult: bot.ult, shield: bot.shield }; }
   // ---------- 봇 한 수 ----------
   function step() {
     if (!active || !me || me.over || bot.over) return;
@@ -40,8 +40,14 @@ window.BOT = (function () {
       if (bot.sweep) return;
       // 정찰: 내 위치를 모르거나 오래됐으면
       if (bot.scout > 0 && (!known || now() - known.t > 12000) && Math.random() < 0.6) {
-        bot.scout--; known = { x: me.tank.x, y: me.tank.y, t: now() }; bot.scoutUntil = now() + SCOUT_MS;
-        setTimeout(function () { if (active) T.enemyScout(); }, 0);
+        bot.scout--;
+        if (now() < me.stormMine) { setTimeout(function () { if (active) T.notice('상대 정찰기가 폭풍우에 추락!'); }, 0); }   // 내 서지 폭풍우 → 봇 정찰기 추락
+        else { known = { x: me.tank.x, y: me.tank.y, t: now() }; bot.scoutUntil = now() + SCOUT_MS; setTimeout(function () { if (active) T.enemyScout(); }, 0); }
+      }
+      // 필살기: 게이지가 차면 상황 봐서 발동 (게일은 내 보병이 있을 때, 솔라는 체력이 깎였거나 내 위치가 알려졌을 때, 서지는 바로)
+      if (bot.ult >= T.ULT_MAX) {
+        var ok = bot.fac === 'gale' ? bot.soldiers.length >= 2 || Math.random() < 0.15 : bot.fac === 'solar' ? (bot.tank.hp < 3 || bot.shield === 0) : true;
+        if (ok) T.useUlt();
       }
       // 미사일: 내 보병이 봇 앞에 있으면 그 줄, 아니면 알고 있는 내 탱크 줄
       if (bot.missile > 0 && now() >= bot.missileReady) {
@@ -122,6 +128,13 @@ window.BOT = (function () {
     if (badv >= ROWS) { bot.over = true; end('win', 'CPU 가 전장을 잃었다'); return; }
     syncToPlayer();
   }
+  function skill(k) {                                      // 봇이 쓴 필살기(useUlt 가 NET.skill 로 호출) → 내 쪽에 전달
+    if (!active) return;
+    if (k && bot === T.get()) { setTimeout(function () { if (active) T.skillIn(k); }, 0); return; }
+    // 내가 쓴 필살기 → 봇 쪽 판정
+    if (k === 'gale') { var v = bot.mySol.slice().sort(function (a, b) { return a.d - b.d; }).slice(0, 3); setTimeout(function () { if (!active) return; v.forEach(function (e) { var i = bot.mySol.indexOf(e); if (i >= 0) bot.mySol.splice(i, 1); }); while (bot.mySol.length && !bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); if (v.length) T.notice('적 보병 ' + v.length + '명 벼락 사망'); syncToPlayer(); }, 600); }
+    else if (k === 'surge') { bot.stormOpp = now() + 20000; known = null; }
+  }
   function collapsed() { if (!active) return; shiftLine(0); }   // 내 보드 붕괴: 전선은 내 쪽(tank.js)이 이미 두 줄 밀었으니 봇 쪽만 맞춘다
   function lines(p, gx, gy) {                              // 이 자리에 놓으면 지워지는 줄 수
     var b = bot.board, top = T.fns.top(), n = 0, cells = {}; p.cells.forEach(function (c) { cells[(gx + c.dx) + ',' + (gy + c.dy)] = 1; });
@@ -144,7 +157,8 @@ window.BOT = (function () {
       if (!active || bot.over) return;
       var v = null; bot.mySol.forEach(function (e) { if (e.x === mx && (!v || e.d < v.d)) v = e; });
       if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); if (!bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); T.notice('적 보병 격파!'); }
-      else if (bot.tank.x === mx) { bot.tank.hp--; T.notice('명중! CPU 체력 ' + bot.tank.hp); if (bot.tank.hp <= 0) { bot.over = true; end('win', 'CPU 탱크 격파'); return; } }
+      else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice(bot.shield ? 'CPU 태양 방패가 막았다 (1겹 남음)' : 'CPU 태양 방패가 깨졌다'); }
+      else if (bot.tank.x === mx) { bot.tank.hp--; if (bot.tank.hp <= 0) { bot.over = true; end('win', 'CPU 탱크 격파'); return; } }
       syncToPlayer();
     }, 900);
   }
@@ -155,5 +169,5 @@ window.BOT = (function () {
   // 결과 화면의 [다시 대전] → CPU 다시
   $('againBtn').addEventListener('click', function () { if (window.NET === BOT) { window.REALNET.show('none'); start(); try { SFX.go(); SFX.ambientStart(); } catch (e) { } } });
   $('resLeave').addEventListener('click', function () { if (window.NET === BOT) stop(); });
-  return { start: start, stop: stop, opp: opp, fired: fired, scouted: scouted, collapsed: collapsed, pub: pub, sendInf: sendInf, over: over, setLevel: function (l) { level = l; }, _bot: function () { return bot; }, _clash: clash, _step: step };
+  return { start: start, stop: stop, opp: opp, fired: fired, scouted: scouted, skill: skill, collapsed: collapsed, pub: pub, sendInf: sendInf, over: over, setLevel: function (l) { level = l; }, _bot: function () { return bot; }, _clash: clash, _step: step };
 })();

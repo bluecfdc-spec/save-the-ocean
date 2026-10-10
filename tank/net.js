@@ -76,12 +76,10 @@ window.REALNET = window.NET = (function () {
     if (started && o) window.__tank.setOpp(o);                                  // 상대 탱크 위치·내 보병 목록(상대가 보는 그대로)
     if (started && o && (o.collapses | 0) > oppCollapses) { var dc = (o.collapses | 0) - oppCollapses; oppCollapses = o.collapses | 0; window.__tank.notice('💥 상대 보드 붕괴!'); if (isHost()) hostLine(-2 * dc); }
     if (started && o && o.scout && o.scout !== lastScout) { lastScout = o.scout; window.__tank.enemyScout(); }
+    if (started && o && o.skill && o.skill.t && o.skill.t !== lastSkill) { lastSkill = o.skill.t; window.__tank.skillIn(o.skill.k); }
     if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); if (o.fire.s) window.__tank.incomingShot(o.fire.x | 0); }
     if (started && o) {                                               // 상대 쪽 변화 알림
       var G0 = window.__tank.get();
-      if (prevOpp.inf != null && (o.inf || 0) < prevOpp.inf) window.__tank.notice('적 보병 격파!');
-      if (prevOpp.tank != null && o.tank !== prevOpp.tank && !window.__tank.get().scoutUntil) { }
-      if (prevOpp.hp != null && o.hp != null && o.hp < prevOpp.hp) window.__tank.notice('명중! 상대 체력 ' + o.hp);
       prevOpp = { inf: o.inf || 0, hp: o.hp == null ? 3 : o.hp, tank: o.tank };
     }
     // 둘 다 준비 → 방장이 시작 시각을 정한다
@@ -117,7 +115,7 @@ window.REALNET = window.NET = (function () {
     if (started && meta.line != null) window.__tank.applyLine(isHost() ? (meta.line | 0) : -(meta.line | 0), meta.nextTick ? meta.nextTick - snow() : null);   // line 은 방장 기준(+ = 방장 쪽으로 밀림) → 상대는 부호 반대
     if (meta.state === 'play' && meta.startAt && meta.startAt !== lastStart) {
       lastStart = meta.startAt; resultUp = false;
-      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '3,6', collapses: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; myCollapses = 0; oppCollapses = 0;
+      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '3,6', collapses: 0, skill: null, ult: 0, shield: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; lastSkill = 0; myCollapses = 0; oppCollapses = 0;
       if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
       show('count'); lastPub = ''; prevOpp = {}; tick();
@@ -131,7 +129,7 @@ window.REALNET = window.NET = (function () {
     startTimer = setTimeout(tick, 100);
   }
   function startGame() {
-    started = true; show('none'); window.__tank.newGame(true); try { SFX.go(); SFX.ambientStart(); } catch (e) { }
+    started = true; show('none'); window.__tank.newGame(true); pub(true); try { SFX.go(); SFX.ambientStart(); } catch (e) { }
     clearInterval(pubTimer); pubTimer = setInterval(pub, 1000);
     clearInterval(lineTimer); if (isHost()) lineTimer = setInterval(hostTick, 30000);
   }
@@ -140,7 +138,8 @@ window.REALNET = window.NET = (function () {
     if (!started) return; var G = window.__tank.get(); if (G.over) return;
     window.__tank.addEnemyInf(v.x | 0);
   }
-  var lastFire = 0, prevOpp = {}, lastScout = 0;
+  var lastFire = 0, prevOpp = {}, lastScout = 0, lastSkill = 0;
+  function skill(k) { if (ref && started) ref.child('players/' + uid + '/skill').set({ k: k, t: firebase.database.ServerValue.TIMESTAMP }); }
   function scouted() { if (ref && started) ref.child('players/' + uid + '/scout').set(firebase.database.ServerValue.TIMESTAMP); }
   function fired(x, y, shot) { if (ref) ref.child('players/' + uid + '/fire').set({ x: x, y: y, s: shot ? 1 : 0, t: firebase.database.ServerValue.TIMESTAMP }); }
   function sendInf(x) { var o = oppId(); if (ref && o) ref.child('inbox/' + o).push({ x: x, t: firebase.database.ServerValue.TIMESTAMP }); }
@@ -148,9 +147,9 @@ window.REALNET = window.NET = (function () {
   function pub(force) {                                                        // 바뀔 때만: 체력 · 내 탱크 위치 · 내 앞의 적 보병(상대에겐 '보낸 보병' 목록) · 최전방 수
     if (!ref || !started) return; var G = window.__tank.get();
     var sol = G.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';'), front = G.mySol.filter(function (e) { return e.d === 1; }).length;
-    var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp + '/' + G.board.map(function (r) { return r.filter(Boolean).length; }).join(''); if (k === lastPub && !force) return; lastPub = k;
+    var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp + '/' + G.ult + '/' + G.shield + '/' + G.board.map(function (r) { return r.filter(Boolean).length; }).join(''); if (k === lastPub && !force) return; lastPub = k;
     var empty = 0; for (var y = Math.max(0, G.adv); y < 9; y++) for (var x = 0; x < 7; x++) if (!G.board[y][x]) empty++;
-    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp, empty: empty });
+    ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp, empty: empty, fac: G.fac, ult: G.ult, shield: G.shield });
   }   // 바뀔 때만 보냄
   function over(m) {
     if (!ref) return; var G = window.__tank.get();
@@ -190,5 +189,5 @@ window.REALNET = window.NET = (function () {
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
   try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
-  return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, collapsed: collapsed, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
+  return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, skill: skill, collapsed: collapsed, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();
