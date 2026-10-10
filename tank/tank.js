@@ -12,7 +12,7 @@
   'use strict';
   var COLS = 7, ROWS = 9, EROWS = 4, S = 68, FOG_MAX = 9;  // 7×9. 혼자: 칸 68, 안개 4줄. 대전: 칸 60, 위쪽은 상대 진영 9줄(한 줄 26px) — 한 전장을 위아래로 나눠 씀
   var W = COLS * S, TOP = 22, HUD = 26, TRAY = 96, BBAR = 48, FS = 44;   // FS: 위쪽(적진) 한 줄 높이       // 위: 진격 타이머 띠. 보드 아래: 연료·점수 한 줄(HUD) → 블록 받침(TRAY) → 맨 바닥 넓고 얇은 버튼 띠(BBAR)
-  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13, PW = 72, WT;   // PW: 오른쪽 정보 패널 폭, WT: 전체 폭            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
+  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13, PW = 60, WT, OFFY = 0, HL = 0;   // PW: 오른쪽 정보 패널 폭(화면 남는 만큼 늘어남), WT: 전체 폭, OFFY: 세로 남는 공간을 위아래로 나눈 여백            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
   function layout(vs) {
     if (vs) { S = 60; FS = 40; EROWS = 9; TOP = 20; HUD = 24; TRAY = 80; BBAR = 44; } else { S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 96; BBAR = 48; }
     W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
@@ -32,11 +32,13 @@
   ];
 
   var cv = document.getElementById('c'), ctx = cv.getContext('2d'), scale = 1, scaleY = 1, dpr = 1;
-  function fit() {                                             // 비율 유지. 게임판 오른쪽에 정보 패널(PW)을 붙여 전체를 화면에 맞춤
+  function fit() {                                             // 비율 유지하되 화면 전체를 씀: 오른쪽 남는 폭은 정보 패널이, 세로 남는 높이는 위아래 여백이 가져감
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    scale = Math.min(window.innerWidth / WT, window.innerHeight / H); scaleY = scale;
-    cv.style.width = (WT * scale) + 'px'; cv.style.height = (H * scale) + 'px';
-    cv.width = Math.round(WT * scale * dpr); cv.height = Math.round(H * scale * dpr);
+    var iw = window.innerWidth, ih = window.innerHeight;
+    scale = Math.min(iw / (W + 60), ih / H); scaleY = scale;
+    PW = iw / scale - W; WT = W + PW; HL = ih / scale; OFFY = Math.max(0, (HL - H) / 2);
+    cv.style.width = iw + 'px'; cv.style.height = ih + 'px';
+    cv.width = Math.round(iw * dpr); cv.height = Math.round(ih * dpr);
   }
   window.addEventListener('resize', fit); fit();
   function rowC(y) { return BYY(y) + (y >= 0 ? S : FS) / 2; }      // 줄 y 의 세로 중심
@@ -349,7 +351,8 @@
   }
   function draw(t) {
     ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0);
-    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, WT, H);
+    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, WT, HL);
+    ctx.translate(0, OFFY);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 칸마다 흙 타일
     if (IMG.b_ground) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
@@ -492,8 +495,9 @@
     }
   }
   function drawPanel(t) {                                       // 오른쪽 정보 패널: 상대 탱크 체력·상대 빈 칸 / 내 체력·내 빈 칸
-    var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, 0, PW, H);
-    ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0, 0, 2, H);
+    var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, -OFFY, PW, HL);
+    ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0, -OFFY, 2, HL);
+    var g2 = ctx.createLinearGradient(0, 0, 0, HL); g2.addColorStop(0, '#1b1d16'); g2.addColorStop(1, '#0d0e0a'); if (OFFY > 0) { ctx.fillStyle = '#1b1d16'; ctx.fillRect(0, -OFFY, W, OFFY); ctx.fillRect(0, H, W, OFFY + 1); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, oempty = o.empty == null ? ROWS * COLS : o.empty;
     var myEmpty = 0; for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x]) myEmpty++;
     function block(y0, title, img, hp, empty, col, mine) {
@@ -578,7 +582,7 @@
   function best() { try { return +localStorage.getItem('tank_best') || 0; } catch (e) { return 0; } }
 
   // ---------- 입력 ----------
-  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scaleY }; }
+  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scaleY - OFFY }; }
   function inB(b, p) { return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
