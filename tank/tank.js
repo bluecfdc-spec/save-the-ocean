@@ -169,6 +169,7 @@
   function moveTank(x, y) {
     G.sel = false;
     if (G.tank.path.length) return;
+    if (G.lockUntil && now() < G.lockUntil) { sfx('bad'); G.fx.push({ t: 'pop', text: '조준당함 — 이동 불가', x: BX(G.tank.x) + S / 2, y: BYY(G.tank.y) - 12, at: now(), big: false, col: '#ff8a7a' }); return; }
     var k = x + ',' + y, n = G.reach[k];
     if (!n || !n.d) return;
     var path = [], c = [x, y];
@@ -224,7 +225,9 @@
     var mx = COLS - 1 - x;
     var vict = null; G.mySol.forEach(function (e) { if (e.x === mx && (!vict || e.d < vict.d)) vict = e; });
     var landY = vict ? myRow(vict.d) : (G.tank.x === mx ? G.tank.y : Math.max(top(), 1));                 // 떨어질 칸(판정과 같은 규칙)
-    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: !vict && G.tank.x === mx });   // 판정은 쏜 순간에 확정 — 날아오는 동안 움직여도 못 피한다
+    var hitTank = !vict && G.tank.x === mx;
+    if (hitTank) { G.tank.path = []; G.tank.fx = G.tank.x; G.tank.fy = G.tank.y; G.sel = false; G.lockUntil = now() + 900; }   // 조준당함: 탱크가 그 자리에 묶인다(이동 불가)
+    G.incoming.push({ x: mx, at: now() + 900, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: hitTank });   // 판정은 쏜 순간에 확정
     G.fx.push({ t: 'pop', text: '적 포격! 포탄 날아온다', x: W / 2, y: 0, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
     G.alarmUntil = now() + 900;
   }
@@ -557,6 +560,7 @@
       ctx.restore();
     }
     // 탱크
+    if (G.lockUntil && t < G.lockUntil) { var lk = 0.6 + 0.4 * Math.sin(t / 60); ctx.save(); ctx.strokeStyle = 'rgba(255,60,50,' + lk + ')'; ctx.lineWidth = 3; ctx.strokeRect(BX(G.tank.fx) + 2, BYY(G.tank.fy) + 2, S - 4, S - 4); if (IMG.ui_cross) fitImg(IMG.ui_cross, BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, S * 1.3, S * 1.3, lk); ctx.restore(); }   // 조준당함 표시
     if (G.sel) { ctx.save(); ctx.strokeStyle = 'rgba(200,255,210,.9)'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.strokeRect(BX(G.tank.fx) + 2, BYY(G.tank.fy) + 2, S - 4, S - 4); ctx.setLineDash([]); ctx.restore(); }
     drawTank(BX(G.tank.fx), BYY(G.tank.fy), S, ['#5f7a3a', '#9bbd55'], true, null);
     if (G.vs) for (var hh = 0; hh < HP_MAX; hh++) { ctx.fillStyle = hh < G.tank.hp ? '#ff5050' : 'rgba(0,0,0,.55)'; rr(BX(G.tank.fx) + 8 + hh * 18, BYY(G.tank.fy) + S - 9, 14, 6, 2); ctx.fill(); }
@@ -833,7 +837,7 @@
     }
     if (down && Math.abs(p.x - down.x) < 12 && Math.abs(p.y - down.y) < 12 && p.y >= BY && p.y < BY + ROWS * S) {
       var cx2 = Math.floor(p.x / S), cy2 = Math.floor((p.y - BY) / S);
-      if (cx2 === G.tank.x && cy2 === G.tank.y) { G.sel = !G.sel; sfx(G.sel ? 'pick' : 'click'); }           // 탱크 탭 → 갈 수 있는 칸 표시 토글
+      if (cx2 === G.tank.x && cy2 === G.tank.y) { if (G.lockUntil && now() < G.lockUntil) { sfx('bad'); } else { G.sel = !G.sel; sfx(G.sel ? 'pick' : 'click'); } }           // 탱크 탭 → 갈 수 있는 칸 표시 토글
       else if (G.sel) { G.sel = false; moveTank(cx2, cy2); }
     }
     down = null;
