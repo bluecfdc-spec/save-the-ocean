@@ -232,8 +232,7 @@
   function enemyPlane() {                                   // 적 정찰기: 비행기 그림을 붉게 물들인 사본(한 번만 생성)
     if (planeE || !IMG.u_plane) return planeE;
     var c = document.createElement('canvas'); c.width = IMG.u_plane.width; c.height = IMG.u_plane.height; var g = c.getContext('2d');
-    g.drawImage(IMG.u_plane, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,40,30,.62)'; g.fillRect(0, 0, c.width, c.height);
-    g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgba(255,120,100,.5)'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(IMG.u_plane, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,40,30,.7)'; g.fillRect(0, 0, c.width, c.height);
     return planeE = c;
   }
   function enemyScout() {                                   // 대전: 상대 정찰기가 내 진영 위를 돈다 → 내 위치가 발각됨
@@ -678,42 +677,48 @@
     if (OFFY > 0) { ctx.fillStyle = '#1b1d16'; ctx.fillRect(0, -OFFY, W, OFFY); ctx.fillRect(0, H, W, OFFY + 1); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0;
     function card(y0, hgt, title, tankImg, hp, shield, f, ult, mine, col) {
-      var pad = 4, th = Math.max(30, Math.min(hgt * 0.42, (PW - 26) * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽(보드 쪽)에 크게, 오른쪽에 체력 세로 3칸. 아래 문장 자리가 남도록 높이 제한
-      ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 10px system-ui'; ctx.fillStyle = col; ctx.fillText(title, x0 + 6, y0); ctx.restore();
-      var ty = y0 + 14, tcx = x0 + pad + tw / 2, tcy = ty + th / 2;
+      var pad = 6, th = Math.max(30, Math.min(hgt * 0.4, (PW - 40) * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽에, 오른쪽엔 체력 막대 3단(패널 끝까지)
+      ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 11px system-ui'; ctx.fillStyle = col; ctx.shadowColor = '#000'; ctx.shadowBlur = 3; ctx.fillText(title, x0 + pad, y0); ctx.restore();
+      var ty = y0 + 16, tcx = x0 + pad + tw / 2, tcy = ty + th / 2;
       if (tankImg) fitImg(tankImg, tcx, tcy, tw, th, 1, 0);
       if (shield > 0) drawShield(tcx, tcy, shield, t, 0.9);
-      var px = Math.min(x0 + PW - 16, x0 + pad + tw + 10), ph = Math.min(16, (th - 8) / 3);   // 체력은 탱크 바로 오른쪽에
-      for (var i = 0; i < HP_MAX; i++) { var on = i < hp; ctx.fillStyle = on ? '#ff5050' : 'rgba(0,0,0,.55)'; rr(px, ty + (HP_MAX - 1 - i) * (ph + 4), 12, ph, 3); ctx.fill(); if (on) { ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(px + 2, ty + (HP_MAX - 1 - i) * (ph + 4) + 2, 8, ph * 0.35, 2); ctx.fill(); } }
+      var bx = x0 + pad + tw + 8, bw = Math.max(14, x0 + PW - 6 - bx), segH = Math.min(14, (th - 12) / 3), gap = 5, by = tcy - (segH * 3 + gap * 2) / 2;
+      for (var i = 0; i < HP_MAX; i++) { var on = i < hp, sy = by + (HP_MAX - 1 - i) * (segH + gap);
+        ctx.fillStyle = 'rgba(0,0,0,.55)'; rr(bx, sy, bw, segH, 4); ctx.fill();
+        if (on) { var hg = ctx.createLinearGradient(bx, sy, bx, sy + segH); hg.addColorStop(0, '#ff8a7a'); hg.addColorStop(1, '#d81f10'); ctx.fillStyle = hg; rr(bx + 1, sy + 1, bw - 2, segH - 2, 3); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.3)'; rr(bx + 3, sy + 2, bw - 6, segH * 0.3, 2); ctx.fill(); }
+        ctx.strokeStyle = on ? '#ff5050' : '#3a3e32'; ctx.lineWidth = 1; rr(bx, sy, bw, segH, 4); ctx.stroke(); }
+      if (shield > 0) { ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 9px system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText('방패 ' + shield, bx, by + segH * 3 + gap * 2 + 3); ctx.restore(); }
       // 문장 = 필살기 게이지(아래에서 차오름)
-      var E = Math.max(24, Math.min(PW - 12, hgt - th - 36)), ex = x0 + PW / 2, ey = ty + th + 8 + E / 2, full = ult >= ULT_MAX, fr = Math.min(1, ult / ULT_MAX);
+      var E = Math.max(24, Math.min(PW - 16, hgt - th - 44)), ex = x0 + PW / 2, ey = ty + th + 12 + E / 2, full = ult >= ULT_MAX, fr = Math.min(1, ult / ULT_MAX);
       if (f && IMG[f.img]) {
         var pulse = full ? 0.5 + 0.5 * Math.sin(t / 160) : 0;
-        ctx.save(); ctx.globalAlpha = 0.28; fitImg(IMG[f.img], ex, ey, E, E, 0.28, 0); ctx.restore();                           // 바탕: 흐린 문장
+        fitImg(IMG[f.img], ex, ey, E, E, 0.22, 0);                                                                                 // 바탕: 흐린 문장
         ctx.save(); ctx.beginPath(); ctx.rect(ex - E / 2, ey + E / 2 - E * fr, E, E * fr); ctx.clip(); fitImg(IMG[f.img], ex, ey, E, E, 1, 0); ctx.restore();   // 찬 만큼 또렷
-        if (full) { ctx.save(); ctx.shadowColor = f.col; ctx.shadowBlur = 14 + 10 * pulse; ctx.strokeStyle = f.col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ex, ey, E / 2 + 2, 0, 7); ctx.stroke(); ctx.restore(); }
-        else { ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex, ey, E / 2 + 2, 0, 7); ctx.stroke(); }
+        if (fr > 0 && fr < 1) { ctx.fillStyle = f.col; ctx.globalAlpha = 0.7; ctx.fillRect(ex - E / 2, ey + E / 2 - E * fr - 1, E, 2); ctx.globalAlpha = 1; }
+        if (full) { ctx.save(); ctx.shadowColor = f.col; ctx.shadowBlur = 14 + 10 * pulse; ctx.strokeStyle = f.col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ex, ey, E / 2 + 3, 0, 7); ctx.stroke(); ctx.restore(); }
+        else { ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex, ey, E / 2 + 3, 0, 7); ctx.stroke(); }
         ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = full ? '800 10px Orbitron, system-ui' : '600 9px system-ui'; ctx.fillStyle = full ? f.col : '#cfd6bf'; ctx.shadowColor = '#000'; ctx.shadowBlur = 3;
-        ctx.fillText(full ? (mine ? '▶ ' + f.skill : f.skill + ' 준비됨') : (f.name + ' ' + ult + '/' + ULT_MAX), ex, ey + E / 2 + 5); ctx.restore();
+        ctx.fillText(full ? (mine ? '▶ ' + f.skill : f.skill + ' 준비됨') : (f.skill + ' ' + ult + '/' + ULT_MAX), ex, ey + E / 2 + 7); ctx.restore();
       } else if (!f) { ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '600 9px system-ui'; ctx.fillStyle = '#6b7a52'; ctx.fillText('세력 ?', ex, ey); ctx.restore(); }
-      return { x: ex - E / 2 - 6, y: ey - E / 2 - 6, w: E + 12, h: E + 24 };
+      return { x: ex - E / 2 - 6, y: ey - E / 2 - 6, w: E + 12, h: E + 26 };
     }
     // 상대 카드
-    var oH = Math.min(150, BY + 36 - EY - 110);
+    var oH = Math.min(170, BY + 36 - EY - 120);
     card(EY + 6, oH, '상대 ' + (o.name || ''), IMG.u_tank_e, ohp, o.shield | 0, of, oult, false, '#ff8a7a');
     // 전선 게이지
-    var gy0 = EY + 6 + oH + 22, gh = BY + 40 - gy0 - 4, tot = EROWS + ROWS, rh = gh / tot, gx0 = x0 + 8, gw = PW - 16, lineRow = EROWS + G.adv, myPct = Math.round((ROWS - G.adv) / tot * 100);
+    ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 8, EY + 6 + oH + 6, PW - 16, 1);
+    var gy0 = EY + 6 + oH + 28, gh = BY + 40 - gy0 - 6, tot = EROWS + ROWS, rh = gh / tot, gx0 = x0 + 8, gw = PW - 16, lineRow = EROWS + G.adv, myPct = Math.round((ROWS - G.adv) / tot * 100);
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '700 9px system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('전선', x0 + PW / 2, gy0 - 13);
     ctx.fillStyle = 'rgba(255,80,70,.32)'; ctx.fillRect(gx0, gy0, gw, rh * lineRow); ctx.fillStyle = 'rgba(120,230,110,.32)'; ctx.fillRect(gx0, gy0 + rh * lineRow, gw, gh - rh * lineRow);
     for (var gi = 1; gi < tot; gi++) { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(gx0, gy0 + gi * rh, gw, 1); }
     ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(gx0, gy0 + rh * EROWS - 1, gw, 2);
     ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(gx0 - 3, gy0 + rh * lineRow); ctx.lineTo(gx0 + gw + 3, gy0 + rh * lineRow); ctx.stroke(); ctx.setLineDash([]);
     ctx.strokeStyle = '#4a4e40'; ctx.lineWidth = 1; ctx.strokeRect(gx0, gy0, gw, gh);
-    var ts = Math.min(gw * 0.55, rh * 2.4);
-    if (IMG.u_tank_e) fitImg(IMG.u_tank_e, x0 + PW / 2, gy0 + rh * 1.5, ts, rh * 2.6, 0.9, 0);
-    if (IMG.u_tank_p) fitImg(IMG.u_tank_p, x0 + PW / 2, gy0 + gh - rh * 1.5, ts, rh * 2.6, 0.9, 0);
+    var ts = Math.min(gw * 0.4, rh * 2.2);
+    if (IMG.u_tank_e) fitImg(IMG.u_tank_e, x0 + PW / 2, gy0 + rh * 1.3, ts, rh * 2.2, 0.85, 0);
+    if (IMG.u_tank_p) fitImg(IMG.u_tank_p, x0 + PW / 2, gy0 + gh - rh * 1.3, ts, rh * 2.2, 0.85, 0);
     ctx.font = '800 10px Orbitron, system-ui'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#000';
-    var oy1 = gy0 + rh * lineRow / 2 + rh * 1.2, my1 = gy0 + rh * lineRow + (gh - rh * lineRow) / 2 - rh * 1.2;
+    var oy1 = gy0 + rh * 2.6 + (rh * lineRow - rh * 2.6) / 2, my1 = gy0 + rh * lineRow + (gh - rh * lineRow - rh * 2.6) / 2;
     ctx.strokeText((100 - myPct) + '%', x0 + PW / 2, oy1); ctx.fillStyle = '#ffb3a8'; ctx.fillText((100 - myPct) + '%', x0 + PW / 2, oy1);
     ctx.strokeText(myPct + '%', x0 + PW / 2, my1); ctx.fillStyle = '#c8f5b0'; ctx.fillText(myPct + '%', x0 + PW / 2, my1);
     ctx.restore();
