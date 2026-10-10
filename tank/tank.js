@@ -467,14 +467,16 @@
     ctx.save(); ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip(); drawForest(1); ctx.restore();   // 전선 너머 = 숲
     var plane = null;
     if (scouting) { var sp0 = 1 - (G.scoutUntil - t) / SCOUT_MS, fh0 = fogH(); plane = [-70 + (W + 140) * sp0, EY + fh0 * 0.5 + Math.sin(sp0 * Math.PI * 2.2) * fh0 * 0.32]; }
-    ctx.save(); ctx.globalAlpha = scouting ? 0.74 : 0.84;
-    ctx.drawImage(fogC, 0, ((t / 60) % S) | 0, COLS * S, fogH(), 0, EY, COLS * S, fogH());
-    if (IMG.fog_a && IMG.fog_b) {
-      ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip(); ctx.globalAlpha = scouting ? 0.25 : 0.5;
-      for (var fi = 0; fi < 7; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = 260 + (fi % 3) * 60, fx0 = ((fi * 173 + t / (60 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 20 + (fi * 67) % Math.max(40, fogH() - 40); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); }
-    }
-    ctx.restore();
-    if (plane) {                                                             // 정찰기 아래는 숲이 또렷하게(서치라이트)
+    if (!G.vs) {                                                             // 혼자 모드만 안개. 대전은 숲 지형이 또렷하고 유닛만 숨는다
+      ctx.save(); ctx.globalAlpha = scouting ? 0.74 : 0.84;
+      ctx.drawImage(fogC, 0, ((t / 60) % S) | 0, COLS * S, fogH(), 0, EY, COLS * S, fogH());
+      if (IMG.fog_a && IMG.fog_b) {
+        ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip(); ctx.globalAlpha = scouting ? 0.25 : 0.5;
+        for (var fi = 0; fi < 7; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = 260 + (fi % 3) * 60, fx0 = ((fi * 173 + t / (60 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 20 + (fi * 67) % Math.max(40, fogH() - 40); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); }
+      }
+      ctx.restore();
+    } else { ctx.fillStyle = 'rgba(10,14,8,' + (scouting ? 0.12 : 0.3) + ')'; ctx.fillRect(0, EY, W, fogH()); }   // 대전: 상대 땅은 살짝 어둡게만
+    if (plane && !G.vs) {                                                    // 정찰기 아래는 숲이 또렷하게(서치라이트)
       ctx.save(); ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip();
       ctx.beginPath(); ctx.arc(plane[0], plane[1], S * 1.9, 0, 7); ctx.clip(); drawForest(0.85);
       var sl = ctx.createRadialGradient(plane[0], plane[1], S * 0.6, plane[0], plane[1], S * 1.9); sl.addColorStop(0, 'rgba(200,255,200,.12)'); sl.addColorStop(1, 'rgba(0,0,0,.55)'); ctx.fillStyle = sl; ctx.fillRect(plane[0] - S * 2, plane[1] - S * 2, S * 4, S * 4);
@@ -496,7 +498,7 @@
     ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(0, BYY(G.adv)); ctx.lineTo(W, BYY(G.adv)); ctx.stroke(); ctx.setLineDash([]);
     // 적 병사 (정찰 중에만 보임) · 내 보병(대전, 항상 보임) · 상대 탱크(대전, 정찰 중·발사 직후)
     var cj = G.clash && t < G.clash.until ? 1 : 0;                                   // 교전 중엔 병사들이 떨림
-    if (scouting || G.vs) G.soldiers.forEach(function (e, i) { var ss = G.vs ? FS * 1.15 : FS * 1.05; ctx.save(); ctx.globalAlpha = scouting ? 1 : 0.5; drawSoldier(BX(e.x) + (S - ss) / 2 + Math.sin(t / 170 + i * 2) * 2 + cj * (Math.random() - 0.5) * 6, slotY(e.d) - ss / 2 + Math.abs(Math.sin(t / 140 + i)) * -3 + cj * (Math.random() - 0.5) * 4, ss); ctx.restore(); });
+    if (scouting || G.vs) G.soldiers.forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return; var ss = G.vs ? FS * 1.15 : FS * 1.05; ctx.save(); ctx.globalAlpha = 1; /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만 */ drawSoldier(BX(e.x) + (S - ss) / 2 + Math.sin(t / 170 + i * 2) * 2 + cj * (Math.random() - 0.5) * 6, slotY(e.d) - ss / 2 + Math.abs(Math.sin(t / 140 + i)) * -3 + cj * (Math.random() - 0.5) * 4, ss); ctx.restore(); });
     if (G.vs) {
       G.mySol.forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return; drawSoldier(BX(e.x) + (S - ss) / 2 + Math.sin(t / 190 + i) * 2 + cj * (Math.random() - 0.5) * 6, rowC(ry) - ss / 2 + Math.abs(Math.sin(t / 150 + i)) * -3, ss, true); });
       var liveSee = G.oppTank && (scouting || (G.reveal && t < G.reveal.until));
