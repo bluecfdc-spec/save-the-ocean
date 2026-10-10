@@ -84,7 +84,7 @@
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
       missiles: [], fx: [],
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null,
-      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: 0, shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
+      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: ULT_MAX,   // 테스트: 필살기 게이지 가득 찬 채로 시작 (정식에선 0) shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     groundImg = null;

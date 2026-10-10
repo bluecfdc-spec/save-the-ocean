@@ -14,7 +14,7 @@ window.BOT = (function () {
   // ---------- 시작/종료 ----------
   function start() {
     stop(); active = true; window.NET = BOT;
-    T.newGame(true); bot = T.get(); bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 0; bot.shield = 0;   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
+    T.newGame(true); bot = T.get(); bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 7; bot.shield = 0;   // 테스트: CPU 는 줄 3개만 지우면 필살기   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
     T.newGame(true); me = T.get();
     known = null; nextTick = now() + 30000;
     T.applyLine(0, 30000);
