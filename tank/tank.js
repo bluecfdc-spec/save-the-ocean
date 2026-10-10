@@ -39,9 +39,9 @@
   // ---------- 상태 ----------
   var G = null;
   // ---------- 그림 (시안 시트에서 잘라낸 조각) ----------
-  var IMG = {}, IMG_LIST = ['blk_plain', 'blk_fuel', 'blk_scout', 'blk_missile', 'blk_inf', 'tank_front', 'enemy_turret', 'enemy_tank', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'fx_scout', 'fx_fuel', 'fx_missile', 'ui_warn'];
+  var IMG = {}, IMG_LIST = ['blk_plain', 'blk_fuel', 'blk_scout', 'blk_scout2', 'blk_missile', 'blk_inf', 'tank_front', 'enemy_turret', 'enemy_tank', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'fx_scout', 'fx_fuel', 'fx_missile', 'ui_warn'];
   IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/c_' + n + '.png?v=1'; });
-  var BLK_IMG = { 1: 'blk_plain', 2: 'blk_fuel', 3: 'blk_scout', 4: 'blk_missile', 5: 'blk_inf' };
+  var BLK_IMG = { 1: 'blk_plain', 2: 'blk_fuel', 3: 'blk_scout2', 4: 'blk_missile', 5: 'blk_scout' };   // 정찰 = 정찰기, 보병 = 파란 병사
   function fitImg(img, cx, cy, w, h, alpha, rot) {              // 비율 유지해서 (cx,cy) 중심, w×h 안에 맞춰 그림
     var r = Math.min(w / img.width, h / img.height), dw = img.width * r, dh = img.height * r;
     ctx.save(); if (alpha != null) ctx.globalAlpha = alpha; ctx.translate(cx, cy); if (rot) ctx.rotate(rot); ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh); ctx.restore();
@@ -270,7 +270,7 @@
   }
   function drawSoldier(px, py, s, mine) {
     if (!mine && IMG.enemy_turret) { fitImg(IMG.enemy_turret, px + s / 2, py + s / 2, s * 1.15, s * 1.1); return; }
-    if (mine && IMG.blk_inf) { fitImg(IMG.blk_inf, px + s / 2, py + s / 2, s * 0.9, s * 0.9); return; }
+    if (mine && IMG.blk_scout) { fitImg(IMG.blk_scout, px + s / 2, py + s / 2, s * 0.9, s * 0.9); return; }
     ctx.save(); ctx.translate(px + s / 2, py + s / 2);
     ctx.fillStyle = mine ? '#4f6a2e' : '#7a2a2a'; rr(-s * 0.16, -s * 0.05, s * 0.32, s * 0.4, 6); ctx.fill();
     ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(s * 0.14, s * 0.05); ctx.lineTo(s * 0.14, s * 0.44); ctx.stroke();
@@ -293,7 +293,16 @@
       for (var fi = 0; fi < 7; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = 260 + (fi % 3) * 60, fx0 = ((fi * 173 + t / (60 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 20 + (fi * 67) % Math.max(40, fogRows * S - 40); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); }
     }
     ctx.restore();
-    if (scouting) { ctx.fillStyle = 'rgba(120,255,140,' + (0.05 + 0.04 * Math.sin(t / 120)) + ')'; ctx.fillRect(0, EY, W, fogRows * S); }
+    if (scouting) {
+      ctx.fillStyle = 'rgba(120,255,140,' + (0.05 + 0.04 * Math.sin(t / 120)) + ')'; ctx.fillRect(0, EY, W, fogRows * S);
+      var sp = 1 - (G.scoutUntil - t) / SCOUT_MS, pxp = -60 + (W + 120) * sp, pyp = EY + 30 + Math.sin(sp * 6) * 10;   // 정찰기 왼쪽→오른쪽
+      ctx.save(); ctx.translate(pxp, pyp); ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = 'rgba(120,230,255,.35)'; ctx.beginPath(); ctx.arc(0, 0, 26, 0, 7); ctx.fill();
+      ctx.fillStyle = '#eaf7ff'; ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(4, -5); ctx.lineTo(3, 17); ctx.lineTo(-3, 17); ctx.lineTo(-4, -5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#aee0ff'; ctx.beginPath(); ctx.moveTo(-24, 6); ctx.lineTo(-3, -3); ctx.lineTo(3, -3); ctx.lineTo(24, 6); ctx.lineTo(23, 10); ctx.lineTo(-23, 10); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-10, 21); ctx.lineTo(-2, 13); ctx.lineTo(2, 13); ctx.lineTo(10, 21); ctx.lineTo(0, 19); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
     // 진격 경고
     var left = G.nextAdv - t;
     if (left < 6000 && !G.over) { ctx.fillStyle = 'rgba(255,40,40,' + (0.25 + 0.25 * Math.sin(t / 90)) + ')'; ctx.fillRect(0, BYY(G.adv), W, S); }
@@ -320,8 +329,9 @@
     // 미사일
     G.missiles.forEach(function (m) {
       var px = BX(m.x) + S / 2, py = BYY(m.y) + S / 2, p = Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(1, m.y0 - m.y1))), h = Math.sin(p * Math.PI);
-      ctx.fillStyle = 'rgba(0,0,0,' + (0.35 * (1 - h * 0.6)) + ')'; ctx.beginPath(); ctx.ellipse(px, py + 6, 10 + 10 * (1 - h), 5 + 3 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자
-      var lift = h * 46, sc = 1 + h * 0.9, tilt = (0.5 - p) * 0.5;
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.4 * (1 - h * 0.7)) + ')'; ctx.beginPath(); ctx.ellipse(px, py + 6, 6 + 14 * (1 - h), 3 + 5 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자(높이 올라갈수록 작고 옅게)
+      ctx.strokeStyle = 'rgba(255,120,60,' + (0.5 * h) + ')'; ctx.lineWidth = 2 + 6 * h; ctx.beginPath(); ctx.moveTo(px, py - h * 80 + S * 0.6 * (0.45 + h * 1.9)); ctx.lineTo(px, py - h * 80 + S * 0.6 * (0.45 + h * 1.9) + 30 + 40 * h); ctx.stroke();   // 꼬리 불꽃
+      var lift = h * 80, sc = 0.45 + h * 1.9, tilt = (0.5 - p) * 0.6;      // 멀리서 작게 → 가까이 크게 → 다시 작게 (원근)
       if (IMG.missile_up) fitImg(IMG.missile_up, px, py - lift, S * 0.55 * sc, S * 1.3 * sc, 1, tilt);
       else { ctx.save(); ctx.translate(px, py - lift); ctx.rotate(tilt); ctx.scale(sc, sc); ctx.fillStyle = 'rgba(255,170,60,.5)'; ctx.beginPath(); ctx.arc(0, 18, 10, 0, 7); ctx.fill(); ctx.fillStyle = '#5ab4ff'; rr(-6, -16, 12, 30, 6); ctx.fill(); ctx.restore(); }
     });
@@ -355,7 +365,7 @@
     function btn(b, icon, n, label, on) {
       var gg = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h); gg.addColorStop(0, on ? '#ffe284' : '#6b6f60'); gg.addColorStop(1, on ? '#e8a21a' : '#3e4138');
       rr(b.x, b.y, b.w, b.h, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke();
-      var bim = IMG[{ '🔭': 'blk_scout', '🚀': 'blk_missile', '🪖': 'blk_inf' }[icon]];
+      var bim = IMG[{ '🔭': 'blk_scout2', '🚀': 'blk_missile', '🪖': 'blk_scout' }[icon]];
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
       if (bim) fitImg(bim, b.x + 24, b.y + b.h / 2, b.h - 8, b.h - 8, on ? 1 : 0.5); else { ctx.font = '24px system-ui'; ctx.fillText(icon, b.x + 10, b.y + b.h / 2 + 1); }
       ctx.font = '800 22px Orbitron'; ctx.fillStyle = on ? '#2a1a00' : '#aaa'; ctx.fillText('×' + n, b.x + 44, b.y + b.h / 2 + 1);
