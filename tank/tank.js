@@ -249,7 +249,7 @@
     if (!G.vs || G.inf <= 0 || G.over) return;
     if (col == null) col = G.tank.x;
     G.inf--; G.sent++;
-    var d = 1; G.mySol.forEach(function (e) { if (e.x === col) d = Math.max(d, e.d + 1); }); G.mySol.push({ x: col, d: d });
+    var d = 1; G.mySol.forEach(function (e) { if (e.x === col) d = Math.max(d, e.d + 1); }); G.mySol.push({ x: col, d: d, runAt: now(), fromX: G.tank.x, fromY: G.tank.y });   // 탱크 해치에서 뛰어나가는 연출
     if (window.NET) NET.pub(true); sfx('send');
     G.fx.push({ t: 'pop', text: '보병 배치', x: BX(col) + S / 2, y: rowC(myRow(d)) - S * 0.6, at: now(), big: false });
   }
@@ -500,7 +500,15 @@
     var cj = G.clash && t < G.clash.until ? 1 : 0;                                   // 교전 중엔 병사들이 떨림
     if (scouting || G.vs) G.soldiers.forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return; var ss = G.vs ? FS * 1.15 : FS * 1.05; ctx.save(); ctx.globalAlpha = 1; /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만 */ drawSoldier(BX(e.x) + (S - ss) / 2 + Math.sin(t / 170 + i * 2) * 2 + cj * (Math.random() - 0.5) * 6, slotY(e.d) - ss / 2 + Math.abs(Math.sin(t / 140 + i)) * -3 + cj * (Math.random() - 0.5) * 4, ss); ctx.restore(); });
     if (G.vs) {
-      G.mySol.forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return; drawSoldier(BX(e.x) + (S - ss) / 2 + Math.sin(t / 190 + i) * 2 + cj * (Math.random() - 0.5) * 6, rowC(ry) - ss / 2 + Math.abs(Math.sin(t / 150 + i)) * -3, ss, true); });
+      G.mySol.forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return;
+        var dx = BX(e.x) + (S - ss) / 2, dy = rowC(ry) - ss / 2, bob = Math.abs(Math.sin(t / 150 + i)) * -3;
+        if (e.runAt && t - e.runAt < 900) {                                                    // 탱크에서 튀어나와 최전방까지 달려감
+          var rp = t - e.runAt, sx = BX(e.fromX) + (S - ss) / 2, sy = BYY(e.fromY) + (S - ss) / 2;
+          if (rp < 220) { var hop = rp / 220; dx = sx; dy = sy - Math.sin(hop * Math.PI) * 26; bob = 0; ss *= 0.6 + 0.4 * hop; }          // 해치에서 폴짝
+          else { var q = Math.min(1, (rp - 220) / 680); q = 1 - (1 - q) * (1 - q); dx = sx + (dx - sx) * q; dy = sy + (dy - sy) * q; bob = -Math.abs(Math.sin(rp / 45)) * 7;
+            ctx.fillStyle = 'rgba(120,90,50,.35)'; for (var di = 0; di < 3; di++) { ctx.beginPath(); ctx.arc(dx + ss / 2 - di * 8 + (Math.random() - 0.5) * 4, dy + ss - 2 + di * 2, 3 + di, 0, 7); ctx.fill(); } }   // 흙먼지
+        } else dx += Math.sin(t / 190 + i) * 2 + cj * (Math.random() - 0.5) * 6;
+        drawSoldier(dx, dy + bob, ss, true); });
       var liveSee = G.oppTank && (scouting || (G.reveal && t < G.reveal.until));
       if (!liveSee && G.lastSeen) {                                            // 마지막으로 확인된 상대 탱크 자리(잔상) — 다음 정찰/발사까지 남는다
         var ls = G.lastSeen, lx = BX(COLS - 1 - ls.x) + S / 2, lyy = rowC(-1 - ls.y), ago = Math.floor((t - ls.t) / 1000);
@@ -679,7 +687,7 @@
     if (OFFY > 0) { ctx.fillStyle = '#1b1d16'; ctx.fillRect(0, -OFFY, W, OFFY); ctx.fillRect(0, H, W, OFFY + 1); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0;
     function card(y0, hgt, title, tankImg, hp, shield, f, ult, mine, col) {
-      var pad = 6, th = Math.max(30, Math.min(hgt * 0.4, (PW - 40) * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽에, 오른쪽엔 체력 막대 3단(패널 끝까지)
+      var pad = 6, th = Math.max(30, Math.min(hgt * 0.4, (PW - 20) * 0.58 * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽에, 오른쪽엔 체력 막대 3단(패널 끝까지)
       ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 11px system-ui'; ctx.fillStyle = col; ctx.shadowColor = '#000'; ctx.shadowBlur = 3; ctx.fillText(title, x0 + pad, y0); ctx.restore();
       var ty = y0 + 16, tcx = x0 + pad + tw / 2, tcy = ty + th / 2;
       if (tankImg) fitImg(tankImg, tcx, tcy, tw, th, 1, 0);
@@ -726,7 +734,7 @@
     ctx.restore();
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0 + 8, BY + 44, PW - 16, 1);
     // 내 카드 (문장 = 필살기 버튼)
-    var mH = Math.min(230, HY - (BY + 54) - 40);
+    var mH = HY - (BY + 54) - 64;                                       // 내 카드는 패널 바닥까지(문장이 크게)
     ULTB = card(BY + 54, mH, '나 · ' + fac().name, IMG.u_tank_p, G.tank.hp, G.shield, fac(), G.ult, true, '#9be37a');
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '500 8px system-ui'; ctx.fillStyle = '#8a9477';
     wrap(fac().desc, PW - 10).forEach(function (l, i) { ctx.fillText(l, x0 + PW / 2, ULTB.y + ULTB.h + 8 + i * 11); }); ctx.restore();
