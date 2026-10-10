@@ -42,8 +42,8 @@
   // ---------- 상태 ----------
   var G = null;
   // ---------- 그림 (시안 시트에서 잘라낸 조각) ----------
-  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'b_plain', 'b_fuel', 'b_scout', 'b_missile', 'b_inf', 'b_ground', 'b_forest', 'missile_up', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
-  IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (n.indexOf('u_') === 0 || n.indexOf('b_') === 0 ? '' : 'c_') + n + '.png?v=3'; });
+  var IMG = {}, IMG_LIST = ['u_tank_p', 'u_tank_e', 'u_soldier_e', 'u_soldier_p', 'u_plane', 'b_plain', 'b_fuel', 'b_scout', 'b_missile', 'b_inf', 'b_ground', 'm_big', 'm_down', 'boom', 'fx_line', 'fog_a', 'fog_b', 'ui_warn', 'ui_cross'];
+  IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (/^(u|b|m)_/.test(n) ? '' : 'c_') + n + '.png?v=3'; });
   var BLK_IMG = { 1: 'b_plain', 2: 'b_fuel', 3: 'b_scout', 4: 'b_missile', 5: 'b_inf' };   // 정찰 = 정찰기, 보병 = 파란 병사
   function fitImg(img, cx, cy, w, h, alpha, rot) {              // 비율 유지해서 (cx,cy) 중심, w×h 안에 맞춰 그림
     var r = Math.min(w / img.width, h / img.height), dw = img.width * r, dh = img.height * r;
@@ -74,7 +74,6 @@
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
-    G.terrain = []; for (var ty = 0; ty < ROWS; ty++) { G.terrain.push([]); for (var tx = 0; tx < COLS; tx++) G.terrain[ty].push(Math.random() < 0.22 ? 1 : 0); }   // 숲 타일 22%
     groundImg = null;
     G.tray = [makePiece(), makePiece(), makePiece()];      // 모드가 정해진 뒤 다시 뽑음(대전이면 보병 자원 포함)
     if (!G.vs) spawnFront();
@@ -212,7 +211,7 @@
     // 미사일
     var dt = 1 / 60, fr = front();
     G.missiles = G.missiles.filter(function (m) {
-      m.y -= 11 * dt;
+      m.y = m.y0 - (m.y0 - m.y1) * Math.min(1, (t - m.at) / 1000);   // 거리와 상관없이 1초 비행(곡사)
       var ty = m.target ? (G.vs ? m.y1 : G.adv - m.target.d) : -99;
       if (G.vs && !m.target && m.y <= m.y1) {                         // 대전: 병사 없는 칸/상대 진영에 착탄
         var pyv = slotY(m.dist); G.fx.push({ t: 'boomv', px: BX(m.x) + S / 2, py: pyv, at: t, big: m.dist >= 5 }); sfx('boom', false);
@@ -321,7 +320,7 @@
     ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, W, H);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 칸마다 흙 타일
-    if (IMG.b_ground && IMG.b_forest) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(G.terrain[gy][gx] ? IMG.b_forest : IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
+    if (IMG.b_ground) { if (!groundImg) { groundImg = document.createElement('canvas'); groundImg.width = COLS * S; groundImg.height = ROWS * S; var gg = groundImg.getContext('2d'); for (var gy = 0; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) gg.drawImage(IMG.b_ground, gx * S, gy * S, S, S); gg.fillStyle = 'rgba(0,0,0,.18)'; gg.fillRect(0, 0, groundImg.width, groundImg.height); } ctx.drawImage(groundImg, 0, BY); }
     else ctx.drawImage(ground, 0, BY);
     // 안개(적 진영 + 점령된 줄)
     var fogRows = EROWS + G.adv, scouting = t < G.scoutUntil, fr = front();
@@ -403,18 +402,18 @@
     }
     // 미사일
     G.missiles.forEach(function (m) {
+      // 곡사포를 위에서 내려다봄: 발사 직후 작게 → 꼭대기에서 가장 크게(카메라에 가까움) → 떨어지며 작아짐.
+      // 오르는 동안은 꼬리 불꽃이 아래로(m_up), 정점을 지나면 기수가 땅을 향해 꽂히는 모습(m_down, 불꽃이 위)으로 바뀜.
       var p = Math.max(0, Math.min(1, (m.y0 - m.y) / Math.max(0.01, m.y0 - m.y1))), h = Math.sin(p * Math.PI), px = BX(m.x) + S / 2;
-      var py = G.vs ? (BYY(m.y0) + S / 2) + (slotY(m.dist) - (BYY(m.y0) + S / 2)) * p : BYY(m.y) + S / 2;
-      ctx.fillStyle = 'rgba(0,0,0,' + (0.4 * (1 - h * 0.7)) + ')'; ctx.beginPath(); ctx.ellipse(px + h * 28, py + 8 + h * 10, 6 + 10 * (1 - h), 3 + 4 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자: 높이 오를수록 옆으로 비껴가고 작아짐
-      // (꼬리 불꽃은 기수 뒤 번짐으로 대체)
-      var lift = h * 60, sc = 0.45 + h * 1.9, tilt = (0.5 - p) * 0.5, flat = 1 - h * 0.72;   // 위에서 보면: 오를수록 커지고 기수 쪽만 보여 납작해짐
-      if (IMG.missile_up) {
-        ctx.save(); ctx.translate(px, py - lift); ctx.rotate(tilt); ctx.scale(1, flat);
-        var gl = ctx.createRadialGradient(0, 0, 0, 0, 0, S * 0.5 * sc); gl.addColorStop(0, 'rgba(255,140,60,' + (0.45 * h) + ')'); gl.addColorStop(1, 'rgba(255,80,30,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, S * 0.5 * sc, 0, 7); ctx.fill();   // 뒤쪽 화염 번짐(기수 방향에서 봄)
-        fitImg(IMG.missile_up, 0, 0, S * 0.55 * sc, S * 1.3 * sc, 1, 0);
-        ctx.restore();
-      }
-      else { ctx.save(); ctx.translate(px, py - lift); ctx.rotate(tilt); ctx.scale(sc, sc); ctx.fillStyle = 'rgba(255,170,60,.5)'; ctx.beginPath(); ctx.arc(0, 18, 10, 0, 7); ctx.fill(); ctx.fillStyle = '#5ab4ff'; rr(-6, -16, 12, 30, 6); ctx.fill(); ctx.restore(); }
+      var gy0 = BYY(m.y0) + S / 2, gy1 = G.vs ? slotY(m.dist) : BYY(m.y1) + S / 2, gy = gy0 + (gy1 - gy0) * p;   // 땅 위의 위치(그림자 자리)
+      var sc = 0.3 + h * 1.05, lift = h * 60, ry = gy - lift;
+      m.trail = m.trail || []; if (!m.lastT || t - m.lastT > 40) { m.trail.push({ x: px + (Math.random() - 0.5) * 4, y: ry + 10 * sc, s: sc, at: t }); m.lastT = t; }
+      m.trail = m.trail.filter(function (q) { return t - q.at < 700; });
+      m.trail.forEach(function (q) { var a = 1 - (t - q.at) / 700; ctx.fillStyle = 'rgba(150,140,130,' + (0.35 * a) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, (6 + (1 - a) * 14) * q.s, 0, 7); ctx.fill(); });   // 연기 꼬리
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.45 - h * 0.3) + ')'; ctx.beginPath(); ctx.ellipse(px + h * 22, gy + 6 + h * 8, 5 + 9 * (1 - h), 3 + 4 * (1 - h), 0, 0, 7); ctx.fill();   // 땅 그림자
+      var img = p < 0.55 ? IMG.m_big : IMG.m_down;   // 오를 땐 큰 해상도 그림(m_big), 정점 지나면 기수가 땅을 향함(m_down)
+      if (img) fitImg(img, px, ry, S * 0.7 * sc, S * 1.7 * sc, 1, (0.5 - p) * 0.25);
+      else { ctx.fillStyle = '#c33'; ctx.beginPath(); ctx.arc(px, ry, 8 * sc, 0, 7); ctx.fill(); }
     });
     // 효과
     G.fx.forEach(function (f) {
