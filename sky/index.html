@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05030f">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>스페이스 서바이버</title>
+<title>SKY RUMBLE (test)</title>
 <meta property="og:title" content="스페이스 서바이버 SPACE SURVIVOR">
 <meta property="og:description" content="몇 초나 버틸 수 있나요? 국기를 걸고 겨루는 우주 회피 게임">
 <meta property="og:image" content="https://bluecfdc-spec.github.io/save-the-ocean/sky/title.jpg">
@@ -113,11 +113,23 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #overlay p em{font-style:normal;color:var(--amber)}
 #overlay .big{font:800 34px var(--display);color:var(--cyan);font-variant-numeric:tabular-nums}
 #pick .lbl{font:800 13px var(--display);letter-spacing:.16em;color:var(--cyan);margin-bottom:8px}
-#flags{display:grid;grid-template-columns:repeat(5,44px);gap:6px 10px;justify-content:center}
-#flags button{width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--panel-edge);
-  background:#0c1c28;font-size:26px;line-height:1;cursor:pointer;
-  font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif}
-#flags button[aria-pressed="true"]{border-color:var(--cyan);background:#0b3946;box-shadow:0 0 14px var(--cyan)}
+#flags,#mpFlags{display:grid;grid-template-columns:repeat(3,92px);gap:8px 12px;justify-content:center}
+#flags button,#mpFlags button{width:92px;padding:8px 4px 6px;border-radius:14px;border:2px solid var(--panel-edge);
+  background:#0c1c28;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#cfe6ff;font:700 13px var(--display);opacity:.75}
+#flags button img,#mpFlags button img{width:56px;height:56px}
+#flags button small,#mpFlags button small{font:500 10px var(--display);color:#8aa3b8}
+#flags button[aria-pressed="true"],#mpFlags button[aria-pressed="true"]{opacity:1;border-color:var(--cyan);background:#0b3946;box-shadow:0 0 14px var(--cyan);color:#fff}
+#flags button[aria-pressed="true"][id$=surge]{border-color:#4fd8ff;box-shadow:0 0 16px #4fd8ff88}
+#flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
+#flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
+#pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
+#ult{position:absolute;left:14px;bottom:14px;width:74px;height:74px;border-radius:50%;padding:0;border:3px solid #2a3a48;background:#0c1c28;cursor:pointer;z-index:3;touch-action:none;overflow:hidden}
+#ult img{width:100%;height:100%;object-fit:cover;opacity:.35;display:block}
+#ult .fill{position:absolute;left:0;right:0;bottom:0;height:0%;overflow:hidden}
+#ult .fill img{position:absolute;left:0;bottom:0;opacity:1}
+#ult.on{border-color:#ffd451;box-shadow:0 0 18px #ffd451aa;animation:ultp 1s ease-in-out infinite}
+#ult .lb{position:absolute;left:0;right:0;bottom:4px;text-align:center;font:800 9px var(--display);color:#fff;text-shadow:0 0 4px #000}
+@keyframes ultp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #title{position:absolute;inset:0;z-index:10;background:var(--void);cursor:pointer;display:flex;align-items:center;justify-content:center}
 #title img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
 #title .fb{text-align:center;font-family:var(--display)}
@@ -241,21 +253,23 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </div>
     <div class="hint">PILOT CONTROL · TOUCH &amp; MOVE</div>
     <div id="mark" hidden></div>
+    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/f_solar.png" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/f_solar.png" alt=""></div><div class="lb" id="ultLb">0%</div></button>
   </div>
   <div id="overlay">
     <div id="homeBlur"></div>
     <img id="homeBg" src="home.jpg" alt="" onerror="this.dataset.bad=1;this.hidden=true;if(window.__home)window.__home()">
     <h1 id="ovT">SPACE SURVIVOR</h1>
     <div class="big" id="ovS" hidden>0</div>
-    <p id="ovP">날아오는 미사일을 전부 피하세요.<br>몇 초를 버티는지가 기록입니다.<br>한 번 맞으면 끝입니다.</p>
+    <p id="ovP">날아오는 탄을 전부 피하세요. 몇 초를 버티는지가 기록입니다.<br>버티면 필살기 게이지가 차요 — 왼쪽 아래 문장을 누르세요.</p>
     <p id="gap" hidden></p>
     <div id="pick">
-      <div class="lbl">CHOOSE YOUR FLAG</div>
-      <div id="flags" role="group" aria-label="국기 선택"></div>
+      <div class="lbl">CHOOSE YOUR FACTION</div>
+      <div id="flags" role="group" aria-label="세력 선택"></div>
+      <p id="facDesc" class="fd"></p>
     </div>
     <button id="go" type="button">출격</button>
     <button id="mpB" type="button">멀티플레이</button>
-    <button id="chg" type="button" hidden>국가 바꾸기</button>
+    <button id="chg" type="button" hidden>세력 바꾸기</button>
     <div id="res" hidden></div>
     <button id="rankB" type="button">스코어보드</button>
     <button id="homeB" type="button" hidden>처음으로</button>
@@ -269,7 +283,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <button id="regB" type="button">기록 등록</button>
     </div>
     <p id="regMsg" hidden></p>
-    <h3>NATIONS · 국가별 최고 기록</h3>
+    <h3>FACTIONS · 세력별 최고 기록</h3>
     <div class="rows" id="natL"></div>
     <button id="natMore" type="button">전체 국가 보기</button>
     <h3>PILOTS · 개인 순위</h3>
@@ -291,8 +305,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <header><h2 id="mpTitle"></h2><button class="mpb" id="mpLeave" type="button">나가기</button></header>
       <h3>PILOTS</h3>
       <div class="rows" id="mpPl"></div>
-      <h3>국기를 고르면 준비 완료</h3>
-      <div id="mpFlags" role="group" aria-label="국기 선택"></div>
+      <h3>세력을 고르면 준비 완료</h3>
+      <div id="mpFlags" role="group" aria-label="세력 선택"></div>
       <div id="mpMsg"></div>
       <button class="mpb" id="mpStart" type="button">게임 시작</button>
       <button class="mpb" id="mpInv" type="button">친구 초대 (링크 보내기)</button>
@@ -303,7 +317,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='42';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='43';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -319,19 +333,28 @@ $('bestV').textContent=best.toFixed(2);
 const SHIP_V=180,LEASH=45;         // 비행기 최고 속도(px/초), 손가락이 앞서갈 수 있는 최대 거리
 
 // 국기 선택 (5열 x 4행 = 20개국)
-const FLAGS=['KR','US','JP','CN','GB','DE','FR','IT','ES','CA','AU','BR','IN','MX','ID','TR','SA','AR','ZA','RU'];
-let flag='KR';
-try{const f=localStorage.getItem('stargraze_flag');if(FLAGS.includes(f))flag=f}catch(e){}
-function flagOf(c){return String.fromCodePoint(0x1F1A5+c.charCodeAt(0),0x1F1A5+c.charCodeAt(1))}
-FLAGS.forEach(c=>{const b=document.createElement('button');b.type='button';b.id='flag-'+c;b.textContent=flagOf(c);
-  b.setAttribute('aria-label',c);b.setAttribute('aria-pressed',c===flag);
-  b.addEventListener('click',()=>{flag=c;try{localStorage.setItem('stargraze_flag',c)}catch(e){}
-    [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x===b))});
+// 세력 (Rumble 시리즈 공통): 서지·게일·솔라. 예전 국기 자리를 그대로 세력이 쓴다
+const FLAGS=['surge','gale','solar'];
+const FAC={surge:{name:'서지',skill:'격류',col:'#4fd8ff',glow:'rgba(79,216,255,',desc:'6초 동안 모든 탄이 느려진다',sym:'🌊'},
+  gale:{name:'게일',skill:'뇌격',col:'#c58bff',glow:'rgba(197,139,255,',desc:'주변의 탄을 전부 날려 버린다',sym:'⚡'},
+  solar:{name:'솔라',skill:'태양 방패',col:'#ffd451',glow:'rgba(255,212,81,',desc:'10초 동안 한 발을 막아 주는 방패',sym:'☀'}};
+const ULT_FILL=12;   // 게이지가 차는 데 걸리는 초
+let flag=(window.TANK_FAC||'solar');
+try{const f=localStorage.getItem('tank_fac');if(FLAGS.includes(f))flag=f}catch(e){}
+function flagOf(c){return FAC[c]?FAC[c].sym:''}
+const FIMG={};FLAGS.forEach(c=>{const i=new Image();i.onload=()=>{FIMG[c]=i};i.src='assets/f_'+c+'.png'});
+function facBtn(c,id){const b=document.createElement('button');b.type='button';b.id=id+c;const im=document.createElement('img');im.src='assets/f_'+c+'.png';im.alt='';b.appendChild(im);
+  const sp=document.createElement('span');sp.textContent=FAC[c].name;b.appendChild(sp);const sm=document.createElement('small');sm.textContent=FAC[c].skill;b.appendChild(sm);b.setAttribute('aria-label',FAC[c].name);return b}
+FLAGS.forEach(c=>{const b=facBtn(c,'flag-');b.setAttribute('aria-pressed',c===flag);
+  b.addEventListener('click',()=>{flag=c;try{localStorage.setItem('tank_fac',c)}catch(e){}
+    [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('facDesc').textContent=FAC[c].name+' · '+FAC[c].skill+' — '+FAC[c].desc});
   $('flags').appendChild(b)});
 
 // 국기 이모지를 따로 그려 실제 그림 영역을 재고, 그 정중앙을 쓴다 (기기마다 글자 위치가 달라 잘리는 문제 방지)
 const flagCache={};
 function flagImg(c){
+  if(FIMG[c])return {c:FIMG[c],x:0,y:0,w:FIMG[c].width,h:FIMG[c].height};
+  if(!FAC[c])return null;
   if(flagCache[c]!==undefined)return flagCache[c];
   const S=160,cn=document.createElement('canvas');cn.width=cn.height=S;
   const g=cn.getContext('2d',{willReadFrequently:true});
@@ -344,6 +367,7 @@ function flagImg(c){
   return flagCache[c]=x1<0?null:{c:cn,x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
 }
 let level=0,spd=1,nears=[],nearT=-1,trail=[];
+const ult={g:0,shield:0,shieldUntil:0,slowUntil:0,flashT:0};
 
 function resize(){
   dpr=Math.min(window.devicePixelRatio||1,2);
@@ -371,6 +395,7 @@ function paintBg(){
 function reset(){
   trail=[];nears=[];nearT=-1;patT=3;queue=[];level=0;spd=1;objs=[];pops=[];parts=[];score=0;graze=0;time=0;spawnT=.6;waveT=12;
   ship={x:W/2,y:H/2,a:-Math.PI/2,mv:0};tgt.x=ship.x;tgt.y=ship.y;
+  ult.g=0;ult.shield=0;ult.shieldUntil=0;ult.slowUntil=0;ult.flashT=0;ultUi();
 }
 function rock(r){const p=[];const n=9;for(let i=0;i<n;i++)p.push(.7+Math.random()*.35);return p}
 function spawn(k){
@@ -434,13 +459,20 @@ function update(dt){
   Music.tempo(Math.min(2,lv));               // 30초, 60초를 넘기면 음악이 한 단계씩 빨라진다
   if(lv>level){level=lv;spawn(6)} // 30초마다 저격탄 한 발
 
+  // 필살기 게이지: 버틴 시간으로 찬다 (효과가 도는 동안은 안 참)
+  const busy=time<ult.slowUntil||ult.shield>0;
+  if(!busy&&ult.g<1){ult.g=Math.min(1,ult.g+dt/ULT_FILL);if(ult.g>=1)Music.beep()}
+  if(ult.shield>0&&time>ult.shieldUntil)ult.shield=0;
+  if(ult.flashT>0)ult.flashT-=dt;
+  spd=time<ult.slowUntil?.45:1;
+  ultUi();
   let near=1e9;
   for(let i=objs.length-1;i>=0;i--){
     const o=objs[i];o.x+=o.vx*spd*dt;o.y+=o.vy*spd*dt;
     if(o.x<-M-80||o.x>W+M+80||o.y<-M-80||o.y>H+M+80){objs.splice(i,1);continue}
     const d=Math.hypot(o.x-ship.x,o.y-ship.y),hit=(o.rock?o.r*.85:o.r)+5;
     if(d-hit<near)near=d-hit;
-    if(d<hit){die();return}
+    if(d<hit){if(ult.shield>0){ult.shield=0;objs.splice(i,1);rings.push({x:ship.x,y:ship.y,t:0,m:70});pops.push({x:ship.x,y:ship.y-20,t:0,s:'방패!'});Music.boom();continue}die();return}
     if(!o.g&&d<hit+12){o.g=true;if(time-nearT>.1){nearT=time;nears.push({t:0,a:Math.atan2(o.y-ship.y,o.x-ship.x),c:o.c});Music.blip()}} // 스침: 점수 없이 연출만
   }
   for(let i=pops.length-1;i>=0;i--){pops[i].t+=dt;if(pops[i].t>.8)pops.splice(i,1)}
@@ -470,6 +502,8 @@ function draw(dt){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(shakeT>0){shakeT-=dt;const q=shakeT/.3*9;ctx.fillStyle='#05030f';ctx.fillRect(0,0,W,H);ctx.translate((Math.random()-.5)*q,(Math.random()-.5)*q)}
   if(bg)ctx.drawImage(bg,0,0,W,H);
+  if(ult.flashT>0){ctx.fillStyle=(FAC[flag]||FAC.solar).glow+(ult.flashT*.6)+')';ctx.fillRect(0,0,W,H)}
+  if(time<ult.slowUntil&&state==='play'){ctx.fillStyle='rgba(40,120,255,.12)';ctx.fillRect(0,0,W,H)}
   ctx.lineCap='round';
   for(const o of objs){
     if(o.rock){
@@ -518,12 +552,14 @@ function draw(dt){
 // 국기 점 기체 (방향 없음). al<1 이면 반투명한 경쟁자
 function drawPlane(x,y,f,al){
   ctx.save();ctx.globalAlpha=al;ctx.translate(Math.round(x),Math.round(y));
-  const mine=al===1;   // 내 비행기만 형광 초록 테두리. 바깥 크기(반지름 9)와 판정은 그대로, 테두리는 안쪽으로 2px
+  const mine=al===1,fc=FAC[f]||FAC.solar;   // 내 비행기만 세력 색 후광. 바깥 크기(반지름 9)와 판정은 그대로
   if(mine){const pu=.75+.25*Math.sin(performance.now()/140),g=ctx.createRadialGradient(0,0,7,0,0,21);
-    g.addColorStop(0,'rgba(57,255,20,'+(.85*pu)+')');g.addColorStop(.45,'rgba(57,255,20,'+(.3*pu)+')');g.addColorStop(1,'rgba(57,255,20,0)');
+    g.addColorStop(0,fc.glow+(.85*pu)+')');g.addColorStop(.45,fc.glow+(.3*pu)+')');g.addColorStop(1,fc.glow+'0)');
     ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.fill();          // 네온 후광 (판정과 무관)
-    ctx.shadowColor='#39ff14';ctx.shadowBlur=14*dpr}
-  ctx.fillStyle=mine?'#5dff3a':'#fff';ctx.beginPath();ctx.arc(0,0,9,0,7);ctx.fill();ctx.shadowBlur=0;
+    ctx.shadowColor=fc.col;ctx.shadowBlur=14*dpr;
+    if(ult.shield>0){ctx.strokeStyle='#ffd451';ctx.lineWidth=3;ctx.shadowColor='#ffd451';ctx.beginPath();ctx.arc(0,0,16+Math.sin(performance.now()/90)*1.5,0,7);ctx.stroke()}   // 태양 방패
+    if(time<ult.slowUntil){ctx.strokeStyle='rgba(79,216,255,.7)';ctx.lineWidth=2;for(let k=0;k<3;k++){const r=18+((performance.now()/14+k*22)%66);ctx.globalAlpha=al*(1-(r-18)/66);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}ctx.globalAlpha=al}}   // 격류 물결
+  ctx.fillStyle=mine?fc.col:'#fff';ctx.beginPath();ctx.arc(0,0,9,0,7);ctx.fill();ctx.shadowBlur=0;
   ctx.beginPath();ctx.arc(0,0,mine?7:8,0,7);ctx.clip();
   const fi=flagImg(f);if(fi){const k=16/fi.h,w=fi.w*k;ctx.fillStyle='#fff';ctx.fillRect(-9,-9,18,18);ctx.drawImage(fi.c,fi.x,fi.y,fi.w,fi.h,-w/2,-8,w,16)}
   ctx.restore();
@@ -538,7 +574,7 @@ function boom(x,y){   // 폭발: 파편 70개 + 번지는 충격파 고리 2개 
   rings.push({x:x,y:y,t:0,m:95},{x:x,y:y,t:-.08,m:55});shakeT=.3;Music.boom();
 }
 function initCpus(){
-  const fl=FLAGS.filter(c=>c!==flag).sort(()=>Math.random()-.5).slice(0,4);
+  const fl=[0,1,2,3].map(()=>FLAGS[Math.random()*3|0]);
   rivals=fl.map((c,i)=>({id:'cpu'+i,flag:c,x:W/2+Math.cos(i*Math.PI/2+Math.PI/4)*26,y:H/2+Math.sin(i*Math.PI/2+Math.PI/4)*26,vx:0,vy:0,alive:true,cpu:true,
     dieAt:15*(i+1),wx:W/2,wy:H/2,wt:0}));
 }
@@ -644,6 +680,20 @@ const Music=(()=>{
       tone('square',96,t,.05,.07);tone('square',103,t+.04,.07,.06)}
   };
 })();
+function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
+  if(b.dataset.f!==flag){b.dataset.f=flag;$('ultBg').src=$('ultFg').src='assets/f_'+flag+'.png'}
+  const full=ult.g>=1;$('ultFill').style.height=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
+  $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?f.skill:Math.round(ult.g*100)+'%'}
+function useUlt(){
+  if(state!=='play'||ult.g<1||!ship)return;ult.g=0;ult.flashT=.5;Music.boom();
+  if(flag==='surge'){ult.slowUntil=time+6;pops.push({x:ship.x,y:ship.y-24,t:0,s:'격류!'})}
+  else if(flag==='gale'){let n=0;for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(Math.hypot(o.x-ship.x,o.y-ship.y)<170){objs.splice(i,1);n++;
+      const a=Math.atan2(o.y-ship.y,o.x-ship.x);parts.push({x:o.x,y:o.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,t:0,c:'#c58bff',s:5})}}
+    rings.push({x:ship.x,y:ship.y,t:0,m:170},{x:ship.x,y:ship.y,t:-.1,m:120});shakeT=.25;pops.push({x:ship.x,y:ship.y-24,t:0,s:'뇌격! '+n})}
+  else{ult.shield=1;ult.shieldUntil=time+10;pops.push({x:ship.x,y:ship.y-24,t:0,s:'태양 방패!'})}
+  ultUi();
+}
+$('ult').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();useUlt()});
 function start(){reset();initCpus();mpWon=false;countN=0;state='count';mp.startAt=Date.now()+mp.off+3000;$('overlay').hidden=true;Music.unlock();Music.launch()}   // 3,2,1 뒤에 시작
 $('snd').addEventListener('click',()=>{const o=Music.toggle();$('snd').style.opacity=o?1:.4;$('snd').setAttribute('aria-pressed',o);
   if(o&&state==='play')Music.start()});
@@ -691,8 +741,7 @@ const DB_URL="https://space-survivor-c7efe-default-rtdb.asia-southeast1.firebase
 const CFG={databaseURL:DB_URL,apiKey:"AIzaSyCdo9ftAg6FdHUd2M0EKbwANrtfm4qlP6w",authDomain:"space-survivor-c7efe.firebaseapp.com",
   projectId:"space-survivor-c7efe",storageBucket:"space-survivor-c7efe.firebasestorage.app",
   messagingSenderId:"926732488913",appId:"1:926732488913:web:07684bb42b37c4c1dbf5f0"};
-const NAMES={KR:'대한민국',US:'미국',JP:'일본',CN:'중국',GB:'영국',DE:'독일',FR:'프랑스',IT:'이탈리아',ES:'스페인',CA:'캐나다',
-  AU:'호주',BR:'브라질',IN:'인도',MX:'멕시코',ID:'인도네시아',TR:'튀르키예',SA:'사우디',AR:'아르헨티나',ZA:'남아공',RU:'러시아'};
+const NAMES={surge:'서지 SURGE',gale:'게일 GALE',solar:'솔라 SOLAR'};
 let db=null,rows=[],nat={},myId='',myName='',mySent=0,pending=0,natAll=false,loaded=false;
 try{myId=localStorage.getItem('ss_id')||'';myName=localStorage.getItem('ss_name')||'';mySent=+localStorage.getItem('ss_sent')||0}catch(e){}
 if(!myId){myId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
@@ -753,7 +802,7 @@ function renderBoard(){
   const order=FLAGS.slice().sort((x,y)=>((nat[y]&&nat[y].time)||-1)-((nat[x]&&nat[x].time)||-1));
   (natAll?order:order.slice(0,5)).forEach((c,i)=>{const n=nat[c];
     nl.appendChild(mkRow(n?i+1:'',flagOf(c),NAMES[c],n?n.name:'',n?n.time.toFixed(2):'-',(n&&i===0?'first':'')+(c===flag?' me':'')))});
-  $('natMore').textContent=natAll?'접기':'전체 국가 보기';
+  $('natMore').textContent=natAll?'접기':'전체 보기';
   rows.forEach((r,i)=>{pl.appendChild(mkRow(i+1,FLAGS.includes(r.flag)?flagOf(r.flag):'',r.name,'',Number(r.time).toFixed(2),(i===0?'first':'')+(r.id===myId?' me':'')))});
   $('bEmpty').hidden=rows.length>0;
   $('bEmpty').textContent=!db?'순위판에 연결할 수 없습니다.':loaded?'아직 등록된 기록이 없습니다. 첫 기록의 주인공이 되어 보세요.':'불러오는 중…';
@@ -800,7 +849,7 @@ function plain(){$('overlay').classList.remove('home','art');$('homeBlur').hidde
 function homeScreen(){
   state='ready';rivals=[];mpWon=false;
   const bad=$('homeBg').dataset.bad;
-  $('overlay').classList.add('home');$('overlay').classList.toggle('art',!bad);$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SPACE SURVIVOR';
+  $('overlay').classList.add('home');$('overlay').classList.toggle('art',!bad);$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SKY RUMBLE';
   $('ovS').hidden=true;$('res').hidden=true;$('gap').hidden=true;$('ovP').hidden=true;$('pick').hidden=true;$('chg').hidden=true;$('homeB').hidden=true;
   $('go').hidden=false;$('go').textContent='출격';$('mpB').hidden=false;$('rankB').hidden=false;
   $('overlay').hidden=false;layoutHome();
@@ -810,7 +859,7 @@ function showPick(){
   plain();$('ovT').hidden=true;$('ovS').hidden=true;$('res').hidden=true;$('gap').hidden=true;$('ovP').hidden=true;
   $('pick').hidden=false;$('chg').hidden=true;$('go').hidden=false;$('go').textContent='출격';$('mpB').hidden=true;$('rankB').hidden=true;
   $('homeB').hidden=false;$('homeB').textContent='뒤로';
-  [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x.id==='flag-'+flag));
+  [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x.id==='flag-'+flag));$('facDesc').textContent=FAC[flag].name+' · '+FAC[flag].skill+' — '+FAC[flag].desc;
   $('overlay').hidden=false;
 }
 ROOMS.forEach(r=>{const b=document.createElement('button');b.type='button';b.id='room-'+r[0];
@@ -895,20 +944,20 @@ function mpLeave(){
 function sorted(){return Object.keys(mp.players).sort((a,b)=>(mp.players[a].joined||0)-(mp.players[b].joined||0)||(a<b?-1:1))}
 function isHost(){return sorted()[0]===myId}
 function showRoom(){$('mp').hidden=false;$('mpList').hidden=true;$('mpRoom').hidden=false;renderRoom()}
-FLAGS.forEach(c=>{const b=document.createElement('button');b.type='button';b.id='mpflag-'+c;b.textContent=flagOf(c);b.setAttribute('aria-label',c);
-  b.addEventListener('click',()=>{if(!mp.ref)return;Music.unlock();flag=c;try{localStorage.setItem('stargraze_flag',c)}catch(e){}
+FLAGS.forEach(c=>{const b=facBtn(c,'mpflag-');
+  b.addEventListener('click',()=>{if(!mp.ref)return;Music.unlock();flag=c;try{localStorage.setItem('tank_fac',c)}catch(e){}
     mp.ref.child('players/'+myId+'/flag').set(c)});
   $('mpFlags').appendChild(b)});
 function renderRoom(){
   if(!mp.on||$('mpRoom').hidden||$('mp').hidden)return;
   const ids=sorted(),pl=$('mpPl');pl.textContent='';
   $('mpTitle').textContent=(ROOMS.find(r=>r[0]===mp.room)||['',''])[1];
-  const cnt={};ids.forEach(id=>{const f=mp.players[id].flag;if(f)cnt[f]=(cnt[f]||0)+1});
+  const cnt={};   // 같은 세력끼리 해도 된다
   ids.forEach((id,i)=>{const q=mp.players[id];
     pl.appendChild(mkRow(i===0?'★':'',q.flag?flagOf(q.flag):'',q.name||'',i===0?'방장':'',q.flag?(cnt[q.flag]>1?'국기 중복':'준비 완료'):'고르는 중',(id===myId?'me':'')+(q.flag&&cnt[q.flag]>1?' dup':'')))});
   const mine=(mp.players[myId]||{}).flag||'';
-  [...$('mpFlags').children].forEach(x=>{x.setAttribute('aria-pressed',x.id==='mpflag-'+mine);x.classList.toggle('dup',(cnt[x.id.slice(7)]||0)>1)});
-  const dup=Object.keys(cnt).some(f=>cnt[f]>1),allReady=ids.length>0&&ids.every(id=>mp.players[id].flag),host=isHost();
+  [...$('mpFlags').children].forEach(x=>{x.setAttribute('aria-pressed',x.id==='mpflag-'+mine)});
+  const dup=false,allReady=ids.length>0&&ids.every(id=>mp.players[id].flag),host=isHost();
   const playing=mp.meta.state==='play'&&!mp.ended;
   const ok=!dup&&allReady&&ids.length>=2&&!playing;
   $('mpMsg').classList.toggle('dup',dup&&!playing);
