@@ -624,7 +624,7 @@
       ctx.font = '800 20px Orbitron, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = G.msg.col || '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
       ctx.save(); ctx.translate(W / 2, by2); ctx.scale(1 + 0.08 * (1 - mIn), 1 + 0.08 * (1 - mIn)); ctx.fillText(G.msg.text, 0, 0); ctx.restore(); ctx.restore();
     }
-    drawHud(t); drawTray(t); drawPanel(t);
+    drawHud(t); drawTray(t); try { drawPanel(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(0, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
     if (G.dragInf) {
       var di = G.dragInf;
@@ -678,15 +678,15 @@
     if (OFFY > 0) { ctx.fillStyle = '#1b1d16'; ctx.fillRect(0, -OFFY, W, OFFY); ctx.fillRect(0, H, W, OFFY + 1); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0;
     function card(y0, hgt, title, tankImg, hp, shield, f, ult, mine, col) {
-      var pad = 4, tw = Math.min(PW - 26, hgt * 0.9), th = tw * 1.1;                   // 탱크: 왼쪽(보드 쪽)에 크게, 오른쪽에 체력 세로 3칸
+      var pad = 4, th = Math.max(30, Math.min(hgt * 0.42, (PW - 26) * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽(보드 쪽)에 크게, 오른쪽에 체력 세로 3칸. 아래 문장 자리가 남도록 높이 제한
       ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 10px system-ui'; ctx.fillStyle = col; ctx.fillText(title, x0 + 6, y0); ctx.restore();
       var ty = y0 + 14, tcx = x0 + pad + tw / 2, tcy = ty + th / 2;
       if (tankImg) fitImg(tankImg, tcx, tcy, tw, th, 1, 0);
       if (shield > 0) drawShield(tcx, tcy, shield, t, 0.9);
-      var px = x0 + PW - 16, ph = Math.min(16, (th - 8) / 3);
+      var px = Math.min(x0 + PW - 16, x0 + pad + tw + 10), ph = Math.min(16, (th - 8) / 3);   // 체력은 탱크 바로 오른쪽에
       for (var i = 0; i < HP_MAX; i++) { var on = i < hp; ctx.fillStyle = on ? '#ff5050' : 'rgba(0,0,0,.55)'; rr(px, ty + (HP_MAX - 1 - i) * (ph + 4), 12, ph, 3); ctx.fill(); if (on) { ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(px + 2, ty + (HP_MAX - 1 - i) * (ph + 4) + 2, 8, ph * 0.35, 2); ctx.fill(); } }
       // 문장 = 필살기 게이지(아래에서 차오름)
-      var E = Math.min(PW - 12, hgt - th - 30), ex = x0 + PW / 2, ey = ty + th + 8 + E / 2, full = ult >= ULT_MAX, fr = Math.min(1, ult / ULT_MAX);
+      var E = Math.max(24, Math.min(PW - 12, hgt - th - 36)), ex = x0 + PW / 2, ey = ty + th + 8 + E / 2, full = ult >= ULT_MAX, fr = Math.min(1, ult / ULT_MAX);
       if (f && IMG[f.img]) {
         var pulse = full ? 0.5 + 0.5 * Math.sin(t / 160) : 0;
         ctx.save(); ctx.globalAlpha = 0.28; fitImg(IMG[f.img], ex, ey, E, E, 0.28, 0); ctx.restore();                           // 바탕: 흐린 문장
