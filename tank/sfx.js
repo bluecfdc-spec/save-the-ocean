@@ -104,10 +104,25 @@ window.SFX = (function () {
     for (var i = 0; i < 9; i++) burst(0.05, 0.14, 2200, 400, t + 0.15 + i * 0.17);                     // 캐터필러 철컥
     [[110, 0.0], [130.8, 0.05], [164.8, 0.1], [82.4, 0.0]].forEach(function (n) { tone('triangle', n[0], n[0] * 0.985, 1.7, 0.09, t + n[1], sfx, 0.25); tone('sawtooth', n[0] / 2, n[0] / 2 * 0.985, 1.7, 0.025, t + n[1], sfx, 0.3); });   // Am 저음 화음
   };
-  S.retreat = function () {                                        // 적 후퇴: 짧은 팡파르
-    if (!ensure()) return; var t = ctx.currentTime, n = [392, 523, 659, 784];
-    n.forEach(function (f, i) { tone('square', f, f, 0.22, 0.12, t + i * 0.1); tone('triangle', f / 2, f / 2, 0.3, 0.1, t + i * 0.1); });
-    tone('square', 784, 784, 0.5, 0.12, t + 0.42);
+  function taiko(t, f, peak) {                                     // 큰 북: 낮은 몸통 + 가죽 타격음
+    tone('sine', f, f * 0.42, 0.55, peak, t, sfx, 0.004);
+    tone('triangle', f * 1.6, f * 0.6, 0.18, peak * 0.35, t, sfx, 0.003);
+    burst(0.09, peak * 0.5, 1400, 90, t);
+  }
+  function brass(t, f, dur, peak) {                                // 낮은 금관 스탭: 톱니파 + 필터가 열렸다 닫힘
+    [1, 1.5, 2].forEach(function (k, i) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = f * k; o.detune.value = (i - 1) * 7;
+      lp.type = 'lowpass'; lp.Q.value = 2; lp.frequency.setValueAtTime(180, t); lp.frequency.exponentialRampToValueAtTime(1600, t + 0.06); lp.frequency.exponentialRampToValueAtTime(260, t + dur);
+      env(g, t, 0.02, peak / (i + 1), dur); o.connect(lp); lp.connect(g); g.connect(sfx); o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  S.retreat = function () {                                        // 적 후퇴: 전장 북 비트(둥-둥-둥 두둥!) + 낮은 금관 D 파워코드 + 심벌
+    if (!ensure()) return; var t = ctx.currentTime;
+    taiko(t, 70, 0.55); taiko(t + 0.16, 70, 0.4); taiko(t + 0.32, 74, 0.5);
+    taiko(t + 0.56, 62, 0.7); taiko(t + 0.64, 62, 0.75);
+    brass(t + 0.56, 73.4, 1.1, 0.16);                                // D2 + A2 + D3
+    var c = burst(1.4, 0.16, 9000, 3000, t + 0.56); c.f.frequency.setValueAtTime(9000, t + 0.56); c.f.frequency.exponentialRampToValueAtTime(3500, t + 1.9);   // 심벌 크래시
+    tone('sine', 36.7, 30, 1.3, 0.35, t + 0.56, sfx, 0.01);          // 서브 저음
   };
   S.sweepStart = function () {                                     // 놓을 곳 없음 → 쓸려 나가는 동안 경보 + 땅울림
     if (!ensure() || sweepNode) return; var t = ctx.currentTime;
