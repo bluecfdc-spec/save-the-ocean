@@ -217,9 +217,19 @@
     calcReach(); checkFit();
   }
   function killTank(msg) { if (G.over) return; G.over = true; G.overMsg = msg; G.fx.push({ t: 'boom', x: G.tank.x, y: G.tank.y, at: now(), big: true }); sfx('sweepStop'); sfx('boom', true); sfx('ambientStop'); setTimeout(function () { if (!G.vs) sfx('over'); }, 600); setTimeout(showOver, 1200); }
+  function collapse() {                                     // 대전: 보드 붕괴 — 블록이 전부 터지고 전선이 내 쪽으로 2줄 밀린다(탱크가 그 줄에 있으면 격파). 게임은 계속
+    var t = now();
+    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) { G.fx.push({ t: 'cell', x: x, y: y, at: t + (y * 40) }); G.fx.push({ t: 'boom', x: x, y: y, at: t + y * 40 + rnd(120), big: false }); G.board[y][x] = 0; }
+    G.tray = [makePiece(), makePiece(), makePiece()]; G.combo = 0; G.collapses = (G.collapses || 0) + 1;
+    G.shake = 16; G.shakeUntil = t + 900; sfx('boom', true); setTimeout(function () { sfx('advance'); }, 400);
+    G.fx.push({ t: 'pop', text: '💥 보드 붕괴! 전선 2줄 밀림', x: W / 2, y: BYY(4), at: t, big: true });
+    calcReach();
+    if (window.NET) NET.collapsed();
+  }
   function checkFit() {
     var live = G.tray.filter(Boolean);
     if (!live.length) { G.tray = [makePiece(), makePiece(), makePiece()]; live = G.tray; }
+    if (G.vs && !live.some(anyFit)) { collapse(); return; }
     if (!live.some(anyFit) && !G.sweep) { G.sweep = true; G.nextAdv = now() + 900; sfx('sweepStart'); var used = {}; G.sweepUnits = [{ kind: 'tank', x: G.tank.x }]; used[G.tank.x] = 1; while (G.sweepUnits.length < 4) { var sx = rnd(COLS); if (used[sx]) continue; used[sx] = 1; G.sweepUnits.push({ kind: 'sol', x: sx }); } G.fx.push({ t: 'pop', text: '놓을 곳이 없다!', x: W / 2, y: BY + ROWS * S / 2, at: now(), big: true }); }
   }
 
@@ -288,6 +298,11 @@
     var quiet = G.vs ? !(G.soldiers.some(function (e) { return e.d === 1; }) || G.mySol.some(function (e) { return e.d === 1; })) : false;
     if (!G.sweep && !quiet && G.nextAdv - t < 6000 && Math.floor((G.nextAdv - t) / 1000) !== G.warnSec) { G.warnSec = Math.floor((G.nextAdv - t) / 1000); if (G.warnSec % 2 === 1) sfx('warn'); }
     if (!G.sweep && !quiet && G.nextAdv - t < 10000 && Math.floor((G.nextAdv - t) / 2000) !== G.drumSec) { G.drumSec = Math.floor((G.nextAdv - t) / 2000); sfx('drum'); }
+    if (G.vs) {
+      var oE = (window.NET && NET.opp() || {}).empty, myE = 0; for (var ey = top(); ey < ROWS; ey++) for (var ex = 0; ex < COLS; ex++) if (!G.board[ey][ex]) myE++;
+      if (oE != null && oE < 15 && !G.warnOpp) { G.warnOpp = true; G.fx.push({ t: 'pop', text: '⚠ 상대 진영 붕괴 임박!', x: W / 2, y: EY + 60, at: t, big: true }); sfx('warn'); } else if (oE != null && oE >= 20) G.warnOpp = false;
+      if (myE < 12 && !G.warnMe) { G.warnMe = true; G.fx.push({ t: 'pop', text: '⚠ 내 보드 붕괴 임박!', x: W / 2, y: BYY(3), at: t, big: true }); sfx('warn'); } else if (myE >= 18) G.warnMe = false;
+    }
     if (G.clash && t > G.clash.until + 400) G.clash = null;
     G.fx = G.fx.filter(function (f) { return t - f.at < (f.t === 'pop' ? 1300 : 700); });
   }
@@ -407,6 +422,7 @@
         ctx.save(); ctx.font = '700 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(255,220,220,' + oa + ')'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('상대 탱크', otx, oty + FS * 0.8); ctx.restore();
       }
     }
+    if (G.vs && G.warnOpp) { ctx.strokeStyle = 'rgba(255,60,60,' + (0.4 + 0.4 * Math.sin(t / 120)) + ')'; ctx.lineWidth = 4; ctx.strokeRect(2, EY + 2, W - 4, BYY(0) - EY - 4); }
     if (G.vs) {                                                            // 위쪽 안내 글씨
       ctx.save(); ctx.font = '600 9px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.shadowColor = '#000'; ctx.shadowBlur = 3; ctx.fillText('▲ 상대 진영', 6, EY + 3); ctx.restore();
     }

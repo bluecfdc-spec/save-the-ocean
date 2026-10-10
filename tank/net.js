@@ -74,6 +74,7 @@ window.REALNET = window.NET = (function () {
     renderRoom();
     var o = opp();
     if (started && o) window.__tank.setOpp(o);                                  // 상대 탱크 위치·내 보병 목록(상대가 보는 그대로)
+    if (started && o && (o.collapses | 0) > oppCollapses) { var dc = (o.collapses | 0) - oppCollapses; oppCollapses = o.collapses | 0; window.__tank.notice('💥 상대 보드 붕괴!'); if (isHost()) hostLine(-2 * dc); }
     if (started && o && o.scout && o.scout !== lastScout) { lastScout = o.scout; window.__tank.enemyScout(); }
     if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); if (o.fire.s) window.__tank.incomingShot(o.fire.x | 0); }
     if (started && o) {                                               // 상대 쪽 변화 알림
@@ -108,14 +109,15 @@ window.REALNET = window.NET = (function () {
     ref.child('meta').update({ clash: { at: snow(), h: h, o: of, d: delta } });
     setTimeout(function () { if (started) hostLine(delta); }, 2600);
   }
-  var lastClash = 0;
+  var lastClash = 0, myCollapses = 0, oppCollapses = 0;
+  function collapsed() { if (!ref || !started) return; myCollapses++; ref.child('players/' + uid + '/collapses').set(myCollapses); if (isHost()) hostLine(2); }   // 내 보드 붕괴 → 전선이 내 쪽으로 2줄
   function onMeta(s) {
     meta = s.val() || {};
     if (started && meta.clash && meta.clash.at && meta.clash.at !== lastClash) { lastClash = meta.clash.at; var c = meta.clash; window.__tank.clash(isHost() ? c.h : c.o, isHost() ? c.o : c.h, isHost() ? c.d : -c.d); }
     if (started && meta.line != null) window.__tank.applyLine(isHost() ? (meta.line | 0) : -(meta.line | 0), meta.nextTick ? meta.nextTick - snow() : null);   // line 은 방장 기준(+ = 방장 쪽으로 밀림) → 상대는 부호 반대
     if (meta.state === 'play' && meta.startAt && meta.startAt !== lastStart) {
       lastStart = meta.startAt; resultUp = false;
-      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '3,6' }); lastFire = 0; lastClash = 0; lastScout = 0;
+      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '3,6', collapses: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; myCollapses = 0; oppCollapses = 0;
       if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
       show('count'); lastPub = ''; prevOpp = {}; tick();
@@ -188,5 +190,5 @@ window.REALNET = window.NET = (function () {
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
   try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
-  return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
+  return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, collapsed: collapsed, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();

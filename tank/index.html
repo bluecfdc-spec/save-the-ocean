@@ -54,7 +54,7 @@
 <!-- 시작 / 혼자 하기 결과 -->
 <div id="ov" class="ov">
   <h1>TANK RUMBLE<small>TEST BUILD</small></h1>
-  <p id="ovText">위는 상대 진영, 아래는 내 보드. 블록을 끌어 줄을 지우면 연료·정찰·미사일·보병을 얻는다.<br>보병은 내 최전방에 서고, 30초마다 전선 교전 — 최전방 보병이 많은 쪽이 민다. 미사일은 같은 세로줄 맨 앞의 적을(3초에 한 발), 정찰기는 상대 탱크를 찾는다.<br>상대 탱크 체력 3을 깎거나 전선으로 덮치면 승리. CPU도 똑같은 규칙으로 싸운다.</p>
+  <p id="ovText">위는 상대 진영, 아래는 내 보드. 블록을 끌어 줄을 지우면 연료·정찰·미사일·보병을 얻는다.<br>보병은 내 최전방에 서고, 30초마다 전선 교전 — 최전방 보병이 많은 쪽이 민다. 미사일은 같은 세로줄 맨 앞의 적을(3초에 한 발), 정찰기는 상대 탱크를 찾는다.<br>보드가 꽉 차면 붕괴 — 블록이 전부 터지고 전선이 2줄 밀린다. 상대 탱크 체력 3을 깎거나 전선으로 덮치면 승리. CPU도 똑같은 규칙으로 싸운다.</p>
   <div id="ovScore" class="score hidden"></div>
   <div class="row"><button id="startBtn" class="btn">CPU 대전</button><button id="vsBtn" class="btn sub">1:1 대전</button></div>
 </div>
@@ -76,7 +76,7 @@
   <div id="roomCode" class="code">----</div>
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
-  <p class="hint">둘 다 [준비!]를 누르면 3초 뒤 동시에 시작해요.<br>위가 상대 진영, 가운데 점선이 전선. 🪖 버튼을 누르면 내 탱크 세로줄의 내 최전방 줄에 보병이 서요(같은 줄이면 뒤로 쌓임). 30초마다 전선에서 교전이 벌어지고 <b>최전방 보병이 많은 쪽이 한 줄</b>(3명 이상 차이면 2줄) 밀어요. 같으면 교착. 한 줄에 쌓으면 탱크 방패, 여러 줄에 펼치면 밀기 유리. 미사일은 같은 세로줄 맨 앞 적 보병을, 없으면 상대 탱크를 맞혀요(체력 3). 정찰기로 상대 탱크를 찾으세요(상대 정찰기가 뜨면 내 화면에도 보여요 = 내 위치 발각). 미사일은 3초에 한 발. 전선이 탱크를 덮치거나 체력 0이면 패배.</p>
+  <p class="hint">둘 다 [준비!]를 누르면 3초 뒤 동시에 시작해요.<br>위가 상대 진영, 가운데 점선이 전선. 🪖 버튼을 누르면 내 탱크 세로줄의 내 최전방 줄에 보병이 서요(같은 줄이면 뒤로 쌓임). 30초마다 전선에서 교전이 벌어지고 <b>최전방 보병이 많은 쪽이 한 줄</b>(3명 이상 차이면 2줄) 밀어요. 같으면 교착. 한 줄에 쌓으면 탱크 방패, 여러 줄에 펼치면 밀기 유리. 미사일은 같은 세로줄 맨 앞 적 보병을, 없으면 상대 탱크를 맞혀요(체력 3). 정찰기로 상대 탱크를 찾으세요(상대 정찰기가 뜨면 내 화면에도 보여요 = 내 위치 발각). 미사일은 3초에 한 발. 보드가 꽉 차면 블록이 전부 터지고 전선이 내 쪽으로 2줄 밀려요(붕괴). 전선이 탱크를 덮치거나 체력 0이면 패배.</p>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
 </div>
@@ -93,8 +93,8 @@
 
 <script>document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script src="sfx.js?v=25"></script>
-<script src="tank.js?v=29"></script>
-<script src="net.js?v=28"></script>
-<script src="bot.js?v=28"></script>
+<script src="tank.js?v=30"></script>
+<script src="net.js?v=30"></script>
+<script src="bot.js?v=30"></script>
 </body>
 </html>

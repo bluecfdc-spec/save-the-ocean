@@ -6,7 +6,7 @@ window.BOT = (function () {
   var T = window.__tank, $ = function (id) { return document.getElementById(id); };
   var COLS = 7, ROWS = 9, SCOUT_MS = 5000;
   var bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal';
-  var SPEED = { easy: 3200, normal: 2000, hard: 1300 };
+  var SPEED = { easy: 3400, normal: 2600, hard: 1600 };
   function withBot(fn) { var real = T.get(); T.set(bot); try { return fn(); } finally { T.set(real); } }
   function rnd(n) { return Math.floor(Math.random() * n); }
   function now() { return performance.now(); }
@@ -71,19 +71,55 @@ window.BOT = (function () {
     bot.fuel -= best.d; bot.tank.x = best.x; bot.tank.y = best.y; bot.tank.fx = best.x; bot.tank.fy = best.y; T.fns.calcReach(); return true;
   }
   function placeBest() {                                   // 줄을 많이 지우는 자리 > 낮은 자리. 자원 블록이면 가산
-    var F = T.fns, top = F.top(), bestS = -1e9, best = null;
+    var F = T.fns, top = F.top(), bestS = -1e9, best = null, cands = [];
     for (var i = 0; i < 3; i++) { var p = bot.tray[i]; if (!p) continue;
       for (var gy = top; gy < ROWS; gy++) for (var gx = 0; gx < COLS; gx++) {
         if (!F.canPlace(p, gx, gy)) continue;
-        var sc = gy * 3 + lines(p, gx, gy) * 120 + (level === 'easy' ? Math.random() * 60 : Math.random() * 8);
+        var sc = gy * 3 + lines(p, gx, gy) * 120 + nearFull(p, gx, gy) * 10 + (level === 'easy' ? Math.random() * 60 : Math.random() * 6);
         p.cells.forEach(function (c) { if (c.r >= 2) sc += 6; });
-        if (sc > bestS) { bestS = sc; best = { i: i, gx: gx, gy: gy }; }
+        cands.push({ i: i, gx: gx, gy: gy, sc: sc });
       }
     }
-    if (!best) { F.checkFit(); return; }
-    var p = bot.tray[best.i]; bot.tray[best.i] = null; F.place(p, best.gx, best.gy); F.checkFit();
-    if (bot.sweep) { bot.over = true; setTimeout(function () { end('win', 'CPU 가 블록을 놓을 곳이 없어 쓸려 나갔다'); }, 1200); }
+    if (!cands.length) { botCollapse(); return; }
+    cands.sort(function (a, c) { return c.sc - a.sc; });
+    var topN = cands.slice(0, level === 'easy' ? 1 : 6);                 // 상위 후보만 한 수 앞까지 본다
+    topN.forEach(function (c) {
+      var p = bot.tray[c.i], saved = p.cells.map(function (q) { return bot.board[c.gy + q.dy][c.gx + q.dx]; });
+      p.cells.forEach(function (q) { bot.board[c.gy + q.dy][c.gx + q.dx] = q.r; });
+      var fut = 0, other = 0;
+      for (var j = 0; j < 3; j++) { var p2 = bot.tray[j]; if (!p2 || j === c.i) continue; other++; var bestL = -1;
+        for (var y2 = top; y2 < ROWS; y2++) for (var x2 = 0; x2 < COLS; x2++) if (F.canPlace(p2, x2, y2)) bestL = Math.max(bestL, lines(p2, x2, y2));
+        fut += bestL < 0 ? -200 : bestL * 70; }                         // 다음 블록을 놓을 곳이 없으면 큰 감점
+      p.cells.forEach(function (q, k) { bot.board[c.gy + q.dy][c.gx + q.dx] = saved[k]; });
+      c.sc += fut;
+    });
+    topN.sort(function (a, c) { return c.sc - a.sc; }); best = topN[0];
+    var p = bot.tray[best.i]; bot.tray[best.i] = null; F.place(p, best.gx, best.gy);
+    var live = bot.tray.filter(Boolean); if (!live.length) bot.tray = [F.makePiece(), F.makePiece(), F.makePiece()];
+    if (!bot.tray.filter(Boolean).some(F.anyFit)) botCollapse();
   }
+  function nearFull(p, gx, gy) {                           // 놓은 뒤 6칸 이상 찬 줄 수(다음에 지우기 쉬움)
+    var b = bot.board, top = T.fns.top(), n = 0, cells = {}; p.cells.forEach(function (c) { cells[(gx + c.dx) + ',' + (gy + c.dy)] = 1; });
+    for (var y = top; y < ROWS; y++) { var k = 0; for (var x = 0; x < COLS; x++) if (b[y][x] || cells[x + ',' + y]) k++; if (k >= COLS - 1) n++; }
+    for (var x2 = 0; x2 < COLS; x2++) { var k2 = 0; for (var y2 = top; y2 < ROWS; y2++) if (b[y2][x2] || cells[x2 + ',' + y2]) k2++; if (k2 >= ROWS - top - 1) n++; }
+    return n;
+  }
+  function botCollapse() {                                 // CPU 보드 붕괴: 블록 전부 비우고 전선이 CPU 쪽으로 2줄 (내 쪽 applyLine 은 음수)
+    var F = T.fns;
+    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0;
+    bot.tray = [F.makePiece(), F.makePiece(), F.makePiece()]; F.calcReach();
+    setTimeout(function () { if (!active) return; T.notice('💥 CPU 보드 붕괴! 전선 전진'); shiftLine(-2); }, 0);
+  }
+  function shiftLine(delta) {                              // 내 기준 delta(음수 = 내가 전진). 봇 쪽은 반대로
+    if (!active) return;
+    var L = Math.max(-8, Math.min(9, me.adv + delta)); T.applyLine(L, Math.max(1000, nextTick - now()));
+    var badv = -L;
+    withBot(function () { if (badv > bot.adv) { for (var y = Math.max(0, bot.adv); y < Math.min(ROWS, badv); y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0; } bot.adv = badv; T.fns.calcReach(); });
+    if (bot.tank.y < badv) { bot.over = true; end('win', 'CPU 탱크가 전선에 깔렸다'); return; }
+    if (badv >= ROWS) { bot.over = true; end('win', 'CPU 가 전장을 잃었다'); return; }
+    syncToPlayer();
+  }
+  function collapsed() { if (!active) return; shiftLine(2); }   // 내 보드 붕괴 → 전선이 내 쪽으로 2줄
   function lines(p, gx, gy) {                              // 이 자리에 놓으면 지워지는 줄 수
     var b = bot.board, top = T.fns.top(), n = 0, cells = {}; p.cells.forEach(function (c) { cells[(gx + c.dx) + ',' + (gy + c.dy)] = 1; });
     for (var y = top; y < ROWS; y++) { var full = true; for (var x = 0; x < COLS; x++) if (!b[y][x] && !cells[x + ',' + y]) { full = false; break; } if (full) n++; }
@@ -96,19 +132,7 @@ window.BOT = (function () {
     var mine = me.mySol.filter(function (e) { return e.d === 1; }).length, theirs = bot.mySol.filter(function (e) { return e.d === 1; }).length, diff = mine - theirs;
     var delta = diff === 0 ? 0 : (Math.abs(diff) >= 3 ? 2 : 1) * (diff > 0 ? -1 : 1);        // 내 기준: 음수 = 내가 전진
     T.clash(mine, theirs, delta); nextTick = now() + 30000;
-    setTimeout(function () {
-      if (!active) return;
-      var L = Math.max(-8, Math.min(9, me.adv + delta));
-      T.applyLine(L, 30000);
-      var badv = -L;                                         // 봇 쪽 전선
-      withBot(function () {
-        if (badv > bot.adv) { for (var y = Math.max(0, bot.adv); y < Math.min(ROWS, badv); y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0; }
-        bot.adv = badv; T.fns.calcReach();
-      });
-      if (bot.tank.y < badv) { bot.over = true; end('win', 'CPU 탱크가 전선에 깔렸다'); return; }
-      if (badv >= ROWS) { bot.over = true; end('win', 'CPU 가 전장을 잃었다'); return; }
-      syncToPlayer();
-    }, 2600);
+    setTimeout(function () { if (active) shiftLine(delta); }, 2600);
   }
   // ---------- 내가 쏜 것: 봇 쪽 판정 ----------
   function fired(x, y, shot) {
@@ -128,5 +152,5 @@ window.BOT = (function () {
   // 결과 화면의 [다시 대전] → CPU 다시
   $('againBtn').addEventListener('click', function () { if (window.NET === BOT) { window.REALNET.show('none'); start(); try { SFX.go(); SFX.ambientStart(); } catch (e) { } } });
   $('resLeave').addEventListener('click', function () { if (window.NET === BOT) stop(); });
-  return { start: start, stop: stop, opp: opp, fired: fired, scouted: scouted, pub: pub, sendInf: sendInf, over: over, setLevel: function (l) { level = l; }, _bot: function () { return bot; }, _clash: clash, _step: step };
+  return { start: start, stop: stop, opp: opp, fired: fired, scouted: scouted, collapsed: collapsed, pub: pub, sendInf: sendInf, over: over, setLevel: function (l) { level = l; }, _bot: function () { return bot; }, _clash: clash, _step: step };
 })();
