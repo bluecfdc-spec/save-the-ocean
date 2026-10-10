@@ -33,7 +33,8 @@ window.BOT = (function () {
   // ---------- 봇 한 수 ----------
   function step() {
     if (!active || !me || me.over || bot.over) return;
-    bot.soldiers = me.mySol.map(function (e) { return { x: mirror(e.x), d: e.d }; });   // 봇 눈에 보이는 내 보병
+    var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
+    bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; }).map(function (e) { return { x: mirror(e.x), d: e.d }; });
     withBot(function () {
       if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
@@ -153,6 +154,7 @@ window.BOT = (function () {
   // ---------- 내가 쏜 것: 봇 쪽 판정 ----------
   function fired(x, y, shot) {
     if (!active) return; var mx = mirror(x);
+    known = { x: x, y: y, t: now() };                                                 // 사람과 똑같이: 내가 쏘면 내 탱크 위치가 상대(봇)에게 노출된다
     setTimeout(function () {
       if (!active || bot.over) return;
       var v = null; bot.mySol.forEach(function (e) { if (e.x === mx && (!v || e.d < v.d)) v = e; });
