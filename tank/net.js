@@ -74,6 +74,13 @@ window.NET = (function () {
     renderRoom();
     var o = opp();
     if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); }
+    if (started && o) {                                               // 상대 쪽 변화 알림
+      var G0 = window.__tank.get();
+      if (prevOpp.inf != null && (o.inf || 0) < prevOpp.inf) window.__tank.notice('상대가 내 보병을 잡았다');
+      if (prevOpp.adv != null && (o.adv || 0) > prevOpp.adv) window.__tank.notice('상대 줄이 밀렸다!');
+      if (prevOpp.adv != null && (o.adv || 0) < prevOpp.adv) window.__tank.notice('상대가 한 줄 되찾았다');
+      prevOpp = { inf: o.inf || 0, adv: o.adv || 0 };
+    }
     // 둘 다 준비 → 방장이 시작 시각을 정한다
     if (meta.host === uid && meta.state === 'lobby' && o && o.ready && me().ready) {
       ref.child('meta').update({ state: 'play', startAt: snow() + 4000, round: (meta.round || 0) + 1 });
@@ -92,7 +99,7 @@ window.NET = (function () {
       lastStart = meta.startAt; resultUp = false;
       ref.child('players/' + uid).update({ ready: false, over: false, msg: '', adv: 0, t: 0, fire: null }); lastFire = 0;
       ref.child('inbox/' + uid).remove();
-      show('count'); tick();
+      show('count'); lastPub = ''; prevOpp = {}; tick();
     }
     if (meta.state === 'lobby' && !started) { show('room'); renderRoom(); }
   }
@@ -111,10 +118,11 @@ window.NET = (function () {
     if (!started) return; var G = window.__tank.get(); if (G.over) return;
     window.__tank.addEnemyInf(v.x | 0);
   }
-  var lastFire = 0;
+  var lastFire = 0, prevOpp = {};
   function fired(x, y) { if (ref) ref.child('players/' + uid + '/fire').set({ x: x, y: y, t: firebase.database.ServerValue.TIMESTAMP }); }
   function sendInf(x) { var o = oppId(); if (ref && o) ref.child('inbox/' + o).push({ x: x, t: firebase.database.ServerValue.TIMESTAMP }); }
-  function pub() { if (!ref || !started) return; var G = window.__tank.get(); ref.child('players/' + uid + '/adv').set(G.adv); }
+  var lastPub = '';
+  function pub() { if (!ref || !started) return; var G = window.__tank.get(); var k = G.adv + '/' + G.soldiers.length; if (k === lastPub) return; lastPub = k; ref.child('players/' + uid).update({ adv: G.adv, inf: G.soldiers.length }); }   // 바뀔 때만 보냄
   function over(m) {
     if (!ref) return; var G = window.__tank.get();
     ref.child('players/' + uid).update({ over: true, msg: m, adv: G.adv, t: firebase.database.ServerValue.TIMESTAMP });
