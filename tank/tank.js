@@ -11,8 +11,8 @@
 (function () {
   'use strict';
   var COLS = 8, ROWS = 10, EROWS = 4, S = 60;              // 칸 크기 60
-  var W = 480, HUD = 70, TRAY = 130;
-  var EY = HUD, BY = HUD + EROWS * S, H = BY + ROWS * S + TRAY;
+  var W = 480, TOP = 26, HUD = 66, TRAY = 124;                 // 위: 진격 타이머 띠만. 보드 아래: 버튼·연료·점수(HUD) → 블록 받침(TRAY)
+  var EY = TOP, BY = TOP + EROWS * S, HY = BY + ROWS * S, TY = HY + HUD, H = TY + TRAY;
   var FUEL_PER = 3, FUEL_MAX = 15, SCOUT_MS = 5000, ADV_MS = 40000, ADV_STEP = 5000, ADV_FLOOR = 20000, ADV_EVERY = 180000, HP_MAX = 3, ADV_MIN = -(EROWS - 1);
   function advMs(t) { return G.vs ? ADV_MS : Math.max(ADV_FLOOR, ADV_MS - ADV_STEP * Math.floor((t - G.start) / ADV_EVERY)); }   // 3분마다 5초씩 빨라짐, 최저 20초
   var SCOUT_MAX = 5, MISSILE_MAX = 5, INF_MAX = 5;
@@ -302,10 +302,12 @@
     drawHud(t); drawTray(t);
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
   }
-  var BTN = { scout: { x: 6, y: 8, w: 82, h: 54 }, missile: { x: 92, y: 8, w: 82, h: 54 }, inf: { x: 178, y: 8, w: 82, h: 54 } };
+  var BTN = { scout: { x: 6, y: HY + 6, w: 82, h: 54 }, missile: { x: 92, y: HY + 6, w: 82, h: 54 }, inf: { x: 178, y: HY + 6, w: 82, h: 54 } };
   function drawHud(t) {
-    var g = ctx.createLinearGradient(0, 0, 0, HUD); g.addColorStop(0, '#3a3e32'); g.addColorStop(1, '#1b1d16'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, HUD);
-    ctx.fillStyle = '#0a0b08'; ctx.fillRect(0, HUD - 3, W, 3);
+    var g = ctx.createLinearGradient(0, HY, 0, HY + HUD); g.addColorStop(0, '#3a3e32'); g.addColorStop(1, '#1b1d16'); ctx.fillStyle = g; ctx.fillRect(0, HY, W, HUD);
+    ctx.fillStyle = '#0a0b08'; ctx.fillRect(0, HY, W, 3);
+    // 맨 위 띠(진격 타이머)
+    var g2 = ctx.createLinearGradient(0, 0, 0, TOP); g2.addColorStop(0, '#2a2d24'); g2.addColorStop(1, '#141610'); ctx.fillStyle = g2; ctx.fillRect(0, 0, W, TOP);
     function btn(b, icon, n, label, on) {
       var gg = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h); gg.addColorStop(0, on ? '#ffe284' : '#6b6f60'); gg.addColorStop(1, on ? '#e8a21a' : '#3e4138');
       rr(b.x, b.y, b.w, b.h, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke();
@@ -317,23 +319,23 @@
     btn(BTN.missile, '🚀', G.missile, 'FIRE', G.missile > 0);
     if (G.vs) btn(BTN.inf, '🪖', G.inf, 'SEND', G.inf > 0);
     // 연료
-    var fx0 = G.vs ? 268 : 182;
-    ctx.font = '20px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('⛽', fx0, 20);
-    ctx.fillStyle = '#111'; rr(fx0 + 26, 10, 112, 20, 6); ctx.fill();
-    for (var i = 0; i < FUEL_MAX; i++) { ctx.fillStyle = i < G.fuel ? (i % 3 === 2 ? '#ff6a3d' : '#ffb13d') : '#2a2a2a'; ctx.fillRect(fx0 + 29 + i * 7.2, 13, 5.5, 14); }
-    ctx.font = '600 9px Orbitron'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('FUEL ' + G.fuel + '/' + FUEL_MAX, fx0, 44);
+    var fx0 = G.vs ? 268 : 182, hy = HY;
+    ctx.font = '20px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.fillText('⛽', fx0, hy + 20);
+    ctx.fillStyle = '#111'; rr(fx0 + 26, hy + 10, 112, 20, 6); ctx.fill();
+    for (var i = 0; i < FUEL_MAX; i++) { ctx.fillStyle = i < G.fuel ? (i % 3 === 2 ? '#ff6a3d' : '#ffb13d') : '#2a2a2a'; ctx.fillRect(fx0 + 29 + i * 7.2, hy + 13, 5.5, 14); }
+    ctx.font = '600 9px Orbitron'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('FUEL ' + G.fuel + '/' + FUEL_MAX, fx0, hy + 44);
     // 점수 / 상대
     ctx.textAlign = 'right';
-    if (G.vs) { var o = (window.NET && NET.opp()) || {}; ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#ffd451'; ctx.fillText('VS ' + (o.name || '?'), W - 8, 18); ctx.fillStyle = '#cfd6bf'; ctx.fillText('상대 밀린 줄 ' + (o.adv || 0) + ' · 보낸 보병 ' + G.sent, W - 8, 44); }
-    else { ctx.font = '800 24px Orbitron'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, 22); ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10, 46); }
+    if (G.vs) { var o = (window.NET && NET.opp()) || {}; ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#ffd451'; ctx.fillText('VS ' + (o.name || '?'), W - 8, hy + 18); ctx.fillStyle = '#cfd6bf'; ctx.fillText('상대 밀린 줄 ' + (o.adv || 0) + ' · 보낸 보병 ' + G.sent, W - 8, hy + 44); }
+    else { ctx.font = '800 24px Orbitron'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, hy + 22); ctx.font = '600 10px Orbitron'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10, hy + 46); }
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
-    ctx.fillStyle = '#111'; ctx.fillRect(0, HUD - 9, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, HUD - 9, W * p, 6);
-    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '⚠ 적군 돌파!' : (G.vs && !G.soldiers.length) ? '적 보병 없음 — 줄이 밀리지 않는다' : ('적 진격까지 ' + Math.ceil(left / 1000) + 's' + (G.vs ? '' : ' (' + (advMs(t) / 1000) + '초 간격)') + '  ·  적 병사 ' + G.soldiers.length), W / 2, EY + 14); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - 6, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - 6, W * p, 6);
+    ctx.textAlign = 'center'; ctx.font = '600 11px Orbitron'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '⚠ 적군 돌파!' : (G.vs && !G.soldiers.length) ? '적 보병 없음 — 줄이 밀리지 않는다' : ('적 진격까지 ' + Math.ceil(left / 1000) + 's' + (G.vs ? '' : ' (' + (advMs(t) / 1000) + '초 간격)') + '  ·  적 병사 ' + G.soldiers.length), W / 2, 10); ctx.shadowBlur = 0;
   }
-  function traySlot(i) { return { x: 20 + i * 150, y: BY + ROWS * S + 10, w: 130, h: TRAY - 20 }; }
+  function traySlot(i) { return { x: 20 + i * 150, y: TY + 8, w: 130, h: TRAY - 16 }; }
   function drawTray(t) {
-    var g = ctx.createLinearGradient(0, BY + ROWS * S, 0, H); g.addColorStop(0, '#1b1d16'); g.addColorStop(1, '#3a3e32'); ctx.fillStyle = g; ctx.fillRect(0, BY + ROWS * S, W, TRAY);
+    var g = ctx.createLinearGradient(0, TY, 0, H); g.addColorStop(0, '#1b1d16'); g.addColorStop(1, '#3a3e32'); ctx.fillStyle = g; ctx.fillRect(0, TY, W, TRAY);
     for (var i = 0; i < 3; i++) {
       var sl = traySlot(i), p = G.tray[i];
       rr(sl.x, sl.y, sl.w, sl.h, 10); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.strokeStyle = '#4a4e40'; ctx.lineWidth = 2; ctx.stroke();
@@ -359,7 +361,7 @@
   });
   function dragTo(p) {
     var d = G.drag; d.px = p.x; d.py = p.y;
-    d.ox = p.x - d.p.w * S / 2; d.oy = p.y - 70 - d.p.h * S;
+    d.ox = p.x - d.p.w * S / 2; d.oy = p.y - 80 - d.p.h * S;
     var gx = Math.round(d.ox / S), gy = Math.round((d.oy - BY) / S);
     d.gx = gx; d.gy = gy;
   }
