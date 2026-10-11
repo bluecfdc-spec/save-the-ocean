@@ -24,7 +24,7 @@ window.REALNET = window.NET = (function () {
     return authed;
   }
   function snow() { return Date.now() + off; }
-  function show(id) { ['ov', 'lobby', 'room', 'count', 'result'].forEach(function (k) { $(k).classList.toggle('hidden', k !== id); }); }
+  function show(id) { ['ov', 'lobby', 'room', 'count', 'result', 'rank'].forEach(function (k) { $(k).classList.toggle('hidden', k !== id); }); }
   function msg(id, t) { $(id).textContent = t || ''; }
   function oppId() { for (var k in players) if (k !== uid) return k; return null; }
   function opp() { var k = oppId(); return k ? players[k] : null; }
@@ -34,7 +34,7 @@ window.REALNET = window.NET = (function () {
   // ---------- 로비 ----------
   function openLobby() {
     if (!init()) { msg('lbMsg', '온라인 연결에 실패했어요. 잠시 후 다시 시도해 주세요.'); }
-    else login().then(function () { watchRooms(true); }).catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
+    else login().then(function () { watchRooms(true); lobbyChat(true); }).catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
     $('nm').value = name; show('lobby'); msg('lbMsg', '');
   }
   function saveName() { name = ($('nm').value || '').trim().slice(0, 10) || '병사' + uid.slice(0, 3); try { localStorage.setItem('tank_name', name); } catch (e) { } }
@@ -49,6 +49,24 @@ window.REALNET = window.NET = (function () {
       rf.on('value', function (s) { var d = s.val() || {}, n = Object.keys(d.players || {}).length, playing = n >= 2 && (d.meta || {}).state === 'play', b = $('rm-' + r[0]);
         b.lastChild.textContent = n + '/2 · ' + (playing ? '대전 중' : n === 1 ? '상대 기다리는 중' : '비어 있음'); b.classList.toggle('full', n >= 2); b.classList.toggle('wait', n === 1); },
         function () { $('rm-' + r[0]).lastChild.textContent = '연결 실패'; }); });
+  }
+  var PHR = ['한 판 하자!', '나랑 할 사람?', '거제로 와', '예루살렘으로 와', '실리콘밸리로 와', '서울로 와', 'ㅋㅋㅋ', '잘했다!'], chatOn = false, lastSay = 0;
+  PHR.forEach(function (t, i) { var b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.addEventListener('click', function () { say(i); }); $('phr').appendChild(b); });
+  function lobbyChat(on) {                                    /* 로비: 접속자 수 + 정해진 문구만 보내는 채팅 */
+    if (!db) return; var pres = db.ref('lobby/tank/pres/' + uid), chat = db.ref('lobby/tank/chat');
+    if (!on) { if (!chatOn) return; chatOn = false; db.ref('lobby/tank/pres').off(); chat.off(); pres.onDisconnect().cancel(); pres.remove(); return; }
+    if (chatOn) return; chatOn = true; pres.onDisconnect().remove(); pres.set(true);
+    db.ref('lobby/tank/pres').on('value', function (s) { $('mpOn').textContent = '● 지금 1:1 대전 로비에 ' + s.numChildren() + '명'; }, function () { });
+    $('chat').textContent = '';
+    chat.limitToLast(20).on('child_added', function (s) { var v = s.val() || {}; if (typeof v.p !== 'number' || !PHR[v.p]) return;
+      var d = document.createElement('div'), b = document.createElement('b'); b.textContent = String(v.n || '').slice(0, 12) + '  '; d.appendChild(b); d.appendChild(document.createTextNode(PHR[v.p]));
+      var c = $('chat'); c.appendChild(d); while (c.children.length > 30) c.removeChild(c.firstChild); c.scrollTop = c.scrollHeight; }, function () { });
+    chat.orderByChild('t').endAt(snow() - 600000).limitToFirst(20).once('value').then(function (s) { s.forEach(function (c) { c.ref.remove(); }); }).catch(function () { });   /* 10분 지난 말은 지움 */
+  }
+  function say(i) {
+    if (!db || !authed) return; saveName();
+    if (Date.now() - lastSay < 2000) { msg('lbMsg', '조금 천천히 보내 주세요.'); return; } lastSay = Date.now(); msg('lbMsg', '');
+    db.ref('lobby/tank/chat').push({ n: name, p: i, t: firebase.database.ServerValue.TIMESTAMP }).catch(function () { msg('lbMsg', '보내지 못했어요.'); });
   }
   function joinPublic(c) {                                    /* 공개 방: 없으면 만들고(내가 방장), 있으면 들어감 */
     if (!init()) return; saveName(); msg('lbMsg', '들어가는 중…');
@@ -84,14 +102,14 @@ window.REALNET = window.NET = (function () {
       ref.child('players').on('value', onPlayers);
       ref.child('meta').on('value', onMeta);
       ref.child('inbox/' + uid).on('child_added', onInbox);
-      watchRooms(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
+      watchRooms(false); lobbyChat(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
     }).catch(function (e) { msg('lbMsg', '입장 실패: ' + (e.message || e)); });
   }
   function leave() {
     if (ref) { var o0 = oppId(); if (roomName(code) && meta.host === uid) ref.child('meta').update(o0 ? { host: o0, state: 'lobby' } : { host: '', state: 'lobby' }); ref.child('players').off(); ref.child('meta').off(); ref.child('inbox/' + uid).off(); ref.child('players/' + uid).onDisconnect().cancel(); ref.child('players/' + uid).remove(); ref.child('inbox/' + uid).remove(); }
     ref = null; code = ''; players = {}; meta = {}; started = false; resultUp = false; clearInterval(pubTimer); clearInterval(lineTimer); clearTimeout(startTimer);
     try { history.replaceState(null, '', location.pathname); } catch (e) { }
-    if (db && authed) { show('lobby'); msg('lbMsg', ''); watchRooms(true); } else show('ov');
+    if (db && authed) { show('lobby'); msg('lbMsg', ''); watchRooms(true); lobbyChat(true); } else show('ov');
   }
   function link() { return location.origin + location.pathname + '?room=' + code; }
   function share() {
@@ -199,6 +217,7 @@ window.REALNET = window.NET = (function () {
     var rf = window.__tank.FAC && window.__tank.FAC[G.fac] ? G.fac : 'solar'; $('result').style.backgroundImage = 'linear-gradient(rgba(8,10,6,.35), rgba(8,10,6,.75)), url(assets/v2/res_' + rf + '_' + (r === 'win' ? 'win' : 'lose') + '.jpg)';   // 세력별 결과 배경
     $('resTitle').textContent = r === 'win' ? 'VICTORY' : r === 'lose' ? 'DEFEAT' : 'DRAW';
     $('resTitle').className = r;
+    var cpu = window.NET === window.BOT; lastScore = G.score | 0; subDone = false; $('sub').style.display = cpu && lastScore > 0 ? '' : 'none'; $('subMsg').textContent = ''; $('subBtn').disabled = false; $('subName').value = name || '';
     $('resText').textContent = detail + ' · 점수 ' + G.score.toLocaleString('en-US') + ' · 지운 줄 ' + G.lines + ' · 격파 ' + G.kills + ' · 보낸 보병 ' + G.sent;
     show('result');
   }
@@ -213,11 +232,37 @@ window.REALNET = window.NET = (function () {
   }
   function esc(s) { return String(s || '').replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); }
 
+  // ---------- 스코어보드 (CPU 대전 점수) ----------
+  var RANK_COL = 'tank_scores_test', lastScore = 0, subDone = false;
+  function fs() { init(); return app.firestore(); }
+  function openRank() {
+    if (!init()) return; show('rank'); $('rankList').textContent = '불러오는 중…';
+    login().then(function () { return fs().collection(RANK_COL).orderBy('score', 'desc').limit(30).get(); }).then(function (q) {
+      var html = '', i = 0; q.forEach(function (d) { var v = d.data(); i++; var f = (window.DG_FAC_BY_ID || {})[v.faction] || 'solar';
+        html += '<div class="rk' + (v.uid === uid ? ' me' : '') + '"><span class="n">' + i + '</span><img src="assets/v2/f_' + f + '.png" alt=""><span>' + esc(v.name) + '</span><span class="s">' + (v.score | 0).toLocaleString('en-US') + '</span></div>'; });
+      $('rankList').innerHTML = html || '<div class="pl dim">아직 기록이 없어요. 첫 기록을 세워 보세요!</div>';
+    }).catch(function (e) { $('rankList').textContent = '불러오지 못했어요: ' + (e.message || e); });
+  }
+  function submitScore() {
+    if (subDone || !lastScore) return; var nm = ($('subName').value || '').trim().slice(0, 12); if (!nm) { $('subMsg').textContent = '이름을 넣어 주세요.'; return; }
+    name = nm; try { localStorage.setItem('tank_name', nm); } catch (e) { } $('subBtn').disabled = true; $('subMsg').textContent = '등록 중…';
+    if (!init()) return; login().then(function () {
+      var f = (window.DG_FAC || {})[window.__tank.get().fac], d = new Date(), date = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+      var b = fs().batch(), ts = firebase.firestore.FieldValue.serverTimestamp();
+      b.set(fs().collection('users').doc(uid), { last: ts });
+      b.set(fs().collection(RANK_COL).doc(), { name: nm, score: Math.min(1000000, lastScore | 0), date: date, flag: '', faction: f ? f.id : 3, uid: uid });
+      return b.commit();
+    }).then(function () { subDone = true; $('subMsg').textContent = '등록 완료! 🏆 스코어보드에서 확인하세요.'; $('sub').style.display = 'none'; })
+      .catch(function (e) { $('subBtn').disabled = false; $('subMsg').textContent = (String(e.message || e).indexOf('permission') >= 0 ? '잠시 후 다시 시도해 주세요(20초에 한 번).' : '등록 실패: ' + (e.message || e)); });
+  }
   // ---------- 버튼 ----------
+  $('rankBtn').addEventListener('click', openRank);
+  $('rankBack').addEventListener('click', function () { show('ov'); });
+  $('subBtn').addEventListener('click', submitScore);
   $('vsBtn').addEventListener('click', function () { if (window.BOT) BOT.stop(); window.NET = window.REALNET; openLobby(); });
   $('mkBtn').addEventListener('click', create);
   $('joinBtn').addEventListener('click', function () { join($('code').value); });
-  $('lbBack').addEventListener('click', function () { watchRooms(false); show('ov'); });
+  $('lbBack').addEventListener('click', function () { watchRooms(false); lobbyChat(false); show('ov'); });
   $('shareBtn').addEventListener('click', share);
   $('readyBtn').addEventListener('click', ready);
   $('leaveBtn').addEventListener('click', leave);

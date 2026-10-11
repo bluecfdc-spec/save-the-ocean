@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../common/firebase-config.js?v=1"></script>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
@@ -45,6 +46,22 @@
   .rooms button.wait { box-shadow: 0 0 0 3px #9be37a, 0 4px 0 #8a5a00, 0 8px 18px #0008; }
   details.priv { width: min(92vw, 420px); color: #cfd6bf; font-family: 'Do Hyeon', sans-serif; }
   details.priv summary { cursor: pointer; font-size: 14px; padding: 6px 0; text-align: center; }
+.row.two { width: min(92vw, 420px); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row.two .btn { padding: 14px 0; }
+  .btn.wide { width: min(92vw, 420px); }
+  #lobby { justify-content: flex-start; padding-top: max(16px, env(safe-area-inset-top)); gap: 10px; }
+  .chatbox { width: min(92vw, 420px); background: rgba(0,0,0,.45); border: 1px solid rgba(255,212,81,.3); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-height: 120px; max-height: 34vh; }
+  .mpon { font-size: 13px; color: #9be37a; text-align: left; }
+  #chat { flex: 1 1 auto; overflow-y: auto; text-align: left; font-size: 14px; color: #e8ecd8; line-height: 1.45; }
+  #chat b { color: #ffd451; font-weight: 400; }
+  #phr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  #phr button { font-family: 'Do Hyeon', sans-serif; font-size: 13px; padding: 7px 2px; border-radius: 8px; border: 1px solid #6b7a52; background: #1b1d16; color: #f3efe0; }
+  .ranklist { width: min(92vw, 420px); max-height: 60vh; overflow-y: auto; background: rgba(0,0,0,.5); border: 1px solid rgba(255,212,81,.35); border-radius: 12px; padding: 6px 10px; }
+  .rk { display: grid; grid-template-columns: 34px 28px 1fr auto; gap: 6px; align-items: center; padding: 7px 2px; border-bottom: 1px solid #2a2d24; font-size: 16px; text-align: left; }
+  .rk .n { font-family: 'Black Han Sans', sans-serif; color: #ffd451; }
+  .rk img { width: 24px; height: 24px; }
+  .rk .s { font-family: 'Black Han Sans', sans-serif; color: #fff; }
+  .rk.me { background: rgba(255,212,81,.12); }
   .btn.sub { font-size: 17px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
@@ -100,21 +117,28 @@
     <button class="fac" data-f="solar"><img src="assets/v2/f_solar.png" alt=""><span>솔라</span><small>태양 방패</small></button>
   </div>
   <p id="facDesc" class="hint"></p>
-  <div class="row"><button id="startBtn" class="btn">CPU 대전</button><button id="vsBtn" class="btn sub">1:1 대전</button></div>
+  <div class="row two"><button id="startBtn" class="btn">CPU 대전</button><button id="vsBtn" class="btn">1:1 대전</button></div>
+  <button id="rankBtn" class="btn sub wide">🏆 스코어보드</button>
   <button id="howBtn" class="btn sub" style="display:none">HOW TO PLAY</button>
 </div>
 
 
+<!-- 스코어보드 -->
+<div id="rank" class="ov hidden">
+  <h2>🏆 스코어보드</h2>
+  <p class="hint">CPU 대전 최고 점수 (테스트 기간)</p>
+  <div id="rankList" class="ranklist">불러오는 중…</div>
+  <button id="rankBack" class="btn sub">뒤로</button>
+</div>
+
 <!-- 대전 로비 -->
 <div id="lobby" class="ov hidden">
   <h2>1:1 대전</h2>
-  <p>이름을 정하고 전장을 고르세요. 먼저 들어간 사람이 기다리고, 두 번째 사람이 들어오면 대전!</p>
+  <p>전장을 고르세요. 먼저 들어간 사람이 기다리고, 두 번째 사람이 오면 대전!</p>
   <input id="nm" maxlength="10" placeholder="이름">
   <div id="rooms" class="rooms"></div>
-  <details class="priv"><summary>친구와 비밀 방 (코드)</summary>
-    <div class="row"><button id="mkBtn" class="btn sub">비밀 방 만들기</button></div>
-    <div class="row"><input id="code" maxlength="4" placeholder="코드 4글자" autocapitalize="characters"><button id="joinBtn" class="btn sub">참가</button></div>
-  </details>
+  <div style="display:none"><button id="mkBtn"></button><input id="code"><button id="joinBtn"></button></div>
+  <div class="chatbox"><div id="mpOn" class="mpon">접속 중…</div><div id="chat"></div><div id="phr"></div></div>
   <p id="lbMsg" class="hint"></p>
   <button id="lbBack" class="btn sub">뒤로</button>
 </div>
@@ -137,6 +161,8 @@
 <div id="result" class="ov hidden">
   <div id="resTitle"></div>
   <p id="resText"></p>
+  <div id="sub" class="row" style="display:none"><input id="subName" maxlength="12" placeholder="이름"><button id="subBtn" class="btn sub">점수 등록</button></div>
+  <p id="subMsg" class="hint"></p>
   <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
 </div>
 
@@ -150,7 +176,7 @@
 </script>
 <script src="sfx.js?v=36"></script>
 <script src="tank.js?v=89"></script>
-<script src="net.js?v=38"></script>
+<script src="net.js?v=39"></script>
 <script src="bot.js?v=42"></script>
 <script src="demo.js?v=4"></script>
 <script>
