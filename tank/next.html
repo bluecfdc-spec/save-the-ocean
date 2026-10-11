@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>TANK RUMBLE · 새 버전 시험판</title>
+<link rel="icon" href="assets/v2/icon_64.png">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Orbitron:wght@800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #120d08; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+  #c { display: block; width: 100vw; height: 100vh; height: 100dvh; }
+  .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); box-sizing: border-box; color: #fff; text-align: center; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; }
+  .hidden { display: none !important; }
+  #title { background: linear-gradient(to bottom, rgba(12,9,5,0) 58%, rgba(12,9,5,.6) 78%, rgba(12,9,5,.95) 100%), url(assets/v2/title2.jpg?v=1) top center / max(100vw, 62vh) auto no-repeat, #1a120a; }
+  .tag { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 3px; color: #ffe066; text-shadow: 0 0 8px #ff9a1f; }
+  .pick { font-size: 18px; color: #ffd451; text-shadow: 0 2px 0 #000; }
+  .facs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(92vw, 420px); }
+  .fac { border-style: solid; border-color: transparent; border-width: 7px; border-image: url(assets/v2/btn_check_off.png?v=1) 32 fill / 7px stretch; background: none; color: #fff; font: 18px 'Black Han Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 2px 4px; filter: brightness(.6) saturate(.6); text-shadow: 0 2px 0 #000; }
+  .fac img { width: 30px; height: 30px; }
+  .fac.on { filter: brightness(1.05) drop-shadow(0 0 8px var(--fc)); }
+  .btn { border-style: solid; border-color: transparent; border-width: 10px 26px; border-image: url(assets/v2/plate_gold.png?v=1) 30 50 fill / 10px 26px stretch; background: none; font: 26px 'Black Han Sans', sans-serif; letter-spacing: 2px; color: #2c1800; text-shadow: 0 1px 0 rgba(255,240,190,.95); padding: 2px 0; width: min(92vw, 420px); filter: drop-shadow(0 6px 8px rgba(0,0,0,.7)); }
+  .btn:active { transform: translateY(2px); }
+  .rules { width: min(92vw, 420px); background: rgba(8,6,3,.82); border: 1px solid rgba(214,170,70,.55); border-radius: 10px; padding: 8px 12px; font-family: 'Do Hyeon', sans-serif; font-size: 16px; line-height: 1.45; text-align: left; }
+  .rules em { font-style: normal; color: #ffe066; text-shadow: 0 0 8px rgba(255,200,60,.8); }
+  #end { background: radial-gradient(ellipse at 50% 35%, rgba(255,190,60,.3), rgba(8,10,6,.94) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; justify-content: center; gap: 10px; }
+  #end.lose { background: radial-gradient(ellipse at 50% 35%, rgba(255,60,40,.25), rgba(8,6,6,.95) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; }
+  #endT { font-size: 72px; letter-spacing: 4px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f, 0 4px 0 #5a3b00; }
+  #end.lose #endT { color: #ff6a5a; text-shadow: 0 0 24px #a01000, 0 4px 0 #300; }
+  #endS { font-size: 28px; } #endB { font-size: 48px; color: #9be37a; text-shadow: 0 0 18px #4caf2a, 0 3px 0 #000; } #end.lose #endB { display: none; }
+  #endScore { font-size: 32px; color: #ffe9a8; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="title" class="ov">
+  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:4px">NEW RULES · 새 규칙 시험판</div>① 블록을 <em>Drag &amp; Drop</em> — 줄을 깨면 <em>탱크가 위로 발사!</em><br>② 맨 앞 <em>적 벙커</em>를 다 부수면 <em>전선</em>이 올라간다<br>③ 시간이 지나면 적이 내려온다 — <em>탱크</em>는 눌러서 피하기<br>④ <em>탱크</em>도 블록 한 칸! 빈칸을 채우면 줄이 깨진다</div>
+  <div class="pick">당신의 세력을 선택하세요</div>
+  <div class="facs">
+    <button class="fac" data-f="surge" style="--fc:#4fd8ff"><img src="assets/v2/f_surge.png" alt="">서지</button>
+    <button class="fac" data-f="gale" style="--fc:#c58bff"><img src="assets/v2/f_gale.png" alt="">게일</button>
+    <button class="fac" data-f="solar" style="--fc:#ffd451"><img src="assets/v2/f_solar.png" alt="">솔라</button>
+  </div>
+  <button id="go" class="btn">출격!</button>
+</div>
+
+<div id="end" class="ov hidden">
+  <div id="endT">VICTORY</div>
+  <div id="endS">스테이지 1 클리어!</div>
+  <div id="endB">+2,000</div>
+  <div id="endScore">점수 0</div>
+  <button id="endBtn" class="btn">다음 스테이지 ▶</button>
+</div>
+
+<script src="sfx.js?v=41"></script>
+<script src="next.js?v=1"></script>
+</body>
+</html>
