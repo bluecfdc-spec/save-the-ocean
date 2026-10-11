@@ -2,13 +2,13 @@
 import fs from 'fs'; import { createHash } from 'crypto';
 const KEY = process.env.ELEVEN_API_KEY; if (!KEY) { console.error('no key'); process.exit(1); }
 const LINES = [
-  { num: '01', name: '보병 출격 — "Go go go!"', text: '[gruff] [cocky] [shouting] Go go go!' },
+  { num: '01', name: '보병 출격 — "Go go go!"', text: '[deep voice] [gruff] [shouting] GO GO GO!' },
   { num: '02', name: '교전 — "Contact! Open fire!"', text: 'Contact! Open fire!' },
   { num: '03', name: '전선 전진 — "Push forward! Advance!"', text: 'Push forward! Advance!' },
   { num: '04', name: '전선 밀림 — "Fall back! Fall back!"', text: 'Fall back! Fall back!' },
   { num: '05', name: '붕괴 경보 — "Warning. Defensive line collapsing."', text: 'Warning. Defensive line collapsing.' }
 ];
-const VOICES = [ ['2EiwWnXFnvU5JabPnv8n', '거친 베테랑'], ['N2lVS1w4EtoT3dr4eOWO', '걸걸한 중사'], ['pNInz6obpgDQGcFmaJgB', '굵은 미군'] ];   // 더 거칠고 급박하게
+const VOICES = [ ['2EiwWnXFnvU5JabPnv8n', '거친 베테랑'], ['nPczCjzI2devNBz1zQrb', '굵고 낮은'], ['onwK4e9ZLuTAKqWW03F9', '굵은 지휘관'] ];   // 낮고 굵은 남자 목소리만   // 더 거칠고 급박하게
 const manifest = JSON.parse(fs.readFileSync('sfx/manifest.json', 'utf8'));
 for (const L of LINES) {
   const id = '목소리_' + L.num; manifest[id] = manifest[id] || { game: '목소리', num: L.num, name: L.name, sec: 2, prompt: L.text, files: [], ver: {} };
@@ -17,7 +17,7 @@ for (const L of LINES) {
     if (have.length > k) continue;
     const [vid, label] = VOICES[k];
     const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vid + '?output_format=mp3_44100_128', { method: 'POST', headers: { 'xi-api-key': KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: L.text, model_id: 'eleven_v3', voice_settings: { stability: 0.0, similarity_boost: 0.8, use_speaker_boost: true } }) });
+      body: JSON.stringify({ text: L.text, model_id: 'eleven_v3', voice_settings: { stability: 0.5, similarity_boost: 0.9, use_speaker_boost: true } }) });
     if (!res.ok) { console.error(id, label, res.status, (await res.text()).slice(0, 200)); continue; }
     const buf = Buffer.from(await res.arrayBuffer()); const h = createHash('md5').update(buf).digest('hex').slice(0, 6);
     const file = `sfx/candidates/${id}_${k + 1}_${h}.mp3`; fs.writeFileSync(file, buf); manifest[id].files.push(file); manifest[id].ver[file] = h; console.log('ok', file, label);
