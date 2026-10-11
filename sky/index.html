@@ -124,12 +124,14 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
 #flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
 #pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
-#ult{position:absolute;left:12px;bottom:12px;width:92px;height:92px;border-radius:50%;padding:0;border:0;background:transparent;cursor:pointer;z-index:3;touch-action:none;overflow:hidden}
-#ult img{width:100%;height:100%;object-fit:contain;opacity:1;display:block}
-#ult .fill{position:absolute;left:0;right:0;bottom:0;height:0%;overflow:hidden}
-#ult .fill img{position:absolute;left:0;bottom:0;opacity:1;width:92px;height:92px}
-#ult.on{animation:ultp 1s ease-in-out infinite}
-#ult .lb{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);white-space:nowrap;padding:1px 7px;border-radius:9px;background:rgba(0,0,0,.6);font:800 13px var(--display);color:#fff}
+#ult{position:absolute;left:18px;top:18px;width:10%;min-width:36px;aspect-ratio:2/3;border-radius:8px;padding:0;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.85);cursor:pointer;z-index:3;touch-action:none;overflow:hidden}   /* 필살기: 터치패드 왼쪽 위 세로 네모 (폭 10%) */
+#ult img{position:absolute;left:10%;top:50%;width:80%;height:auto;transform:translateY(-50%);opacity:.45;z-index:1;pointer-events:none}
+#ult .fill{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--fc,#ffd451);opacity:.45}
+#ult .fill img{display:none}
+#ult.on{box-shadow:0 0 14px var(--fc,#ffd451);animation:ultp 1s ease-in-out infinite}
+#ult.on img{opacity:1}
+#ult .lb{display:none}
+#pad .stats{left:calc(10% + 30px)!important}
 @keyframes ultp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #title{position:absolute;inset:0;z-index:10;background:var(--void);cursor:pointer;display:flex;align-items:center;justify-content:center}
 #title img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
@@ -267,7 +269,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </div>
     <div class="hint">TOUCH &amp; MOVE</div>
     <div id="mark" hidden></div>
-    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/ult_solar_off.png?v=44" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/ult_solar_on.png?v=44" alt=""></div><div class="lb" id="ultLb">0%</div></button>
+    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/emb_solar_on.png?v=44" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/ult_solar_on.png?v=44" alt=""></div><div class="lb" id="ultLb">0%</div></button>
   </div>
   <div id="overlay">
     <div id="homeBlur"></div>
@@ -331,7 +333,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='46';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='47';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -728,7 +730,7 @@ const Music=(()=>{
   };
 })();
 function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
-  if(b.dataset.f!==flag){b.dataset.f=flag;$('ultBg').src='assets/ult_'+flag+'_off.png?v=44';$('ultFg').src='assets/ult_'+flag+'_on.png?v=44'}
+  if(b.dataset.f!==flag){b.dataset.f=flag;b.style.setProperty('--fc',f.col);$('ultBg').src='assets/emb_'+flag+'_on.png?v=44'}
   const full=ult.g>=1;$('ultFill').style.height=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
   $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?f.skill:Math.round(ult.g*100)+'%'}
 function useUlt(){
