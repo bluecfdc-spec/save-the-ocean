@@ -1,0 +1,530 @@
+{
+ "공통_01": {
+  "game": "공통",
+  "num": "01",
+  "name": "버튼 누름",
+  "sec": 0.3,
+  "prompt": "sci-fi UI click, soft digital tap, military interface, clean",
+  "files": [
+   "sfx/candidates/공통_01_1.mp3",
+   "sfx/candidates/공통_01_2.mp3",
+   "sfx/candidates/공통_01_3.mp3"
+  ]
+ },
+ "공통_02": {
+  "game": "공통",
+  "num": "02",
+  "name": "확인/시작",
+  "sec": 0.6,
+  "prompt": "sci-fi UI confirm, bright digital chime with subtle synth sweep, military command interface, clean",
+  "files": [
+   "sfx/candidates/공통_02_1.mp3",
+   "sfx/candidates/공통_02_2.mp3",
+   "sfx/candidates/공통_02_3.mp3"
+  ]
+ },
+ "공통_03": {
+  "game": "공통",
+  "num": "03",
+  "name": "뒤로/취소",
+  "sec": 0.4,
+  "prompt": "sci-fi UI back, short low digital blip, clean",
+  "files": [
+   "sfx/candidates/공통_03_1.mp3",
+   "sfx/candidates/공통_03_2.mp3",
+   "sfx/candidates/공통_03_3.mp3"
+  ]
+ },
+ "공통_04": {
+  "game": "공통",
+  "num": "04",
+  "name": "안 됨(불가)",
+  "sec": 0.4,
+  "prompt": "sci-fi UI denied, two low digital buzz notes, military interface, clean",
+  "files": [
+   "sfx/candidates/공통_04_1.mp3",
+   "sfx/candidates/공통_04_2.mp3",
+   "sfx/candidates/공통_04_3.mp3"
+  ]
+ },
+ "공통_05": {
+  "game": "공통",
+  "num": "05",
+  "name": "카운트다운 3·2·1",
+  "sec": 0.4,
+  "prompt": "sci-fi countdown beep, single clean digital tone, military launch sequence",
+  "files": [
+   "sfx/candidates/공통_05_1.mp3",
+   "sfx/candidates/공통_05_2.mp3",
+   "sfx/candidates/공통_05_3.mp3"
+  ]
+ },
+ "공통_06": {
+  "game": "공통",
+  "num": "06",
+  "name": "시작!",
+  "sec": 0.8,
+  "prompt": "sci-fi launch confirm, rising synth sweep ending in a sharp digital hit, military, clean",
+  "files": [
+   "sfx/candidates/공통_06_1.mp3",
+   "sfx/candidates/공통_06_2.mp3",
+   "sfx/candidates/공통_06_3.mp3"
+  ]
+ },
+ "공통_07": {
+  "game": "공통",
+  "num": "07",
+  "name": "승리",
+  "sec": 3,
+  "prompt": "futuristic victory sting, epic synth brass swell with electronic drums and a bright digital shimmer, cinematic hybrid, no orchestra fanfare",
+  "files": [
+   "sfx/candidates/공통_07_1.mp3",
+   "sfx/candidates/공통_07_2.mp3",
+   "sfx/candidates/공통_07_3.mp3"
+  ]
+ },
+ "공통_08": {
+  "game": "공통",
+  "num": "08",
+  "name": "패배",
+  "sec": 2.5,
+  "prompt": "futuristic defeat sting, low synth drone descending with distorted digital impact, cinematic, somber",
+  "files": [
+   "sfx/candidates/공통_08_1.mp3",
+   "sfx/candidates/공통_08_2.mp3",
+   "sfx/candidates/공통_08_3.mp3"
+  ]
+ },
+ "공통_09": {
+  "game": "공통",
+  "num": "09",
+  "name": "필살기 게이지 완료",
+  "sec": 1,
+  "prompt": "sci-fi power core charged, rising energy hum ending in a bright digital pulse, clean",
+  "files": [
+   "sfx/candidates/공통_09_1.mp3",
+   "sfx/candidates/공통_09_2.mp3",
+   "sfx/candidates/공통_09_3.mp3"
+  ]
+ },
+ "공통_10": {
+  "game": "공통",
+  "num": "10",
+  "name": "서지 발동 (물·인간)",
+  "sec": 2,
+  "prompt": "massive tidal surge with deep sub bass rumble and synth sweep, cinematic water energy blast, futuristic",
+  "files": [
+   "sfx/candidates/공통_10_1.mp3",
+   "sfx/candidates/공통_10_2.mp3",
+   "sfx/candidates/공통_10_3.mp3"
+  ]
+ },
+ "공통_11": {
+  "game": "공통",
+  "num": "11",
+  "name": "게일 발동 (번개·AI)",
+  "sec": 1.5,
+  "prompt": "electric storm burst, sharp thunder crack with glitchy digital zap and electronic bass drop, futuristic",
+  "files": [
+   "sfx/candidates/공통_11_1.mp3",
+   "sfx/candidates/공통_11_2.mp3",
+   "sfx/candidates/공통_11_3.mp3"
+  ]
+ },
+ "공통_12": {
+  "game": "공통",
+  "num": "12",
+  "name": "솔라 발동 (빛·천사)",
+  "sec": 2,
+  "prompt": "holy light burst, bright shimmering synth pad swell with ethereal choir texture and a deep impact, cinematic futuristic",
+  "files": [
+   "sfx/candidates/공통_12_1.mp3",
+   "sfx/candidates/공통_12_2.mp3",
+   "sfx/candidates/공통_12_3.mp3"
+  ]
+ },
+ "탱크_01": {
+  "game": "탱크",
+  "num": "01",
+  "name": "블록 집기",
+  "sec": 0.3,
+  "prompt": "pick up heavy metal crate, short mechanical clack, sci-fi, clean",
+  "files": [
+   "sfx/candidates/탱크_01_1.mp3",
+   "sfx/candidates/탱크_01_2.mp3",
+   "sfx/candidates/탱크_01_3.mp3"
+  ]
+ },
+ "탱크_02": {
+  "game": "탱크",
+  "num": "02",
+  "name": "블록 놓기",
+  "sec": 0.4,
+  "prompt": "heavy metal crate lands with a solid thud and brief mechanical lock, satisfying, sci-fi, clean",
+  "files": [
+   "sfx/candidates/탱크_02_1.mp3",
+   "sfx/candidates/탱크_02_2.mp3",
+   "sfx/candidates/탱크_02_3.mp3"
+  ]
+ },
+ "탱크_03": {
+  "game": "탱크",
+  "num": "03",
+  "name": "줄 완성 폭파",
+  "sec": 0.9,
+  "prompt": "row of metal crates detonating in sequence, crunchy electronic explosion with digital sparkle, satisfying, sci-fi",
+  "files": [
+   "sfx/candidates/탱크_03_1.mp3",
+   "sfx/candidates/탱크_03_2.mp3",
+   "sfx/candidates/탱크_03_3.mp3"
+  ]
+ },
+ "탱크_04": {
+  "game": "탱크",
+  "num": "04",
+  "name": "아이템 획득",
+  "sec": 0.5,
+  "prompt": "sci-fi pickup, bright digital chime with a short synth rise, clean",
+  "files": [
+   "sfx/candidates/탱크_04_1.mp3",
+   "sfx/candidates/탱크_04_2.mp3",
+   "sfx/candidates/탱크_04_3.mp3"
+  ]
+ },
+ "탱크_05": {
+  "game": "탱크",
+  "num": "05",
+  "name": "탱크 이동",
+  "sec": 0.7,
+  "prompt": "futuristic tank tracks rolling with hydraulic whir, short, clean",
+  "files": [
+   "sfx/candidates/탱크_05_1.mp3",
+   "sfx/candidates/탱크_05_2.mp3",
+   "sfx/candidates/탱크_05_3.mp3"
+  ]
+ },
+ "탱크_06": {
+  "game": "탱크",
+  "num": "06",
+  "name": "미사일 발사",
+  "sec": 1,
+  "prompt": "futuristic missile launch, rocket ignition whoosh with rising jet scream, clean",
+  "files": [
+   "sfx/candidates/탱크_06_1.mp3",
+   "sfx/candidates/탱크_06_2.mp3",
+   "sfx/candidates/탱크_06_3.mp3"
+  ]
+ },
+ "탱크_07": {
+  "game": "탱크",
+  "num": "07",
+  "name": "폭발(작은)",
+  "sec": 0.8,
+  "prompt": "small sci-fi explosion, punchy electronic impact with brief debris, clean",
+  "files": [
+   "sfx/candidates/탱크_07_1.mp3",
+   "sfx/candidates/탱크_07_2.mp3",
+   "sfx/candidates/탱크_07_3.mp3"
+  ]
+ },
+ "탱크_08": {
+  "game": "탱크",
+  "num": "08",
+  "name": "폭발(큰·탱크 피격)",
+  "sec": 1.5,
+  "prompt": "large sci-fi explosion, deep sub bass impact with metal debris and distorted tail, cinematic",
+  "files": [
+   "sfx/candidates/탱크_08_1.mp3",
+   "sfx/candidates/탱크_08_2.mp3",
+   "sfx/candidates/탱크_08_3.mp3"
+  ]
+ },
+ "탱크_09": {
+  "game": "탱크",
+  "num": "09",
+  "name": "정찰기 비행",
+  "sec": 3,
+  "prompt": "futuristic jet drone flyby, turbine whine doppler pass, clean",
+  "files": [
+   "sfx/candidates/탱크_09_1.mp3",
+   "sfx/candidates/탱크_09_2.mp3",
+   "sfx/candidates/탱크_09_3.mp3"
+  ]
+ },
+ "탱크_10": {
+  "game": "탱크",
+  "num": "10",
+  "name": "보병 출격",
+  "sec": 0.7,
+  "prompt": "armored soldier charge, short determined shout with boots running on metal, military, clean",
+  "files": [
+   "sfx/candidates/탱크_10_1.mp3",
+   "sfx/candidates/탱크_10_2.mp3",
+   "sfx/candidates/탱크_10_3.mp3"
+  ]
+ },
+ "탱크_11": {
+  "game": "탱크",
+  "num": "11",
+  "name": "교전",
+  "sec": 2.5,
+  "prompt": "near-future battlefield clash, laser and rifle fire with distant shouting and impacts, short, cinematic",
+  "files": [
+   "sfx/candidates/탱크_11_1.mp3",
+   "sfx/candidates/탱크_11_2.mp3",
+   "sfx/candidates/탱크_11_3.mp3"
+  ]
+ },
+ "탱크_12": {
+  "game": "탱크",
+  "num": "12",
+  "name": "전선 전진",
+  "sec": 2,
+  "prompt": "victorious advance sting, military electronic drums with synth brass hit, futuristic, triumphant",
+  "files": [
+   "sfx/candidates/탱크_12_1.mp3",
+   "sfx/candidates/탱크_12_2.mp3",
+   "sfx/candidates/탱크_12_3.mp3"
+  ]
+ },
+ "탱크_13": {
+  "game": "탱크",
+  "num": "13",
+  "name": "전선 밀림",
+  "sec": 2,
+  "prompt": "ominous retreat sting, heavy low drums with dark synth drone, futuristic, tense",
+  "files": [
+   "sfx/candidates/탱크_13_1.mp3",
+   "sfx/candidates/탱크_13_2.mp3",
+   "sfx/candidates/탱크_13_3.mp3"
+  ]
+ },
+ "탱크_14": {
+  "game": "탱크",
+  "num": "14",
+  "name": "붕괴 경보",
+  "sec": 1,
+  "prompt": "sci-fi alarm, single sharp warning klaxon, military base, clean",
+  "files": [
+   "sfx/candidates/탱크_14_1.mp3",
+   "sfx/candidates/탱크_14_2.mp3",
+   "sfx/candidates/탱크_14_3.mp3"
+  ]
+ },
+ "스카이_01": {
+  "game": "스카이",
+  "num": "01",
+  "name": "출격",
+  "sec": 1,
+  "prompt": "spaceship engine ignition, deep rising thrust with synth layer, sci-fi, clean",
+  "files": [
+   "sfx/candidates/스카이_01_1.mp3",
+   "sfx/candidates/스카이_01_2.mp3",
+   "sfx/candidates/스카이_01_3.mp3"
+  ]
+ },
+ "스카이_02": {
+  "game": "스카이",
+  "num": "02",
+  "name": "탄 스침",
+  "sec": 0.3,
+  "prompt": "laser bolt whoosh passing very close, short, sci-fi, clean",
+  "files": [
+   "sfx/candidates/스카이_02_1.mp3",
+   "sfx/candidates/스카이_02_2.mp3",
+   "sfx/candidates/스카이_02_3.mp3"
+  ]
+ },
+ "스카이_03": {
+  "game": "스카이",
+  "num": "03",
+  "name": "기체 폭발",
+  "sec": 1.2,
+  "prompt": "sci-fi ship explosion, bright energy burst with crackling debris, clean",
+  "files": [
+   "sfx/candidates/스카이_03_1.mp3",
+   "sfx/candidates/스카이_03_2.mp3",
+   "sfx/candidates/스카이_03_3.mp3"
+  ]
+ },
+ "스카이_04": {
+  "game": "스카이",
+  "num": "04",
+  "name": "저격탄 발사",
+  "sec": 0.6,
+  "prompt": "sci-fi sniper laser shot, sharp high-energy crack with short tail, clean",
+  "files": [
+   "sfx/candidates/스카이_04_1.mp3",
+   "sfx/candidates/스카이_04_2.mp3",
+   "sfx/candidates/스카이_04_3.mp3"
+  ]
+ },
+ "스카이_05": {
+  "game": "스카이",
+  "num": "05",
+  "name": "운석 지나감",
+  "sec": 1,
+  "prompt": "asteroid rumbling pass by, low rocky roar, short, clean",
+  "files": [
+   "sfx/candidates/스카이_05_1.mp3",
+   "sfx/candidates/스카이_05_2.mp3",
+   "sfx/candidates/스카이_05_3.mp3"
+  ]
+ },
+ "스카이_06": {
+  "game": "스카이",
+  "num": "06",
+  "name": "경쟁 기체 격추",
+  "sec": 1,
+  "prompt": "distant sci-fi explosion, small, muffled, clean",
+  "files": [
+   "sfx/candidates/스카이_06_1.mp3",
+   "sfx/candidates/스카이_06_2.mp3",
+   "sfx/candidates/스카이_06_3.mp3"
+  ]
+ },
+ "스카이_07": {
+  "game": "스카이",
+  "num": "07",
+  "name": "방패 피격",
+  "sec": 0.6,
+  "prompt": "energy shield absorbing a hit, electric ping with resonant hum, sci-fi, clean",
+  "files": [
+   "sfx/candidates/스카이_07_1.mp3",
+   "sfx/candidates/스카이_07_2.mp3",
+   "sfx/candidates/스카이_07_3.mp3"
+  ]
+ },
+ "스카이_08": {
+  "game": "스카이",
+  "num": "08",
+  "name": "신기록",
+  "sec": 1.2,
+  "prompt": "new record sting, quick bright digital arpeggio with synth shimmer, futuristic, clean",
+  "files": [
+   "sfx/candidates/스카이_08_1.mp3",
+   "sfx/candidates/스카이_08_2.mp3",
+   "sfx/candidates/스카이_08_3.mp3"
+  ]
+ },
+ "오션_01": {
+  "game": "오션",
+  "num": "01",
+  "name": "폭탄 투하",
+  "sec": 0.5,
+  "prompt": "depth charge drop into water, short splash with metallic plunk, clean",
+  "files": [
+   "sfx/candidates/오션_01_1.mp3",
+   "sfx/candidates/오션_01_2.mp3",
+   "sfx/candidates/오션_01_3.mp3"
+  ]
+ },
+ "오션_02": {
+  "game": "오션",
+  "num": "02",
+  "name": "수중 폭발",
+  "sec": 1,
+  "prompt": "underwater explosion, muffled deep boom with bubbles and pressure wave, clean",
+  "files": [
+   "sfx/candidates/오션_02_1.mp3",
+   "sfx/candidates/오션_02_2.mp3",
+   "sfx/candidates/오션_02_3.mp3"
+  ]
+ },
+ "오션_03": {
+  "game": "오션",
+  "num": "03",
+  "name": "잠수함 격파",
+  "sec": 1.2,
+  "prompt": "submarine hull crushed underwater, metal groan and crunch with bubbles, cinematic",
+  "files": [
+   "sfx/candidates/오션_03_1.mp3",
+   "sfx/candidates/오션_03_2.mp3",
+   "sfx/candidates/오션_03_3.mp3"
+  ]
+ },
+ "오션_04": {
+  "game": "오션",
+  "num": "04",
+  "name": "보스 잠수함 등장",
+  "sec": 2,
+  "prompt": "ominous submarine horn, deep resonant blast underwater with synth undertone, sci-fi",
+  "files": [
+   "sfx/candidates/오션_04_1.mp3",
+   "sfx/candidates/오션_04_2.mp3",
+   "sfx/candidates/오션_04_3.mp3"
+  ]
+ },
+ "오션_05": {
+  "game": "오션",
+  "num": "05",
+  "name": "빨간 잠수함(고득점)",
+  "sec": 1,
+  "prompt": "sonar target lock, rapid high ping, sci-fi, clean",
+  "files": [
+   "sfx/candidates/오션_05_1.mp3",
+   "sfx/candidates/오션_05_2.mp3",
+   "sfx/candidates/오션_05_3.mp3"
+  ]
+ },
+ "오션_06": {
+  "game": "오션",
+  "num": "06",
+  "name": "어뢰 발사",
+  "sec": 0.8,
+  "prompt": "torpedo launch underwater, pressurized whoosh with propeller spin-up, clean",
+  "files": [
+   "sfx/candidates/오션_06_1.mp3",
+   "sfx/candidates/오션_06_2.mp3",
+   "sfx/candidates/오션_06_3.mp3"
+  ]
+ },
+ "오션_07": {
+  "game": "오션",
+  "num": "07",
+  "name": "군함 피격",
+  "sec": 1,
+  "prompt": "warship hit, heavy metal clang with alarm blip, cinematic",
+  "files": [
+   "sfx/candidates/오션_07_1.mp3",
+   "sfx/candidates/오션_07_2.mp3",
+   "sfx/candidates/오션_07_3.mp3"
+  ]
+ },
+ "오션_08": {
+  "game": "오션",
+  "num": "08",
+  "name": "방패 아이템",
+  "sec": 0.6,
+  "prompt": "energy shield activate, bright hum rising, sci-fi, clean",
+  "files": [
+   "sfx/candidates/오션_08_1.mp3",
+   "sfx/candidates/오션_08_2.mp3",
+   "sfx/candidates/오션_08_3.mp3"
+  ]
+ },
+ "오션_09": {
+  "game": "오션",
+  "num": "09",
+  "name": "드릴 아이템",
+  "sec": 0.6,
+  "prompt": "mechanical drill power up, short metallic whir with digital chime, sci-fi",
+  "files": [
+   "sfx/candidates/오션_09_1.mp3",
+   "sfx/candidates/오션_09_2.mp3",
+   "sfx/candidates/오션_09_3.mp3"
+  ]
+ },
+ "오션_10": {
+  "game": "오션",
+  "num": "10",
+  "name": "소나",
+  "sec": 2,
+  "prompt": "sonar ping, single clean deep echo, submarine",
+  "files": [
+   "sfx/candidates/오션_10_1.mp3",
+   "sfx/candidates/오션_10_2.mp3",
+   "sfx/candidates/오션_10_3.mp3"
+  ]
+ }
+}
