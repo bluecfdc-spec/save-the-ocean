@@ -63,10 +63,11 @@ window.REALNET = window.NET = (function () {
       var c = $('chat'); c.appendChild(d); while (c.children.length > 30) c.removeChild(c.firstChild); c.scrollTop = c.scrollHeight; }, function () { });
     chat.orderByChild('t').endAt(snow() - 600000).limitToFirst(20).once('value').then(function (s) { s.forEach(function (c) { c.ref.remove(); }); }).catch(function () { });   /* 10분 지난 말은 지움 */
   }
+  function chatFlash(t) { var c = $('chat'), d = document.createElement('div'); d.className = 'chatflash'; d.textContent = t; c.appendChild(d); c.scrollTop = c.scrollHeight; setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1800); }
   function say(i) {
     if (!db || !authed) return; saveName();
-    if (Date.now() - lastSay < 2000) { msg('lbMsg', '조금 천천히 보내 주세요.'); return; } lastSay = Date.now(); msg('lbMsg', '');
-    db.ref('lobby/tank/chat').push({ n: name, p: i, t: firebase.database.ServerValue.TIMESTAMP }).catch(function () { msg('lbMsg', '보내지 못했어요.'); });
+    if (Date.now() - lastSay < 2000) { chatFlash('조금 천천히 보내 주세요'); return; } lastSay = Date.now();
+    db.ref('lobby/tank/chat').push({ n: name, p: i, t: firebase.database.ServerValue.TIMESTAMP }).catch(function () { chatFlash('보내지 못했어요'); });
   }
   function joinPublic(c) {                                    /* 공개 방: 없으면 만들고(내가 방장), 있으면 들어감 */
     if (!init()) return; saveName(); msg('lbMsg', '들어가는 중…');
@@ -102,7 +103,7 @@ window.REALNET = window.NET = (function () {
       ref.child('players').on('value', onPlayers);
       ref.child('meta').on('value', onMeta);
       ref.child('inbox/' + uid).on('child_added', onInbox);
-      watchRooms(false); lobbyChat(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
+      try { window.tankCards(); } catch (e) { } watchRooms(false); lobbyChat(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
     }).catch(function (e) { msg('lbMsg', '입장 실패: ' + (e.message || e)); });
   }
   function leave() {
@@ -171,14 +172,14 @@ window.REALNET = window.NET = (function () {
       ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '4,6', collapses: 0, skill: null, ult: 0, shield: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; lastSkill = 0; myCollapses = 0; oppCollapses = 0;
       if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
-      show('count'); lastPub = ''; prevOpp = {}; tick();
+      try { window.tankCards(); } catch (e) { } show('count'); lastPub = ''; prevOpp = {}; tick();
     }
     if (meta.state === 'lobby' && !started) { show('room'); renderRoom(); }
   }
   function tick() {
     var left = meta.startAt - snow();
     if (left <= 0) { startGame(); return; }
-    var c = Math.max(1, Math.min(3, Math.ceil(left / 1300))); if ($('countNum').textContent != c) { $('countNum').textContent = c; $('countTip').innerText = (window.TANK_TIPS || {})[c] || ''; try { SFX.count(); } catch (e) { } }
+    var c = Math.max(1, Math.min(3, Math.ceil(left / 1300))); if ($('countNum').textContent != c) { $('countNum').textContent = c; try { SFX.count(); } catch (e) { } }
     startTimer = setTimeout(tick, 100);
   }
   function startGame() {
