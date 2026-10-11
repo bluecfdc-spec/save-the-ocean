@@ -331,7 +331,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='45';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='46';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -546,21 +546,13 @@ function draw(dt){
       o.rock.forEach((k,i)=>{const a=i/o.rock.length*Math.PI*2;ctx[i?'lineTo':'moveTo'](Math.cos(a)*o.r*k,Math.sin(a)*o.r*k)});
       ctx.closePath();ctx.fillStyle='#2a2630';ctx.fill();ctx.strokeStyle='#8a8594';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     }else{
-      const si=IMG['shotT_'+(o.s?'snipe':SHOTN[o.c]||'red')];
-      if(ok(si)){const h=o.s?14:20,w=h*si.naturalWidth/si.naturalHeight,cx=(o.s?56.2/96:64.5/96)*w;   // 빛 구슬 중심을 탄 위치에 맞춘다
-        ctx.save();ctx.translate(o.x,o.y);ctx.rotate(Math.atan2(o.vy,o.vx));ctx.drawImage(si,-cx,-h/2,w,h);ctx.restore()}
-      else{ctx.fillStyle=o.c;ctx.shadowColor=o.c;ctx.shadowBlur=12;
+      {ctx.fillStyle=o.c;ctx.shadowColor=o.c;ctx.shadowBlur=12;
       ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill();
       ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(o.x,o.y,2.2,0,7);ctx.fill()}
     }
   }
-  const ti=IMG['tail_'+(FAC[flag]?flag:'solar')];
-  if(trail.length>4&&state!=='over'&&ok(ti)&&ship){   // 세력 꼬리 빛: 지나온 방향으로 길게
-    const p0=trail[Math.max(0,trail.length-14)],dx=ship.x-p0.x,dy=ship.y-p0.y,d=Math.hypot(dx,dy);
-    if(d>3){const L=Math.min(90,14+d*1.6),h=18;ctx.save();ctx.translate(ship.x,ship.y);ctx.rotate(Math.atan2(dy,dx));
-      ctx.globalAlpha=Math.min(1,d/20);ctx.drawImage(ti,-L+4,-h/2,L,h);ctx.restore();ctx.globalAlpha=1}
-  }else if(trail.length>1&&state!=='over'){
-    ctx.lineCap='round';ctx.strokeStyle='#ffffff';ctx.shadowColor='#ffffff';ctx.shadowBlur=10;
+  if(trail.length>1&&state!=='over'){   // 지나온 길 꼬리 (세력 색)
+    const tc=(FAC[flag]||FAC.solar).col;ctx.lineCap='round';ctx.strokeStyle=tc;ctx.shadowColor=tc;ctx.shadowBlur=10;
     for(let i=1;i<trail.length;i++){const k=i/trail.length;ctx.globalAlpha=k*k*.6;ctx.lineWidth=1+k*6;
       ctx.beginPath();ctx.moveTo(trail[i-1].x,trail[i-1].y);ctx.lineTo(trail[i].x,trail[i].y);ctx.stroke()}
     ctx.globalAlpha=1;ctx.shadowBlur=0;
@@ -610,8 +602,8 @@ function drawPlane(x,y,f,al){
     if(time<ult.slowUntil){const ri=IMG.surge_ring1;for(let k=0;k<3;k++){const r=18+((performance.now()/14+k*22)%66);ctx.globalAlpha=al*(1-(r-18)/66);
       if(ok(ri))ctx.drawImage(ri,-r,-r,2*r,2*r);else{ctx.strokeStyle='rgba(79,216,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}}ctx.globalAlpha=al}}   // 격류 물결
   const busyU=mine&&(time<ult.slowUntil||ult.shield>0||ult.flashT>0),sp=IMG[(mine?'ship_':'rival_')+(FAC[f]?f:'solar')+(busyU?'_ult':'')];
-  if(ok(sp)){ctx.shadowBlur=0;if(mine&&ult.shield>0){const si=IMG[time>ult.shieldUntil-2.5?'shield1':'shield0'];if(ok(si)){ctx.globalAlpha=.85+.15*Math.sin(performance.now()/120);ctx.drawImage(si,-25,-25,50,50);ctx.globalAlpha=al}}
-    const z=mine?32:26;ctx.drawImage(sp,-z/2,-z/2,z,z);ctx.restore();return}   // 세력 기체 그림 (판정 반지름 9는 그대로)
+  if(ok(sp)){ctx.shadowBlur=0;if(mine&&ult.shield>0){const si=IMG[time>ult.shieldUntil-2.5?'shield1':'shield0'];if(ok(si)){ctx.globalAlpha=.85+.15*Math.sin(performance.now()/120);ctx.drawImage(si,-18,-18,36,36);ctx.globalAlpha=al}}
+    const z=mine?22:20;ctx.drawImage(sp,-z/2,-z/2,z,z);ctx.restore();return}   // 세력 기체 그림 (판정 반지름 9는 그대로)
   ctx.fillStyle=mine?fc.col:'#fff';ctx.beginPath();ctx.arc(0,0,9,0,7);ctx.fill();ctx.shadowBlur=0;
   ctx.beginPath();ctx.arc(0,0,mine?7:8,0,7);ctx.clip();
   const fi=flagImg(f);if(fi){const k=16/fi.h,w=fi.w*k;ctx.fillStyle='#fff';ctx.fillRect(-9,-9,18,18);ctx.drawImage(fi.c,fi.x,fi.y,fi.w,fi.h,-w/2,-8,w,16)}
