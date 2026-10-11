@@ -802,5 +802,90 @@
    "sfx/candidates/오션_10_3_1bcbff.mp3": "1bcbffba"
   },
   "done": false
+ },
+ "목소리_01": {
+  "game": "목소리",
+  "num": "01",
+  "name": "보병 출격 — \"Hold the line! Move, move, move!\"",
+  "sec": 2,
+  "prompt": "Hold the line! Move, move, move!",
+  "files": [
+   "sfx/candidates/목소리_01_1_2ac473.mp3",
+   "sfx/candidates/목소리_01_2_49d549.mp3",
+   "sfx/candidates/목소리_01_3_87564b.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_01_1_2ac473.mp3": "2ac473",
+   "sfx/candidates/목소리_01_2_49d549.mp3": "49d549",
+   "sfx/candidates/목소리_01_3_87564b.mp3": "87564b"
+  }
+ },
+ "목소리_02": {
+  "game": "목소리",
+  "num": "02",
+  "name": "교전 — \"Contact! Open fire!\"",
+  "sec": 2,
+  "prompt": "Contact! Open fire!",
+  "files": [
+   "sfx/candidates/목소리_02_1_689929.mp3",
+   "sfx/candidates/목소리_02_2_9b064e.mp3",
+   "sfx/candidates/목소리_02_3_9814dd.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_02_1_689929.mp3": "689929",
+   "sfx/candidates/목소리_02_2_9b064e.mp3": "9b064e",
+   "sfx/candidates/목소리_02_3_9814dd.mp3": "9814dd"
+  }
+ },
+ "목소리_03": {
+  "game": "목소리",
+  "num": "03",
+  "name": "전선 전진 — \"Push forward! Advance!\"",
+  "sec": 2,
+  "prompt": "Push forward! Advance!",
+  "files": [
+   "sfx/candidates/목소리_03_1_4fdba6.mp3",
+   "sfx/candidates/목소리_03_2_df378f.mp3",
+   "sfx/candidates/목소리_03_3_8468a6.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_03_1_4fdba6.mp3": "4fdba6",
+   "sfx/candidates/목소리_03_2_df378f.mp3": "df378f",
+   "sfx/candidates/목소리_03_3_8468a6.mp3": "8468a6"
+  }
+ },
+ "목소리_04": {
+  "game": "목소리",
+  "num": "04",
+  "name": "전선 밀림 — \"Fall back! Fall back!\"",
+  "sec": 2,
+  "prompt": "Fall back! Fall back!",
+  "files": [
+   "sfx/candidates/목소리_04_1_22638d.mp3",
+   "sfx/candidates/목소리_04_2_6173de.mp3",
+   "sfx/candidates/목소리_04_3_d262d3.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_04_1_22638d.mp3": "22638d",
+   "sfx/candidates/목소리_04_2_6173de.mp3": "6173de",
+   "sfx/candidates/목소리_04_3_d262d3.mp3": "d262d3"
+  }
+ },
+ "목소리_05": {
+  "game": "목소리",
+  "num": "05",
+  "name": "붕괴 경보 — \"Warning. Defensive line collapsing.\"",
+  "sec": 2,
+  "prompt": "Warning. Defensive line collapsing.",
+  "files": [
+   "sfx/candidates/목소리_05_1_69b817.mp3",
+   "sfx/candidates/목소리_05_2_83d181.mp3",
+   "sfx/candidates/목소리_05_3_2c5e15.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_05_1_69b817.mp3": "69b817",
+   "sfx/candidates/목소리_05_2_83d181.mp3": "83d181",
+   "sfx/candidates/목소리_05_3_2c5e15.mp3": "2c5e15"
+  }
  }
 }
