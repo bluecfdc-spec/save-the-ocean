@@ -6,7 +6,7 @@ window.BOT = (function () {
   var T = window.__tank, $ = function (id) { return document.getElementById(id); };
   var ROWS = 9, SCOUT_MS = 5000; function COLSf() { return T.get() ? T.get().board[0].length : 9; } var COLS = 9;
   var bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal', wave = 1;
-  var SPEED = { easy: 3400, normal: 2600, hard: 1600 };
+  var SPEED = { easy: 6800, normal: 5200, hard: 3200 };   // CPU 한 수 간격(ms) — 처음엔 예전의 절반 속도
   function withBot(fn) { var real = T.get(); T.set(bot); try { return fn(); } finally { T.set(real); } }
   function rnd(n) { return Math.floor(Math.random() * n); }
   function now() { return performance.now(); }
