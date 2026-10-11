@@ -202,29 +202,32 @@
   }
   // ---------- 플레이 중 가이드: 상황이 생기면 그 자리를 가리키는 말풍선 (게임은 안 멈춤, 한 번 본 건 다시 안 나옴) ----------
   function guideOn() { try { return localStorage.getItem('tank_guide') !== '0'; } catch (e) { return true; } }
-  var SEEN = (function () { try { return JSON.parse(localStorage.getItem('tank_guide_seen') || '{}'); } catch (e) { return {}; } })();
-  function hint(id, text, pt) {                              // pt: 가리킬 곳을 돌려주는 함수 { x, y }
-    if (!G || !G.vs || G.demo || G.bot || !guideOn()) return; if (SEEN[id]) return;
+  function setGuide(on) { try { localStorage.setItem('tank_guide', on ? '1' : '0'); } catch (e) { } if (!on && G) { G.hint = null; G.hintQ = []; } }
+  function muted() { try { return localStorage.getItem('tank_mute') === '1'; } catch (e) { return false; } }
+  function setMute(on) { try { localStorage.setItem('tank_mute', on ? '1' : '0'); } catch (e) { } try { SFX.mute(on); } catch (e) { } }
+  try { if (muted()) setTimeout(function () { try { SFX.mute(true); } catch (e) { } }, 0); } catch (e) { }
+  function hint(id, text, pt, cool) {                        // pt: 가리킬 곳 { x, y }. cool: 다시 보여줄 간격(ms) — 없으면 한 판에 한 번
+    if (!G || !G.vs || G.demo || G.bot || !guideOn()) return; G.hintLast = G.hintLast || {}; var last = G.hintLast[id];
+    if (last != null && (cool == null || now() - last < cool)) return;
     G.hintQ = G.hintQ || []; if (G.hintQ.some(function (h) { return h.id === id; }) || (G.hint && G.hint.id === id)) return;
-    G.hintQ.push({ id: id, text: text, pt: pt });
+    G.hintQ.push({ id: id, text: text, pt: pt }); G.hintLast[id] = now();
   }
   function guideTick(t) {
     if (!G.vs || G.demo || G.bot || !guideOn()) return;
-    try { SEEN = JSON.parse(localStorage.getItem('tank_guide_seen') || '{}'); } catch (e) { }
     var el = t - G.start; layoutBtns();
     if (el > 900) hint('blocks', '블록을 끌어다 놓아 줄을 채우면 아이템이 나와요', function () { return { x: W / 2, y: TY + 10 }; });
     if (el > 6000) hint('move', '초록 칸을 누르면 탱크가 이동해요 (기름 1칸에 1)', function () { return { x: BX(G.tank.fx) + S / 2, y: BYY(G.tank.fy) }; });
     if (el > 11000) hint('front', '최전방 보병이 많은 쪽이 30초마다 전선을 밀어요', function () { return { x: W / 2, y: BYY(G.adv) }; });
     if (el > 16000 && G.scout > 0) hint('scout', '정찰기를 띄우면 안개가 걷혀 적 탱크가 보여요', function () { return { x: BTN.scout.x + BTN.scout.w / 2, y: BTN.scout.y }; });
-    if (G.inf > 0) hint('inf', '보병 투입! 내 탱크가 있는 줄 맨 앞으로 나가요', function () { return { x: BTN.inf.x + BTN.inf.w / 2, y: BTN.inf.y }; });
-    if (G.missile > 0) hint('missile', '미사일은 내 탱크가 있는 세로줄로 날아가요 — 적 탱크와 같은 줄에서 쏘세요', function () { return { x: BTN.missile.x + BTN.missile.w / 2, y: BTN.missile.y }; });
-    if (G.ult >= ULT_MAX && ULTB) hint('ult', '필살기 준비! 문장을 누르세요', function () { return { x: ULTB.x + ULTB.w / 2, y: ULTB.y }; });
-    if (G.fuel <= 0) hint('fuel', '기름이 없어요 — ⛽ 블록이 든 줄을 지우면 채워져요', function () { return { x: 60, y: HY + 4 }; });
+    if (G.inf > 0) hint('inf', '보병 투입! 내 탱크가 있는 줄 맨 앞으로 나가요', function () { return { x: BTN.inf.x + BTN.inf.w / 2, y: BTN.inf.y }; }, 30000);
+    if (G.missile > 0) hint('missile', '미사일은 내 탱크가 있는 세로줄로 날아가요 — 적 탱크와 같은 줄에서 쏘세요', function () { return { x: BTN.missile.x + BTN.missile.w / 2, y: BTN.missile.y }; }, 30000);
+    if (G.ult >= ULT_MAX && ULTB) hint('ult', '필살기 준비! 문장을 누르세요', function () { return { x: ULTB.x + ULTB.w / 2, y: ULTB.y }; }, 30000);
+    if (G.fuel <= 0) hint('fuel', '기름이 없어요 — ⛽ 블록이 든 줄을 지우면 채워져요', function () { return { x: 60, y: HY + 4 }; }, 30000);
     if (el > 45000) hint('reroll', '블록이 마음에 안 들면 교체 (한 판에 3번)', function () { return REROLLB ? { x: REROLLB.x + REROLLB.w / 2, y: REROLLB.y } : { x: W, y: TY }; });
     if (G.hint && t - G.hint.at > 4200) G.hint = null;
-    if (!G.hint && G.hintQ && G.hintQ.length && !G.roundFx) { G.hint = G.hintQ.shift(); G.hint.at = t; SEEN[G.hint.id] = 1; try { localStorage.setItem('tank_guide_seen', JSON.stringify(SEEN)); } catch (e) { } }
+    if (!G.hint && G.hintQ && G.hintQ.length && !G.roundFx) { G.hint = G.hintQ.shift(); G.hint.at = t; G.hintLast[G.hint.id] = t; }
   }
-  var HINTB = null;
+  var HINTB = null, TGL = null;
   function drawHint(t) {
     HINTB = null; var h = G.hint; if (!h) return; var a = t - h.at, al = Math.min(1, a / 200) * Math.min(1, (4200 - a) / 300); if (al <= 0) return;
     var p = h.pt(); ctx.save(); ctx.globalAlpha = al;
@@ -237,7 +240,7 @@
     ctx.fillStyle = 'rgba(14,16,10,.92)'; rr(bx, by, bw, bh, 10); ctx.fill(); ctx.strokeStyle = '#ffd451'; ctx.lineWidth = 2; rr(bx, by, bw, bh, 10); ctx.stroke();
     ctx.beginPath(); var ax = Math.max(bx + 14, Math.min(bx + bw - 14, p.x)); if (above) { ctx.moveTo(ax - 9, by + bh); ctx.lineTo(ax, p.y - 14); ctx.lineTo(ax + 9, by + bh); } else { ctx.moveTo(ax - 9, by); ctx.lineTo(ax, p.y + 14); ctx.lineTo(ax + 9, by); } ctx.closePath(); ctx.fillStyle = '#ffd451'; ctx.fill();
     ctx.fillStyle = '#fff3c0'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; lines.forEach(function (l, i) { ctx.fillText(l, bx + 14, by + 10 + i * 20); });
-    ctx.font = '600 11px Do Hyeon, system-ui'; ctx.fillStyle = 'rgba(255,233,160,.6)'; ctx.textAlign = 'right'; ctx.fillText('💡 가이드 · 누르면 닫힘', bx + bw - 8, by + bh - 14);
+    ctx.font = '600 11px Do Hyeon, system-ui'; ctx.fillStyle = 'rgba(255,233,160,.6)'; ctx.textAlign = 'right'; ctx.fillText('💡 가이드 · 누르면 닫힘 (위 💡로 끄기)', bx + bw - 8, by + bh - 14);
     ctx.restore(); HINTB = { x: bx, y: by, w: bw, h: bh };
   }
   function addScore(n, x, y, label) {                      // 점수 + 연출: 그 자리에서 숫자가 튀어 오른 뒤 점수판으로 날아가 꽂힌다
@@ -320,7 +323,7 @@
     G.freezeUntil = now() + FLIGHT_MS; G.sel = false; G.drag = null; G.dragInf = null; G.aim = null;   /* 포격 중엔 양쪽 다 정지 */
     G.incoming.push({ x: mx, at: now() + FLIGHT_MS, start: now(), y0: G.oppTank ? -1 - G.oppTank.y : -EROWS + 1, y1: landY, trail: [], vict: vict, hitTank: hitTank });   // 판정은 쏜 순간에 확정
     G.fx.push({ t: 'pop', text: '적 포격! 포탄 날아온다', x: W / 2, y: 0, at: now(), big: true, col: '#ff5a4a' }); sfx('siren');
-    hint('incoming', '적이 쏘면 위치가 드러나요 — 그 줄로 가서 반격!', function () { return G.oppTank ? { x: BX(COLS - 1 - G.oppTank.x) + S / 2, y: rowC(-1 - G.oppTank.y) } : { x: W / 2, y: EY + 30 }; });
+    hint('incoming', '적이 쏘면 위치가 드러나요 — 그 줄로 가서 반격!', function () { return G.oppTank ? { x: BX(COLS - 1 - G.oppTank.x) + S / 2, y: rowC(-1 - G.oppTank.y) } : { x: W / 2, y: EY + 30 }; }, 30000);
     G.alarmUntil = now() + FLIGHT_MS;
   }
   var planeE = null;
@@ -1053,7 +1056,9 @@
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
     var barH = G.vs ? 12 : 6; ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - barH, W, barH); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - barH, W * p, barH); if (G.vs) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(0, TOP - barH, W * p, 3); }
-    if (G.vs && G.wave) { ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('전투 ' + G.wave, 8, (TOP - barH) / 2); ctx.restore(); }
+    var tb = Math.min(30, TOP - barH - 6), ty0 = (TOP - barH - tb) / 2; TGL = { snd: { x: 6, y: ty0, w: tb, h: tb }, gd: { x: 12 + tb, y: ty0, w: tb, h: tb } };   /* 게임 안: 소리·가이드 켜기/끄기 */
+    [['snd', muted() ? '🔇' : '🔊', !muted()], ['gd', '💡', guideOn()]].forEach(function (q) { var b = TGL[q[0]]; ctx.save(); rr(b.x, b.y, b.w, b.h, 7); ctx.fillStyle = q[2] ? 'rgba(255,212,81,.22)' : 'rgba(0,0,0,.45)'; ctx.fill(); ctx.strokeStyle = q[2] ? '#ffd451' : '#555'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = q[2] ? 1 : 0.4; ctx.font = Math.round(b.h * 0.6) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(q[1], b.x + b.w / 2, b.y + b.h / 2 + 1); ctx.restore(); });
+    if (G.vs && G.wave) { ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('전투 ' + G.wave, 18 + tb * 2, (TOP - barH) / 2); ctx.restore(); }
     ctx.textAlign = 'center'; ctx.font = '800 ' + (G.vs ? 20 : 13) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = left < 6000 && G.vs ? '#ffb3a8' : '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), G.vs ? W * 0.4 : W / 2, G.vs ? (TOP - barH) / 2 : 10); ctx.shadowBlur = 0;
   }
   function traySlot(i) { var w = (W - 40) / 3 - 10; return { x: 20 + i * (w + 15), y: TY + 8, w: w, h: TRAY - 16 }; }
@@ -1077,6 +1082,8 @@
   cv.addEventListener('pointerdown', function (ev) {
     if (!G || G.over || G.sweep || G.collapsing) return;
     var p = pos(ev); if (G.demo) { if (window.DEMO) DEMO.tap(p); return; }
+    if (TGL && inB(TGL.snd, p)) { setMute(!muted()); return; }
+    if (TGL && inB(TGL.gd, p)) { setGuide(!guideOn()); G.fx.push({ t: 'pop', text: guideOn() ? '💡 가이드 켜짐' : '💡 가이드 꺼짐', x: W / 2, y: EY + 40, at: now(), big: false, col: '#ffd451' }); return; }
     if (HINTB && G.hint && inB(HINTB, p)) { G.hint = null; HINTB = null; return; }   /* 가이드 닫기 */
     if (G.freezeUntil && now() < G.freezeUntil) return;              /* 포격 중: 양쪽 다 정지 */
     if (G.roundFx) return;

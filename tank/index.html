@@ -93,7 +93,7 @@
   </div>
   <p id="facDesc" class="hint"></p>
   <div class="row"><button id="startBtn" class="btn">CPU 대전</button><button id="vsBtn" class="btn sub">1:1 대전</button></div>
-  <div class="row tg"><button id="howBtn" class="btn sub" style="font-size:12px;padding:8px 18px">HOW TO PLAY</button><button id="sndBtn" class="tgl">🔊 소리 켜짐</button><button id="gdBtn" class="tgl">💡 가이드 켜짐</button></div>
+  <button id="howBtn" class="btn sub" style="display:none">HOW TO PLAY</button>
 </div>
 
 
@@ -138,28 +138,14 @@
 })();
 </script>
 <script src="sfx.js?v=36"></script>
-<script src="tank.js?v=84"></script>
+<script src="tank.js?v=85"></script>
 <script src="net.js?v=36"></script>
 <script src="bot.js?v=42"></script>
 <script src="demo.js?v=4"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };
   document.getElementById('howBtn').addEventListener('click', showTut);
-  if (!localStorage.getItem('tank_tut')) setTimeout(function () { var d = document.getElementById('facDesc'); if (d) d.innerHTML += '<br><b style="color:#ffd451">처음이면 HOW TO PLAY 를 먼저 눌러 보세요</b>'; }, 300);
-</script>
-<script>
-(function () {   /* 시작 화면: 소리·가이드 켜기/끄기 (기기에 저장) */
-  var sb = document.getElementById('sndBtn'), gb = document.getElementById('gdBtn');
-  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
-  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
-  function paint() { var m = get('tank_mute', '0') === '1', g = get('tank_guide', '1') === '1';
-    sb.textContent = m ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'; sb.classList.toggle('off', m);
-    gb.textContent = g ? '💡 가이드 켜짐' : '💡 가이드 꺼짐'; gb.classList.toggle('off', !g); }
-  sb.addEventListener('click', function () { var m = get('tank_mute', '0') !== '1'; set('tank_mute', m ? '1' : '0'); try { SFX.mute(m); } catch (e) { } paint(); });
-  gb.addEventListener('click', function () { var g = get('tank_guide', '1') !== '1'; set('tank_guide', g ? '1' : '0'); if (g) set('tank_guide_seen', '{}'); paint(); });   /* 다시 켜면 처음부터 다시 보여줌 */
-  try { if (get('tank_mute', '0') === '1') SFX.mute(true); } catch (e) { }
-  paint();
-})();
+  if (!localStorage.getItem('tank_tut')) setTimeout(function () { var d = document.getElementById('facDesc'); if (d) d.innerHTML += '<br><b style="color:#ffd451"></b>'; }, 300);
 </script>
 </body>
 </html>
