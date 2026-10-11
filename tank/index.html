@@ -9,30 +9,30 @@
 <link rel="icon" href="assets/v2/icon_64.png">
 <link rel="apple-touch-icon" href="assets/v2/icon_180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
   body { position: fixed; inset: 0; width: 100%; }
   #c { touch-action: none; }
-  body { display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', system-ui, sans-serif; }
+  body { display: flex; align-items: center; justify-content: center; font-family: 'Do Hyeon', system-ui, sans-serif; }
   #c { display: block; background: #0b0d0a; }
   #ov { background: url(assets/v2/title.jpg) center/cover no-repeat; justify-content: flex-end; padding-bottom: 36px; }
   #ov h1 { display: none; }
-  #ov { padding-bottom: 28px; }
+  #ov { padding-bottom: 22px; gap: 10px; }
   #ov p { background: rgba(0,0,0,.55); border: 1px solid rgba(255,212,81,.35); border-radius: 10px; padding: 10px 14px; font-size: 12px; backdrop-filter: blur(3px); }
   #lobby, #room, #count, #result { background: linear-gradient(rgba(8,10,6,.82), rgba(8,10,6,.9)), url(assets/v2/keyart.jpg) center/cover no-repeat; background-size: cover; background-position: center; }
   .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 30%, #2b3321 0%, #0b0d0a 70%); color: #f3efe0; text-align: center; padding: 24px; box-sizing: border-box; }
-  .ov h1 { font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
+  .ov h1 { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
   .ov h1 small { display: block; font-size: 12px; color: #b9c7a0; letter-spacing: 6px; margin-top: 6px; }
-  .ov h2 { font-size: 22px; letter-spacing: 2px; margin: 0; color: #ffd451; }
-  .ov p { font: 500 13px/1.7 system-ui, sans-serif; max-width: 340px; margin: 0; color: #d7dcc6; }
+  .ov h2 { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 26px; letter-spacing: 1px; margin: 0; color: #ffd451; }
+  .ov p { font: 400 15px/1.6 'Do Hyeon', system-ui, sans-serif; max-width: 340px; margin: 0; color: #d7dcc6; }
   .ov .score { font-size: 30px; color: #fff; }
-  .btn { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 2px; padding: 14px 34px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; cursor: pointer; }
+  .btn { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: 1px; padding: 14px 34px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; cursor: pointer; }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a5a00; }
   .btn:disabled { opacity: .45; }
-  .btn.sub { font-size: 14px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
+  .btn.sub { font-size: 17px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
   input::placeholder { color: #6b7a52; letter-spacing: 0; }
@@ -40,21 +40,21 @@
   .pl { font: 600 15px system-ui; padding: 8px 14px; border-radius: 8px; background: #1b1d16; border: 1px solid #3a3e32; min-width: 240px; margin: 4px 0; }
   .pl.rd { border-color: #9bbd55; color: #cfe8a0; }
   .pl.dim { color: #8a9477; font-weight: 500; }
-  #countNum { font-size: 120px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f; }
-  #resTitle { font-size: 40px; letter-spacing: 4px; }
+  #countNum { font-family: 'Black Han Sans', sans-serif; font-size: 140px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f; }
+  #resTitle { font-family: 'Black Han Sans', sans-serif; font-size: 48px; letter-spacing: 2px; }
   #resTitle.win { color: #ffd451; text-shadow: 0 0 20px #ff9a1f; }
   #resTitle.lose { color: #ff6a5a; text-shadow: 0 0 20px #a01000; }
   #resTitle.draw { color: #cfd6bf; }
-  .hint { font: 500 12px/1.6 system-ui; color: #8a9477; max-width: 320px; }
+  .hint { font: 400 14px/1.6 'Do Hyeon', system-ui; color: #8a9477; max-width: 320px; }
   .hidden { display: none !important; }
-  .fac { background: rgba(0,0,0,.45); border: 2px solid #3a3e32; border-radius: 14px; padding: 6px 8px 4px; width: 92px; color: #cfd6bf; font: 700 13px system-ui; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: .7; }
-  .fac img { width: 56px; height: 56px; }
+  .fac { background: rgba(0,0,0,.45); border: 2px solid #3a3e32; border-radius: 14px; padding: 6px 8px 4px; width: 84px; color: #cfd6bf; font: 400 15px 'Do Hyeon', system-ui; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: .7; }
+  .fac img { width: 46px; height: 46px; }
   .fac small { font: 500 10px system-ui; color: #8a9477; }
   .fac.on { opacity: 1; border-color: #ffd451; box-shadow: 0 0 16px #ffd45166; color: #fff; }
   .fac.on[data-f=surge] { border-color: #4fd8ff; box-shadow: 0 0 16px #4fd8ff66; }
   .fac.on[data-f=gale] { border-color: #c58bff; box-shadow: 0 0 16px #c58bff66; }
   #ov p#ovText { display: none; }
-  #facDesc { background: rgba(0,0,0,.5); border-radius: 8px; padding: 6px 10px; max-width: 320px; color: #d7dcc6; }
+  #facDesc { background: rgba(0,0,0,.5); border-radius: 8px; padding: 5px 10px; max-width: 320px; color: #d7dcc6; font-size: 13px; line-height: 1.4; }
   #tut { background: rgba(6,8,5,.88); z-index: 50; justify-content: center; }
   .tcard { width: min(92vw, 400px); background: linear-gradient(#1f2318, #121410); border: 2px solid #ffd451; border-radius: 16px; padding: 16px 16px 12px; box-shadow: 0 0 30px #000c; text-align: left; }
   .tcard .step { font: 800 11px Orbitron, system-ui; letter-spacing: 3px; color: #8a9477; }
@@ -133,10 +133,10 @@
 })();
 </script>
 <script src="sfx.js?v=27"></script>
-<script src="tank.js?v=53"></script>
+<script src="tank.js?v=54"></script>
 <script src="net.js?v=32"></script>
 <script src="bot.js?v=34"></script>
-<script src="demo.js?v=2"></script>
+<script src="demo.js?v=3"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };
   document.getElementById('howBtn').addEventListener('click', showTut);

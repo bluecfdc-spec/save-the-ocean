@@ -80,18 +80,18 @@ window.DEMO = (function () {
     ctx.fillStyle = '#ffd451'; ctx.fillRect(0, y, L.W, 3); ctx.fillRect(0, y + h - 3, L.W, 3);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.save(); ctx.translate(L.W / 2, y + 28); ctx.scale(pop, pop); ctx.globalAlpha = ka;
-    var fs = 26; ctx.font = '800 ' + fs + 'px Orbitron, system-ui'; while (ctx.measureText(cap).width > L.W - 16 && fs > 15) { fs -= 1; ctx.font = '800 ' + fs + 'px Orbitron, system-ui'; }
+    var fs = 26; ctx.font = '800 ' + fs + 'px Black Han Sans, Do Hyeon, system-ui'; while (ctx.measureText(cap).width > L.W - 16 && fs > 15) { fs -= 1; ctx.font = '800 ' + fs + 'px Black Han Sans, Do Hyeon, system-ui'; }
     ctx.lineWidth = 6; ctx.strokeStyle = '#2a1a00'; ctx.strokeText(cap, 0, 0); ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#ff9a1f'; ctx.shadowBlur = 14; ctx.fillText(cap, 0, 0); ctx.restore();
-    ctx.globalAlpha = ka; var fs2 = 15; ctx.font = '700 ' + fs2 + 'px system-ui'; while (ctx.measureText(sub).width > L.W - 16 && fs2 > 10) { fs2 -= 1; ctx.font = '700 ' + fs2 + 'px system-ui'; }
+    ctx.globalAlpha = ka; var fs2 = 15; ctx.font = '700 ' + fs2 + 'px Do Hyeon, system-ui'; while (ctx.measureText(sub).width > L.W - 16 && fs2 > 10) { fs2 -= 1; ctx.font = '700 ' + fs2 + 'px Do Hyeon, system-ui'; }
     ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(sub, L.W / 2, y + 58); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-    ctx.font = '600 10px system-ui'; ctx.fillStyle = '#8a9477'; ctx.fillText('화면을 누르면 다음 ▶', L.W / 2, y + h + 10);
-    ctx.font = '800 11px Orbitron, system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('HOW TO PLAY  ' + (step + 1) + ' / ' + STEPS.length, 8, y - 12);
+    ctx.font = '600 12px Do Hyeon, system-ui'; ctx.fillStyle = '#8a9477'; ctx.fillText('화면을 누르면 다음 ▶', L.W / 2, y + h + 10);
+    ctx.font = '800 13px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('HOW TO PLAY  ' + (step + 1) + ' / ' + STEPS.length, 8, y - 12);
     ctx.restore();
     // 손가락
     if (hand.on) { var pr = Math.max(0, 1 - (t - hand.press) / 220), sc = 1 - 0.25 * pr; ctx.save(); ctx.translate(hand.x, hand.y);
       if (pr > 0) { ctx.strokeStyle = 'rgba(255,212,81,' + pr + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 14 + (1 - pr) * 22, 0, 7); ctx.stroke(); }
       ctx.scale(sc, sc); ctx.fillStyle = 'rgba(255,212,81,.35)'; ctx.beginPath(); ctx.arc(0, 0, 16, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#1a1200'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7); ctx.fill(); ctx.stroke();   // 터치 점
-      ctx.font = '34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = '#000'; ctx.shadowBlur = 8; ctx.fillText('👆', 0, 2); ctx.restore(); }
+      ctx.font = '34px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = '#000'; ctx.shadowBlur = 8; ctx.fillText('👆', 0, 2); ctx.restore(); }
   }
   return { start: start, tap: tap, draw: draw, running: function () { return running; } };
 })();
