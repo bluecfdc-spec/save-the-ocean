@@ -37,6 +37,14 @@
 .tgl { font-family: 'Do Hyeon', sans-serif; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,212,81,.55); background: rgba(0,0,0,.6); color: #ffe9a0; }
   .tgl.off { color: #888; border-color: #555; }
   .row.tg { gap: 8px; align-items: center; }
+.rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(92vw, 420px); }
+  .rooms button { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 20px; padding: 14px 8px 10px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rooms button small { font-family: 'Do Hyeon', sans-serif; font-size: 13px; color: #5a3b00; }
+  .rooms button.full { background: linear-gradient(#9a9a8a, #5e6152); border-color: #777; color: #ddd; }
+  .rooms button.full small { color: #eee; }
+  .rooms button.wait { box-shadow: 0 0 0 3px #9be37a, 0 4px 0 #8a5a00, 0 8px 18px #0008; }
+  details.priv { width: min(92vw, 420px); color: #cfd6bf; font-family: 'Do Hyeon', sans-serif; }
+  details.priv summary { cursor: pointer; font-size: 14px; padding: 6px 0; text-align: center; }
   .btn.sub { font-size: 17px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
@@ -100,17 +108,20 @@
 <!-- 대전 로비 -->
 <div id="lobby" class="ov hidden">
   <h2>1:1 대전</h2>
-  <p>이름을 정하고, 방을 만들어 친구에게 코드(또는 링크)를 보내거나 받은 코드로 들어가세요.</p>
+  <p>이름을 정하고 전장을 고르세요. 먼저 들어간 사람이 기다리고, 두 번째 사람이 들어오면 대전!</p>
   <input id="nm" maxlength="10" placeholder="이름">
-  <div class="row"><button id="mkBtn" class="btn">방 만들기</button></div>
-  <div class="row"><input id="code" maxlength="4" placeholder="코드 4글자" autocapitalize="characters"><button id="joinBtn" class="btn sub">참가</button></div>
+  <div id="rooms" class="rooms"></div>
+  <details class="priv"><summary>친구와 비밀 방 (코드)</summary>
+    <div class="row"><button id="mkBtn" class="btn sub">비밀 방 만들기</button></div>
+    <div class="row"><input id="code" maxlength="4" placeholder="코드 4글자" autocapitalize="characters"><button id="joinBtn" class="btn sub">참가</button></div>
+  </details>
   <p id="lbMsg" class="hint"></p>
   <button id="lbBack" class="btn sub">뒤로</button>
 </div>
 
 <!-- 방 -->
 <div id="room" class="ov hidden">
-  <h2>방 코드</h2>
+  <h2>전장</h2>
   <div id="roomCode" class="code">----</div>
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
@@ -139,7 +150,7 @@
 </script>
 <script src="sfx.js?v=36"></script>
 <script src="tank.js?v=87"></script>
-<script src="net.js?v=36"></script>
+<script src="net.js?v=37"></script>
 <script src="bot.js?v=42"></script>
 <script src="demo.js?v=4"></script>
 <script>

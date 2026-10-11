@@ -34,10 +34,31 @@ window.REALNET = window.NET = (function () {
   // ---------- 로비 ----------
   function openLobby() {
     if (!init()) { msg('lbMsg', '온라인 연결에 실패했어요. 잠시 후 다시 시도해 주세요.'); }
-    else login().catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
+    else login().then(function () { watchRooms(true); }).catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
     $('nm').value = name; show('lobby'); msg('lbMsg', '');
   }
   function saveName() { name = ($('nm').value || '').trim().slice(0, 10) || '병사' + uid.slice(0, 3); try { localStorage.setItem('tank_name', name); } catch (e) { } }
+  var ROOMS = [['GEOJE', '거제'], ['JERUSALEM', '예루살렘'], ['SILICON', '실리콘밸리'], ['SEOUL', '서울']];   /* 공개 전장 4곳 */
+  function roomName(c) { for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i][0] === c) return ROOMS[i][1]; return null; }
+  ROOMS.forEach(function (r) { var b = document.createElement('button'); b.type = 'button'; b.id = 'rm-' + r[0]; b.appendChild(document.createTextNode(r[1])); var sm = document.createElement('small'); sm.textContent = '…'; b.appendChild(sm);
+    b.addEventListener('click', function () { joinPublic(r[0]); }); $('rooms').appendChild(b); });
+  var roomsRef = null;
+  function watchRooms(on) {                                   /* 로비에 있는 동안만 4개 방 인원·상태를 실시간으로 */
+    if (roomsRef) { roomsRef.off(); roomsRef = null; } if (!on || !db) return;
+    roomsRef = db.ref('rooms/tank'); roomsRef.on('value', function (s) { var v = s.val() || {};
+      ROOMS.forEach(function (r) { var d = v[r[0]] || {}, n = Object.keys(d.players || {}).length, playing = n >= 2 && (d.meta || {}).state === 'play', b = $('rm-' + r[0]);
+        b.lastChild.textContent = n + '/2 · ' + (playing ? '대전 중' : n === 1 ? '상대 기다리는 중' : '비어 있음'); b.classList.toggle('full', n >= 2); b.classList.toggle('wait', n === 1); }); }, function () { msg('lbMsg', '전장 정보를 못 불러왔어요.'); });
+  }
+  function joinPublic(c) {                                    /* 공개 방: 없으면 만들고(내가 방장), 있으면 들어감 */
+    if (!init()) return; saveName(); msg('lbMsg', '들어가는 중…');
+    login().then(function () { return db.ref('rooms/tank/' + c).once('value'); }).then(function (s) {
+      var v = s.val() || {}, ps = v.players || {}, others = Object.keys(ps).filter(function (k) { return k !== uid; });
+      if (others.length >= 2 || (others.length >= 1 && Object.keys(ps).length >= 2 && !ps[uid])) { msg('lbMsg', '이 전장은 꽉 찼어요. 다른 곳을 골라 주세요.'); return; }
+      var host = v.meta && v.meta.host && ps[v.meta.host] ? v.meta.host : uid;   /* 방장이 나갔으면 내가 방장 */
+      var m = v.meta && host !== uid ? null : { state: 'lobby', host: uid, startAt: 0, round: (v.meta && v.meta.round) || 0 };
+      return (m ? db.ref('rooms/tank/' + c + '/meta').set(m) : Promise.resolve()).then(function () { joinNow(c); });
+    }).catch(function (e) { msg('lbMsg', '입장 실패: ' + (e.message || e)); });
+  }
   function mkCode() { var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
   function create() {
     if (!init()) return; saveName(); msg('lbMsg', '방 만드는 중…');
@@ -54,7 +75,7 @@ window.REALNET = window.NET = (function () {
       var v = s.val();
       if (!v || !v.meta) { msg('lbMsg', '그 코드의 방이 없어요.'); return; }
       var ps = v.players || {}, n = Object.keys(ps).filter(function (k) { return k !== uid; }).length;
-      if (n >= 2) { msg('lbMsg', '방이 꽉 찼어요.'); return; }
+      if (n >= 1 && !ps[uid] && Object.keys(ps).length >= 2) { msg('lbMsg', '방이 꽉 찼어요.'); return; }   /* 2명까지 */
       code = c; ref = r; players = {}; meta = v.meta; started = false; lastStart = v.meta.startAt || 0;
       var mine = ref.child('players/' + uid);
       mine.onDisconnect().remove();
@@ -62,14 +83,14 @@ window.REALNET = window.NET = (function () {
       ref.child('players').on('value', onPlayers);
       ref.child('meta').on('value', onMeta);
       ref.child('inbox/' + uid).on('child_added', onInbox);
-      $('roomCode').textContent = code; show('room'); renderRoom();
+      watchRooms(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
     }).catch(function (e) { msg('lbMsg', '입장 실패: ' + (e.message || e)); });
   }
   function leave() {
-    if (ref) { ref.child('players').off(); ref.child('meta').off(); ref.child('inbox/' + uid).off(); ref.child('players/' + uid).onDisconnect().cancel(); ref.child('players/' + uid).remove(); ref.child('inbox/' + uid).remove(); }
+    if (ref) { var o0 = oppId(); if (roomName(code) && meta.host === uid) ref.child('meta').update(o0 ? { host: o0, state: 'lobby' } : { host: '', state: 'lobby' }); ref.child('players').off(); ref.child('meta').off(); ref.child('inbox/' + uid).off(); ref.child('players/' + uid).onDisconnect().cancel(); ref.child('players/' + uid).remove(); ref.child('inbox/' + uid).remove(); }
     ref = null; code = ''; players = {}; meta = {}; started = false; resultUp = false; clearInterval(pubTimer); clearInterval(lineTimer); clearTimeout(startTimer);
     try { history.replaceState(null, '', location.pathname); } catch (e) { }
-    show('ov');
+    if (db && authed) { show('lobby'); msg('lbMsg', ''); watchRooms(true); } else show('ov');
   }
   function link() { return location.origin + location.pathname + '?room=' + code; }
   function share() {
@@ -94,6 +115,7 @@ window.REALNET = window.NET = (function () {
       var G0 = window.__tank.get();
       prevOpp = { inf: o.inf || 0, hp: o.hp == null ? 3 : o.hp, tank: o.tank };
     }
+    if (roomName(code) && meta && !started && meta.host && !players[meta.host] && players[uid]) ref.child('meta').update({ host: uid, state: 'lobby' });   /* 방장이 끊겼으면 넘겨받음 */
     // 둘 다 준비 → 방장이 시작 시각을 정한다
     if (meta.host === uid && meta.state === 'lobby' && o && o.ready && me().ready) {
       ref.child('meta').update({ state: 'play', startAt: snow() + 4000, round: (meta.round || 0) + 1 });
@@ -194,7 +216,7 @@ window.REALNET = window.NET = (function () {
   $('vsBtn').addEventListener('click', function () { if (window.BOT) BOT.stop(); window.NET = window.REALNET; openLobby(); });
   $('mkBtn').addEventListener('click', create);
   $('joinBtn').addEventListener('click', function () { join($('code').value); });
-  $('lbBack').addEventListener('click', function () { show('ov'); });
+  $('lbBack').addEventListener('click', function () { watchRooms(false); show('ov'); });
   $('shareBtn').addEventListener('click', share);
   $('readyBtn').addEventListener('click', ready);
   $('leaveBtn').addEventListener('click', leave);
