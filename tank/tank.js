@@ -11,12 +11,12 @@
 (function () {
   'use strict';
   var COLS = 7, ROWS = 9, EROWS = 4, S = 68, FOG_MAX = 9;  // 7×9. 혼자: 칸 68, 안개 4줄. 대전: 칸 60, 위쪽은 상대 진영 9줄(한 줄 26px) — 한 전장을 위아래로 나눠 씀
-  var W = COLS * S, TOP = 22, HUD = 26, TRAY = 96, BBAR = 48, FS = 44;   // FS: 위쪽(적진) 한 줄 높이       // 위: 진격 타이머 띠. 보드 아래: 연료·점수 한 줄(HUD) → 블록 받침(TRAY) → 맨 바닥 넓고 얇은 버튼 띠(BBAR)
-  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13, PW = 60, WT, OFFY = 0, HL = 0;   // PW: 오른쪽 정보 패널 폭(화면 남는 만큼 늘어남), WT: 전체 폭, OFFY: 세로 남는 공간을 위아래로 나눈 여백            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
+  var W = COLS * S, TOP = 22, HUD = 26, TRAY = 118, BBAR = 48, FS = 44;   // FS: 위쪽(적진) 한 줄 높이       // 위: 진격 타이머 띠. 보드 아래: 연료·점수 한 줄(HUD) → 블록 받침(TRAY) → 맨 바닥 넓고 얇은 버튼 띠(BBAR)
+  var EY, BY, HY, TY, OY, H, ADV_MIN, SLOTS = 13, PW = 60, WT, OFFY = 0, OFFX = 0, HL = 0;   // PW: 오른쪽 정보 패널 폭(화면 남는 만큼 늘어남), WT: 전체 폭, OFFY: 세로 남는 공간을 위아래로 나눈 여백            // SLOTS: 대전 사거리 칸 수 = 안개 4 + 상대 진영 9
   var VS_MODE = false;
   function layout(vs) {
     VS_MODE = !!vs;
-    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 18; HUD = 22; TRAY = 100; BBAR = 46; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 96; BBAR = 48; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
+    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 18; HUD = 22; TRAY = 118; BBAR = 46; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 118; BBAR = 48; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
     relayout(); }
   function relayout() { W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
   layout(false);
@@ -51,7 +51,8 @@
     if (VS_MODE) { var fsWant = (ih / scale - fixed) / EROWS; FS = Math.max(22, Math.min(40, Math.round(fsWant))); relayout(); }
     if (H * scale > ih) scale = ih / H;
     scaleY = scale;
-    PW = iw / scale - W; WT = W + PW; HL = ih / scale; OFFY = Math.max(0, (HL - H) / 2);
+    PW = iw / scale - W; var pwMax = W * 0.45; OFFX = 0; if (PW > pwMax) { OFFX = (PW - pwMax) / 2; PW = pwMax; }   /* PC 넓은 창: 패널은 보드 폭의 45%까지만, 나머지는 좌우 여백 */
+    WT = W + PW; HL = ih / scale; OFFY = Math.max(0, (HL - H) / 2);
     cv.style.width = iw + 'px'; cv.style.height = ih + 'px';
     cv.width = Math.round(iw * dpr); cv.height = Math.round(ih * dpr);
   }
@@ -488,8 +489,8 @@
   }
   function draw(t) {
     ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0);
-    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, WT, HL);
-    ctx.translate(0, OFFY);
+    ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, WT + OFFX * 2, HL);
+    ctx.translate(OFFX, OFFY);
     if (t < G.shakeUntil) { var sk = G.shake * (G.shakeUntil - t) / 400; ctx.translate((Math.random() - 0.5) * sk, (Math.random() - 0.5) * sk); }
     // 땅: 대전은 새 전장 그림(격자 없음), 혼자 모드는 흙 타일
     function cover(img, x, y, w, h, alpha) { var r = Math.max(w / img.width, h / img.height), sw = w / r, sh = h / r; ctx.save(); if (alpha != null) ctx.globalAlpha = alpha; ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h); ctx.restore(); }
@@ -588,7 +589,7 @@
     if (danger > 0.6 && !G.over) { var dg = ctx.createRadialGradient(W / 2, BYY((top() + ROWS) / 2), W * 0.35, W / 2, BYY((top() + ROWS) / 2), W * 0.75); dg.addColorStop(0, 'rgba(255,0,0,0)'); dg.addColorStop(1, 'rgba(255,20,20,' + ((danger - 0.6) * 1.2 + 0.08 * Math.sin(t / 200)) + ')'); ctx.fillStyle = dg; ctx.fillRect(0, BYY(top()), W, (ROWS - top()) * S); }
     if (G.freezeUntil && t < G.freezeUntil && !G.over) {                   /* 포격 중 정지 표시 */
       ctx.save(); ctx.strokeStyle = 'rgba(255,200,80,' + (0.5 + 0.4 * Math.sin(t / 90)) + ')'; ctx.lineWidth = 4; ctx.strokeRect(2, EY + 2, W - 4, HY - EY - 4);
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 15px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a0a00'; ctx.strokeText('포격 중 — 정지', W / 2, BYY(G.adv) - 14); ctx.fillStyle = '#ffd451'; ctx.fillText('포격 중 — 정지', W / 2, BYY(G.adv) - 14); ctx.restore();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 15px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a0a00'; ctx.strokeText('포격 중 — 정지', W / 2, EY + 22); ctx.fillStyle = '#ffd451'; ctx.fillText('포격 중 — 정지', W / 2, EY + 22); ctx.restore();
     }
     if (G.alarmUntil && t < G.alarmUntil) { ctx.fillStyle = 'rgba(255,30,30,' + (0.12 + 0.12 * Math.sin(t / 50)) + ')'; ctx.fillRect(0, BYY(top()), W, (ROWS - top()) * S); }   // 적 포격 경보: 붉게 번쩍
     // 붕괴 경보: 보드가 붉게 번쩍이고 3초 카운트다운 (조작 불가)
@@ -682,7 +683,7 @@
       ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = G.msg.col || '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
       ctx.save(); ctx.translate(W / 2, by2); ctx.scale(1 + 0.08 * (1 - mIn), 1 + 0.08 * (1 - mIn)); ctx.fillText(G.msg.text, 0, 0); ctx.restore(); ctx.restore();
     }
-    drawHud(t); drawTray(t); if (G.demo && window.DEMO) DEMO.draw(t); try { drawPanel(t); drawReroll(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(0, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
+    drawHud(t); drawTray(t); if (G.demo && window.DEMO) DEMO.draw(t); try { drawPanel(t); drawReroll(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(OFFX, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
     if (G.dragInf) {
       var di = G.dragInf;
@@ -747,6 +748,7 @@
     var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, -OFFY, PW, HL);
     ctx.fillStyle = '#3a3e32'; ctx.fillRect(x0, -OFFY, 2, HL);
     if (OFFY > 0) { ctx.fillStyle = '#1b1d16'; ctx.fillRect(0, -OFFY, W, OFFY); ctx.fillRect(0, H, W, OFFY + 1); }
+    if (OFFX > 0) { ctx.fillStyle = '#0b0d0a'; ctx.fillRect(-OFFX, -OFFY, OFFX, HL); ctx.fillRect(WT, -OFFY, OFFX + 2, HL); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0;
     function card(y0, hgt, title, tankImg, hp, shield, f, ult, mine, col) {
       var pad = 6, th = Math.max(30, Math.min(hgt * 0.4, (PW - 20) * 0.58 * 1.1)), tw = th / 1.1;   // 탱크: 왼쪽에, 오른쪽엔 체력 막대 3단(패널 끝까지)
@@ -850,7 +852,7 @@
       var sl = traySlot(i), p = G.tray[i];
       rr(sl.x, sl.y, sl.w, sl.h, 10); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.strokeStyle = '#4a4e40'; ctx.lineWidth = 2; ctx.stroke();
       if (!p || (G.drag && G.drag.i === i)) continue;
-      var s = Math.floor(Math.min(26, (sl.h - 8) / p.h, (sl.w - 8) / p.w)), ox = sl.x + (sl.w - p.w * s) / 2, oy = sl.y + (sl.h - p.h * s) / 2;   /* 긴 블록도 받침 안에 들어오게 칸 크기를 줄임 */
+      var s = Math.floor(Math.min(30, (sl.h - 8) / p.h, (sl.w - 8) / p.w)), ox = sl.x + (sl.w - p.w * s) / 2, oy = sl.y + (sl.h - p.h * s) / 2;   /* 긴 블록도 받침 안에 들어오게 칸 크기를 줄임 */
       var fits = anyFit(p);
       p.cells.forEach(function (c) { drawBlock(ox + c.dx * s, oy + c.dy * s, s, c.r, fits ? 1 : 0.35); });
     }
@@ -858,7 +860,7 @@
   function best() { try { return +localStorage.getItem('tank_best') || 0; } catch (e) { return 0; } }
 
   // ---------- 입력 ----------
-  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scaleY - OFFY }; }
+  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / scale - OFFX, y: (ev.clientY - r.top) / scaleY - OFFY }; }
   function inB(b, p) { return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; }
   var down = null;
   cv.addEventListener('pointerdown', function (ev) {
