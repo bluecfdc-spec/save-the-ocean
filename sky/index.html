@@ -124,16 +124,19 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
 #flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
 #pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
-#ult{position:absolute;left:12px;bottom:10px;width:46%;height:38px;border-radius:10px;padding:0 10px 0 40px;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.82);cursor:default;pointer-events:none;z-index:3;overflow:hidden;transition:width .25s}   /* 필살기 게이지: 전장 왼쪽 아래(터치패드 바로 위) 가로 막대. 다 차면 손가락을 뗄 때 발동 */
-#ult.on{width:calc(100% - 24px)}
-#ult img{position:absolute;left:3px;top:50%;width:32px;height:32px;transform:translateY(-50%);opacity:.5;z-index:2;pointer-events:none}
-#ult .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--fc,#ffd451);opacity:.4}
+#ult{position:absolute;left:10px;bottom:8px;width:52%;height:48px;padding:0 14px 0 50px;border:0;background:none;cursor:default;pointer-events:none;z-index:3;transition:width .3s}   /* 필살기 게이지: 터치패드 위 메탈+네온 막대. 다 차면 손가락을 뗄 때 발동 */
+#ult::after{content:"";position:absolute;inset:0;border:20px solid transparent;border-image:url(assets/ult_frame.png?v=50) 40 fill / 20px stretch;z-index:1;pointer-events:none}
+#ult.on{width:calc(100% - 20px)}
+#ult img{position:absolute;left:6px;top:50%;width:40px;height:40px;transform:translateY(-50%);opacity:.55;z-index:3;pointer-events:none;filter:drop-shadow(0 0 4px #000)}
+#ult .fill{position:absolute;left:8px;top:8px;bottom:8px;width:0;border-radius:4px;z-index:0;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 45%),linear-gradient(90deg,color-mix(in srgb,var(--fc,#ffd451) 35%,transparent),var(--fc,#ffd451));box-shadow:0 0 12px var(--fc,#ffd451);opacity:.85}
+#ult .fill::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:ultSheen 1.6s linear infinite;opacity:0}
+#ult.on .fill::after{opacity:1}
+@keyframes ultSheen{to{left:110%}}
 #ult .fill img{display:none}
-#ult.on{box-shadow:0 0 14px var(--fc,#ffd451);animation:ultp 1s ease-in-out infinite}
-#ult.on img{opacity:1}
-#ult .lb{position:relative;z-index:2;display:block;text-align:center;font:800 15px var(--display);color:#fff;text-shadow:0 0 4px #000,0 1px 2px #000}
-#ult.ubB{top:64px;bottom:auto}
-#ult.ubC{left:0;right:0;width:auto;bottom:0;height:34px;border-radius:0;border-width:2px 0 0}
+#ult.on{animation:none}
+#ult.on img{opacity:1;filter:drop-shadow(0 0 8px var(--fc,#ffd451))}
+#ult .lb{position:relative;z-index:3;display:block;line-height:48px;text-align:center;white-space:nowrap;font:800 15px var(--display);color:#fff;text-shadow:0 0 4px #000,0 1px 2px #000,0 0 10px var(--fc,#ffd451)}
 @keyframes ultp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #title{position:absolute;inset:0;z-index:10;background:var(--void);cursor:pointer;display:flex;align-items:center;justify-content:center}
 #title img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
@@ -335,7 +338,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='49';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='50';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -356,7 +359,6 @@ const FLAGS=['surge','gale','solar'];
 const FAC={surge:{name:'서지',skill:'격류',col:'#4fd8ff',glow:'rgba(79,216,255,',desc:'6초 동안 모든 탄이 느려진다',sym:'🌊'},
   gale:{name:'게일',skill:'뇌격',col:'#c58bff',glow:'rgba(197,139,255,',desc:'주변의 탄을 전부 날려 버린다',sym:'⚡'},
   solar:{name:'솔라',skill:'태양 방패',col:'#ffd451',glow:'rgba(255,212,81,',desc:'10초 동안 한 발을 막아 주는 방패',sym:'☀'}};
-const UB=(location.search.match(/[?&]ub=([ABC])/)||[])[1];if(UB&&UB!=='A')document.getElementById('ult').classList.add('ub'+UB);
 const ULT_FILL=/[?&]god\b/.test(location.search)?2:12;   // 게이지가 차는 데 걸리는 초
 let flag=(window.TANK_FAC||'solar');
 try{const f=localStorage.getItem('tank_fac');if(FLAGS.includes(f))flag=f}catch(e){}
@@ -608,7 +610,10 @@ function drawPlane(x,y,f,al){
       if(ok(ri))ctx.drawImage(ri,-r,-r,2*r,2*r);else{ctx.strokeStyle='rgba(79,216,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}}ctx.globalAlpha=al}}   // 격류 물결
   const busyU=mine&&(time<ult.slowUntil||ult.shield>0||ult.flashT>0),sp=IMG[(mine?'ship_':'rival_')+(FAC[f]?f:'solar')+(busyU?'_ult':'')];
   if(ok(sp)){ctx.shadowBlur=0;if(mine&&ult.shield>0){const si=IMG[time>ult.shieldUntil-2.5?'shield1':'shield0'];if(ok(si)){ctx.globalAlpha=.85+.15*Math.sin(performance.now()/120);ctx.drawImage(si,-18,-18,36,36);ctx.globalAlpha=al}}
-    const z=mine?22:20;ctx.drawImage(sp,-z/2,-z/2,z,z);ctx.restore();return}   // 세력 기체 그림 (판정 반지름 9는 그대로)
+    const z=mine?22:20;ctx.drawImage(sp,-z/2,-z/2,z,z);
+    if(mine){ctx.strokeStyle='#39ff6a';ctx.lineWidth=1.6;ctx.shadowColor='#39ff6a';ctx.shadowBlur=8*dpr;ctx.globalAlpha=.75+.25*Math.sin(performance.now()/180);   // 내 기체 표시: 초록 네온 테두리
+      ctx.beginPath();ctx.arc(0,0,z/2+1.5,0,7);ctx.stroke();ctx.shadowBlur=0}
+    ctx.restore();return}   // 세력 기체 그림 (판정 반지름 9는 그대로)
   ctx.fillStyle=mine?fc.col:'#fff';ctx.beginPath();ctx.arc(0,0,9,0,7);ctx.fill();ctx.shadowBlur=0;
   ctx.beginPath();ctx.arc(0,0,mine?7:8,0,7);ctx.clip();
   const fi=flagImg(f);if(fi){const k=16/fi.h,w=fi.w*k;ctx.fillStyle='#fff';ctx.fillRect(-9,-9,18,18);ctx.drawImage(fi.c,fi.x,fi.y,fi.w,fi.h,-w/2,-8,w,16)}
@@ -734,7 +739,7 @@ const Music=(()=>{
 })();
 function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
   if(b.dataset.f!==flag){b.dataset.f=flag;b.style.setProperty('--fc',f.col);$('ultBg').src='assets/emb_'+flag+'_on.png?v=44'}
-  const full=ult.g>=1;$('ultFill').style.width=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
+  const full=ult.g>=1;$('ultFill').style.width='calc((100% - 16px) * '+ult.g.toFixed(3)+')';b.classList.toggle('on',full&&state==='play');
   $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?'손가락을 떼면 필살기 발동!':f.skill}
 function useUlt(){
   if(state!=='play'||ult.g<1||!ship)return;ult.g=0;ult.flashT=.5;Music.boom();
