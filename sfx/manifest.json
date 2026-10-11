@@ -77,16 +77,8 @@
   "name": "카운트다운 3·2·1",
   "sec": 0.5,
   "prompt": "sci-fi countdown beep, single clean digital tone, military launch sequence",
-  "files": [
-   "sfx/candidates/공통_05_1_be5bef.mp3",
-   "sfx/candidates/공통_05_2_6d3bfd.mp3",
-   "sfx/candidates/공통_05_3_d043c0.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/공통_05_1_be5bef.mp3": "be5bef",
-   "sfx/candidates/공통_05_2_6d3bfd.mp3": "6d3bfd",
-   "sfx/candidates/공통_05_3_d043c0.mp3": "d043c0"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "공통_06": {
@@ -167,16 +159,8 @@
   "name": "서지 발동 (물·인간)",
   "sec": 2.5,
   "prompt": "massive tidal surge with deep sub bass rumble and synth sweep, cinematic water energy blast, futuristic",
-  "files": [
-   "sfx/candidates/공통_10_1_806fee.mp3",
-   "sfx/candidates/공통_10_2_ed9914.mp3",
-   "sfx/candidates/공통_10_3_7e044f.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/공통_10_1_806fee.mp3": "806fee",
-   "sfx/candidates/공통_10_2_ed9914.mp3": "ed9914",
-   "sfx/candidates/공통_10_3_7e044f.mp3": "7e044f"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "공통_11": {
