@@ -355,7 +355,7 @@
     return planeE = c;
   }
   function enemyScout() {                                   // 대전: 상대 정찰기가 내 진영 위를 돈다 → 내 위치가 발각됨
-    if (!G.vs || G.over) return; G.enemyScoutUntil = now() + SCOUT_MS; sfx('radar');
+    if (!G.vs || G.over) return; G.enemyScoutUntil = now() + SCOUT_MS;   /* 적 정찰기는 빨간 비행기로 보이니 경고음 없음 */
     G.fx.push({ t: 'pop', text: '적 정찰기 출현 — 탐색 중', x: W / 2, y: BYY(top()) + S * 1.5, at: now(), big: false, col: '#ffb3a8' });
   }
   function myRow(d) { return G.adv + d - 1; }                // 내 보병 d(1=최전방) 가 서는 내 보드 줄
@@ -493,8 +493,7 @@
       if (!G.sweep) { calcReach(); checkFit(); }
     }
     var quiet = G.vs ? !(G.soldiers.some(function (e) { return e.d === 1; }) || G.mySol.some(function (e) { return e.d === 1; })) : false;
-    if (!G.sweep && !quiet && G.nextAdv - t < 6000 && Math.floor((G.nextAdv - t) / 1000) !== G.warnSec) { G.warnSec = Math.floor((G.nextAdv - t) / 1000); if (G.warnSec % 2 === 1) sfx('warn'); }
-    if (!G.sweep && !quiet && G.nextAdv - t < 10000 && Math.floor((G.nextAdv - t) / 2000) !== G.drumSec) { G.drumSec = Math.floor((G.nextAdv - t) / 2000); sfx('drum'); }
+    /* 30초 교전 전 경고음·북소리는 시끄러워서 뺌 (화면의 남은 시간만 표시) */
     if (G.vs) {
       var oE = (window.NET && NET.opp() || {}).empty, myE = 0; for (var ey = top(); ey < ROWS; ey++) for (var ex = 0; ex < COLS; ex++) if (!G.board[ey][ex]) myE++;
       if (oE != null && oE < 15 && !G.warnOpp) { G.warnOpp = true; G.fx.push({ t: 'pop', text: '상대 보드 붕괴 임박', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); sfx('warn'); } else if (oE != null && oE >= 20) G.warnOpp = false;
@@ -1194,7 +1193,7 @@
   setInterval(function () { if (document.hidden && G && G.vs && !G.over) update(now()); }, 250);   /* 화면이 숨겨져도(다른 앱 잠깐 보기) 대전 진행은 멈추지 않게 */
   newGame(false); G.over = true;   // 시작 전 배경 표시용
   loop();
-  window.__tank = { get: function () { return G; }, set: function (g) { G = g; }, fns: { canPlace: canPlace, place: place, anyFit: anyFit, calcReach: calcReach, checkFit: checkFit, top: top, makePiece: makePiece }, notice: function (txt) { if (G) { G.fx.push({ t: 'pop', text: txt, x: W / 2, y: EY + 40, at: now(), big: false }); } }, revealOpp: function (x, y) { if (!G || !G.vs) return; G.oppTank = { x: x, y: y }; G.reveal = { until: now() + 3500 }; G.lastSeen = { x: x, y: y, t: now(), how: '발사' }; sfx('warn'); }, incomingShot: incomingShot, applyLine: applyLine, setOpp: function (o) { if (!G || !G.vs) return; if (o.fac && FAC[o.fac] && G.oppFacGuess !== o.fac) { G.oppFacGuess = o.fac; applySkin(); } if (o.tank) { var tp = o.tank.split(','); G.oppTank = { x: +tp[0], y: +tp[1] }; } if (o.sol != null) { var oldS = G.soldiers, cnt0 = {}, minD = {}; oldS.forEach(function (e) { cnt0[e.x] = (cnt0[e.x] || 0) + 1; if (minD[e.x] == null || e.d < minD[e.x]) minD[e.x] = e.d; });
+  window.__tank = { get: function () { return G; }, set: function (g) { G = g; }, fns: { canPlace: canPlace, place: place, anyFit: anyFit, calcReach: calcReach, checkFit: checkFit, top: top, makePiece: makePiece }, notice: function (txt) { if (G) { G.fx.push({ t: 'pop', text: txt, x: W / 2, y: EY + 40, at: now(), big: false }); } }, revealOpp: function (x, y) { if (!G || !G.vs) return; G.oppTank = { x: x, y: y }; G.reveal = { until: now() + 3500 }; G.lastSeen = { x: x, y: y, t: now(), how: '발사' }; }   /* 포격 경고는 incomingShot 의 사이렌 하나만 */, incomingShot: incomingShot, applyLine: applyLine, setOpp: function (o) { if (!G || !G.vs) return; if (o.fac && FAC[o.fac] && G.oppFacGuess !== o.fac) { G.oppFacGuess = o.fac; applySkin(); } if (o.tank) { var tp = o.tank.split(','); G.oppTank = { x: +tp[0], y: +tp[1] }; } if (o.sol != null) { var oldS = G.soldiers, cnt0 = {}, minD = {}; oldS.forEach(function (e) { cnt0[e.x] = (cnt0[e.x] || 0) + 1; if (minD[e.x] == null || e.d < minD[e.x]) minD[e.x] = e.d; });
         G.soldiers = o.sol ? o.sol.split(';').map(function (q) { var a = q.split(':'); return { x: COLS - 1 - (+a[0]), d: +a[1] }; }) : [];
         var cnt1 = {}; G.soldiers.forEach(function (e) { cnt1[e.x] = (cnt1[e.x] || 0) + 1; }); for (var cx in cnt0) if ((cnt1[cx] || 0) < cnt0[cx] && !G.over) G.fx.push({ t: 'dead', enemy: true, px: BX(+cx) + S / 2, py: slotY(minD[cx]), at: now(), life: 1500 }); } }, clash: startClash, enemyScout: enemyScout, BTN: function () { layoutBtns(); return BTN; }, newGame: newGame, addEnemyInf: addEnemyInf, useInfantry: useInfantry, forceOver: function (m) { G.over = true; G.overMsg = m || '테스트'; showOver(); }, place: place, canPlace: canPlace, moveTank: moveTank, useScout: useScout, useMissile: useMissile, makePiece: makePiece, checkFit: checkFit, useUlt: useUlt, skillIn: skillIn, FAC: FAC, ULT_MAX: ULT_MAX, V2: V2, applySkin: applySkin, useScout: useScout, startClash: startClash, traySlot: traySlot, ULTB: function () { return ULTB; }, L: function () { return { W: W, S: S, BY: BY, FS: FS, EY: EY, HY: HY, TY: TY, PW: PW, OFFY: OFFY, ctx: ctx }; }, drawSoldier: drawSoldier, fitImg: fitImg, IMG: IMG, BX: BX, BYY: BYY, rowC: rowC, myRow: myRow, slotY: slotY, fx: function (f) { G.fx.push(f); }, addScore: addScore, resetRound: resetRound, killTank: killTank };
 })();
