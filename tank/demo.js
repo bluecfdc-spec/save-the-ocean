@@ -22,15 +22,15 @@ window.DEMO = (function () {
     },
     function () {                                                   // 1. 블록 끌어 줄 채우기
       say('블록을 끌어 한 줄을 채워라', '줄이 터지면 아이템을 얻어요');
-      for (var x = 0; x < 6; x++) G.board[8][x] = x === 2 ? 4 : x === 4 ? 3 : 1;      // 미사일·정찰 자원이 섞인 줄
+      var NC = G.board[0].length; for (var x = 0; x < NC - 1; x++) G.board[8][x] = x === 2 ? 4 : x === 4 ? 3 : 1;      // 미사일·정찰 자원이 섞인 줄
       G.tray = [{ cells: [{ dx: 0, dy: 0, r: 5 }], w: 1, h: 1 }, T.makePiece(), T.makePiece()];
       var sl = T.traySlot(0); hand.x = sl.x + sl.w / 2; hand.y = sl.y + sl.h / 2 + 10; hand.on = true;
       later(600, function () {
         press(function () {
-          var p = G.tray[0], tx = 6 * L.S + p.w * L.S / 2, ty = L.BY + 8 * L.S + 80 + p.h * L.S;
+          var p = G.tray[0], NC2 = G.board[0].length, tx = (NC2 - 1) * L.S + p.w * L.S / 2, ty = L.BY + 8 * L.S + 80 + p.h * L.S;
           G.drag = { i: 0, p: p, px: hand.x, py: hand.y, sx: hand.x, sy: hand.y, moved: true, ox: 0, oy: 0, gx: null, gy: null };
           (function track() { if (!running || !G.drag) return; var d = G.drag; d.px = hand.x; d.py = hand.y; d.ox = d.px - d.p.w * L.S / 2; d.oy = d.py - 80 - d.p.h * L.S; d.gx = Math.round(d.ox / L.S); d.gy = Math.round((d.oy - L.BY) / L.S); requestAnimationFrame(track); })();
-          moveHand(tx, ty, 1400, function () { later(300, function () { G.drag = null; G.tray[0] = null; T.place(p, 6, 8); T.checkFit(); hand.on = false; say('줄 완성!', '미사일 🚀 정찰기 🔭 보병 🪖 획득'); later(2200, next); }); });
+          moveHand(tx, ty, 1400, function () { later(300, function () { G.drag = null; G.tray[0] = null; T.place(p, NC2 - 1, 8); T.checkFit(); hand.on = false; say('줄 완성!', '미사일 🚀 정찰기 🔭 보병 🪖 획득'); later(2200, next); }); });
         });
       });
     },

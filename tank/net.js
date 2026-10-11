@@ -115,7 +115,7 @@ window.REALNET = window.NET = (function () {
     if (started && meta.line != null) window.__tank.applyLine(isHost() ? (meta.line | 0) : -(meta.line | 0), meta.nextTick ? meta.nextTick - snow() : null);   // line 은 방장 기준(+ = 방장 쪽으로 밀림) → 상대는 부호 반대
     if (meta.state === 'play' && meta.startAt && meta.startAt !== lastStart) {
       lastStart = meta.startAt; resultUp = false;
-      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '3,6', collapses: 0, skill: null, ult: 0, shield: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; lastSkill = 0; myCollapses = 0; oppCollapses = 0;
+      ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '4,6', collapses: 0, skill: null, ult: 0, shield: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; lastSkill = 0; myCollapses = 0; oppCollapses = 0;
       if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
       show('count'); lastPub = ''; prevOpp = {}; tick();
@@ -148,7 +148,7 @@ window.REALNET = window.NET = (function () {
     if (!ref || !started) return; var G = window.__tank.get();
     var sol = G.mySol.map(function (e) { return e.x + ':' + e.d; }).join(';'), front = G.mySol.filter(function (e) { return e.d === 1; }).length;
     var k = G.tank.x + ',' + G.tank.y + '/' + sol + '/' + G.tank.hp + '/' + G.ult + '/' + G.shield + '/' + G.board.map(function (r) { return r.filter(Boolean).length; }).join(''); if (k === lastPub && !force) return; lastPub = k;
-    var empty = 0; for (var y = Math.max(0, G.adv); y < 9; y++) for (var x = 0; x < 7; x++) if (!G.board[y][x]) empty++;
+    var empty = 0; for (var y = Math.max(0, G.adv); y < G.board.length; y++) for (var x = 0; x < G.board[0].length; x++) if (!G.board[y][x]) empty++;
     ref.child('players/' + uid).update({ tank: G.tank.x + ',' + G.tank.y, sol: sol, front: front, inf: G.mySol.length, hp: G.tank.hp, empty: empty, fac: G.fac, ult: G.ult, shield: G.shield });
   }   // 바뀔 때만 보냄
   function over(m) {

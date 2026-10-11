@@ -4,7 +4,7 @@
 window.BOT = (function () {
   'use strict';
   var T = window.__tank, $ = function (id) { return document.getElementById(id); };
-  var COLS = 7, ROWS = 9, SCOUT_MS = 5000;
+  var ROWS = 9, SCOUT_MS = 5000; function COLSf() { return T.get() ? T.get().board[0].length : 9; } var COLS = 9;
   var bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal';
   var SPEED = { easy: 3400, normal: 2600, hard: 1600 };
   function withBot(fn) { var real = T.get(); T.set(bot); try { return fn(); } finally { T.set(real); } }
@@ -14,7 +14,7 @@ window.BOT = (function () {
   // ---------- 시작/종료 ----------
   function start() {
     stop(); active = true; window.NET = BOT;
-    T.newGame(true); bot = T.get(); bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 7; bot.shield = 0;   // 테스트: CPU 는 줄 3개만 지우면 필살기   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
+    T.newGame(true); bot = T.get(); COLS = bot.board[0].length; bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 7; bot.shield = 0;   // 테스트: CPU 는 줄 3개만 지우면 필살기   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
     T.newGame(true); me = T.get();
     known = null; nextTick = now() + 30000;
     T.applyLine(0, 30000);
