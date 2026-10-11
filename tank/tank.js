@@ -16,7 +16,7 @@
   var VS_MODE = false;
   function layout(vs) {
     VS_MODE = !!vs;
-    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 40; HUD = 30; TRAY = 104; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
+    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 44; HUD = 48; TRAY = 104; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
     relayout(); }
   function relayout() { W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
   layout(false);
@@ -860,18 +860,19 @@
     if (G.vs) btn(BTN.inf, '🪖', G.inf, '보병 투입', G.inf > 0);
     // 연료
     var hy = HY, cy = hy + HUD / 2;
-    var fw = Math.min(W * 0.42, 210), fh = HUD - 4, fx0 = 6, fy0 = hy + 2;
-    if (V2.ui_fuel) ctx.drawImage(V2.ui_fuel, fx0, fy0, fw, fh); else { ctx.fillStyle = '#111'; rr(fx0, fy0, fw, fh, 5); ctx.fill(); }
-    var ix = fx0 + fw * 0.3, iw2 = fw * 0.62, iy = fy0 + fh * 0.3, ih2 = fh * 0.4, segW = iw2 / FUEL_MAX;
-    for (var i = 0; i < FUEL_MAX; i++) { ctx.fillStyle = i < G.fuel ? (G.fuel <= 3 ? '#ff5a3d' : '#ffb13d') : 'rgba(0,0,0,.45)'; ctx.fillRect(ix + i * segW + 1, iy, segW - 2, ih2); }
-    ctx.font = '800 ' + Math.round(fh * 0.55) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('⛽ ' + G.fuel, fx0 + fw * 0.06, cy); ctx.fillStyle = G.fuel <= 3 ? '#ff8a7a' : '#ffe28a'; ctx.fillText('⛽ ' + G.fuel, fx0 + fw * 0.06, cy);
+    var fw = Math.min(W * 0.58, 300), fh = HUD - 8, fx0 = 6, fy0 = hy + 4;          /* 연료: 큰 숫자 + 굵은 15칸 게이지 (금테) */
+    var lab = '⛽ ' + G.fuel, lf = Math.round(fh * 0.72); ctx.font = '800 ' + lf + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    var lw = ctx.measureText(lab).width + 10, ix = fx0 + lw, iw2 = fw - lw, iy = fy0, ih2 = fh, segW = iw2 / FUEL_MAX;
+    ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeText(lab, fx0, cy); ctx.fillStyle = G.fuel <= 3 ? '#ff8a7a' : '#ffe28a'; ctx.fillText(lab, fx0, cy);
+    ctx.fillStyle = '#0a0b08'; rr(ix - 3, iy - 3, iw2 + 6, ih2 + 6, 6); ctx.fill(); ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 2; rr(ix - 3, iy - 3, iw2 + 6, ih2 + 6, 6); ctx.stroke();
+    for (var i = 0; i < FUEL_MAX; i++) { var onF = i < G.fuel; var fg = ctx.createLinearGradient(0, iy, 0, iy + ih2); fg.addColorStop(0, onF ? (G.fuel <= 3 ? '#ff8a6a' : '#ffd86a') : '#2a2d24'); fg.addColorStop(1, onF ? (G.fuel <= 3 ? '#c0301a' : '#d9821a') : '#15170f'); ctx.fillStyle = fg; rr(ix + i * segW + 1.5, iy + 2, segW - 3, ih2 - 4, 3); ctx.fill(); }
     // 점수 / 상대
     ctx.textAlign = 'right';
     if (G.vs) {
       var o = (window.NET && NET.opp()) || {};
       var mf = G.mySol.filter(function (e) { return e.d === 1; }).length, ef = G.soldiers.filter(function (e) { return e.d === 1; }).length;
-      ctx.textAlign = 'left'; ctx.font = '600 13px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', fx0 + fw + 10, cy);
-      ctx.font = '800 15px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + ef, fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '600 14px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', fx0 + fw + 10, cy);
+      ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + ef, fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
     }
     else { ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, cy); ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
     // 진격 타이머
