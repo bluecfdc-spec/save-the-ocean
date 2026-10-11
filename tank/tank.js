@@ -16,7 +16,7 @@
   var VS_MODE = false;
   function layout(vs) {
     VS_MODE = !!vs;
-    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 18; HUD = 30; TRAY = 104; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
+    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 40; HUD = 30; TRAY = 104; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
     relayout(); }
   function relayout() { W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
   layout(false);
@@ -48,7 +48,7 @@
     // 보드가 화면 폭의 78%를 차지하도록 배율을 정하고, 세로가 모자라면 상대 진영 줄 높이(FS)를 22~40 사이에서 줄인다. 그래도 모자라면 배율을 낮춘다(패널이 넓어짐)
     var fixed = TOP + ROWS * S + HUD + TRAY + BBAR;
     scale = iw * (VS_MODE ? 0.76 : 0.82) / W;   /* 대전: 오른쪽 패널에 24% */
-    if (VS_MODE) { var fsWant = (ih / scale - fixed) / EROWS; FS = Math.max(22, Math.min(40, Math.round(fsWant))); relayout(); }
+    if (VS_MODE) { var fsWant = (ih / scale - fixed) / EROWS; FS = Math.max(20, Math.min(28, Math.round(fsWant)));   /* 적진은 낮게(최대 28) — 내 땅과 아래 조작부에 자리를 준다 */ relayout(); }
     if (H * scale > ih) scale = ih / H;
     scaleY = scale;
     PW = iw / scale - W; var pwMax = W * 0.45; OFFX = 0; if (PW > pwMax) { OFFX = (PW - pwMax) / 2; PW = pwMax; }   /* PC 넓은 창: 패널은 보드 폭의 45%까지만, 나머지는 좌우 여백 */
@@ -578,8 +578,8 @@
     // 갈 수 있는 칸
     var showReach = !G.drag && !G.tank.path.length && !G.over && !G.sweep && !G.collapsing && !(G.freezeUntil && t < G.freezeUntil);   /* 탱크를 누르지 않아도 갈 수 있는 칸은 늘 보인다 */
     if (showReach) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','), rcx = BX(+c[0]) + S / 2, rcy = BYY(+c[1]) + S / 2, rd = G.reach[k].d, pulse = 0.8 + 0.2 * Math.sin(t / 220 + rd);
-      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, (G.sel ? 0.18 : 0.08) + 0.1 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.18 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.22, S * 0.22, 0.85); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 4, 0, 7); ctx.fill(); }
-      if (G.sel) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 11px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText('⛽' + rd, rcx, rcy + S * 0.3); ctx.fillStyle = '#d9ffd0'; ctx.fillText('⛽' + rd, rcx, rcy + S * 0.3); } ctx.restore(); }   /* 탱크를 누르면 칸마다 드는 연료 숫자까지 */
+      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, (G.sel ? 0.18 : 0.08) + 0.1 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.18 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.34, S * 0.34, 0.9); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 6, 0, 7); ctx.fill(); }
+      if (G.sel) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText('⛽' + rd, rcx, rcy + S * 0.3); ctx.fillStyle = '#d9ffd0'; ctx.fillText('⛽' + rd, rcx, rcy + S * 0.3); } ctx.restore(); }   /* 탱크를 누르면 칸마다 드는 연료 숫자까지 */
     // 드래그 미리보기
     if (G.drag && G.drag.moved) {
       var d = G.drag, ok = d.gx != null && canPlace(d.p, d.gx, d.gy);
@@ -848,9 +848,9 @@
         rr(b.x, b.y, b.w, b.h, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke();
         var bim = IMG[{ '🔭': 'b_scout', '🚀': 'b_missile', '🪖': 'b_inf' }[icon]]; if (bim) fitImg(bim, b.x + 24, b.y + b.h / 2, b.h - 8, b.h - 8, on ? 1 : 0.5); }
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';   /* 그림의 아이콘 자리(왼쪽 30%) 다음에 숫자, 오른쪽 끝에 이름 */
-      var fs1 = Math.round(b.h * 0.5), fs2 = Math.round(b.h * 0.3);
-      ctx.font = '800 ' + fs1 + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = on ? '#2a1a00' : '#aaa'; ctx.fillText('×' + n, b.x + b.w * 0.31, b.y + b.h / 2 + 1);
-      ctx.font = '600 ' + fs2 + 'px Do Hyeon, system-ui'; ctx.textAlign = 'right'; ctx.fillStyle = on ? '#5a3b00' : '#888'; ctx.fillText(label, b.x + b.w - b.w * 0.07, b.y + b.h / 2 + 1);
+      var fs1 = Math.round(b.h * 0.46), fs2 = Math.round(b.h * 0.26);
+      ctx.font = '800 ' + fs1 + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = on ? '#2a1a00' : '#aaa'; ctx.fillText('×' + n, b.x + b.w * 0.36, b.y + b.h / 2 + 1);
+      ctx.font = '600 ' + fs2 + 'px Do Hyeon, system-ui'; ctx.textAlign = 'right'; ctx.fillStyle = on ? '#5a3b00' : '#888'; ctx.fillText(label, b.x + b.w * 0.9, b.y + b.h / 2 + 1);   /* 그림 판(30~93%) 안에 */
     }
     layoutBtns();
     var g3 = ctx.createLinearGradient(0, OY, 0, H); g3.addColorStop(0, '#1b1d16'); g3.addColorStop(1, '#0d0e0a'); ctx.fillStyle = g3; ctx.fillRect(0, OY, W, BBAR);
@@ -876,8 +876,8 @@
     else { ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, cy); ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
-    ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - 6, W, 6); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - 6, W * p, 6);
-    ctx.textAlign = 'center'; ctx.font = '600 13px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), W / 2, 10); ctx.shadowBlur = 0;
+    var barH = G.vs ? 12 : 6; ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - barH, W, barH); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - barH, W * p, barH); if (G.vs) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(0, TOP - barH, W * p, 3); }
+    ctx.textAlign = 'center'; ctx.font = '800 ' + (G.vs ? 20 : 13) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = left < 6000 && G.vs ? '#ffb3a8' : '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), W / 2, G.vs ? (TOP - barH) / 2 : 10); ctx.shadowBlur = 0;
   }
   function traySlot(i) { var w = (W - 40) / 3 - 10; return { x: 20 + i * (w + 15), y: TY + 8, w: w, h: TRAY - 16 }; }
   function drawTray(t) {
