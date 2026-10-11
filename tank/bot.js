@@ -6,7 +6,7 @@ window.BOT = (function () {
   var T = window.__tank, $ = function (id) { return document.getElementById(id); };
   var ROWS = 9, SCOUT_MS = 5000; function COLSf() { return T.get() ? T.get().board[0].length : 9; } var COLS = 9;
   var bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal', wave = 1;
-  var SPEED = { easy: 6800, normal: 5200, hard: 3200 };   // CPU 한 수 간격(ms) — 처음엔 예전의 절반 속도
+  var SPEED = { easy: 3400, normal: 2600, hard: 1600 };   // CPU 한 수 간격(ms) — 처음엔 예전의 절반 속도
   function withBot(fn) { var real = T.get(); T.set(bot); try { return fn(); } finally { T.set(real); } }
   function rnd(n) { return Math.floor(Math.random() * n); }
   function now() { return performance.now(); }
@@ -22,7 +22,7 @@ window.BOT = (function () {
     think = setInterval(step, SPEED[level]);
     clashTimer = setInterval(clash, 30000);
   }
-  function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * Math.max(0, wave - 2))); }   /* 스테이지 1은 가만히, 2부터 원래 속도, 그 뒤 0.2배씩 빨라짐 */
+  function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * Math.max(0, wave - 2))); }   /* 스테이지 1·2는 기본 속도(한 수 2.6초), 3부터 20%씩 빨라짐 */
   function nextWave(kind) {                                 /* CPU 무한 모드: 탱크 격파(tank) 또는 적진 점령(push) → 보너스 + VICTORY 화면 → '다음 스테이지' 누르면 이어서 */
     if (!active) return; var bonus = 1000 * (wave + 1);
     T.addScore(bonus, T.L().W / 2, T.L().EY + 60, kind === 'push' ? '적진 점령!' : 'CPU 탱크 격파!');
@@ -60,8 +60,7 @@ window.BOT = (function () {
     if (bot.solarUntil && now() > bot.solarUntil) { bot.solarUntil = 0; bot.shield = 0; bot.mySol.forEach(function (e) { e.sh = 0; }); }   // CPU 솔라 5초 끝
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
     bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; })   /* 최전방은 보이고, 뒷줄은 정찰할 때만(사람과 같음) */.map(function (e) { return { x: mirror(e.x), d: e.d }; });
-    if (wave <= 1) { syncToPlayer(); return; }                                       /* 스테이지 1: CPU 는 그 자리에 가만히 */
-    var full = wave >= 3;                                                             /* 스테이지 2: 블록·벙커만 / 3부터: 정찰·미사일·필살기까지 전부 */
+    var full = wave >= 2;                                                             /* 스테이지 1: 블록·벙커만 / 2부터: 정찰·미사일·필살기까지 전부 */
     withBot(function () {
       if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
