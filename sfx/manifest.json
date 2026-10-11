@@ -918,14 +918,14 @@
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
   "files": [
-   "sfx/candidates/목소리_01_1_08451e.mp3",
-   "sfx/candidates/목소리_01_2_631796.mp3",
-   "sfx/candidates/목소리_01_3_033fa5.mp3"
+   "sfx/candidates/목소리_01_1_marine_a0bf9a.mp3",
+   "sfx/candidates/목소리_01_2_marine_581a59.mp3",
+   "sfx/candidates/목소리_01_3_marine_57d977.mp3"
   ],
   "ver": {
-   "sfx/candidates/목소리_01_1_08451e.mp3": "08451e",
-   "sfx/candidates/목소리_01_2_631796.mp3": "631796",
-   "sfx/candidates/목소리_01_3_033fa5.mp3": "033fa5"
+   "sfx/candidates/목소리_01_1_marine_a0bf9a.mp3": "a0bf9ab9",
+   "sfx/candidates/목소리_01_2_marine_581a59.mp3": "581a592b",
+   "sfx/candidates/목소리_01_3_marine_57d977.mp3": "57d977c7"
   },
   "done": false,
   "hold": false
