@@ -22,7 +22,7 @@ window.SCORES_COLLECTION = "scores";
 //  · 단, 콘솔 문서의 제목이 NOTICE_REPLACES 에 있는 옛 공지면 아래 기본 공지를 대신 보여줍니다.
 window.NOTICE_REPLACES = ["Save the Ocean 주간보드 게시"];
 window.DEFAULT_NOTICE = {
-  active: true,
+  active: false,   // 2026-10-11 공지 내림 (다시 켜려면 true)
   title: "🌊 바다 점령전 시작!",
   body: "이제 세 세력 — 서지 · 게일 · 솔라 — 으로 나뉘어 싸웁니다.\n\n· 처음 기록을 올릴 때 세력을 고르세요.\n· 올린 점수는 모두 우리 세력에 한 달 동안 누적됩니다.\n· 누적 점수가 많을수록 지도의 바다를 더 넓게 차지합니다.\n· 매달 1일, 가장 넓은 바다를 차지한 세력이 명예의 전당에 오릅니다.\n\n개인 순위는 따로 겨룹니다.\n주간 TOP 10 은 매주 월요일에 새로 시작하고, 주간 1위도 명예의 전당에 기록됩니다.\n\n우리 세력의 바다를 넓혀보세요!",
   button: "출격",
