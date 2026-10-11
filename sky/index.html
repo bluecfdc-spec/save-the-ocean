@@ -124,7 +124,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
 #flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
 #pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
-#ult{position:absolute;left:12px;bottom:10px;width:46%;height:38px;border-radius:10px;padding:0 10px 0 40px;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.82);cursor:pointer;z-index:3;touch-action:none;overflow:hidden}   /* 필살기: 전장 왼쪽 아래(터치패드 바로 위) 가로 막대 */
+#ult{position:absolute;left:12px;bottom:10px;width:46%;height:38px;border-radius:10px;padding:0 10px 0 40px;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.82);cursor:default;pointer-events:none;z-index:3;overflow:hidden;transition:width .25s}   /* 필살기 게이지: 전장 왼쪽 아래(터치패드 바로 위) 가로 막대. 다 차면 손가락을 뗄 때 발동 */
+#ult.on{width:calc(100% - 24px)}
 #ult img{position:absolute;left:3px;top:50%;width:32px;height:32px;transform:translateY(-50%);opacity:.5;z-index:2;pointer-events:none}
 #ult .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--fc,#ffd451);opacity:.4}
 #ult .fill img{display:none}
@@ -334,7 +335,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='48';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='49';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -734,7 +735,7 @@ const Music=(()=>{
 function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
   if(b.dataset.f!==flag){b.dataset.f=flag;b.style.setProperty('--fc',f.col);$('ultBg').src='assets/emb_'+flag+'_on.png?v=44'}
   const full=ult.g>=1;$('ultFill').style.width=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
-  $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?f.skill:Math.round(ult.g*100)+'%'}
+  $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?'손가락을 떼면 필살기 발동!':f.skill}
 function useUlt(){
   if(state!=='play'||ult.g<1||!ship)return;ult.g=0;ult.flashT=.5;Music.boom();
   if(flag==='surge'){ult.slowUntil=time+6;fx.push({n:'surge_ring2',f:1,t:0,d:.7,s0:40,s1:260},{n:'surge_drops',f:1,t:-.05,d:.6,s0:40,s1:150});pops.push({x:ship.x,y:ship.y-24,t:0,s:'격류!'})}
@@ -744,7 +745,7 @@ function useUlt(){
   else{ult.shield=1;ult.shieldUntil=time+10;fx.push({n:'shield0',f:1,t:0,d:.35,s0:120,s1:50,a0:.9});pops.push({x:ship.x,y:ship.y-24,t:0,s:'태양 방패!'})}
   ultUi();
 }
-$('ult').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();useUlt()});
+// 필살기는 게이지가 다 찬 상태에서 터치패드의 손가락을 떼면 발동한다 (다시 대면 바로 이어서 움직임)
 function start(){bgRoom=mp.on?mp.room:'';paintBg();reset();initCpus();mpWon=false;countN=0;state='count';mp.startAt=Date.now()+mp.off+3000;$('overlay').hidden=true;Music.unlock();Music.launch()}   // 3,2,1 뒤에 시작
 $('snd').addEventListener('click',()=>{const o=Music.toggle();$('snd').style.opacity=o?1:.4;$('snd').setAttribute('aria-pressed',o);
   if(o&&state==='play')Music.start()});
@@ -775,7 +776,7 @@ function setJoy(e){
   const mk=$('mark');mk.hidden=false;   // 파란 점은 손가락이 닿은 자리에만
   mk.style.transform='translate('+(e.clientX-b.left)+'px,'+(e.clientY-b.top)+'px)';
 }
-function endJoy(){pid=null;lx=null;$('mark').hidden=true;if(ship){tgt.x=ship.x;tgt.y=ship.y}}
+function endJoy(){const was=pid!==null;if(was&&state==='play'&&ult.g>=1)useUlt();pid=null;lx=null;$('mark').hidden=true;if(ship){tgt.x=ship.x;tgt.y=ship.y}}
 stick.addEventListener('pointerdown',e=>{pid=e.pointerId;try{stick.setPointerCapture(pid)}catch(_){ }setJoy(e);e.preventDefault()});
 stick.addEventListener('pointermove',e=>{if(e.pointerId===pid)setJoy(e)});
 stick.addEventListener('pointerup',e=>{if(e.pointerId===pid)endJoy()});
