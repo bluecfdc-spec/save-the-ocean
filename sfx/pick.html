@@ -1,28 +1,68 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>효과음 고르기</title>
 <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
-<style>body{margin:0;background:#0b0d0a;color:#f3efe0;font:16px 'Do Hyeon',system-ui;padding:14px 12px 120px}h1{color:#ffd451;font-size:22px;margin:0 0 6px}h2{color:#9be37a;font-size:18px;margin:18px 0 6px;border-bottom:1px solid #3a3e32}
-.it{background:#15170f;border:1px solid #3a3e32;border-radius:10px;padding:10px;margin:8px 0}.it .nm{font-size:17px;color:#fff}.it .pr{font-size:12px;color:#8a9477;margin:2px 0 8px}
-.c{display:flex;align-items:center;gap:8px;margin:4px 0}.c button{font:16px 'Do Hyeon';padding:8px 14px;border-radius:8px;border:1px solid #6b7a52;background:#1b1d16;color:#fff}.c label{display:flex;align-items:center;gap:6px}
-.c input{width:22px;height:22px}#out{position:fixed;left:0;right:0;bottom:0;background:#1b1d16;border-top:2px solid #ffd451;padding:10px 12px}#out textarea{width:100%;height:60px;background:#0b0d0a;color:#9be37a;border:1px solid #3a3e32;font:13px monospace}
-.sm{color:#8a9477;font-size:13px}.cm{width:100%;box-sizing:border-box;height:56px;margin-top:6px;background:#0b0d0a;color:#ffd451;border:1px solid #6b7a52;border-radius:8px;font:15px 'Do Hyeon';padding:6px}#out textarea{height:110px}</style></head><body>
-<h1>효과음 고르기 <span id="cnt" style="font-size:14px;color:#8a9477"></span></h1><div class="sm">▶ 눌러 듣고, 마음에 드는 후보 하나에 체크. "다시 뽑기"면 노란 칸에 <b>어떻게 바꿀지</b> 적어 주세요. 다 끝나면 아래 상자의 글을 복사해서 Claude에게 붙여 주세요.</div>
-<label class="sm" style="display:block;margin:8px 0"><input type="checkbox" id="showAll"> 반영된 것도 전부 보기</label><div id="list">불러오는 중…</div>
-<div id="out"><div class="sm">선택 결과 (자동 갱신)</div><textarea id="sel" readonly></textarea></div>
+<style>
+body{margin:0;background:#0b0d0a;color:#f3efe0;font:17px 'Do Hyeon',system-ui;padding:14px 12px 30px;max-width:560px;margin:0 auto}
+h1{color:#ffd451;font-size:20px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center}
+.prog{font-size:14px;color:#8a9477}
+.bar{height:6px;background:#1b1d16;border-radius:3px;margin:6px 0 14px;overflow:hidden}.bar i{display:block;height:100%;background:#9be37a}
+.card{background:#15170f;border:1px solid #3a3e32;border-radius:14px;padding:16px 14px}
+.nm{font-size:22px;color:#fff;margin-bottom:4px}.ds{font-size:14px;color:#8a9477;margin-bottom:14px;line-height:1.4}
+.cand{display:flex;align-items:center;gap:10px;margin:8px 0}
+.cand .pl{flex:0 0 auto;font:18px 'Do Hyeon';padding:12px 0;width:120px;border-radius:10px;border:1px solid #6b7a52;background:#1b1d16;color:#fff}
+.cand .pl.on{background:#2f4a1f;border-color:#9be37a}
+.cand .ok{flex:1;font:18px 'Do Hyeon';padding:12px 0;border-radius:10px;border:0;background:#2a2d24;color:#cfd6bf}
+.cand .ok.on{background:#9be37a;color:#102000;font-weight:700}
+.redo{margin-top:16px;border-top:1px dashed #3a3e32;padding-top:12px}
+.redo textarea{width:100%;box-sizing:border-box;height:64px;background:#0b0d0a;color:#ffd451;border:1px solid #6b7a52;border-radius:10px;font:16px 'Do Hyeon';padding:8px}
+.redo button{width:100%;margin-top:8px;font:18px 'Do Hyeon';padding:12px 0;border-radius:10px;border:1px solid #c0392b;background:#3a1512;color:#ffb3a8}
+.nav{display:flex;gap:8px;margin-top:12px}.nav button{flex:1;font:16px 'Do Hyeon';padding:10px 0;border-radius:10px;border:1px solid #3a3e32;background:#1b1d16;color:#cfd6bf}
+.done{background:#15170f;border:1px solid #9be37a;border-radius:14px;padding:16px 14px}
+.done textarea{width:100%;box-sizing:border-box;height:160px;background:#0b0d0a;color:#9be37a;border:1px solid #3a3e32;border-radius:10px;font:13px monospace;padding:8px}
+.done button{width:100%;margin-top:10px;font:20px 'Do Hyeon';padding:14px 0;border-radius:10px;border:0;background:#ffd451;color:#2a1a00;font-weight:700}
+.sm{color:#8a9477;font-size:13px;margin-top:8px}
+</style></head><body>
+<h1><span>효과음 고르기</span><span class="prog" id="prog"></span></h1>
+<div class="bar"><i id="bar" style="width:0"></i></div>
+<div id="app">불러오는 중…</div>
 <script>
-function render(m){
-  const L=document.getElementById('list'); L.innerHTML=''; const all=document.getElementById('showAll').checked; let tot=0; const games={}; Object.values(m).forEach(it=>{(games[it.game]=games[it.game]||[]).push(it)});
-  const saved=JSON.parse(localStorage.getItem('sfxpick')||'{}');
-  for(const g of ['공통','탱크','목소리','스카이','오션']){ if(!games[g])continue; const vis=games[g].filter(it=>all||!it.done); if(!vis.length)continue; tot+=vis.length; const h=document.createElement('h2'); h.textContent=g; L.appendChild(h);
-    games[g].sort((a,b)=>a.num.localeCompare(b.num)).forEach(it=>{ const id=it.game+'_'+it.num; if(it.done&&!all)return; const d=document.createElement('div'); d.className='it';
-      d.innerHTML='<div class="nm">'+id+' · '+it.name+'</div><div class="pr">'+it.prompt+'</div>';
-      it.files.forEach((f,i)=>{ const c=document.createElement('div'); c.className='c'; const b=document.createElement('button'); b.textContent='▶ 후보 '+(i+1)+' ('+(((it.ver||{})[f])||'').slice(0,4)+')'; const a=new Audio('../'+f+'?v='+((it.ver||{})[f]||'0')); b.onclick=()=>{a.currentTime=0;a.play()};
-        const lb=document.createElement('label'); const r=document.createElement('input'); r.type='radio'; r.name=id; r.value=f; r.checked=saved[id]===f; r.onchange=()=>{saved[id]=f;localStorage.setItem('sfxpick',JSON.stringify(saved));out()}; lb.appendChild(r); lb.appendChild(document.createTextNode('이걸로')); c.appendChild(b); c.appendChild(lb); d.appendChild(c); });
-      const c2=document.createElement('div'); c2.className='c'; const lb2=document.createElement('label'); const r2=document.createElement('input'); r2.type='radio'; r2.name=id; r2.value='다시'; r2.checked=saved[id]==='다시'; r2.onchange=()=>{saved[id]='다시';localStorage.setItem('sfxpick',JSON.stringify(saved));out()}; lb2.appendChild(r2); lb2.appendChild(document.createTextNode('다 별로 — 다시 뽑기')); c2.appendChild(lb2); d.appendChild(c2);
-      const ta=document.createElement('textarea'); ta.className='cm'; ta.placeholder='코멘트 (어떻게 바꿀지: 예) 더 날카롭게, 저음 빼고, 짧게…)'; ta.value=(saved['#'+id]||''); ta.oninput=()=>{saved['#'+id]=ta.value;localStorage.setItem('sfxpick',JSON.stringify(saved));out()}; d.appendChild(ta);
-      L.appendChild(d); });
+let M={}, items=[], idx=0, saved={}, audio=null, playingBtn=null;
+try{saved=JSON.parse(localStorage.getItem('sfxpick')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('sfxpick',JSON.stringify(saved))}catch(e){}}
+const DESC={'공통_10':'서지(물) 필살기 발동 소리. 파도가 바위에 부딪히는 쏴아 — 저음 울림이 아니어야 함',
+ '탱크_05':'탱크가 칸을 옮길 때. 짧고 조용한 궤도 소리',
+ '탱크_13':'전선이 밀릴 때. 모래주머니·바리케이드가 터지는 폭파 (게임은 계속됨)',
+ '목소리_01':'보병 투입 버튼을 누를 때 나오는 군인 목소리. 4~6번은 같은 목소리를 무전기 음색으로 가공한 것. 고르면 제가 발소리와 섞어 완성'};
+const TITLE={'목소리_01':'탱크_10 · 보병 출격 목소리'};
+function stop(){if(audio){audio.pause();audio=null}if(playingBtn){playingBtn.classList.remove('on');playingBtn.textContent=playingBtn.dataset.t;playingBtn=null}}
+function render(){
+  const app=document.getElementById('app'); stop();
+  const total=items.length, doneN=items.filter(it=>saved[it.id]).length;
+  document.getElementById('prog').textContent=doneN+' / '+total+' 완료';
+  document.getElementById('bar').style.width=(total?doneN/total*100:0)+'%';
+  if(!total){app.innerHTML='<div class="done">고를 항목이 없어요. 다 반영됐습니다 👍</div>';return}
+  if(idx>=total){ // 완료 화면
+    const lines=items.map(it=>{const v=saved[it.id];if(!v)return it.id+' = (안 고름)';const cm=(saved['#'+it.id]||'').trim();return it.id+' = '+(v==='다시'?'다시':v.split('/').pop())+(cm?'  ← '+cm.replace(/\n/g,' / '):'')}).join('\n');
+    app.innerHTML='<div class="done"><div class="nm">끝! 아래 글을 Claude에게 보내 주세요</div><textarea id="res" readonly>'+lines+'</textarea><button id="copy">📋 복사하기</button><div class="sm">복사한 뒤 Claude 대화창에 붙여 넣기만 하면 됩니다.</div><div class="nav"><button id="back">← 다시 보기</button></div></div>';
+    document.getElementById('copy').onclick=()=>{const ta=document.getElementById('res');ta.select();try{navigator.clipboard.writeText(ta.value)}catch(e){document.execCommand('copy')}document.getElementById('copy').textContent='✓ 복사됨';};
+    document.getElementById('back').onclick=()=>{idx=0;render()}; return;
   }
-  document.getElementById('cnt').textContent='남은 항목 '+tot+'개';
-  function out(){ document.getElementById('sel').value=Object.entries(saved).filter(([k])=>!k.startsWith('#')&&!(m[k]&&m[k].done)).map(([k,v])=>{const cm=(saved['#'+k]||'').trim(); return k+' = '+(v==='다시'?'다시':v.split('/').pop())+(cm?'  ← '+cm.replace(/\n/g,' / '):'')}).join('\n'); } out();
+  const it=items[idx], pick=saved[it.id];
+  let h='<div class="card"><div class="nm">'+(TITLE[it.id]||it.id+' · '+it.name)+'</div><div class="ds">'+(DESC[it.id]||it.name)+'</div>';
+  it.files.forEach((f,i)=>{h+='<div class="cand"><button class="pl" data-f="'+f+'" data-t="▶ 후보 '+(i+1)+'">▶ 후보 '+(i+1)+'</button><button class="ok'+(pick===f?' on':'')+'" data-f="'+f+'">'+(pick===f?'✓ 이걸로 골랐음':'이걸로')+'</button></div>'});
+  h+='<div class="redo"><textarea id="cm" placeholder="다 별로면: 어떻게 바꿀지 적어 주세요 (예: 더 짧게, 저음 빼고, 더 급박하게)">'+(saved['#'+it.id]||'')+'</textarea><button id="redo">'+(pick==='다시'?'✓ 다시 뽑기로 표시됨':'다 별로 — 다시 뽑기')+'</button></div>';
+  h+='<div class="nav"><button id="prev"'+(idx===0?' disabled':'')+'>← 이전</button><button id="next">'+(pick?'다음 →':'건너뛰기 →')+'</button></div></div>';
+  app.innerHTML=h;
+  app.querySelectorAll('.pl').forEach(b=>{b.onclick=()=>{if(playingBtn===b){stop();return}stop();audio=new Audio('../'+b.dataset.f+'?v='+((it.ver||{})[b.dataset.f]||'0'));audio.onended=stop;audio.play();playingBtn=b;b.classList.add('on');b.textContent='■ 재생 중'}});
+  app.querySelectorAll('.ok').forEach(b=>{b.onclick=()=>{saved[it.id]=b.dataset.f;save();setTimeout(()=>{idx++;render()},150)}});
+  document.getElementById('cm').oninput=e=>{saved['#'+it.id]=e.target.value;save()};
+  document.getElementById('redo').onclick=()=>{saved[it.id]='다시';save();idx++;render()};
+  document.getElementById('prev').onclick=()=>{idx--;render()};
+  document.getElementById('next').onclick=()=>{idx++;render()};
 }
-let M=null; fetch('manifest.json?t='+Date.now()).then(r=>r.json()).then(m=>{M=m;render(m)}); document.getElementById('showAll').addEventListener('change',()=>{if(M)render(M)});
+fetch('manifest.json?t='+Date.now()).then(r=>r.json()).then(m=>{M=m;
+  const order=['공통','탱크','목소리','스카이','오션'];
+  items=Object.entries(m).map(([id,it])=>Object.assign({id},it)).filter(it=>!it.done&&it.files&&it.files.length).sort((a,b)=>order.indexOf(a.game)-order.indexOf(b.game)||a.num.localeCompare(b.num));
+  // 반영된 항목의 옛 선택은 지움
+  Object.keys(saved).forEach(k=>{const id=k.replace(/^#/,'');if(m[id]&&m[id].done)delete saved[k]});save();
+  idx=items.findIndex(it=>!saved[it.id]); if(idx<0)idx=items.length; render();});
 </script></body></html>
