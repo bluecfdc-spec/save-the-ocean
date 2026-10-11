@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 새 버전 자동 반영: 폰 브라우저가 옛 화면을 들고 있으면 최신 버전 번호로 다시 연다 */
-(function () { var BUILD = '110'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '111'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -103,7 +103,7 @@
   #count.check #countNum { display: none; }
   #count.check #countDone { display: flex; }
   #count .chk { display: none; }
-  #count.check .ncard { grid-template-columns: 52px 28px 1fr 50px; column-gap: 8px; font-size: 19px; white-space: nowrap; padding: 12px 10px; }
+  #count.check .ncard { grid-template-columns: 52px 28px 1fr 50px; column-gap: 8px; font-size: clamp(14px, 4.1vw, 19px); white-space: nowrap; padding: 12px 10px; }
   #count.check .ncard img { width: 52px; height: 52px; }
   #count.check .chk { display: block; width: 52px; height: 52px; cursor: pointer; padding: 0; border: 0; background: url(assets/v2/btn_check_off.png?v=1) center/contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,212,81,.55)); animation: chkPulse 1s ease-in-out infinite; }
   #count.check .chk.on { animation: chkPop .3s ease-out; background-image: url(assets/v2/btn_check_on.png?v=1); filter: drop-shadow(0 0 10px #6dff3a); }
@@ -187,8 +187,12 @@
   .fac.on, .fac.on[data-f=surge], .fac.on[data-f=gale] { filter: brightness(1.05) drop-shadow(0 0 8px var(--fc, #ffd451)); box-shadow: none; color: #fff; }
   .fac[data-f=surge] { --fc: #4fd8ff; } .fac[data-f=gale] { --fc: #c58bff; } .fac[data-f=solar] { --fc: #ffd451; }
   #facDesc { background: linear-gradient(rgba(12,10,6,.88), rgba(4,4,2,.88)); border: 1px solid rgba(214,170,70,.55); box-shadow: inset 0 0 10px rgba(0,0,0,.8), 0 0 8px rgba(0,0,0,.6); border-radius: 6px; font-family: 'Do Hyeon', sans-serif; }
-  #ov .row.two .btn { padding: 6px 0; font-size: 24px; }
-  #ov .btn.wide { padding: 2px 0; font-size: 19px; }
+  #ov .row.two .btn { padding: 0; font-size: 24px; line-height: 1.15; border-width: 9px 26px; border-image-width: 9px 26px; }
+  #ov .btn.wide { padding: 0; font-size: 19px; line-height: 1.15; border-width: 7px 26px; border-image-width: 7px 26px; }
+  #ov { gap: 5px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  #ov .pickT { font-size: 18px; }
+  #facRow .fac { border-width: 7px; border-image-width: 7px; }
+  #facDesc { padding: 3px 10px; }
   #facRow .fac { padding: 2px 4px; color: #fff; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 18px; text-shadow: 0 2px 0 #000; }
 </style>
 </head>
@@ -240,7 +244,7 @@
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 드래그 앤 드랍으로<br>아이템을 모으자!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
@@ -252,7 +256,7 @@
 <link rel="preload" as="image" href="assets/v2/btn_check_on.png?v=1">
 <div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countSub">오른쪽 체크를 누르세요!</div><div id="countDone"></div><div id="countNum">3</div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 드래그 앤 드랍으로<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div><button class="chk" aria-label="확인"></button></div>
   </div>
