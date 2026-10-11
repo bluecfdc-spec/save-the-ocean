@@ -78,13 +78,13 @@ window.BOT = (function () {
         else if (Math.random() < 0.25) target = rnd(COLS);                          // 아무것도 안 보이면 가끔 감으로 쏨
         if (target != null && goTo(target)) {
           bot.missile--; bot.missileReady = now() + 3000;
-          setTimeout(function () { if (active) { T.revealOpp(bot.tank.x, bot.tank.y); T.incomingShot(bot.tank.x); } }, 0);   // 내 쪽 판정: 맨 앞 내 보병 → 없으면 내 탱크. 쏜 순간 1초 노출
+          setTimeout(function () { if (active) { T.revealOpp(bot.tank.x, bot.tank.y); T.incomingShot(now() < (bot.stormOpp || 0) ? rnd(COLS) : bot.tank.x);   /* 내 서지 폭풍우 속이면 봇 미사일도 아무 열로 */ } }, 0);   // 내 쪽 판정: 맨 앞 내 보병 → 없으면 내 탱크. 쏜 순간 1초 노출
         }
       }
       // 보병: 있으면 투입 (탱크 줄). 쌓이지 않게 가끔 열을 옮김
       if (bot.inf > 0 && Math.random() < 0.8) {
         var col = bot.tank.x; if (bot.mySol.some(function (e) { return e.x === col; }) && bot.fuel >= 1 && Math.random() < 0.5) { var nc = Math.max(0, Math.min(COLS - 1, col + (Math.random() < 0.5 ? -1 : 1))); if (goTo(nc)) col = bot.tank.x; }
-        var d = 1; bot.mySol.forEach(function (e) { if (e.x === col) d = Math.max(d, e.d + 1); }); bot.mySol.push({ x: col, d: d }); bot.inf--;
+        var d = 1; while (bot.mySol.some(function (e) { return e.x === col && e.d === d; })) d++; bot.mySol.push({ x: col, d: d }); bot.inf--;
       }
       // 탱크가 전선에 너무 가까우면 뒤로
       if (bot.tank.y < T.fns.top() + 2 && bot.fuel >= 2) { var k = bot.tank.x + ',' + (bot.tank.y + 2); if (bot.reach[k]) { bot.fuel -= bot.reach[k].d; bot.tank.y += 2; T.fns.calcReach(); } }
@@ -152,7 +152,7 @@ window.BOT = (function () {
     if (!active) return;
     if (k && bot === T.get()) { setTimeout(function () { if (active) T.skillIn(k); }, 0); return; }
     // 내가 쓴 필살기 → 봇 쪽 판정
-    if (k === 'gale') { var v = bot.mySol.slice().sort(function (a, b) { return a.d - b.d; }).slice(0, 3); setTimeout(function () { if (!active) return; v.forEach(function (e) { var i = bot.mySol.indexOf(e); if (i >= 0) bot.mySol.splice(i, 1); }); while (bot.mySol.length && !bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); if (v.length) T.notice('적 보병 ' + v.length + '명 벼락 사망'); syncToPlayer(); }, 600); }
+    if (k === 'gale') { var v = bot.mySol.slice().sort(function (a, b) { return a.d - b.d; }).slice(0, 3); setTimeout(function () { if (!active) return; v.forEach(function (e) { var i = bot.mySol.indexOf(e); if (i >= 0) bot.mySol.splice(i, 1); }); if (v.length) T.notice('적 보병 ' + v.length + '명 벼락 사망'); syncToPlayer(); }, 600); }
     else if (k === 'surge') { bot.stormOpp = now() + 20000; known = null; }
   }
   function collapsed() { if (!active) return; shiftLine(0); }   // 내 보드 붕괴: 전선은 내 쪽(tank.js)이 이미 두 줄 밀었으니 봇 쪽만 맞춘다
@@ -178,7 +178,7 @@ window.BOT = (function () {
       if (!active || bot.over) return;
       var v = null; bot.mySol.forEach(function (e) { if (e.x === mx && (!v || e.d < v.d)) v = e; });
       if (v && v.sh) { v.sh = 0; T.notice('CPU 태양 방패가 보병을 지켰다'); }
-      else if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); if (!bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); T.notice('적 보병 격파!'); }
+      else if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); T.notice('적 보병 격파!'); }
       else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice('CPU 태양 방패가 막았다'); }
       else if (bot.tank.x === mx) { bot.tank.hp--; if (bot.tank.hp <= 0) { bot.over = true; syncToPlayer(); nextWave('tank'); return; } }
       syncToPlayer();

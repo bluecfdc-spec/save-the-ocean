@@ -211,16 +211,16 @@
 
 <script>document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script>
-(function () { var DESC = { surge: '서지 · 폭풍우 — 적 정찰기를 추락시킨다', gale: '게일 · 낙뢰 — 적 보병 3명을 벼락으로 쓰러뜨린다', solar: '솔라 · 태양 방패 — 우리 편 전체에 보호막' };
+(function () { var DESC = { surge: '서지 · 폭풍우 — 적 정찰기 추락, 적 미사일은 아무 데나 떨어진다', gale: '게일 · 낙뢰 — 적 보병 3명을 벼락으로 쓰러뜨린다', solar: '솔라 · 태양 방패 — 우리 편 전체에 보호막' };
   var cur = localStorage.getItem('tank_fac') || 'solar'; window.TANK_FAC = cur;
   function sel(f) { cur = f; window.TANK_FAC = f; localStorage.setItem('tank_fac', f); document.querySelectorAll('.fac').forEach(function (b) { b.classList.toggle('on', b.dataset.f === f); }); document.getElementById('facDesc').textContent = DESC[f]; }
   document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
 })();
 </script>
 <script src="sfx.js?v=38"></script>
-<script src="tank.js?v=97"></script>
-<script src="net.js?v=43"></script>
-<script src="bot.js?v=44"></script>
+<script src="tank.js?v=99"></script>
+<script src="net.js?v=44"></script>
+<script src="bot.js?v=46"></script>
 <script src="demo.js?v=4"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };

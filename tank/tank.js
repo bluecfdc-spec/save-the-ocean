@@ -25,7 +25,7 @@
   var SCOUT_MAX = 5, MISSILE_MAX = 5, INF_MAX = 5, FLIGHT_MS = 1500;                   // 대전 포탄 비행 시간(이 동안 양쪽 정지)
   var ULT_MAX = 10, STORM_MS = 20000, SHIELD_HP = 1, SOLAR_MS = 5000, BOLTS = 3;                       // 필살기: 줄 10개 = 게이지 100%(넘침 없음)
   var FAC = {
-    surge: { name: '서지', skill: '폭풍우', col: '#4fd8ff', img: 'f_surge', desc: '내 땅 전체에 폭풍우 20초. 상대 정찰기는 뜨자마자 추락, 상대가 아는 내 마지막 위치도 지워짐' },
+    surge: { name: '서지', skill: '폭풍우', col: '#4fd8ff', img: 'f_surge', desc: '내 땅 전체에 폭풍우 20초. 상대 정찰기는 뜨자마자 추락, 상대 미사일은 아무 열로나 떨어짐, 상대가 아는 내 마지막 위치도 지워짐' },
     gale:  { name: '게일', skill: '낙뢰',   col: '#c58bff', img: 'f_gale',  desc: '적 보병 3명에게 벼락(최전방부터)' },
     solar: { name: '솔라', skill: '태양 방패', col: '#ffd451', img: 'f_solar', desc: '5초 동안 내 전장에 햇살 — 탱크 방패 1번, 모든 보병에 방패' }
   };
@@ -298,13 +298,14 @@
     if (G.missile <= 0 || G.over || G.tank.path.length) return;
     if (now() < G.missileReady) { sfx('bad'); return; }               // 재장전 중(3초에 한 발)
     G.missileReady = now() + 3000;
-    var tx = G.tank.x, best = null;
+    var sx = G.tank.x, stormed = G.vs && now() < G.stormOpp, tx = stormed ? rnd(COLS) : sx, best = null;   // 상대 서지 폭풍우 속: 미사일이 아무 열로나 흩어져 떨어짐(불발일 수도, 명중일 수도)
+    if (stormed) G.fx.push({ t: 'pop', text: '폭풍우에 미사일이 휩쓸린다!', x: W / 2, y: EY + 40, at: now(), big: false, col: '#bfe3ff' });
     G.soldiers.forEach(function (e) { if (e.x === tx && (!best || e.d < best.d)) best = e; });
     var ty0 = best ? G.adv - best.d : (G.vs && G.oppTank && COLS - 1 - G.oppTank.x === tx) ? -1 - G.oppTank.y : -EROWS;
     G.missile--;
-    G.missiles.push({ x: tx, y: G.tank.y, y0: G.tank.y, y1: ty0, target: best, pred: G.vs && !!best, at: now(), fl: G.vs ? FLIGHT_MS : 1000 }); sfx('launch');
+    G.missiles.push({ x: tx, x0: sx, y: G.tank.y, y0: G.tank.y, y1: ty0, target: best, pred: G.vs && !!best, at: now(), fl: G.vs ? FLIGHT_MS : 1000 }); sfx('launch');
     if (G.vs) { G.freezeUntil = now() + FLIGHT_MS; G.sel = false; G.drag = null; }   /* 포격 중엔 양쪽 다 정지 */
-    if (G.vs && window.NET) { NET.fired(tx, G.tank.y, true);              // 대전: 명중 판정은 맞는 쪽(병사·탱크 주인)이 한다
+    if (G.vs && window.NET) { NET.fired(sx, G.tank.y, true, tx);              // 대전: 명중 판정은 맞는 쪽(병사·탱크 주인)이 한다
       var o0 = NET.opp() || {}; G.shotWait = { at: now(), until: now() + 1000 + 2500, hp: o0.hp == null ? HP_MAX : o0.hp, sol: G.soldiers.length, x: tx, scored: !!best }; }   // 결과(상대 체력·보병 수 변화)를 기다렸다가 명중/빗나감 표시
   }
   function useUlt() {                                      // 필살기 발동 (게이지 가득 찼을 때, 문장 버튼)
@@ -329,7 +330,6 @@
       vict.forEach(function (e, i) { G.bolts.push({ x: e.x, py: rowC(myRow(e.d)), at: t + i * 180, mine: true }); });
       if (!vict.length) G.bolts.push({ x: rnd(COLS), py: rowC(top() + 1), at: t, mine: true });
       setTimeout(function () { if (G.over) return; vict = vict.filter(function (e) { if (e.sh) { e.sh = 0; G.fx.push({ t: 'shieldHit', px: BX(e.x) + S / 2, py: BYY(myRow(e.d)) + S * 0.6, sz: 0.7, at: now() }); return false; } return true; }); vict.forEach(function (e) { var i = G.mySol.indexOf(e); if (i >= 0) { G.fx.push({ t: 'dead', px: BX(e.x) + S / 2, py: rowC(myRow(e.d)), at: now(), life: 1500 }); G.mySol.splice(i, 1); } });
-        while (G.mySol.length && !G.mySol.some(function (e) { return e.d === 1; })) G.mySol.forEach(function (e) { e.d--; });
         if (vict.length) G.fx.push({ t: 'pop', text: '내 벙커 ' + vict.length + '개 벼락 파괴', x: W / 2, y: 0, at: now(), big: true, col: '#ff8a7a' });
         if (window.NET) NET.pub(true); }, 600);
     }
@@ -365,11 +365,11 @@
     for (var i = 0; i < 14; i++) G.clash.puffs.push({ x: Math.random() * W, dy: (Math.random() - 0.5) * 30, r: 14 + Math.random() * 22, sp: 0.5 + Math.random() });
     sfx('clash');
   }
-  function useInfantry(col) {                             // 대전: 내 탱크 세로줄의 최전방(전선 바로 너머)에 보병을 세워 밀고 들어간다. 같은 줄이면 뒤로 쌓임
+  function useInfantry(col) {                             // 대전: 내 탱크 세로줄의 최전방(전선 바로 너머)에 보병을 세워 밀고 들어간다. 같은 줄이면 앞 빈자리부터 채움
     if (!G.vs || G.inf <= 0 || G.over) return;
     if (col == null) col = G.tank.x;
     G.inf--; G.sent++;
-    var d = 1; G.mySol.forEach(function (e) { if (e.x === col) d = Math.max(d, e.d + 1); }); G.mySol.push({ x: col, d: d, runAt: now(), fromX: G.tank.x, fromY: G.tank.y, sh: now() < (G.solarUntil || 0) ? 1 : 0 });   // 탱크 해치에서 뛰어나가는 연출
+    var d = 1; while (G.mySol.some(function (e) { return e.x === col && e.d === d; })) d++; G.mySol.push({ x: col, d: d, runAt: now(), fromX: G.tank.x, fromY: G.tank.y, sh: now() < (G.solarUntil || 0) ? 1 : 0 });   // 탱크 해치에서 뛰어나가는 연출
     if (window.NET) NET.pub(true); sfx('send');
     G.fx.push({ t: 'pop', text: '벙커 건설', x: BX(col) + S / 2, y: rowC(myRow(d)) - S * 0.6, at: now(), big: false });
   }
@@ -471,7 +471,7 @@
         G.mySol.splice(G.mySol.indexOf(vict), 1); G.fx.push({ t: 'dead', px: BX(sh.x) + S / 2, py: rowC(myRow(vict.d)), at: t, life: 1500 });
         G.fx.push({ t: 'boom', x: sh.x, y: myRow(vict.d), at: t, big: false }); sfx('boom', false);
         G.fx.push({ t: 'pop', text: '벙커 파괴', x: BX(sh.x) + S / 2, y: rowC(myRow(vict.d)) - 20, at: t, big: false });
-        if (!G.mySol.some(function (e) { return e.d === 1; })) G.mySol.forEach(function (e) { e.d--; });   // 최전방이 비면 뒷줄이 앞으로
+        /* 벙커는 건물이라 제자리 — 빈 앞자리는 다음 벙커가 채움 */
         if (window.NET) NET.pub(true);
         return false;
       }
@@ -805,7 +805,7 @@
     function drawMissile(m, p, t, enemy) {
       // 곡사포를 위에서 내려다봄: 발사 직후 작게 → 꼭대기에서 가장 크게(카메라에 가까움) → 떨어지며 작아짐.
       // 오르는 동안은 꼬리 불꽃이 아래로(m_up), 정점을 지나면 기수가 땅을 향해 꽂히는 모습(m_down, 불꽃이 위)으로 바뀜.
-      var h = Math.sin(p * Math.PI), px = BX(m.x) + S / 2;
+      var h = Math.sin(p * Math.PI), px = BX(m.x0 == null ? m.x : m.x0 + (m.x - m.x0) * p) + S / 2;
       var gy0 = rowC(m.y0), gy1 = rowC(m.y1), gy = gy0 + (gy1 - gy0) * p;   // 땅 위의 위치(그림자 자리)
       var sc = 0.3 + h * 1.05, lift = h * 60, ry = gy - lift;
       m.trail = m.trail || []; if (!m.lastT || t - m.lastT > 40) { m.trail.push({ x: px + (Math.random() - 0.5) * 4, y: ry + 10 * sc, s: sc, at: t }); m.lastT = t; }
@@ -912,7 +912,7 @@
   }
   function drawSkillFx(t) {
     if (t < G.stormMine) drawStorm(BYY(top()), (ROWS - top()) * S, t, true);                      // 내 땅의 폭풍우(서지)
-    if (t < G.stormOpp) { drawStorm(EY, fogH(), t, false); ctx.save(); ctx.font = '700 12px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#bfe3ff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('폭풍우 — 정찰 불가 ' + Math.ceil((G.stormOpp - t) / 1000) + 's', W / 2, EY + 4); ctx.restore(); }
+    if (t < G.stormOpp) { drawStorm(EY, fogH(), t, false); ctx.save(); ctx.font = '700 12px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#bfe3ff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('폭풍우 — 정찰 불가 · 미사일 흔들림 ' + Math.ceil((G.stormOpp - t) / 1000) + 's', W / 2, EY + 4); ctx.restore(); }
     G.bolts.forEach(function (b) { if (t >= b.at) drawBolt(b.x, b.py, t - b.at); });
     if (G.shield > 0) drawShield(BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, G.shield, t);
     if (G.oppShield > 0 && G.oppTank && (t < G.scoutUntil || (G.reveal && t < G.reveal.until))) drawShield(BX(COLS - 1 - G.oppTank.x) + S / 2, rowC(-1 - G.oppTank.y), G.oppShield, t, 0.8);

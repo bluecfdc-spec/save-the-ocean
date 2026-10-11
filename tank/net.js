@@ -130,7 +130,7 @@ window.REALNET = window.NET = (function () {
     if (started && o && (o.collapses | 0) > oppCollapses) { var dc = (o.collapses | 0) - oppCollapses; oppCollapses = o.collapses | 0; window.__tank.notice('💥 상대 보드 붕괴!'); if (isHost()) hostLine(-2 * dc); }
     if (started && o && o.scout && o.scout !== lastScout) { lastScout = o.scout; window.__tank.enemyScout(); }
     if (started && o && o.skill && o.skill.t && o.skill.t !== lastSkill) { lastSkill = o.skill.t; window.__tank.skillIn(o.skill.k); }
-    if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); if (o.fire.s) window.__tank.incomingShot(o.fire.x | 0); }
+    if (started && o && o.fire && o.fire.t && o.fire.t !== lastFire) { lastFire = o.fire.t; window.__tank.revealOpp(o.fire.x | 0, o.fire.y | 0); if (o.fire.s) window.__tank.incomingShot(o.fire.c != null ? o.fire.c | 0 : o.fire.x | 0); }
     if (started && o) {                                               // 상대 쪽 변화 알림
       var G0 = window.__tank.get();
       prevOpp = { inf: o.inf || 0, hp: o.hp == null ? 3 : o.hp, tank: o.tank };
@@ -195,7 +195,7 @@ window.REALNET = window.NET = (function () {
   var lastFire = 0, prevOpp = {}, lastScout = 0, lastSkill = 0;
   function skill(k) { if (ref && started) ref.child('players/' + uid + '/skill').set({ k: k, t: firebase.database.ServerValue.TIMESTAMP }); }
   function scouted() { if (ref && started) ref.child('players/' + uid + '/scout').set(firebase.database.ServerValue.TIMESTAMP); }
-  function fired(x, y, shot) { if (ref) ref.child('players/' + uid + '/fire').set({ x: x, y: y, s: shot ? 1 : 0, t: firebase.database.ServerValue.TIMESTAMP }); }
+  function fired(x, y, shot, col) { if (ref) ref.child('players/' + uid + '/fire').set({ x: x, y: y, c: col == null ? x : col, s: shot ? 1 : 0, t: firebase.database.ServerValue.TIMESTAMP }); }
   function sendInf(x) { var o = oppId(); if (ref && o) ref.child('inbox/' + o).push({ x: x, t: firebase.database.ServerValue.TIMESTAMP }); }
   var lastPub = '';
   function pub(force) {                                                        // 바뀔 때만: 체력 · 내 탱크 위치 · 내 앞의 적 보병(상대에겐 '보낸 보병' 목록) · 최전방 수
