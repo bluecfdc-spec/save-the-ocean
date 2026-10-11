@@ -438,18 +438,8 @@
   "name": "보병 출격",
   "sec": 0.8,
   "prompt": "military squad deployed confirmation, pleasant rising two-note digital chime with a soft synth whoosh and a light metallic click, satisfying and positive, sci-fi command interface, clean, no voice",
-  "files": [
-   "sfx/candidates/탱크_10_1_04aaa9.mp3",
-   "sfx/candidates/탱크_10_2_b62fc9.mp3",
-   "sfx/candidates/탱크_10_3_256c33.mp3",
-   "sfx/candidates/탱크_10_4_68f631.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/탱크_10_1_04aaa9.mp3": "04aaa9ac",
-   "sfx/candidates/탱크_10_2_b62fc9.mp3": "b62fc9c4",
-   "sfx/candidates/탱크_10_3_256c33.mp3": "256c3304",
-   "sfx/candidates/탱크_10_4_68f631.mp3": "68f6319f"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "탱크_11": {
