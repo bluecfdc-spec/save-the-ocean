@@ -97,7 +97,8 @@
    "sfx/candidates/공통_05_3_0241c2.mp3": "0241c253",
    "sfx/candidates/공통_05_4_8ac26e.mp3": "8ac26e58"
   },
-  "done": false
+  "done": true,
+  "pick": "sfx/candidates/공통_05_2_44ab3e.mp3"
  },
  "공통_06": {
   "game": "공통",
@@ -185,18 +186,8 @@
   "name": "서지 발동 (물·인간)",
   "sec": 2.5,
   "prompt": "massive tidal surge with deep sub bass rumble and synth sweep, cinematic water energy blast, futuristic",
-  "files": [
-   "sfx/candidates/공통_10_1_95c6f8.mp3",
-   "sfx/candidates/공통_10_2_657bdf.mp3",
-   "sfx/candidates/공통_10_3_a42cbe.mp3",
-   "sfx/candidates/공통_10_4_e8d809.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/공통_10_1_95c6f8.mp3": "95c6f817",
-   "sfx/candidates/공통_10_2_657bdf.mp3": "657bdf1b",
-   "sfx/candidates/공통_10_3_a42cbe.mp3": "a42cbe6c",
-   "sfx/candidates/공통_10_4_e8d809.mp3": "e8d8097b"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "공통_11": {
@@ -217,7 +208,8 @@
    "sfx/candidates/공통_11_3_d9cfa0.mp3": "d9cfa05a",
    "sfx/candidates/공통_11_4_40289e.mp3": "40289ecf"
   },
-  "done": false
+  "done": true,
+  "pick": "sfx/candidates/공통_11_3_d9cfa0.mp3"
  },
  "공통_12": {
   "game": "공통",
@@ -309,7 +301,8 @@
    "sfx/candidates/탱크_04_2_63ebea.mp3": "63ebea75",
    "sfx/candidates/탱크_04_3_5d574b.mp3": "5d574b93"
   },
-  "done": false
+  "done": true,
+  "pick": "sfx/candidates/탱크_04_2_63ebea.mp3"
  },
  "탱크_05": {
   "game": "탱크",
@@ -317,16 +310,8 @@
   "name": "탱크 이동",
   "sec": 1.2,
   "prompt": "futuristic tank tracks rolling with hydraulic whir, short, clean",
-  "files": [
-   "sfx/candidates/탱크_05_1_1debc2.mp3",
-   "sfx/candidates/탱크_05_2_f93a2d.mp3",
-   "sfx/candidates/탱크_05_3_a026ae.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/탱크_05_1_1debc2.mp3": "1debc233",
-   "sfx/candidates/탱크_05_2_f93a2d.mp3": "f93a2dab",
-   "sfx/candidates/탱크_05_3_a026ae.mp3": "a026ae7b"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "탱크_06": {
@@ -417,7 +402,8 @@
    "sfx/candidates/탱크_10_2_b82ea5.mp3": "b82ea52a",
    "sfx/candidates/탱크_10_3_63249a.mp3": "63249a3b"
   },
-  "done": false
+  "done": true,
+  "note": "목소리_01 로 대체"
  },
  "탱크_11": {
   "game": "탱크",
@@ -461,16 +447,8 @@
   "name": "전선 밀림",
   "sec": 2.2,
   "prompt": "ominous retreat sting, heavy low drums with dark synth drone, futuristic, tense",
-  "files": [
-   "sfx/candidates/탱크_13_1_9e8afe.mp3",
-   "sfx/candidates/탱크_13_2_3e6cec.mp3",
-   "sfx/candidates/탱크_13_3_1a5801.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/탱크_13_1_9e8afe.mp3": "9e8afef1",
-   "sfx/candidates/탱크_13_2_3e6cec.mp3": "3e6cecaa",
-   "sfx/candidates/탱크_13_3_1a5801.mp3": "1a5801f9"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "탱크_14": {
@@ -821,16 +799,8 @@
   "name": "보병 출격 — \"Hold the line! Move, move, move!\"",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [
-   "sfx/candidates/목소리_01_1_2ac473.mp3",
-   "sfx/candidates/목소리_01_2_49d549.mp3",
-   "sfx/candidates/목소리_01_3_87564b.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/목소리_01_1_2ac473.mp3": "2ac473",
-   "sfx/candidates/목소리_01_2_49d549.mp3": "49d549",
-   "sfx/candidates/목소리_01_3_87564b.mp3": "87564b"
-  },
+  "files": [],
+  "ver": {},
   "done": false
  },
  "목소리_02": {
