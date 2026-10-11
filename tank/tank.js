@@ -477,7 +477,7 @@
   }
   function burstDust(t, y) { for (var i = 0; i < 10; i++) { var q = ((t / 7 + i * 61) % 100) / 100; ctx.fillStyle = 'rgba(160,130,90,' + (0.35 * (1 - q)) + ')'; ctx.beginPath(); ctx.arc(((i * 97 + t / 9) % W), y - q * 30, 6 + q * 14, 0, 7); ctx.fill(); } }
   function drawSoldier(px, py, s, mine) {
-    if (!mine && IMG.u_soldier_e) { fitImg(IMG.u_soldier_e, px + s / 2, py + s / 2, s * 1.1, s * 1.3); return; }   /* 적·아군 같은 높이(세로 1.3칸) */
+    if (!mine && IMG.u_soldier_e) { fitImg(IMG.u_soldier_e, px + s / 2, py + s / 2 - s * 0.1, s * 1.4, s * 1.85); return; }   /* 정면 그림은 세로로 길어서 상자를 더 크게 줘야 몸집이 같아 보임 */   /* 적·아군 같은 높이(세로 1.3칸) */
     if (mine && IMG.u_soldier_p) { fitImg(IMG.u_soldier_p, px + s / 2, py + s / 2, s * 1.1, s * 1.3); return; }
     ctx.save(); ctx.translate(px + s / 2, py + s / 2);
     ctx.fillStyle = mine ? '#4f6a2e' : '#7a2a2a'; rr(-s * 0.16, -s * 0.05, s * 0.32, s * 0.4, 6); ctx.fill();

@@ -163,7 +163,7 @@ window.BOT = (function () {
       else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice(bot.shield ? 'CPU 태양 방패가 막았다 (1겹 남음)' : 'CPU 태양 방패가 깨졌다'); }
       else if (bot.tank.x === mx) { bot.tank.hp--; if (bot.tank.hp <= 0) { bot.over = true; end('win', 'CPU 탱크 격파'); return; } }
       syncToPlayer();
-    }, 900);
+    }, 1560);   // 포탄 비행(1.5초)이 끝나 터진 뒤에 보병이 사라진다
   }
   function scouted() { /* 내 정찰: 봇 탱크는 setOpp 로 이미 보임 */ }
   function pub() { }
