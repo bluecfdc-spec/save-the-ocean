@@ -36,7 +36,7 @@ window.BOT = (function () {
     if (me.freezeUntil && now() < me.freezeUntil) return;                         // 포격 중엔 CPU 도 정지
     if (bot.solarUntil && now() > bot.solarUntil) { bot.solarUntil = 0; bot.shield = 0; bot.mySol.forEach(function (e) { e.sh = 0; }); }   // CPU 솔라 5초 끝
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
-    bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; }).map(function (e) { return { x: mirror(e.x), d: e.d }; });
+    bot.soldiers = me.mySol.filter(function (e) { return seeAll; })   /* 안개: 정찰할 때만 내 보병이 보인다(사람과 같음) */.map(function (e) { return { x: mirror(e.x), d: e.d }; });
     withBot(function () {
       if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
@@ -58,6 +58,7 @@ window.BOT = (function () {
         var front = bot.soldiers.filter(function (e) { return e.d === 1; });     // 봇 눈에 보이는 내 보병(봇 좌표)
         if (front.length && Math.random() < 0.7) target = front[rnd(front.length)].x;
         else if (known && now() - known.t < 9000) target = mirror(known.x);
+        else if (Math.random() < 0.25) target = rnd(COLS);                          // 아무것도 안 보이면 가끔 감으로 쏨
         if (target != null && goTo(target)) {
           bot.missile--; bot.missileReady = now() + 3000;
           setTimeout(function () { if (active) { T.revealOpp(bot.tank.x, bot.tank.y); T.incomingShot(bot.tank.x); } }, 0);   // 내 쪽 판정: 맨 앞 내 보병 → 없으면 내 탱크. 쏜 순간 1초 노출

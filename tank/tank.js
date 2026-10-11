@@ -501,12 +501,22 @@
       img.__hw = best; } catch (e) { img.__hw = img.width * 0.6; }
     return img.__hw;
   }
+  var SOL_CASE = (function () { try { var q = /[?&]sol=([ABC])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'A'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
+  var SOL_BOX = { A: [0.8, 1.05], B: [1.1, 1.3], C: [0.95, 1.18] };
+  function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 아군은 시안 상자에 맞추고, 적군은 '머리 폭'이 아군과 같아지게
+    var f = G.fac || 'solar', refM = V2['s_' + f + '_stand'] || IMG.u_soldier_p; if (!refM) return 1;
+    var bx = SOL_BOX[SOL_CASE] || SOL_BOX.A, kM = Math.min(s * bx[0] / refM.width, s * bx[1] / refM.height);
+    if (mine) return kM;
+    var refE = V2['s_' + oppFacKey() + '_frun1'] || IMG.u_soldier_e; if (!refE) return kM;
+    return kM * headW(refM) / headW(refE);
+  }
   function drawSoldier(px, py, s, mine, feetY) {
     var im = mine ? IMG.u_soldier_p : IMG.u_soldier_e;
-    if (im) {                                                     /* 그림마다 머리(헬멧) 폭을 재서 머리 크기가 같도록 맞춤. 발은 칸 바닥(feetY)에 */
-      var k = (S * 0.36) / headW(im), dw = im.width * k, dh = im.height * k, fy = feetY != null ? feetY : py + s;
-      if (dh > S * 1.5) { var kk = S * 1.5 / dh; dw *= kk; dh *= kk; }
-      ctx.drawImage(im, px + s / 2 - dw / 2, fy - dh, dw, dh); return;
+    if (im) {
+      var k = solK(mine, s), dw = im.width * k, dh = im.height * k;
+      if (mine) ctx.drawImage(im, px + s / 2 - dw / 2, py + s / 2 - dh / 2, dw, dh);                         /* 아군: 칸 가운데 */
+      else { var fy = feetY != null ? feetY : py + s; ctx.drawImage(im, px + s / 2 - dw / 2, fy - dh, dw, dh); }   /* 적군: 발이 자기 줄 바닥(전선을 안 넘음) */
+      return;
     }
     ctx.save(); ctx.translate(px + s / 2, py + s / 2);
     ctx.fillStyle = mine ? '#4f6a2e' : '#7a2a2a'; rr(-s * 0.16, -s * 0.05, s * 0.32, s * 0.4, 6); ctx.fill();
@@ -546,7 +556,15 @@
         for (var fi = 0; fi < 7; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = 260 + (fi % 3) * 60, fx0 = ((fi * 173 + t / (60 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 20 + (fi * 67) % Math.max(40, fogH() - 40); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); }
       }
       ctx.restore();
-    } else { ctx.fillStyle = 'rgba(10,14,8,' + (scouting ? 0.12 : 0.3) + ')'; ctx.fillRect(0, EY, W, fogH()); }   // 대전: 상대 땅은 살짝 어둡게만
+    } else {                                                                 // 대전: 상대 땅은 짙은 안개. 정찰기가 떠 있는 동안만 걷힌다
+      var sIn = scouting ? Math.min(1, (t - (G.scoutUntil - SCOUT_MS)) / 450) : 0, sOut = scouting ? Math.min(1, (G.scoutUntil - t) / 450) : 0, clear = Math.min(sIn, sOut), fa = 1 - clear * 0.92;
+      ctx.save(); ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip();
+      ctx.fillStyle = 'rgba(18,22,20,' + (0.72 * fa) + ')'; ctx.fillRect(0, EY, W, fogH());
+      if (IMG.fog_a && IMG.fog_b) { ctx.globalAlpha = 0.75 * fa; for (var fi = 0; fi < 8; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = W * (0.6 + (fi % 3) * 0.15), fx0 = ((fi * 173 + t / (50 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 10 + ((fi * 67) % Math.max(30, fogH() - 20)); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); } }
+      ctx.restore();
+      if (clear > 0) { ctx.save(); ctx.font = '800 13px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; var stx = '정찰 중 — 적진이 보인다 ' + Math.ceil((G.scoutUntil - t) / 1000) + 's'; ctx.globalAlpha = clear; ctx.strokeText(stx, W / 2, EY + 4); ctx.fillStyle = '#c8f5b0'; ctx.fillText(stx, W / 2, EY + 4); ctx.restore(); }
+      else { ctx.save(); ctx.font = '700 12px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(220,230,220,.45)'; ctx.fillText('안개 — 정찰기를 띄우면 적진이 보인다', W / 2, EY + fogH() * 0.45); ctx.restore(); }
+    }
     if (plane && !G.vs) {                                                    // 정찰기 아래는 숲이 또렷하게(서치라이트)
       ctx.save(); ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip();
       ctx.beginPath(); ctx.arc(plane[0], plane[1], S * 1.9, 0, 7); ctx.clip(); drawForest(0.85);
@@ -574,7 +592,7 @@
     var cj = G.clash && t < G.clash.until ? 1 : 0;                                   // 교전 중엔 병사들이 떨림
     var keepSE = IMG.u_soldier_e, keepSP = IMG.u_soldier_p, rf = Math.floor(t / 110) % 2, oe = oppFacKey(), mf2 = G.fac || 'solar';
     if (cj) { if (V2['s_' + oe + '_frun2']) IMG.u_soldier_e = V2['s_' + oe + (rf ? '_frun2' : '_frun1')]; if (V2['s_' + mf2 + '_run2']) IMG.u_soldier_p = V2['s_' + mf2 + (rf ? '_run2' : '_run1')]; }   /* 교전: 양쪽 달리기 2프레임 */
-    if (scouting || G.vs) G.soldiers.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return; var ss = G.vs ? S * 0.8 : FS * 1.05; ctx.save(); ctx.globalAlpha = 1; /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만. 크기는 내 보병과 같게, 흔들림 없음 */ var ejx = cj * (Math.random() - 0.5) * 6; drawSoldier(BX(e.x) + (S - ss) / 2 + ejx, slotY(e.d) - ss / 2, ss, false, slotY(e.d) + FS * 0.45); if (t < (G.oppSolarUntil || 0)) drawSolDome(BX(e.x) + S / 2 + ejx, slotY(e.d) + FS * 0.45, t); ctx.restore(); });
+    if (scouting || G.vs) G.soldiers.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { if (G.vs && !scouting && !(cj && e.d === 1)) return; var ss = G.vs ? S * 0.8 : FS * 1.05; ctx.save(); ctx.globalAlpha = 1; /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만. 크기는 내 보병과 같게, 흔들림 없음 */ var ejx = cj * (Math.random() - 0.5) * 6; drawSoldier(BX(e.x) + (S - ss) / 2 + ejx, slotY(e.d) - ss / 2, ss, false, slotY(e.d) + FS * 0.45); if (t < (G.oppSolarUntil || 0)) drawSolDome(BX(e.x) + S / 2 + ejx, slotY(e.d) + FS * 0.45, t); ctx.restore(); });
     if (G.vs) {
       G.mySol.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return;
         var dx = BX(e.x) + (S - ss) / 2, dy = rowC(ry) - ss / 2, bob = 0;
@@ -714,7 +732,7 @@
       else if (f.t === 'flash' && IMG.fx_line) { var fal = Math.max(0, 1 - a / 600); f.rows.forEach(function (ry) { fitImg(IMG.fx_line, W / 2, BYY(ry) + S / 2, W * 1.05, S * 1.6, fal); }); f.cols.forEach(function (cx) { fitImg(IMG.fx_line, BX(cx) + S / 2, BYY((top() + ROWS) / 2), ROWS * S, S * 1.6, fal, Math.PI / 2); }); }
       else if (f.t === 'boom') { var r = (f.big ? 50 : 26) * Math.min(1, a / 250), al = 1 - a / 700; ctx.fillStyle = 'rgba(255,140,30,' + al * 0.8 + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,240,180,' + al + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r * 0.45, 0, 7); ctx.fill(); }
       else if (f.t === 'shieldHit') { var sal = Math.max(0, 1 - a / 650), scx = f.px != null ? f.px : BX(G.tank.fx) + S / 2, scy = f.py != null ? f.py : BYY(G.tank.fy) + S / 2, ssz = f.sz || 1; if (V2.sh_break) fitImg(V2.sh_break, scx, scy - S * 0.12, S * ssz * (1.65 + a / 500), S * ssz * (1.2 + a / 700), sal); else { ctx.save(); ctx.strokeStyle = 'rgba(255,212,81,' + sal + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(scx, scy, S * (0.7 + a / 500), 0, 7); ctx.stroke(); ctx.restore(); } }
-      else if (f.t === 'dead') { var dimg2 = f.enemy ? V2['s_' + oppFacKey() + '_fdead'] : V2['s_' + (G.fac || 'solar') + '_dead']; if (dimg2) fitImg(dimg2, f.px, f.py, S * 1.2, S * 1.0, Math.max(0, 1 - Math.max(0, a - 900) / 600)); }
+      else if (f.t === 'dead') { if (f.enemy && !(t < G.scoutUntil || (G.clash && t < G.clash.until))) return; var dimg2 = f.enemy ? V2['s_' + oppFacKey() + '_fdead'] : V2['s_' + (G.fac || 'solar') + '_dead']; if (dimg2) { var dk = solK(!f.enemy, S * 0.8), ddw = dimg2.width * dk, ddh = dimg2.height * dk; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - Math.max(0, a - 900) / 600); ctx.drawImage(dimg2, f.px - ddw / 2, f.py - ddh / 2, ddw, ddh); ctx.restore(); } }
       else if (f.t === 'debris') { var dp = Math.min(1, a / (f.life || 900)); if (V2.cr_debris) fitImg(V2.cr_debris, f.px, f.py - dp * 30, S * (1 + dp * 1.4), S * (1 + dp * 1.4), 1 - dp, f.rot + dp * 1.5); }
       else if (f.t === 'pop') { ctx.save(); ctx.globalAlpha = 1 - Math.max(0, (a - 550) / 450); ctx.font = '700 15px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; var fy = f.y - a / 40; ctx.strokeText(f.text, f.x, fy); ctx.fillStyle = f.col || '#fff'; ctx.fillText(f.text, f.x, fy); ctx.restore(); }
     });
@@ -930,7 +948,7 @@
       var o = (window.NET && NET.opp()) || {};
       var mf = G.mySol.filter(function (e) { return e.d === 1; }).length, ef = G.soldiers.filter(function (e) { return e.d === 1; }).length;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '600 14px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', fx0 + fw + 10, cy);
-      ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + ef, fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
+      ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; var seeE = t < G.scoutUntil || (G.clash && t < G.clash.until); ctx.fillStyle = !seeE ? '#fff' : mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + (seeE ? ef : '?'), fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
     }
     else { ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, cy); ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
     // 진격 타이머
