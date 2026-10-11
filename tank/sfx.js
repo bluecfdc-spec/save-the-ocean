@@ -169,11 +169,7 @@ window.SFX = (function () {
     sweepNode = { stop: function () { var e = ctx.currentTime; g.gain.exponentialRampToValueAtTime(0.0001, e + 0.3); ag.gain.setValueAtTime(0, e); setTimeout(function () { try { o.stop(); l.stop(); a.stop(); al.stop(); } catch (x) { } }, 400); } };
   };
   S.sweepStop = function () { if (sweepNode) { sweepNode.stop(); sweepNode = null; } };
-  S.send = function () {                                           // 보병 출격: 호루라기 + 북
-    if (!ensure()) return; var t = ctx.currentTime;
-    tone('square', 2200, 2600, 0.25, 0.12, t); tone('square', 2600, 2000, 0.25, 0.1, t + 0.25);
-    for (var i = 0; i < 4; i++) { tone('sine', 120, 60, 0.12, 0.35, t + 0.5 + i * 0.16); burst(0.05, 0.2, 2000, 300, t + 0.5 + i * 0.16); }
-  };
+  S.send = function () { if (!ensure()) return; var t = ctx.currentTime; tone('square', 440, 660, 0.18, 0.08, t); };   /* 대체음(파일 없을 때만) */
   S.inf = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sawtooth', 220, 180, 0.3, 0.12, t); tone('square', 440, 440, 0.12, 0.06, t + 0.1); tone('square', 440, 440, 0.12, 0.06, t + 0.3); };
   S.over = function () {                                           // 패배/게임오버: 내려가는 화음
     if (!ensure()) return; var t = ctx.currentTime;
@@ -214,9 +210,10 @@ window.SFX = (function () {
   function loadAll() { if (!ensure()) return; Object.keys(SAMPLES).forEach(function (k) { if (BUF[k] || loading[k]) return; loading[k] = 1;
     fetch('assets/sfx/' + k + '.mp3?v=2').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
   document.addEventListener('pointerdown', function () { loadAll(); }, { passive: true });
+  try { loadAll(); } catch (e) { }   /* 페이지 열리자마자 미리 받기 */
   function play(k, vol, rate) { if (!ensure() || !BUF[k]) return false; var src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = BUF[k]; if (rate) src.playbackRate.value = rate; g.gain.value = (vol == null ? 1 : vol) * SAMPLES[k]; src.connect(g); g.connect(sfx); src.start(); return true; }
   function wrap(name, key, volFn) { var synth = S[name]; S[name] = function (a) { if (play(key, volFn ? volFn(a) : 1, null)) return; if (synth) synth(a); }; }
-  wrap('click', 'ui_click'); wrap('go', 'go'); wrap('bad', 'ui_bad'); wrap('win', 'win'); wrap('over', 'lose'); S.lose = S.over;
+  wrap('click', 'ui_click'); wrap('go', 'go'); wrap('bad', 'ui_bad'); wrap('win', 'retreat'); wrap('over', 'advance'); S.lose = S.over;   /* 게임 승리 = 전선 전진 음악(탱크_12), 패배 = 전선 밀림(탱크_13) */
   wrap('ultReady', 'ult_ready'); wrap('pick', 'pick'); wrap('place', 'place'); wrap('launch', 'launch'); wrap('scout', 'scout'); wrap('clash', 'clash'); wrap('retreat', 'retreat'); wrap('warn', 'warn'); wrap('count', 'count'); wrap('gain', 'gain'); wrap('advance', 'advance'); wrap('send', 'send'); var synthStep = S.step, stepAt = 0; S.step = function () { var n = Date.now(); if (BUF.step) { if (n - stepAt > 1900) { stepAt = n; play('step', 1); } return; } if (synthStep) synthStep(); };
   var synthClear = S.clear; S.clear = function (n) { if (play('clear', Math.min(1.2, 0.8 + (n || 1) * 0.1), n > 2 ? 0.92 : 1)) return; synthClear(n); };
   var synthBoom = S.boom; S.boom = function (big) { if (play(big ? 'boom_b' : 'boom_s', 1, 0.95 + Math.random() * 0.1)) return; synthBoom(big); };
