@@ -882,18 +882,24 @@
  "목소리_01": {
   "game": "목소리",
   "num": "01",
-  "name": "보병 출격 — \"Hold the line! Move, move, move!\"",
+  "name": "보병 출격 — \"Hold the line! Move move move!\" (4~6번은 무전기 음색)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
   "files": [
    "sfx/candidates/목소리_01_1_04c0d8.mp3",
    "sfx/candidates/목소리_01_2_72147f.mp3",
-   "sfx/candidates/목소리_01_3_52d19b.mp3"
+   "sfx/candidates/목소리_01_3_52d19b.mp3",
+   "sfx/candidates/목소리_01_4_radio_f8644f.mp3",
+   "sfx/candidates/목소리_01_5_radio_b7354c.mp3",
+   "sfx/candidates/목소리_01_6_radio_ceba1b.mp3"
   ],
   "ver": {
    "sfx/candidates/목소리_01_1_04c0d8.mp3": "04c0d8",
    "sfx/candidates/목소리_01_2_72147f.mp3": "72147f",
-   "sfx/candidates/목소리_01_3_52d19b.mp3": "52d19b"
+   "sfx/candidates/목소리_01_3_52d19b.mp3": "52d19b",
+   "sfx/candidates/목소리_01_4_radio_f8644f.mp3": "f8644f09",
+   "sfx/candidates/목소리_01_5_radio_b7354c.mp3": "b7354c05",
+   "sfx/candidates/목소리_01_6_radio_ceba1b.mp3": "ceba1b16"
   },
   "done": false
  },
