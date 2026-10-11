@@ -115,7 +115,7 @@ window.SFX = (function () {
     if (!ensure()) return; var t = ctx.currentTime;
     for (var i = 0; i < 2; i++) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; var t0 = t + i * 0.55;
       o.frequency.setValueAtTime(500, t0); o.frequency.linearRampToValueAtTime(900, t0 + 0.28); o.frequency.linearRampToValueAtTime(520, t0 + 0.55);
-      env(g, t0, 0.03, 0.12, 0.55); var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200; o.connect(f); f.connect(g); g.connect(sfx); o.start(t0); o.stop(t0 + 0.65); }
+      env(g, t0, 0.03, 0.05, 0.55); var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1500; o.connect(f); f.connect(g); g.connect(sfx); o.start(t0); o.stop(t0 + 0.65); }
   };
   S.ultReady = function () {                                       // 필살기 준비: 밝은 상승 아르페지오
     if (!ensure()) return; var t = ctx.currentTime; [523, 659, 784, 1047].forEach(function (fq, i) { tone('triangle', fq, fq, 0.35, 0.14, t + i * 0.09, sfx, 0.01); });
@@ -205,7 +205,7 @@ window.SFX = (function () {
   S.ambientStop = function () { if (ambient) { ambient.stop(); ambient = null; } };
   // ---------- 음원 파일(ElevenLabs 효과음, 2026-10-11) — 있으면 파일, 없으면 위 합성음 ----------
   var SAMPLES = { ui_click: 0.5, ui_confirm: 0.6, ui_back: 0.5, ui_bad: 0.55, go: 0.8, win: 0.9, lose: 0.8, ult_ready: 0.8, ult_solar: 0.9,
-    pick: 0.5, place: 0.7, clear: 0.85, launch: 0.8, boom_s: 0.8, boom_b: 1.0, scout: 0.6, clash: 0.8, retreat: 0.9, warn: 0.7, count: 0.6, ult_gale: 0.9, gain: 0.6, ult_surge: 0.9, advance: 0.9, step: 0.7, deploy5: 0.9 };
+    pick: 0.5, place: 0.7, clear: 0.85, launch: 0.8, boom_s: 0.8, boom_b: 1.0, scout: 0.6, clash: 0.8, retreat: 0.9, warn: 0.3, count: 0.6, ult_gale: 0.9, gain: 0.6, ult_surge: 0.9, advance: 0.9, step: 0.7, deploy5: 0.9 };
   var BUF = {}, loading = {};
   function loadAll() { if (!ensure()) return; Object.keys(SAMPLES).forEach(function (k) { if (BUF[k] || loading[k]) return; loading[k] = 1;
     fetch('assets/sfx/' + k + '.mp3?v=3').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
