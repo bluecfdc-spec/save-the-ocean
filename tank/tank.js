@@ -82,11 +82,14 @@
   V2_PNG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; v2n++; applySkin(); }; i.src = 'assets/v2/' + n + '.png?v=6'; });
   V2_JPG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; }; i.src = 'assets/v2/' + n + '.jpg?v=1'; });
   function oppFacKey() { var o = (window.NET && NET.opp && NET.opp()) || {}; return FAC[o.fac] ? o.fac : (G && G.oppFacGuess) || 'gale'; }
+  var FLIP = [];                                          // 180도 돌린 그림 캐시
+  function flip180(im) { for (var i = 0; i < FLIP.length; i++) if (FLIP[i][0] === im) return FLIP[i][1];
+    var c = document.createElement('canvas'); c.width = im.width; c.height = im.height; var g = c.getContext('2d'); g.translate(c.width, c.height); g.rotate(Math.PI); g.drawImage(im, 0, 0); FLIP.push([im, c]); return c; }
   function applySkin() {                                   // 세력에 맞는 그림을 옛 이름(IMG.u_*)에 꽂아 넣는다 — 그리기 코드는 그대로
     if (!G) return; var f = G.fac || 'solar', e = oppFacKey();
     function dmg(pre, hp) { return V2[pre + (hp <= 1 ? '_dead' : hp === 2 ? '_hit' : '')] || V2[pre]; }   /* 맞을 때마다 탱크가 점점 부서짐 */
     if (V2['t_' + f]) IMG.u_tank_p = dmg('t_' + f, G.tank ? G.tank.hp : HP_MAX);
-    var oo = (window.NET && NET.opp && NET.opp()) || {}; if (V2['e_' + e]) IMG.u_tank_e = dmg('e_' + e, oo.hp == null ? HP_MAX : oo.hp);
+    var oo = (window.NET && NET.opp && NET.opp()) || {}, et = dmg('t_' + e, oo.hp == null ? HP_MAX : oo.hp); if (et) IMG.u_tank_e = flip180(et);   /* 적 탱크 = 그 세력의 원래 탱크(빨간 칠 없음)를 나를 향해 돌린 것 */
     if (V2['s_' + f + '_stand']) IMG.u_soldier_p = V2['s_' + f + '_stand'];
     if (V2['s_' + e + '_frun1']) IMG.u_soldier_e = V2['s_' + e + '_frun1']; else if (V2['s_' + e + '_front']) IMG.u_soldier_e = V2['s_' + e + '_front']; else if (V2['s_' + e + '_stand']) IMG.u_soldier_e = V2['s_' + e + '_stand'];   /* 26번(정면) 시트가 오면 적 보병은 나를 바라봄 */
     if (V2['p_' + f]) IMG.u_plane = V2['p_' + f];
