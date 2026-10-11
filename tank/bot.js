@@ -33,6 +33,7 @@ window.BOT = (function () {
   // ---------- 봇 한 수 ----------
   function step() {
     if (!active || !me || me.over || bot.over) return;
+    if (me.freezeUntil && now() < me.freezeUntil) return;                         // 포격 중엔 CPU 도 정지
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
     bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; }).map(function (e) { return { x: mirror(e.x), d: e.d }; });
     withBot(function () {
