@@ -3,17 +3,21 @@
 <style>body{margin:0;background:#0b0d0a;color:#f3efe0;font:17px 'Do Hyeon',system-ui;padding:16px;max-width:520px;margin:0 auto}h1{color:#ffd451;font-size:22px}
 button{display:block;width:100%;margin:10px 0;font:19px 'Do Hyeon';padding:16px;border-radius:12px;border:2px solid #ffcf4a;background:linear-gradient(#ffe284,#e8a21a);color:#2a1a00}
 button.b{background:#1b1d16;color:#ffd451}.d{font-size:14px;color:#8a9477;margin:-4px 0 8px}</style></head><body>
-<h1>보병 소리 시험</h1><p class="d">하나씩 눌러서 들어 보세요. 게임에서 "북소리"로 들린 게 몇 번인지 알려 주세요.</p>
-<button id="a">① 보병 출격 소리 (고르신 소리)</button><p class="d">보병 투입 버튼 누를 때 나는 소리 — 장전 찰칵 + 브라스 두 음</p>
-<button id="b" class="b">② 교전 10초 전 경고 북</button><p class="d">최전방에 보병이 있으면 교전 10초 전부터 2초마다 울리던 소리</p>
-<button id="c" class="b">③ 적 보병 등장 소리</button><p class="d">상대가 보병을 보냈을 때</p>
-<button id="d" class="b">④ 교전 소리</button><p class="d">30초마다 교전할 때</p>
+<h1>보병 소리 — 어느 것인가요?</h1>
+<p class="d">제가 만든 후보 6개 전부입니다. 눌러서 들어 보고, 원하시는 것의 번호를 알려 주세요.<br>지금 게임에 들어간 건 <b style="color:#ffd451">1번</b>입니다 (파일이 똑같은 것 확인).</p>
+<button data-f="w1">1 · 장전 찰칵 + 브라스 두 음 ← 지금 게임</button>
+<button data-f="w2" class="b">2 · 무전 삑삑 + 장전 + 화음</button>
+<button data-f="w3" class="b">3 · 낮게 차오름 + 철컥 + 브라스</button>
+<button data-f="w4" class="b">4 · 확인 소리 낮춤 + 장전</button>
+<button data-f="c1" class="b">5 · 두 음 올라가며 반짝 (먼저 만든 것)</button>
+<button data-f="c2" class="b">6 · 세 음 빠르게 + 낮은 받침 (먼저 만든 것)</button>
+<p class="d" style="margin-top:18px">참고 — 게임 중 다른 소리</p>
+<button id="b" class="b">교전 10초 전 경고 북</button>
 <p id="st" class="d"></p>
 <script src="sfx.js?v=37"></script>
 <script>
 var st=document.getElementById('st');
-document.getElementById('a').onclick=function(){var x=new Audio('assets/sfx/deploy_chime.mp3?v=3');x.play().then(function(){st.textContent='① 재생: deploy_chime.mp3'}).catch(function(e){st.textContent='재생 실패 '+e})};
-document.getElementById('b').onclick=function(){SFX.drum();st.textContent='② 재생: 교전 경고 북(합성음)'};
-document.getElementById('c').onclick=function(){SFX.inf();st.textContent='③ 재생: 적 보병 등장(합성음)'};
-document.getElementById('d').onclick=function(){SFX.clash();st.textContent='④ 재생: 교전'};
+document.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){var x=new Audio('assets/sfx/try/'+b.dataset.f+'.mp3?v=1');x.play().then(function(){st.textContent=b.textContent+' 재생 중'}).catch(function(e){st.textContent='재생 실패 '+e})}});
+document.getElementById('b').onclick=function(){SFX.drum();st.textContent='교전 경고 북 재생'};
+
 </script></body></html>
