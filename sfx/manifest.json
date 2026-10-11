@@ -53,7 +53,11 @@
   "name": "카운트다운 3·2·1",
   "sec": 0.4,
   "prompt": "sci-fi countdown beep, single clean digital tone, military launch sequence",
-  "files": []
+  "files": [
+   "sfx/candidates/공통_05_1.mp3",
+   "sfx/candidates/공통_05_2.mp3",
+   "sfx/candidates/공통_05_3.mp3"
+  ]
  },
  "공통_06": {
   "game": "공통",
@@ -109,7 +113,11 @@
   "name": "서지 발동 (물·인간)",
   "sec": 2,
   "prompt": "massive tidal surge with deep sub bass rumble and synth sweep, cinematic water energy blast, futuristic",
-  "files": []
+  "files": [
+   "sfx/candidates/공통_10_1.mp3",
+   "sfx/candidates/공통_10_2.mp3",
+   "sfx/candidates/공통_10_3.mp3"
+  ]
  },
  "공통_11": {
   "game": "공통",
@@ -117,7 +125,11 @@
   "name": "게일 발동 (번개·AI)",
   "sec": 1.5,
   "prompt": "electric storm burst, sharp thunder crack with glitchy digital zap and electronic bass drop, futuristic",
-  "files": []
+  "files": [
+   "sfx/candidates/공통_11_1.mp3",
+   "sfx/candidates/공통_11_2.mp3",
+   "sfx/candidates/공통_11_3.mp3"
+  ]
  },
  "공통_12": {
   "game": "공통",
@@ -173,7 +185,11 @@
   "name": "아이템 획득",
   "sec": 0.5,
   "prompt": "sci-fi pickup, bright digital chime with a short synth rise, clean",
-  "files": []
+  "files": [
+   "sfx/candidates/탱크_04_1.mp3",
+   "sfx/candidates/탱크_04_2.mp3",
+   "sfx/candidates/탱크_04_3.mp3"
+  ]
  },
  "탱크_05": {
   "game": "탱크",
@@ -181,7 +197,11 @@
   "name": "탱크 이동",
   "sec": 0.7,
   "prompt": "futuristic tank tracks rolling with hydraulic whir, short, clean",
-  "files": []
+  "files": [
+   "sfx/candidates/탱크_05_1.mp3",
+   "sfx/candidates/탱크_05_2.mp3",
+   "sfx/candidates/탱크_05_3.mp3"
+  ]
  },
  "탱크_06": {
   "game": "탱크",
@@ -237,7 +257,11 @@
   "name": "보병 출격",
   "sec": 0.7,
   "prompt": "armored soldier charge, short determined shout with boots running on metal, military, clean",
-  "files": []
+  "files": [
+   "sfx/candidates/탱크_10_1.mp3",
+   "sfx/candidates/탱크_10_2.mp3",
+   "sfx/candidates/탱크_10_3.mp3"
+  ]
  },
  "탱크_11": {
   "game": "탱크",
@@ -269,7 +293,11 @@
   "name": "전선 밀림",
   "sec": 2,
   "prompt": "ominous retreat sting, heavy low drums with dark synth drone, futuristic, tense",
-  "files": []
+  "files": [
+   "sfx/candidates/탱크_13_1.mp3",
+   "sfx/candidates/탱크_13_2.mp3",
+   "sfx/candidates/탱크_13_3.mp3"
+  ]
  },
  "탱크_14": {
   "game": "탱크",
