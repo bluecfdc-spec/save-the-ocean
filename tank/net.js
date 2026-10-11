@@ -1,13 +1,13 @@
-/* TANK RUMBLE — 1:1 대전 (Firebase Realtime Database, Space Survivor 와 같은 DB)
-   rooms/tk_CODE/meta    {state:'lobby'|'play', host, startAt, round}
-   rooms/tk_CODE/players/{uid} {name, ready, over, msg, adv, joined, t}
-   rooms/tk_CODE/inbox/{uid}/{push} {x, t}   ← 상대가 보낸 보병(열 번호). 받는 쪽이 읽고 지운다
+/* TANK RUMBLE — 1:1 대전 (DIVINE GENESIS 공통 Firebase: save-the-ocean-a96f1, 익명 로그인)
+   rooms/tank/CODE/meta    {state:'lobby'|'play', host, startAt, round}
+   rooms/tank/CODE/players/{uid} {name, ready, over, msg, adv, joined, t}
+   rooms/tank/CODE/inbox/{uid}/{push} {x, t}   ← 상대가 보낸 보병(열 번호). 받는 쪽이 읽고 지운다
 */
 window.REALNET = window.NET = (function () {
   'use strict';
-  var CFG = { databaseURL: 'https://space-survivor-c7efe-default-rtdb.asia-southeast1.firebasedatabase.app', apiKey: 'AIzaSyCdo9ftAg6FdHUd2M0EKbwANrtfm4qlP6w', authDomain: 'space-survivor-c7efe.firebaseapp.com', projectId: 'space-survivor-c7efe' };
+  var CFG = window.DG_FIREBASE;                                 /* /common/firebase-config.js */
   var $ = function (id) { return document.getElementById(id); };
-  var db = null, off = 0, uid = '', name = '', code = '', ref = null, players = {}, meta = {}, started = false, lastStart = 0, pubTimer = null, startTimer = null, resultUp = false;
+  var db = null, app = null, authed = null, off = 0, uid = '', name = '', code = '', ref = null, players = {}, meta = {}, started = false, lastStart = 0, pubTimer = null, startTimer = null, resultUp = false;
   var AS = ''; try { AS = new URLSearchParams(location.search).get('as') || ''; } catch (e) { }   /* ?as=2 : 같은 브라우저에서 다른 플레이어로(시험용) */
   var UK = 'tank_uid' + (AS ? '_' + AS : '');
   try { uid = localStorage.getItem(UK) || ''; name = localStorage.getItem('tank_name') || ''; } catch (e) { }
@@ -15,8 +15,13 @@ window.REALNET = window.NET = (function () {
   window.addEventListener('error', function (ev) { try { var L = window.__errlog = window.__errlog || []; L.push(String(ev.message)); } catch (e) { } });
   function init() {
     if (db) return true;
-    try { if (!firebase.apps.length) firebase.initializeApp(CFG); db = firebase.database(); db.ref('.info/serverTimeOffset').on('value', function (s) { off = s.val() || 0; }); return true; }
+    try { app = firebase.initializeApp(CFG, 'tank' + AS); db = app.database(); db.ref('.info/serverTimeOffset').on('value', function (s) { off = s.val() || 0; }); return true; }   /* ?as= 시험 시 앱 이름을 달리해 익명 계정도 분리 */
     catch (e) { db = null; return false; }
+  }
+  function login() {                                                            /* 익명 로그인 — 규칙이 auth 를 요구. uid 는 로그인 uid 로 */
+    if (authed) return authed;
+    authed = app.auth().signInAnonymously().then(function (c) { uid = c.user.uid; return uid; }).catch(function (e) { authed = null; throw e; });
+    return authed;
   }
   function snow() { return Date.now() + off; }
   function show(id) { ['ov', 'lobby', 'room', 'count', 'result'].forEach(function (k) { $(k).classList.toggle('hidden', k !== id); }); }
@@ -24,23 +29,27 @@ window.REALNET = window.NET = (function () {
   function oppId() { for (var k in players) if (k !== uid) return k; return null; }
   function opp() { var k = oppId(); return k ? players[k] : null; }
   function me() { return players[uid] || {}; }
-  function path() { return 'rooms/tk_' + code; }
+  function path() { return 'rooms/tank/' + code; }
 
   // ---------- 로비 ----------
   function openLobby() {
     if (!init()) { msg('lbMsg', '온라인 연결에 실패했어요. 잠시 후 다시 시도해 주세요.'); }
+    else login().catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
     $('nm').value = name; show('lobby'); msg('lbMsg', '');
   }
   function saveName() { name = ($('nm').value || '').trim().slice(0, 10) || '병사' + uid.slice(0, 3); try { localStorage.setItem('tank_name', name); } catch (e) { } }
   function mkCode() { var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
   function create() {
-    if (!init()) return; saveName(); code = mkCode();
-    db.ref('rooms/tk_' + code + '/meta').set({ state: 'lobby', host: uid, startAt: 0, round: 0 }).then(function () { join(code); }).catch(function (e) { msg('lbMsg', '방을 못 만들었어요: ' + (e.message || e)); });
+    if (!init()) return; saveName(); msg('lbMsg', '방 만드는 중…');
+    login().then(function () { code = mkCode(); return db.ref('rooms/tank/' + code + '/meta').set({ state: 'lobby', host: uid, startAt: 0, round: 0 }); }).then(function () { join(code); }).catch(function (e) { msg('lbMsg', '방을 못 만들었어요: ' + (e.message || e)); });
   }
   function join(c) {
     if (!init()) return; saveName();
     c = (c || '').trim().toUpperCase(); if (c.length !== 4) { msg('lbMsg', '코드 4글자를 넣어 주세요.'); return; }
-    var r = db.ref('rooms/tk_' + c);
+    login().then(function () { joinNow(c); }).catch(function (e) { msg('lbMsg', '로그인 실패: ' + (e.message || e)); });
+  }
+  function joinNow(c) {
+    var r = db.ref('rooms/tank/' + c);
     r.once('value').then(function (s) {
       var v = s.val();
       if (!v || !v.meta) { msg('lbMsg', '그 코드의 방이 없어요.'); return; }

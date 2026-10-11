@@ -9,5 +9,5 @@ window.DG_FIREBASE = {
   storageBucket: "save-the-ocean-a96f1.firebasestorage.app",
   messagingSenderId: "1047701817156",
   appId: "1:1047701817156:web:923b1374f715b79e787911",
-  databaseURL: ""   // ← RTDB 만든 뒤: https://save-the-ocean-a96f1-default-rtdb.asia-southeast1.firebasedatabase.app
+  databaseURL: "https://save-the-ocean-a96f1-default-rtdb.asia-southeast1.firebasedatabase.app"   // RTDB (Singapore)
 };
