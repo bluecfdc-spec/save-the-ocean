@@ -350,7 +350,8 @@
    "sfx/candidates/탱크_05_3_df2d34.mp3": "df2d349e",
    "sfx/candidates/탱크_05_4_413070.mp3": "4130705a"
   },
-  "done": false
+  "done": true,
+  "pick": "sfx/candidates/탱크_05_2_84fabf.mp3"
  },
  "탱크_06": {
   "game": "탱크",
@@ -916,22 +917,8 @@
   "name": "보병 출격 목소리 (4~6번은 더 낮고 묵직한 무전기 버전)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [
-   "sfx/candidates/목소리_01_1_673069.mp3",
-   "sfx/candidates/목소리_01_2_39d454.mp3",
-   "sfx/candidates/목소리_01_3_6605f7.mp3",
-   "sfx/candidates/목소리_01_4_deep_06416c.mp3",
-   "sfx/candidates/목소리_01_5_deep_29d591.mp3",
-   "sfx/candidates/목소리_01_6_deep_9670e6.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/목소리_01_1_673069.mp3": "673069",
-   "sfx/candidates/목소리_01_2_39d454.mp3": "39d454",
-   "sfx/candidates/목소리_01_3_6605f7.mp3": "6605f7",
-   "sfx/candidates/목소리_01_4_deep_06416c.mp3": "06416cf3",
-   "sfx/candidates/목소리_01_5_deep_29d591.mp3": "29d59102",
-   "sfx/candidates/목소리_01_6_deep_9670e6.mp3": "9670e61d"
-  },
+  "files": [],
+  "ver": {},
   "done": false,
   "hold": false
  },
