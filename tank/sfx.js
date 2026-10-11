@@ -188,6 +188,7 @@ window.SFX = (function () {
     for (var k = 0; k < 5; k++) tone('sine', 80, 40, 0.3, 0.3, t + k * 0.5);
   };
   S.count = function () { if (!ensure()) return; tone('square', 660, 660, 0.12, 0.12); };
+  S.ding = function () { if (!ensure()) return; var t = ctx.currentTime; tone('sine', 1175, 1175, 0.14, 0.22, t); tone('triangle', 1175, 1175, 0.14, 0.08, t); tone('sine', 1568, 1568, 0.38, 0.24, t + 0.11); tone('triangle', 3136, 3136, 0.25, 0.04, t + 0.11); };   /* 띠롱 — 확인 체크 */
   S.go = function () { if (!ensure()) return; var t = ctx.currentTime; tone('square', 1047, 1047, 0.45, 0.16, t); tone('square', 1319, 1319, 0.45, 0.1, t); };
   S.ambientStart = function () {                                   // 게임 시작: 배경음악을 처음부터 (옛 합성 바람 소리는 음악과 겹쳐서 끔)
     if (bgmEl) { try { bgmEl.currentTime = 0; } catch (e) { } } S.bgmStart(); return;

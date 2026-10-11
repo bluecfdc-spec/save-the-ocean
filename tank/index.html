@@ -76,6 +76,23 @@
   .ncard b { display: inline-block; width: 30px; height: 30px; line-height: 28px; text-align: center; border-radius: 50%; font-size: 18px;
     color: #fff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(var(--g),.55) 45%, rgba(var(--g),.18) 100%); border: 1.5px solid rgba(var(--g),.9);
     box-shadow: 0 0 8px rgba(var(--g),.6), inset 0 -2px 4px rgba(0,0,0,.35); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  #countHead { font-family: 'Black Han Sans', sans-serif; font-size: 22px; letter-spacing: 8px; color: #ffe9a8; text-shadow: 0 0 14px #ff9a1f, 0 2px 0 #000; }
+  #countDone { display: none; flex-direction: column; gap: 4px; height: 100px; justify-content: flex-end; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 24px; color: #9be37a; text-shadow: 0 0 12px #4caf2a, 0 2px 0 #000; }
+  #countDone div { animation: doneIn .35s ease-out; }
+  @keyframes doneIn { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
+  #count.check #countNum { display: none; }
+  #count.check #countDone { display: flex; }
+  #count .chk { display: none; }
+  #count.check .ncard { grid-template-columns: 56px 30px 1fr 52px; column-gap: 10px; font-size: 21px; white-space: nowrap; }
+  #count.check .ncard img { width: 56px; height: 56px; }
+  #count.check .chk { display: block; width: 50px; height: 50px; border-radius: 12px; cursor: pointer; position: relative; padding: 0;
+    background: linear-gradient(160deg, #2a2f22, #0d0f0a); border: 2.5px solid var(--c); box-shadow: 0 0 10px rgba(var(--g),.8), inset 0 0 10px rgba(var(--g),.35), 0 3px 0 #000; animation: chkPulse 1s ease-in-out infinite; }
+  #count.check .chk::after { content: ''; position: absolute; left: 15px; top: 7px; width: 13px; height: 24px; border: solid transparent; border-width: 0 6px 6px 0; transform: rotate(45deg); }
+  #count.check .chk.on { animation: none; background: linear-gradient(160deg, #6fe04a, #2c8a18); border-color: #d8ffc4; box-shadow: 0 0 16px #7dff4a, inset 0 2px 0 rgba(255,255,255,.5), 0 3px 0 #000; }
+  #count.check .chk.on::after { border-color: #fff; filter: drop-shadow(0 1px 1px #0008); animation: tick .3s ease-out; }
+  #count.check .chk:disabled:not(.on) { opacity: .4; animation: none; }
+  @keyframes chkPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes tick { from { transform: rotate(45deg) scale(0); } to { transform: rotate(45deg) scale(1); } }
   #count .ncard { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s, transform .35s; }
   #count .ncard.show { opacity: 1; transform: none; }
   @keyframes neon { from { filter: brightness(.94); } to { filter: brightness(1.08); } }
@@ -182,20 +199,20 @@
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀어라!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 찾아서<br>폭탄으로 격파하자!</div></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
 </div>
 
 <!-- 카운트다운 -->
-<div id="count" class="ov hidden"><div id="countNum">3</div>
+<div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countDone"></div><div id="countNum">3</div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀어라!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 찾아서<br>폭탄으로 격파하자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div><button class="chk" aria-label="확인"></button></div>
   </div>
 </div>
 
@@ -217,8 +234,8 @@
   document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
 })();
 </script>
-<script src="sfx.js?v=38"></script>
-<script src="tank.js?v=101"></script>
+<script src="sfx.js?v=39"></script>
+<script src="tank.js?v=102"></script>
 <script src="net.js?v=44"></script>
 <script src="bot.js?v=46"></script>
 <script src="demo.js?v=4"></script>
@@ -230,15 +247,23 @@
 <script>
 window.TANK_TIPS = { 3: '정찰기를 띄워\n적 탱크를 찾아 부숴라!', 2: '블록 줄을 지워\n아이템을 모아라!', 1: '최전방에 보병을 모아\n30초마다 전선을 밀어라!' };
 window.tankCards = function () { var f = localStorage.getItem('tank_fac') || 'solar'; document.querySelectorAll('.ncard.c2 img').forEach(function (i) { i.src = 'assets/v2/p_' + f + '.png'; }); document.querySelectorAll('.ncard.c3 img').forEach(function (i) { i.src = 'assets/v2/k_' + f + '_m2.png'; }); };
-window.tankCountStep = function (n) {   /* n: 0=아무것도, 1~3 = 그 번호까지 카드 표시 */
+window.tankCountStep = function (n) {   /* 1:1 대전용 3-2-1. n: 0=아무것도, 1~3 = 그 번호까지 카드 표시 */
+  var cc = document.getElementById('count'); cc.classList.remove('check'); document.getElementById('countHead').textContent = 'COUNTDOWN';
   document.getElementById('countNum').textContent = n ? n : '';
   document.querySelectorAll('#count .ncard').forEach(function (c, k) { c.classList.toggle('show', k < n); });
 };
-window.tankCountdown = function (cb) { window.tankCards();
+window.tankCountdown = function (cb) { window.tankCards();   /* CPU 대전: 카운트다운 대신 카드마다 확인 체크를 눌러 출격 준비 */
   ['ov', 'lobby', 'room', 'result', 'rank'].forEach(function (k) { var e = document.getElementById(k); if (e) e.classList.add('hidden'); });
-  var c = document.getElementById('count'), n = 0; window.tankCountStep(0); c.classList.remove('hidden');
-  function step() { n++; if (n > 3) { c.classList.add('hidden'); cb(); return; } window.tankCountStep(n); try { SFX.count(); } catch (e) { } setTimeout(step, n === 3 ? 2300 : 1300); }   /* 3이 뜬 뒤 1초 더 */
-  setTimeout(step, 250);
+  var c = document.getElementById('count'), cards = c.querySelectorAll('.ncard'), done = document.getElementById('countDone'), n = 0;
+  var LBL = ['탱크 배치 완료', '기름 채우기 완료', '정찰기 배치 완료'];
+  c.classList.add('check'); document.getElementById('countHead').textContent = 'READY CHECK'; done.innerHTML = '';
+  cards.forEach(function (cd) { cd.classList.remove('show'); var b = cd.querySelector('.chk'); b.classList.remove('on'); b.disabled = true; b.onclick = null; });
+  c.classList.remove('hidden');
+  function next() { var cd = cards[n], b = cd.querySelector('.chk'); cd.classList.add('show'); b.disabled = false;
+    b.onclick = function () { if (b.classList.contains('on')) return; b.classList.add('on'); b.disabled = true; try { SFX.ding(); } catch (e) { }
+      var d = document.createElement('div'); d.textContent = '✓ ' + LBL[n]; done.appendChild(d); n++;
+      if (n < 3) setTimeout(next, 350); else setTimeout(function () { c.classList.add('hidden'); c.classList.remove('check'); cb(); }, 900); }; }
+  setTimeout(next, 250);
 };
 </script>
 </body>
