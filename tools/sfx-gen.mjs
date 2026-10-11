@@ -27,5 +27,5 @@ for (const r of list) {
     await new Promise(r => setTimeout(r, 400));
   }
 }
-fs.writeFileSync('sfx/manifest.json', JSON.stringify(manifest, null, 1));
+import('crypto').then(({createHash}) => { for (const id in manifest) { manifest[id].ver = {}; for (const f of manifest[id].files) if (fs.existsSync(f)) manifest[id].ver[f] = createHash('md5').update(fs.readFileSync(f)).digest('hex').slice(0, 8); } fs.writeFileSync('sfx/manifest.json', JSON.stringify(manifest, null, 1)); console.log('manifest ok'); });
 console.log('완료');
