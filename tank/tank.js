@@ -180,10 +180,13 @@
   }
   function place(p, gx, gy) {
     p.cells.forEach(function (c) { G.board[gy + c.dy][gx + c.dx] = c.r; if (G.loot) delete G.loot[(gx + c.dx) + ',' + (gy + c.dy)]; });   /* 떠 있는 아이템 위에 블록을 놓으면 아이템은 사라짐 */
-    // 줄 검사
-    var rows = [], cols = [], y, x, full;
-    for (y = top(); y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!G.board[y][x]) { full = false; break; } if (full) rows.push(y); }   // 탱크 칸은 채운 칸으로 치지 않음
-    for (x = 0; x < COLS; x++) { full = true; for (y = top(); y < ROWS; y++) if (!G.board[y][x]) { full = false; break; } if (full) cols.push(x); }
+    lineCheck(); calcReach();
+  }
+  function lineCheck() {                                   // 줄 검사 — 숨은 기능: 탱크가 서 있는 칸도 블록 한 칸처럼 쳐서 줄을 완성시킨다 (놓을 때든, 탱크가 나중에 그 빈칸에 들어갈 때든)
+    var rows = [], cols = [], y, x, full, tk = G.tank;
+    function filled(x, y) { return G.board[y][x] || (tk && !tk.path.length && tk.x === x && tk.y === y); }
+    for (y = top(); y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!filled(x, y)) { full = false; break; } if (full) rows.push(y); }
+    for (x = 0; x < COLS; x++) { full = true; for (y = top(); y < ROWS; y++) if (!filled(x, y)) { full = false; break; } if (full) cols.push(x); }
     var n = rows.length + cols.length;
     if (n) {
       var got = { 2: 0, 3: 0, 4: 0, 5: 0 }, cleared = {};
@@ -208,10 +211,11 @@
       if (msg) G.fx.push({ t: 'pop', text: msg.trim(), x: W / 2, y: BY + (top() + ROWS) / 2 * S + 34, at: now(), big: false });
       G.fx.push({ t: 'flash', at: now(), rows: rows, cols: cols });
       sfx('clear', n + mult - 1); [2, 3, 4, 5].forEach(function (k, i) { if (got[k]) setTimeout(function () { sfx('gain', k); }, 350 + i * 120); });
+      return true;
     } else {
       G.combo = 0;
     }
-    calcReach();
+    return false;
   }
   function resetRound() {                                   // CPU 무한 모드: 다음 전장. 점수·세력·탱크 체력·교체 횟수는 그대로, 전장·보병·블록은 새로
     var t = now();
@@ -459,7 +463,7 @@
     if (tk.ang == null) tk.ang = 0; var dA = angT - tk.ang; while (dA > Math.PI) dA -= Math.PI * 2; while (dA < -Math.PI) dA += Math.PI * 2; tk.ang += Math.max(-0.22, Math.min(0.22, dA)); if (Math.abs(dA) < 0.01) tk.ang = angT;
     if (!frozen && tk.path.length && t - tk.moveAt >= 150) {
       var c = tk.path.shift(); tk.x = c[0]; tk.y = c[1]; tk.moveAt = t; pickLoot(tk.x, tk.y); if (tk.path.length) sfx('step');
-      if (!tk.path.length) { calcReach(); if (G.vs && window.NET) NET.pub(); }
+      if (!tk.path.length) { lineCheck(); calcReach(); if (G.vs && window.NET) NET.pub(); }
     }
     if (tk.path.length) { var p = Math.min(1, (t - tk.moveAt) / 150); tk.fx = tk.x + (tk.path[0][0] - tk.x) * p; tk.fy = tk.y + (tk.path[0][1] - tk.y) * p; }
     else { tk.fx = tk.x; tk.fy = tk.y; }

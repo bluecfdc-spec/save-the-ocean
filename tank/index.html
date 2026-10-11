@@ -82,6 +82,9 @@
   @keyframes doneIn { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
   #countSub { display: none; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 26px; color: #fff; text-shadow: 0 0 12px #ff9a1f, 0 2px 0 #000; animation: chkPulse 1s ease-in-out infinite; }
   #count.check #countSub { display: block; }
+  #count.check #countHead { font-size: 34px; letter-spacing: 6px; background: linear-gradient(90deg, #4fd8ff, #c58bff 50%, #ffd451); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+    filter: drop-shadow(0 0 6px rgba(79,216,255,.9)) drop-shadow(0 0 14px rgba(197,139,255,.8)) drop-shadow(0 0 24px rgba(255,212,81,.45)); animation: neonHead 1.6s ease-in-out infinite alternate; }
+  @keyframes neonHead { from { filter: drop-shadow(0 0 4px rgba(79,216,255,.8)) drop-shadow(0 0 10px rgba(197,139,255,.6)) drop-shadow(0 0 18px rgba(255,212,81,.3)); } to { filter: drop-shadow(0 0 8px rgba(79,216,255,1)) drop-shadow(0 0 18px rgba(197,139,255,.95)) drop-shadow(0 0 30px rgba(255,212,81,.6)); } }
   #count.check #countNum { display: none; }
   #count.check #countDone { display: flex; }
   #count .chk { display: none; }
@@ -253,7 +256,7 @@
 })();
 </script>
 <script src="sfx.js?v=40"></script>
-<script src="tank.js?v=105"></script>
+<script src="tank.js?v=106"></script>
 <script src="net.js?v=44"></script>
 <script src="bot.js?v=49"></script>
 <script src="demo.js?v=4"></script>
@@ -273,7 +276,7 @@ window.tankCountStep = function (n) {   /* 1:1 대전용 3-2-1. n: 0=아무것�
 window.tankCountdown = function (cb) { window.tankCards();   /* CPU 대전: 카운트다운 대신 카드마다 확인 체크를 눌러 출격 준비 */
   ['ov', 'lobby', 'room', 'result', 'rank'].forEach(function (k) { var e = document.getElementById(k); if (e) e.classList.add('hidden'); });
   var c = document.getElementById('count'), cards = c.querySelectorAll('.ncard'), done = document.getElementById('countDone'), n = 0;
-  var LBL = ['탱크 배치 완료', '기름 채우기 완료', '정찰기 배치 완료'];
+  var LBL = ['기름 채우기 완료', '정찰기 띄우기 완료', '탱크 배치 완료'];
   c.classList.add('check'); document.getElementById('countHead').textContent = 'READY CHECK'; done.innerHTML = '';
   cards.forEach(function (cd) { cd.classList.remove('show'); var b = cd.querySelector('.chk'); b.classList.remove('on'); b.disabled = true; b.onclick = null; });
   c.classList.remove('hidden');
