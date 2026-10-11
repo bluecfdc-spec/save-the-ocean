@@ -270,8 +270,7 @@
    "sfx/candidates/탱크_01_3_90c673.mp3": "90c67376",
    "sfx/candidates/탱크_01_4_96c84f.mp3": "96c84fac"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_02": {
   "game": "탱크",
@@ -291,8 +290,7 @@
    "sfx/candidates/탱크_02_3_7c974d.mp3": "7c974d9e",
    "sfx/candidates/탱크_02_4_7d939b.mp3": "7d939bb7"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_03": {
   "game": "탱크",
@@ -312,8 +310,7 @@
    "sfx/candidates/탱크_03_3_8e4283.mp3": "8e428359",
    "sfx/candidates/탱크_03_4_501c11.mp3": "501c114e"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_04": {
   "game": "탱크",
@@ -333,19 +330,27 @@
    "sfx/candidates/탱크_04_3_5d574b.mp3": "5d574b93",
    "sfx/candidates/탱크_04_4_b5d4fc.mp3": "b5d4fcdf"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_05": {
   "game": "탱크",
   "num": "05",
   "name": "탱크 이동",
   "sec": 2,
-  "prompt": "tank slowly rolling forward, soft metal tracks clinking and a gentle low engine hum, quiet and smooth, not loud, no roar, short, clean",
-  "files": [],
-  "ver": {},
-  "done": false,
-  "hold": false
+  "prompt": "tank driving forward for two full seconds, continuous metal tracks clanking and squeaking with a mid-range mechanical rattle and steady engine, clearly audible, not deep, no sub bass, 2 seconds",
+  "files": [
+   "sfx/candidates/탱크_05_1_b6d274.mp3",
+   "sfx/candidates/탱크_05_2_84fabf.mp3",
+   "sfx/candidates/탱크_05_3_df2d34.mp3",
+   "sfx/candidates/탱크_05_4_413070.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/탱크_05_1_b6d274.mp3": "b6d27465",
+   "sfx/candidates/탱크_05_2_84fabf.mp3": "84fabf09",
+   "sfx/candidates/탱크_05_3_df2d34.mp3": "df2d349e",
+   "sfx/candidates/탱크_05_4_413070.mp3": "4130705a"
+  },
+  "done": false
  },
  "탱크_06": {
   "game": "탱크",
@@ -365,8 +370,7 @@
    "sfx/candidates/탱크_06_3_c89a41.mp3": "c89a4136",
    "sfx/candidates/탱크_06_4_075c8d.mp3": "075c8d08"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_07": {
   "game": "탱크",
@@ -386,8 +390,7 @@
    "sfx/candidates/탱크_07_3_81e666.mp3": "81e6664c",
    "sfx/candidates/탱크_07_4_8acb1f.mp3": "8acb1fa5"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_08": {
   "game": "탱크",
@@ -407,8 +410,7 @@
    "sfx/candidates/탱크_08_3_c79676.mp3": "c7967646",
    "sfx/candidates/탱크_08_4_24d282.mp3": "24d282c4"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_09": {
   "game": "탱크",
@@ -428,8 +430,7 @@
    "sfx/candidates/탱크_09_3_9335ab.mp3": "9335abf4",
    "sfx/candidates/탱크_09_4_189c8a.mp3": "189c8a4b"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_10": {
   "game": "탱크",
@@ -449,8 +450,7 @@
    "sfx/candidates/탱크_10_3_63249a.mp3": "63249a3b",
    "sfx/candidates/탱크_10_4_ac0645.mp3": "ac06452c"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_11": {
   "game": "탱크",
@@ -470,8 +470,7 @@
    "sfx/candidates/탱크_11_3_86d49f.mp3": "86d49fb4",
    "sfx/candidates/탱크_11_4_83918c.mp3": "83918cf5"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_12": {
   "game": "탱크",
@@ -491,8 +490,7 @@
    "sfx/candidates/탱크_12_3_6d2f5c.mp3": "6d2f5ce5",
    "sfx/candidates/탱크_12_4_c4b959.mp3": "c4b95917"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "탱크_13": {
   "game": "탱크",
@@ -512,9 +510,7 @@
    "sfx/candidates/탱크_13_3_125b8b.mp3": "125b8bfd",
    "sfx/candidates/탱크_13_4_c23416.mp3": "c23416c8"
   },
-  "done": true,
-  "hold": false,
-  "pick": "sfx/candidates/탱크_13_2_37ab4b.mp3"
+  "done": true
  },
  "탱크_14": {
   "game": "탱크",
@@ -534,8 +530,7 @@
    "sfx/candidates/탱크_14_3_336c13.mp3": "336c132a",
    "sfx/candidates/탱크_14_4_e80356.mp3": "e8035603"
   },
-  "done": true,
-  "hold": false
+  "done": true
  },
  "스카이_01": {
   "game": "스카이",
