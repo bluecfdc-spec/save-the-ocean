@@ -1,0 +1,23 @@
+{
+  "rules": {
+    ".read": false, ".write": false,
+    "rooms": {
+      "$game": {
+        "$code": {
+          ".read": "auth != null",
+          "meta":    { ".write": "auth != null" },
+          "players": { "$uid": { ".write": "auth != null && auth.uid == $uid", ".validate": "newData.hasChildren() || newData.val() == null" } },
+          "pos":     { "$uid": { ".write": "auth != null && auth.uid == $uid" } },
+          "inbox":   { "$uid": { ".write": "auth != null" } }
+        }
+      }
+    },
+    "lobby": {
+      "$game": {
+        ".read": "auth != null",
+        "pres": { "$uid": { ".write": "auth != null && auth.uid == $uid" } },
+        "chat": { ".write": "auth != null", "$id": { ".validate": "newData.hasChildren(['n','p','t']) && newData.child('p').isNumber() && newData.child('n').isString() && newData.child('n').val().length <= 12" } }
+      }
+    }
+  }
+}

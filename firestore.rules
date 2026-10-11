@@ -2,57 +2,79 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── 공통 조건 ──
-    // Apple 또는 Google 계정으로 로그인한 사용자만 (익명 로그인·이메일 가입 등은 불가)
+    // ───────── 공통 ─────────
+    // 스토어 로그인(Apple/Google)만 정식 기록. 익명은 *_test(웹 체험판)에서만
     function storeUser() {
       return request.auth != null
         && request.auth.token.firebase.sign_in_provider in ['apple.com', 'google.com'];
     }
-    // 이번 요청에서 users/{uid} 의 마지막 등록 시각을 "지금"으로 같이 기록했는지
-    //  → 기록은 반드시 users 문서와 한 묶음(batch)으로만 올릴 수 있고, users 문서는 20초에 한 번만 바뀔 수 있다
+    function anyUser() { return request.auth != null; }
     function stampedNow() {
       return getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.last == request.time;
     }
+    function okName(d) { return d.name is string && d.name.size() >= 1 && d.name.size() <= 12; }
+    function okFlag(d) { return d.flag is string && d.flag.size() <= 3; }
+    function okFac(d)  { return d.faction is int && d.faction >= 1 && d.faction <= 3; }
+    function okDate(d) { return d.date is string && d.date.size() <= 12; }
+    // 게임별 점수 상한: 오션 300만 / 스카이 60,000(초×100 = 10분) / 탱크 100만
+    function okScore(game, d) {
+      return d.score is int && d.score > 0
+        && ((game == 'ocean' && d.score <= 3000000) || (game == 'sky' && d.score <= 60000) || (game == 'tank' && d.score <= 1000000));
+    }
+    function scoreDoc(game, d) {
+      return d.keys().hasOnly(['name', 'score', 'date', 'flag', 'faction', 'uid'])
+        && d.uid == request.auth.uid && okScore(game, d) && okName(d) && okFlag(d) && okFac(d) && okDate(d);
+    }
 
-    // ── 계정별 마지막 등록 시각 (연속 등록 막기) ──
-    match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if storeUser() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['last'])
-        && request.resource.data.last == request.time;
-      allow update: if storeUser() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['last'])
-        && request.resource.data.last == request.time
+    // ───────── 계정 ─────────
+    match /users/{uid} {                       // 마지막 등록 시각(20초 1회 제한)
+      allow read: if anyUser() && request.auth.uid == uid;
+      allow create: if anyUser() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['last']) && request.resource.data.last == request.time;
+      allow update: if anyUser() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['last']) && request.resource.data.last == request.time
         && request.time > resource.data.last + duration.value(20, 's');
     }
-
-    // ── 점수 (주간 scores_sN, 월간 점령전 scores_sYYYYMMF): 누구나 읽기, 로그인한 본인만 올리기. 수정·삭제 불가 ──
-    match /{col}/{id} {
-      allow read: if col.matches('^(scores|plays)(_s[0-9]+)?$');
-
-      allow create: if col.matches('^scores(_s[0-9]+)?$')
-        && storeUser()
-        && stampedNow()
-        && request.resource.data.keys().hasOnly(['name', 'score', 'date', 'flag', 'faction', 'uid'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.score is int
-        && request.resource.data.score > 0 && request.resource.data.score <= 3000000
-        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 8
-        && request.resource.data.flag is string && request.resource.data.flag.size() <= 3
-        && request.resource.data.faction is int && request.resource.data.faction >= 1 && request.resource.data.faction <= 3
-        && request.resource.data.date is string && request.resource.data.date.size() <= 12;
-      // plays(판별 통계)는 더 이상 쓰지 않음 → 쓰기 불가
+    match /profiles/{uid} {                    // 아이디·국기·세력(계정에 하나)
+      allow read: if anyUser() && request.auth.uid == uid;
+      allow create: if anyUser() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'flag', 'faction', 'facSetAt', 'facChanges', 'paid'])
+        && okName(request.resource.data) && okFlag(request.resource.data) && okFac(request.resource.data)
+        && request.resource.data.facChanges == 0 && request.resource.data.paid == false;
+      // 이름·국기는 자유, 세력은 바꿀 수 없음(변경권은 나중에 서버 함수로). paid 는 서버만
+      allow update: if anyUser() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'flag'])
+        && okName(request.resource.data) && okFlag(request.resource.data);
     }
 
-    // ── 방문자 수·공지: 누구나 읽기. 방문자 수는 1씩만 올릴 수 있고, 공지(notice…)는 콘솔에서만 수정 ──
+    // ───────── 점수 ─────────
+    // 오션(기존 이름 유지): scores_sN (주간), scores_sYYYYMMF (월간 점령전)
+    match /{col}/{id} {
+      allow read: if col.matches('^(scores|plays)(_s[0-9]+)?$');
+      allow create: if col.matches('^scores(_s[0-9]+)?$') && storeUser() && stampedNow()
+        && scoreDoc('ocean', request.resource.data);
+    }
+    // 스카이·탱크: {game}_scores_sN (주간), {game}_war_YYYYMM_F (월간)
+    match /{col}/{id} {
+      allow read: if col.matches('^(sky|tank)_(scores_s[0-9]+|war_[0-9]{6}_[1-3])$');
+      allow create: if col.matches('^(sky|tank)_(scores_s[0-9]+|war_[0-9]{6}_[1-3])$') && storeUser() && stampedNow()
+        && scoreDoc(col.split('_')[0], request.resource.data);
+    }
+    // 웹 체험판: {game}_scores_test — 익명 로그인도 허용(출시 전 테스트용, 출시 때 닫음)
+    match /{col}/{id} {
+      allow read: if col.matches('^(ocean|sky|tank)_scores_test$');
+      allow create: if col.matches('^(ocean|sky|tank)_scores_test$') && anyUser() && stampedNow()
+        && scoreDoc(col.split('_')[0], request.resource.data);
+    }
+
+    // ───────── 점령전 집계(허브가 읽음) — GitHub Actions 만 씀 ─────────
+    match /war/{month} { allow read: if true; allow write: if false; }
+
+    // ───────── 방문자 수·공지 ─────────
     match /visits/{id} {
       allow read: if true;
-      allow create: if !id.matches('^notice.*')
-        && request.resource.data.keys().hasOnly(['count', 'date'])
-        && request.resource.data.count == 1;
-      allow update: if !id.matches('^notice.*')
-        && request.resource.data.keys().hasOnly(['count', 'date'])
-        && request.resource.data.count == resource.data.count + 1;
+      allow create: if !id.matches('^notice.*') && request.resource.data.keys().hasOnly(['count', 'date']) && request.resource.data.count == 1;
+      allow update: if !id.matches('^notice.*') && request.resource.data.keys().hasOnly(['count', 'date']) && request.resource.data.count == resource.data.count + 1;
     }
   }
 }

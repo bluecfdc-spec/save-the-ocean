@@ -1,0 +1,18 @@
+/* DIVINE GENESIS 공통 UI 규칙 — 글씨·색·버튼·배너. 세 게임이 같은 걸 쓴다 */
+:root {
+  --dg-gold: #ffd451; --dg-gold-dark: #e8a21a; --dg-red: #ff5a4a; --dg-green: #9be37a;
+  --dg-ink: #f3efe0; --dg-dim: #8a9477; --dg-panel: #15170f; --dg-edge: #3a3e32;
+  --dg-surge: #4fd8ff; --dg-gale: #c58bff; --dg-solar: #ffd451;
+  --dg-display: 'Orbitron', system-ui, sans-serif; --dg-body: system-ui, -apple-system, sans-serif;
+}
+.dg-btn { font: 800 18px/1 var(--dg-display); letter-spacing: 2px; padding: 14px 34px; border-radius: 12px; border: 2px solid var(--dg-gold); color: #2a1a00;
+  background: linear-gradient(#ffe284, var(--dg-gold-dark)); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; cursor: pointer; }
+.dg-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a5a00; }
+.dg-btn.sub { font-size: 14px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
+.dg-fac { background: rgba(0,0,0,.45); border: 2px solid var(--dg-edge); border-radius: 14px; padding: 6px 8px 4px; width: 92px; color: #cfd6bf; font: 700 13px var(--dg-body);
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: .7; }
+.dg-fac img { width: 56px; height: 56px; } .dg-fac small { font: 500 10px var(--dg-body); color: var(--dg-dim); }
+.dg-fac.on { opacity: 1; color: #fff; }
+.dg-fac.on[data-f=surge] { border-color: var(--dg-surge); box-shadow: 0 0 16px #4fd8ff88; }
+.dg-fac.on[data-f=gale]  { border-color: var(--dg-gale);  box-shadow: 0 0 16px #c58bff88; }
+.dg-fac.on[data-f=solar] { border-color: var(--dg-solar); box-shadow: 0 0 16px #ffd45188; }
