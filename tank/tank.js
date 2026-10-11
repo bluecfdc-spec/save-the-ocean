@@ -79,7 +79,7 @@
   var BLK_IMG = { 1: 'b_plain', 2: 'b_fuel', 3: 'b_scout', 4: 'b_missile', 5: 'b_inf' };   // 정찰 = 정찰기, 보병 = 파란 병사
   // ---------- 새 그림(v2, 2026-10-11 GPT 시트) ----------
   var V2 = {}, V2_PNG = ['b_bonus', 'b_fuel', 'b_inf', 'b_missile', 'b_plain', 'b_scout', 'ban_gold', 'ban_green', 'ban_red', 'bolt1', 'bolt2', 'bolt3', 'bolt_flash', 'btn_inf_off', 'btn_inf_on', 'btn_reroll_on', 'btn_reroll_off', 'btn_missile_off', 'btn_missile_on', 'btn_scout_off', 'btn_scout_on', 'cr_crack1', 'cr_crack2', 'cr_debris', 'cr_vignette', 'd_barrel', 'd_crater', 'd_pole', 'd_sandbag', 'd_trench1', 'd_trench2', 'd_trench3', 'd_wire1', 'd_wire2', 'e_gale', 'e_gale_dead', 'e_gale_hit', 'e_solar', 'e_solar_dead', 'e_solar_hit', 'e_surge', 'e_surge_dead', 'e_surge_hit', 'em_down', 'em_top', 'em_up', 'f_gale', 'f_gale_glow', 'f_solar', 'f_solar_glow', 'f_surge', 'f_surge_glow', 'fx_dust1', 'fx_dust2', 'fx_flash1', 'fx_flash2', 'fx_smoke', 'fx_smoke2', 'icon_1024', 'icon_180', 'icon_64', 'm_down', 'm_top', 'm_up', 'o_bad', 'o_dot', 'o_ok', 'o_sel', 'p_gale', 'p_gale_crash', 'p_solar', 'p_solar_crash', 'p_surge', 'p_surge_crash', 's_gale_dead', 's_gale_run1', 's_gale_run2', 's_gale_stand', 's_solar_dead', 's_solar_run1', 's_solar_run2', 's_solar_stand', 's_surge_dead', 's_surge_run1', 's_surge_run2', 's_surge_stand', 's_surge_front', 's_gale_front', 's_solar_front', 's_surge_frun1', 's_gale_frun1', 's_solar_frun1', 's_surge_frun2', 's_gale_frun2', 's_solar_frun2', 's_surge_fdead', 's_gale_fdead', 's_solar_fdead', 'sh_1', 'sh_2', 'sh_break', 'st_cloud', 'st_rain', 'st_splash', 'st_vortex', 't_gale', 't_gale_dead', 't_gale_hit', 't_solar', 't_solar_dead', 't_solar_hit', 't_surge', 't_surge_dead', 't_surge_hit', 'ui_card', 'ui_divider', 'ui_fuel', 'ui_hp_off', 'ui_hp_on', 'ui_vgauge', 'x_b1', 'x_b2', 'x_b3', 'x_b4', 'x_b5', 'x_b6', 'x_b7', 'x_b8', 'x_s1', 'x_s2', 'x_s3', 'x_s4', 'x_s5', 'x_s6', 'x_s7', 'x_s8'], V2_JPG = ['bg_enemy', 'bg_mine', 'keyart', 'res_gale_lose', 'res_gale_win', 'res_solar_lose', 'res_solar_win', 'res_surge_lose', 'res_surge_win', 'solar_rays', 'tile_g00', 'tile_g01', 'tile_g02', 'tile_g03', 'tile_g04', 'tile_g05', 'tile_g06', 'tile_g07', 'tile_g08', 'tile_g09', 'tile_g10', 'tile_g11', 'tile_g12', 'tile_g13', 'tile_g14', 'tile_g15', 'tile_r00', 'tile_r01', 'tile_r02', 'tile_r03', 'tile_r04', 'tile_r05', 'tile_r06', 'tile_r07', 'tile_r08', 'tile_r09', 'tile_r10', 'tile_r11', 'tile_r12', 'tile_r13', 'tile_r14', 'tile_r15', 'title'], v2n = 0;
-  V2_PNG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; v2n++; applySkin(); }; i.src = 'assets/v2/' + n + '.png?v=1'; });
+  V2_PNG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; v2n++; applySkin(); }; i.src = 'assets/v2/' + n + '.png?v=2'; });
   V2_JPG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; }; i.src = 'assets/v2/' + n + '.jpg?v=1'; });
   function oppFacKey() { var o = (window.NET && NET.opp && NET.opp()) || {}; return FAC[o.fac] ? o.fac : (G && G.oppFacGuess) || 'gale'; }
   function applySkin() {                                   // 세력에 맞는 그림을 옛 이름(IMG.u_*)에 꽂아 넣는다 — 그리기 코드는 그대로
@@ -504,14 +504,13 @@
       img.__hw = best; } catch (e) { img.__hw = img.width * 0.6; }
     return img.__hw;
   }
-  var SOL_CASE = (function () { try { var q = /[?&]sol=([ABC])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'A'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
-  var SOL_BOX = { A: [0.8, 1.05], B: [1.1, 1.3], C: [0.95, 1.18] };
-  function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 아군은 시안 상자에 맞추고, 적군은 '머리 폭'이 아군과 같아지게
+  var SOL_CASE = (function () { try { var q = /[?&]sol=([ABCD])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'A'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
+  var SOL_BOX = { A: [0.8, 1.05], B: [1.1, 1.3], C: [0.95, 1.18], D: [1.35, 1.6] };   /* 상자 [가로, 세로] 배수 */
+  function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 한 시트 안에선 같은 배율(뒷모습·정면·쓰러짐 비율 유지), 세력끼리는 키를 같게
     var f = G.fac || 'solar', refM = V2['s_' + f + '_stand'] || IMG.u_soldier_p; if (!refM) return 1;
     var bx = SOL_BOX[SOL_CASE] || SOL_BOX.A, kM = Math.min(s * bx[0] / refM.width, s * bx[1] / refM.height);
     if (mine) return kM;
-    var refE = V2['s_' + oppFacKey() + '_frun1'] || IMG.u_soldier_e; if (!refE) return kM;
-    return kM * headW(refM) / headW(refE);
+    var refE = V2['s_' + oppFacKey() + '_stand']; return refE ? kM * refM.height / refE.height : kM;
   }
   function drawSoldier(px, py, s, mine, feetY) {
     var im = mine ? IMG.u_soldier_p : IMG.u_soldier_e;
