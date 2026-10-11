@@ -916,8 +916,16 @@
   "name": "보병 출격 — \"Hold the line! Move move move!\" (4~6번은 무전기 음색)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [],
-  "ver": {},
+  "files": [
+   "sfx/candidates/목소리_01_1_673069.mp3",
+   "sfx/candidates/목소리_01_2_39d454.mp3",
+   "sfx/candidates/목소리_01_3_6605f7.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_01_1_673069.mp3": "673069",
+   "sfx/candidates/목소리_01_2_39d454.mp3": "39d454",
+   "sfx/candidates/목소리_01_3_6605f7.mp3": "6605f7"
+  },
   "done": false,
   "hold": false
  },
