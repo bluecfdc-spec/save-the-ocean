@@ -16,7 +16,7 @@
   var VS_MODE = false;
   function layout(vs) {
     VS_MODE = !!vs;
-    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 18; HUD = 22; TRAY = 110; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
+    if (vs) { COLS = 9; S = 56; FS = 40; EROWS = 9; TOP = 18; HUD = 30; TRAY = 104; BBAR = 64; } else { COLS = 7; S = 68; FS = 44; EROWS = 4; TOP = 22; HUD = 26; TRAY = 110; BBAR = 64; }   // 대전: 9×9 (폰 비율에 맞춰 가로를 넓힘)
     relayout(); }
   function relayout() { W = COLS * S; WT = W + PW; groundImg = null; EY = TOP; BY = TOP + EROWS * FS; HY = BY + ROWS * S; TY = HY + HUD; OY = TY + TRAY; H = OY + BBAR; ADV_MIN = -(EROWS - 1); }
   layout(false);
@@ -576,8 +576,10 @@
     // 블록
     for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
     // 갈 수 있는 칸
-    if (G.sel && !G.drag && !G.tank.path.length && !G.over && !G.sweep && !G.collapsing) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','), rcx = BX(+c[0]) + S / 2, rcy = BYY(+c[1]) + S / 2, pulse = 0.8 + 0.2 * Math.sin(t / 220 + G.reach[k].d);
-      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, 0.18 + 0.12 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.22 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.22, S * 0.22, 0.85); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 4, 0, 7); ctx.fill(); } ctx.restore(); }
+    var showReach = !G.drag && !G.tank.path.length && !G.over && !G.sweep && !G.collapsing && !(G.freezeUntil && t < G.freezeUntil);   /* 탱크를 누르지 않아도 갈 수 있는 칸은 늘 보인다 */
+    if (showReach) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','), rcx = BX(+c[0]) + S / 2, rcy = BYY(+c[1]) + S / 2, rd = G.reach[k].d, pulse = 0.8 + 0.2 * Math.sin(t / 220 + rd);
+      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, (G.sel ? 0.18 : 0.08) + 0.1 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.18 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.22, S * 0.22, 0.85); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 4, 0, 7); ctx.fill(); }
+      if (G.sel) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 11px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText('⛽' + rd, rcx, rcy + S * 0.3); ctx.fillStyle = '#d9ffd0'; ctx.fillText('⛽' + rd, rcx, rcy + S * 0.3); } ctx.restore(); }   /* 탱크를 누르면 칸마다 드는 연료 숫자까지 */
     // 드래그 미리보기
     if (G.drag && G.drag.moved) {
       var d = G.drag, ok = d.gx != null && canPlace(d.p, d.gx, d.gy);
@@ -858,17 +860,18 @@
     if (G.vs) btn(BTN.inf, '🪖', G.inf, '보병 투입', G.inf > 0);
     // 연료
     var hy = HY, cy = hy + HUD / 2;
-    ctx.font = '18px Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.fillText('⛽', 8, cy);
-    ctx.fillStyle = '#111'; rr(32, cy - 9, 130, 18, 5); ctx.fill();
-    for (var i = 0; i < FUEL_MAX; i++) { ctx.fillStyle = i < G.fuel ? (i % 3 === 2 ? '#ff6a3d' : '#ffb13d') : '#2a2a2a'; ctx.fillRect(35 + i * 8.4, cy - 6, 6.5, 12); }
-    ctx.font = '600 12px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText(G.fuel + '/' + FUEL_MAX, 168, cy);
+    var fw = Math.min(W * 0.42, 210), fh = HUD - 4, fx0 = 6, fy0 = hy + 2;
+    if (V2.ui_fuel) ctx.drawImage(V2.ui_fuel, fx0, fy0, fw, fh); else { ctx.fillStyle = '#111'; rr(fx0, fy0, fw, fh, 5); ctx.fill(); }
+    var ix = fx0 + fw * 0.3, iw2 = fw * 0.62, iy = fy0 + fh * 0.3, ih2 = fh * 0.4, segW = iw2 / FUEL_MAX;
+    for (var i = 0; i < FUEL_MAX; i++) { ctx.fillStyle = i < G.fuel ? (G.fuel <= 3 ? '#ff5a3d' : '#ffb13d') : 'rgba(0,0,0,.45)'; ctx.fillRect(ix + i * segW + 1, iy, segW - 2, ih2); }
+    ctx.font = '800 ' + Math.round(fh * 0.55) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('⛽ ' + G.fuel, fx0 + fw * 0.06, cy); ctx.fillStyle = G.fuel <= 3 ? '#ff8a7a' : '#ffe28a'; ctx.fillText('⛽ ' + G.fuel, fx0 + fw * 0.06, cy);
     // 점수 / 상대
     ctx.textAlign = 'right';
     if (G.vs) {
       var o = (window.NET && NET.opp()) || {};
       var mf = G.mySol.filter(function (e) { return e.d === 1; }).length, ef = G.soldiers.filter(function (e) { return e.d === 1; }).length;
-      ctx.textAlign = 'left'; ctx.font = '600 13px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', 215, cy);
-      ctx.font = '800 15px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + ef, 290, cy);
+      ctx.textAlign = 'left'; ctx.font = '600 13px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', fx0 + fw + 10, cy);
+      ctx.font = '800 15px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + ef, fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
     }
     else { ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, cy); ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
     // 진격 타이머
@@ -927,7 +930,7 @@
     if (down && Math.abs(p.x - down.x) < 12 && Math.abs(p.y - down.y) < 12 && p.y >= BY && p.y < BY + ROWS * S) {
       var cx2 = Math.floor(p.x / S), cy2 = Math.floor((p.y - BY) / S);
       if (cx2 === G.tank.x && cy2 === G.tank.y) { if (G.lockUntil && now() < G.lockUntil) { sfx('bad'); } else { G.sel = !G.sel; sfx(G.sel ? 'pick' : 'click'); } }           // 탱크 탭 → 갈 수 있는 칸 표시 토글
-      else if (G.sel) { G.sel = false; moveTank(cx2, cy2); }
+      else if (G.reach && G.reach[cx2 + ',' + cy2] && G.reach[cx2 + ',' + cy2].d) { G.sel = false; moveTank(cx2, cy2); }   /* 탱크를 먼저 안 눌러도 바로 이동 */
     }
     down = null;
   });
