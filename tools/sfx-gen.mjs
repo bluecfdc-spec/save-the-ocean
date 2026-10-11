@@ -14,7 +14,7 @@ console.log('항목', list.length, '× 후보', N);
 fs.mkdirSync('sfx/candidates', { recursive: true });
 const manifest = fs.existsSync('sfx/manifest.json') ? JSON.parse(fs.readFileSync('sfx/manifest.json', 'utf8')) : {};
 for (const r of list) {
-  const id = r.game + '_' + r.num; manifest[id] = { game: r.game, num: r.num, name: r.name, sec: r.sec, prompt: r.prompt, files: manifest[id]?.files || [] };
+  const id = r.game + '_' + r.num; manifest[id] = { game: r.game, num: r.num, name: r.name, sec: r.sec, prompt: r.prompt, files: manifest[id]?.files || [], ver: manifest[id]?.ver || {}, done: !!manifest[id]?.done };   // done(반영됨) 표시 유지
   for (let k = 1; k <= N; k++) {
     if ((manifest[id].files || []).filter(f => fs.existsSync(f)).length >= k) continue;   // 이미 후보가 있으면 건너뜀
     const body = { text: r.prompt, duration_seconds: Math.max(0.5, Math.min(22, r.sec)), prompt_influence: 0.75 };
