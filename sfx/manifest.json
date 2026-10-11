@@ -435,20 +435,20 @@
  "탱크_10": {
   "game": "탱크",
   "num": "10",
-  "name": "보병 출격 (1·2 ElevenLabs, 3·4 Claude가 직접 만든 전자음)",
+  "name": "보병 출격 — 전쟁 느낌 전자음 (1 장전+브라스 두 음 / 2 무전 삑+장전+화음 / 3 파워 상승+철컥 / 4 확인 소리 낮춤+장전)",
   "sec": 0.8,
   "prompt": "bright pleasant two-note ascending synth chime, soft bell tone with a gentle sparkle tail, sci-fi interface success sound, tonal only, no percussion, no drums, no footsteps, no voice",
   "files": [
-   "sfx/candidates/탱크_10_1_903f09.mp3",
-   "sfx/candidates/탱크_10_2_beb7a7.mp3",
-   "sfx/candidates/탱크_10_3_synth_47cf6d.mp3",
-   "sfx/candidates/탱크_10_4_synth_ae214e.mp3"
+   "sfx/candidates/탱크_10_1_war_d11bb4.mp3",
+   "sfx/candidates/탱크_10_2_war_72cff4.mp3",
+   "sfx/candidates/탱크_10_3_war_3c1017.mp3",
+   "sfx/candidates/탱크_10_4_war_01c526.mp3"
   ],
   "ver": {
-   "sfx/candidates/탱크_10_1_903f09.mp3": "903f097c",
-   "sfx/candidates/탱크_10_2_beb7a7.mp3": "beb7a79f",
-   "sfx/candidates/탱크_10_3_synth_47cf6d.mp3": "47cf6d02",
-   "sfx/candidates/탱크_10_4_synth_ae214e.mp3": "ae214eb2"
+   "sfx/candidates/탱크_10_1_war_d11bb4.mp3": "d11bb41d",
+   "sfx/candidates/탱크_10_2_war_72cff4.mp3": "72cff48a",
+   "sfx/candidates/탱크_10_3_war_3c1017.mp3": "3c101767",
+   "sfx/candidates/탱크_10_4_war_01c526.mp3": "01c52693"
   },
   "done": false
  },
