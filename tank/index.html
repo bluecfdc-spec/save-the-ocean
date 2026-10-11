@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 새 버전 자동 반영: 폰 브라우저가 옛 화면을 들고 있으면 최신 버전 번호로 다시 연다 */
-(function () { var BUILD = '113'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '114'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -119,6 +119,7 @@
   @keyframes vicIn { from { opacity: 0; transform: scale(2.4); } to { opacity: 1; transform: none; } }
   @keyframes vicUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
   @keyframes vicGlow { from { filter: brightness(1); } to { filter: brightness(1.25); } }
+  .ncard em.dd { font-style: normal; font-family: 'Orbitron', 'Black Han Sans', sans-serif; font-weight: 800; font-size: .86em; letter-spacing: .5px; color: #ffe066; text-shadow: 0 0 8px rgba(255,200,60,.85), 0 2px 0 #000; }
   #count .ncard { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s, transform .35s; }
   #count .ncard.show { opacity: 1; transform: none; }
   @keyframes neon { from { filter: brightness(.94); } to { filter: brightness(1.08); } }
@@ -266,7 +267,7 @@
   <div id="roomCode" class="code">----</div>
   <div id="plist"></div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 드래그 앤 드랍으로<br>아이템을 모으자!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 <em class="dd">Drag &amp; Drop</em>으로<br>아이템을 모으자!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
@@ -278,7 +279,7 @@
 <link rel="preload" as="image" href="assets/v2/btn_check_on.png?v=1">
 <div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countSub">오른쪽 체크를 누르세요!</div><div id="countDone"></div><div id="countNum">3</div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 드래그 앤 드랍으로<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 <em class="dd">Drag &amp; Drop</em>으로<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div><button class="chk" aria-label="확인"></button></div>
   </div>
