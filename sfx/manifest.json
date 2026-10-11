@@ -927,8 +927,9 @@
    "sfx/candidates/목소리_01_2_marine_3a5dd9.mp3": "3a5dd986",
    "sfx/candidates/목소리_01_3_marine_d69e13.mp3": "d69e1338"
   },
-  "done": false,
-  "hold": false
+  "done": true,
+  "hold": false,
+  "pick": "sfx/candidates/목소리_01_1_marine_6c9b0f.mp3"
  },
  "목소리_02": {
   "game": "목소리",
