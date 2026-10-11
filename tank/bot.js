@@ -37,18 +37,12 @@ window.BOT = (function () {
         if (!active) return; me.freezeUntil = 0; clashTimer = setInterval(clash, 30000); nextTick = now() + 30000; T.applyLine(me.adv, 30000); contWave(kind); };
     }, 1300);
   }
-  function contWave(kind) {
+  function contWave(kind) {                                /* 다음 스테이지: 탱크 격파든 적진 점령이든 처음부터 새 판 (점수만 이어짐, CPU 더 빨라짐) */
     wave++; me.wave = wave; clearInterval(think); think = setInterval(step, speedMs()); known = null;
-    if (kind === 'tank') {                                  /* 뒤에서 새 탱크가 등장 */
-      bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.tank.x = rnd(COLS); bot.tank.y = ROWS - 1; bot.tank.fx = bot.tank.x; bot.tank.fy = bot.tank.y; bot.tank.path = [];
-      withBot(function () { T.fns.calcReach(); });
-      setTimeout(function () { if (!active) return; syncToPlayer(); T.revealOpp(bot.tank.x, bot.tank.y); T.notice('스테이지 ' + wave + ' 시작!'); }, 1200);
-    } else {                                                /* 적진 점령: 내 보병 전멸, 탱크 전진, 새 전장 */
-      var L = T.L(); me.mySol.forEach(function (e) { me.fx.push({ t: 'dead', px: T.BX(e.x) + L.S / 2, py: T.rowC(T.myRow(e.d)), at: now(), life: 1700 }); }); me.mySol = [];
-      me.roundFx = { at: now(), title: '스테이지 ' + wave, sub: '', onReset: function () {
-        if (!active) return; var hp = bot.tank.hp; T.resetRound(); withBot(function () { T.resetRound(); }); bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.ult = Math.min(bot.ult, 5); nextTick = now() + 30000; T.applyLine(0, 30000); syncToPlayer(); T.notice('스테이지 ' + wave + ' 시작!'); try { SFX.go(); } catch (e) { } } };
-      try { SFX.retreat(); } catch (e) { }
-    }
+    T.resetRound(); withBot(function () { T.resetRound(); });
+    bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.ult = Math.min(bot.ult, 5); bot.tank.x = rnd(COLS); bot.tank.y = ROWS - 1; bot.tank.fx = bot.tank.x; bot.tank.fy = bot.tank.y; bot.tank.path = [];
+    withBot(function () { T.fns.calcReach(); }); T.applySkin();
+    nextTick = now() + 30000; T.applyLine(0, 30000); syncToPlayer(); T.notice('스테이지 ' + wave + ' 시작!');
   }
   function stop() { active = false; clearInterval(think); clearInterval(clashTimer); think = clashTimer = null; }
   function end(r, detail) { if (!active) return; stop(); window.REALNET.finish(r, detail); }
@@ -183,8 +177,8 @@ window.BOT = (function () {
     setTimeout(function () { if (active) shiftLine(delta); }, 2600);
   }
   // ---------- 내가 쏜 것: 봇 쪽 판정 ----------
-  function fired(x, y, shot) {
-    if (!active) return; var mx = mirror(x);
+  function fired(x, y, shot, col) {
+    if (!active) return; var mx = mirror(col == null ? x : col);   /* col: 실제로 떨어지는 열(폭풍우면 랜덤) */
     known = { x: x, y: y, t: now() };                                                 // 사람과 똑같이: 내가 쏘면 내 탱크 위치가 상대(봇)에게 노출된다
     setTimeout(function () {
       if (!active || bot.over) return;
@@ -193,6 +187,8 @@ window.BOT = (function () {
       else if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); T.notice('적 보병 격파!'); }
       else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice('CPU 태양 방패가 막았다'); }
       else if (bot.tank.x === mx) { bot.tank.hp--; if (bot.tank.hp <= 0) { bot.over = true; syncToPlayer(); nextWave('tank'); return; } }
+      else { var by = -1; for (var yy = Math.max(0, bot.adv); yy < ROWS; yy++) if (bot.board[yy][mx]) { by = yy; break; }   /* 빗나감: 그 줄에서 가장 가까운 CPU 블록 하나가 부서짐 */
+        if (by >= 0) { var it = bot.board[by][mx]; bot.board[by][mx] = 0; if (it >= 2) { bot.loot = bot.loot || {}; bot.loot[mx + ',' + by] = it; } withBot(function () { T.fns.calcReach(); }); } }
       syncToPlayer();
     }, 1560);   // 포탄 비행(1.5초)이 끝나 터진 뒤에 보병이 사라진다
   }
