@@ -48,7 +48,18 @@
     // 보드가 화면 폭의 78%를 차지하도록 배율을 정하고, 세로가 모자라면 상대 진영 줄 높이(FS)를 22~40 사이에서 줄인다. 그래도 모자라면 배율을 낮춘다(패널이 넓어짐)
     var fixed = TOP + ROWS * S + HUD + TRAY + BBAR;
     scale = iw * (VS_MODE ? 0.76 : 0.82) / W;   /* 대전: 오른쪽 패널에 24% */
-    if (VS_MODE) { var fsWant = (ih / scale - fixed) / EROWS; FS = Math.max(20, Math.min(28, Math.round(fsWant)));   /* 적진은 낮게(최대 28) — 내 땅과 아래 조작부에 자리를 준다 */ relayout(); }
+    if (VS_MODE) {                                               /* 세로가 남으면 검은 띠로 버리지 않고 적진·받침·버튼·연료창에 나눠 준다 */
+      TOP = 44; HUD = 48; TRAY = 104; BBAR = 64; FS = 20; relayout();
+      var spare = ih / scale - H;
+      if (spare > 0) { var add = Math.min(spare, 8 * EROWS); FS += add / EROWS; spare -= add; }           /* 적진 줄 20→28 */
+      if (spare > 0) { var a2 = Math.min(spare, 70); TRAY += a2; spare -= a2; }                            /* 블록 받침 최대 174 */
+      if (spare > 0) { var a3 = Math.min(spare, 30); BBAR += a3; spare -= a3; }                            /* 버튼 띠 최대 94 */
+      if (spare > 0) { var a4 = Math.min(spare, 20); HUD += a4; spare -= a4; }                             /* 연료창 최대 68 */
+      if (spare > 0) { var a5 = Math.min(spare, 20); TOP += a5; spare -= a5; }                             /* 타이머 띠 최대 64 */
+      if (spare > 0) { var a6 = Math.min(spare, 12 * EROWS); FS += a6 / EROWS; spare -= a6; }              /* 그래도 남으면 적진 최대 40 */
+      if (spare > 0) { var a7 = Math.min(spare, 40); TRAY += a7; spare -= a7; } if (spare > 0) { FS += spare / EROWS; spare = 0; }   /* 마지막까지 남으면 적진이 가져감 */                                /* 끝까지 남는 건 받침·연료창이 가져감 → 검은 띠 없음 */
+      relayout();
+    }
     if (H * scale > ih) scale = ih / H;
     scaleY = scale;
     PW = iw / scale - W; var pwMax = W * 0.45; OFFX = 0; if (PW > pwMax) { OFFX = (PW - pwMax) / 2; PW = pwMax; }   /* PC 넓은 창: 패널은 보드 폭의 45%까지만, 나머지는 좌우 여백 */
@@ -860,7 +871,7 @@
     if (G.vs) btn(BTN.inf, '🪖', G.inf, '보병 투입', G.inf > 0);
     // 연료
     var hy = HY, cy = hy + HUD / 2;
-    var fw = Math.min(W * 0.58, 300), fh = HUD - 8, fx0 = 6, fy0 = hy + 4;          /* 연료: 큰 숫자 + 굵은 15칸 게이지 (금테) */
+    var fw = Math.min(W * 0.58, 300), fh = Math.min(HUD - 8, 44), fx0 = 6, fy0 = cy - fh / 2;          /* 연료: 큰 숫자 + 굵은 15칸 게이지 (금테) */
     var lab = '⛽ ' + G.fuel, lf = Math.round(fh * 0.72); ctx.font = '800 ' + lf + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     var lw = ctx.measureText(lab).width + 10, ix = fx0 + lw, iw2 = fw - lw, iy = fy0, ih2 = fh, segW = iw2 / FUEL_MAX;
     ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeText(lab, fx0, cy); ctx.fillStyle = G.fuel <= 3 ? '#ff8a7a' : '#ffe28a'; ctx.fillText(lab, fx0, cy);
@@ -887,7 +898,7 @@
       var sl = traySlot(i), p = G.tray[i];
       rr(sl.x, sl.y, sl.w, sl.h, 10); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.strokeStyle = '#4a4e40'; ctx.lineWidth = 2; ctx.stroke();
       if (!p || (G.drag && G.drag.i === i)) continue;
-      var s = Math.floor(Math.min(30, (sl.h - 8) / p.h, (sl.w - 8) / p.w)), ox = sl.x + (sl.w - p.w * s) / 2, oy = sl.y + (sl.h - p.h * s) / 2;   /* 긴 블록도 받침 안에 들어오게 칸 크기를 줄임 */
+      var s = Math.floor(Math.min(44, (sl.h - 8) / p.h, (sl.w - 8) / p.w)), ox = sl.x + (sl.w - p.w * s) / 2, oy = sl.y + (sl.h - p.h * s) / 2;   /* 긴 블록도 받침 안에 들어오게 칸 크기를 줄임 */
       var fits = anyFit(p);
       p.cells.forEach(function (c) { drawBlock(ox + c.dx * s, oy + c.dy * s, s, c.r, fits ? 1 : 0.35); });
     }
