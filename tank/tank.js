@@ -216,7 +216,7 @@
     if (!G.vs || G.demo || G.bot || !guideOn()) return;
     var el = t - G.start; layoutBtns();
     if (el > 900) hint('blocks', '블록을 끌어다 놓아 줄을 채우면 아이템이 나와요', function () { return { x: W / 2, y: TY + 10 }; });
-    if (el > 6000) hint('move', '초록 칸을 누르면 탱크가 이동해요 (기름 1칸에 1)', function () { return { x: BX(G.tank.fx) + S / 2, y: BYY(G.tank.fy) }; });
+    if (el > 6000) hint('move', '초록 칸을 누르면 이동해요. 탱크를 누르면 칸마다 드는 기름이 보여요', function () { return { x: BX(G.tank.fx) + S / 2, y: BYY(G.tank.fy) }; });
     if (el > 11000) hint('front', '최전방 보병이 많은 쪽이 30초마다 전선을 밀어요', function () { return { x: W / 2, y: BYY(G.adv) }; });
     if (el > 16000 && G.scout > 0) hint('scout', '정찰기를 띄우면 안개가 걷혀 적 탱크가 보여요', function () { return { x: BTN.scout.x + BTN.scout.w / 2, y: BTN.scout.y }; });
     if (G.inf > 0) hint('inf', '보병 투입! 내 탱크가 있는 줄 맨 앞으로 나가요', function () { return { x: BTN.inf.x + BTN.inf.w / 2, y: BTN.inf.y }; }, 30000);
@@ -694,8 +694,12 @@
     // 갈 수 있는 칸
     var showReach = !G.drag && !G.tank.path.length && !G.over && !G.sweep && !G.collapsing && !(G.freezeUntil && t < G.freezeUntil);   /* 탱크를 누르지 않아도 갈 수 있는 칸은 늘 보인다 */
     if (showReach) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','), rcx = BX(+c[0]) + S / 2, rcy = BYY(+c[1]) + S / 2, rd = G.reach[k].d, pulse = 0.8 + 0.2 * Math.sin(t / 220 + rd);
-      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, (G.sel ? 0.18 : 0.08) + 0.1 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.18 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.34, S * 0.34, 0.9); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 6, 0, 7); ctx.fill(); }
-      if (G.sel) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText('⛽' + rd, rcx, rcy + S * 0.3); ctx.fillStyle = '#d9ffd0'; ctx.fillText('⛽' + rd, rcx, rcy + S * 0.3); } ctx.restore(); }   /* 탱크를 누르면 칸마다 드는 연료 숫자까지 */
+      ctx.save(); if (V2.o_ok) fitImg(V2.o_ok, rcx, rcy, S - 6, S - 6, (G.sel ? 0.18 : 0.08) + 0.1 * pulse); else { ctx.fillStyle = 'rgba(57,255,106,' + (0.18 * pulse) + ')'; ctx.fillRect(BX(+c[0]) + 3, BYY(+c[1]) + 3, S - 6, S - 6); } if (G.sel) { } else if (V2.o_dot) fitImg(V2.o_dot, rcx, rcy, S * 0.34, S * 0.34, 0.9); else { ctx.fillStyle = 'rgba(200,255,210,.9)'; ctx.beginPath(); ctx.arc(rcx, rcy, 6, 0, 7); ctx.fill(); }
+      if (G.sel) {                                                    /* 탱크를 누르면: 그 칸까지 드는 기름을 크게. 가까우면 초록 → 기름을 거의 다 쓰면 주황 */
+        var fr2 = rd / Math.max(1, G.fuel), pc = fr2 <= 0.34 ? '#7dff7a' : fr2 <= 0.67 ? '#ffe066' : '#ff9a3a';
+        ctx.fillStyle = 'rgba(0,0,0,.55)'; rr(rcx - S * 0.3, rcy - S * 0.2, S * 0.6, S * 0.4, 7); ctx.fill(); ctx.strokeStyle = pc; ctx.lineWidth = 1.5; rr(rcx - S * 0.3, rcy - S * 0.2, S * 0.6, S * 0.4, 7); ctx.stroke();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 ' + Math.round(S * 0.32) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = pc; ctx.fillText('-' + rd, rcx, rcy + 1); }
+      ctx.restore(); }
     // 드래그 미리보기
     if (G.drag && G.drag.moved) {
       var d = G.drag, ok = d.gx != null && canPlace(d.p, d.gx, d.gy);
@@ -730,6 +734,11 @@
     if (G.sel) { if (V2.o_sel) fitImg(V2.o_sel, BX(G.tank.fx) + S / 2, BYY(G.tank.fy) + S / 2, S + 4, S + 4, 0.9); else { ctx.save(); ctx.strokeStyle = 'rgba(200,255,210,.9)'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.strokeRect(BX(G.tank.fx) + 2, BYY(G.tank.fy) + 2, S - 4, S - 4); ctx.setLineDash([]); ctx.restore(); } }
     drawTank(BX(G.tank.fx), BYY(G.tank.fy), S, ['#5f7a3a', '#9bbd55'], true, null, G.tank.ang || 0);
     /* 탱크 밑 체력 막대는 없앰 — 체력은 탱크 그림(부서짐)과 오른쪽 패널로 */
+    if (!G.over && !G.roundFx) {                                              /* 탱크 밑: 남은 기름 */
+      var bx6 = BX(G.tank.fx) + S / 2, by6 = BYY(G.tank.fy) + S - 2, lab6 = '⛽ ' + G.fuel; ctx.save(); ctx.font = '800 ' + Math.round(S * 0.27) + 'px Black Han Sans, Do Hyeon, system-ui'; var w6 = ctx.measureText(lab6).width + 14, h6 = S * 0.34;
+      ctx.fillStyle = G.fuel <= 0 ? 'rgba(120,0,0,.85)' : 'rgba(10,12,8,.85)'; rr(bx6 - w6 / 2, by6 - h6 / 2, w6, h6, h6 / 2); ctx.fill(); ctx.strokeStyle = G.fuel <= 3 ? '#ff7a5a' : '#ffd451'; ctx.lineWidth = 1.5; rr(bx6 - w6 / 2, by6 - h6 / 2, w6, h6, h6 / 2); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = G.fuel <= 3 ? '#ffb3a0' : '#ffe9a0'; ctx.fillText(lab6, bx6, by6 + 1); ctx.restore();
+    }
     // 놓을 곳 없음 → 적 전차·보병이 전선과 함께 밀고 내려옴 (안개 밖으로 드러남)
     if (G.sweep && G.sweepUnits) {
       var lp = 1 - Math.max(0, Math.min(1, (G.nextAdv - t) / 420)), ly = BYY(G.adv - 1) + lp * S;   // 다음 줄로 내려가는 중간 위치
