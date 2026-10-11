@@ -16,13 +16,13 @@ const manifest = fs.existsSync('sfx/manifest.json') ? JSON.parse(fs.readFileSync
 for (const r of list) {
   const id = r.game + '_' + r.num; manifest[id] = { game: r.game, num: r.num, name: r.name, sec: r.sec, prompt: r.prompt, files: manifest[id]?.files || [] };
   for (let k = 1; k <= N; k++) {
-    const file = `sfx/candidates/${id}_${k}.mp3`;
-    if (fs.existsSync(file)) { if (!manifest[id].files.includes(file)) manifest[id].files.push(file); continue; }
+    if ((manifest[id].files || []).filter(f => fs.existsSync(f)).length >= k) continue;   // 이미 후보가 있으면 건너뜀
     const body = { text: r.prompt, duration_seconds: Math.max(0.5, Math.min(22, r.sec)), prompt_influence: 0.75 };
     try {
       const res = await fetch('https://api.elevenlabs.io/v1/sound-generation', { method: 'POST', headers: { 'xi-api-key': KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) { console.error(id, k, res.status, (await res.text()).slice(0, 200)); continue; }
-      fs.writeFileSync(file, Buffer.from(await res.arrayBuffer())); manifest[id].files.push(file); console.log('ok', file);
+      const buf = Buffer.from(await res.arrayBuffer()); const { createHash } = await import('crypto'); const h = createHash('md5').update(buf).digest('hex').slice(0, 6); const file = `sfx/candidates/${id}_${k}_${h}.mp3`;
+      fs.writeFileSync(file, buf); manifest[id].files.push(file); console.log('ok', file);
     } catch (e) { console.error(id, k, e.message); }
     await new Promise(r => setTimeout(r, 400));
   }
