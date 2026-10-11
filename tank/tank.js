@@ -174,21 +174,24 @@
       cols.forEach(function (x) { for (var y = top(); y < ROWS; y++) clr(x, y); });
       G.combo++;
       var mult = Math.min(5, G.combo), pts = (n * 100 + (n - 1) * 100) * mult;
-      G.score += pts; G.lines += n;
+      addScore(pts, W / 2, BY + (top() + ROWS) / 2 * S, mult > 1 ? 'COMBO ×' + mult : (n > 1 ? n + '줄!' : '')); G.lines += n;
       if (G.vs && G.ult < ULT_MAX) { G.ult = Math.min(ULT_MAX, G.ult + n); if (G.ult >= ULT_MAX) { G.fx.push({ t: 'pop', text: fac().name + ' 필살기 준비 완료!', x: W / 2, y: 0, at: now(), big: true, col: fac().col }); sfx('ultReady'); } }
       G.shake = 4 + n * 3 + mult * 2; G.shakeUntil = now() + 250 + n * 80;
       G.fuel = Math.min(FUEL_MAX, G.fuel + got[2] * FUEL_PER);
       G.scout = Math.min(SCOUT_MAX, G.scout + got[3]);
       G.missile = Math.min(MISSILE_MAX, G.missile + got[4]);
       G.inf = Math.min(INF_MAX, G.inf + got[5]);
-      var msg = (mult > 1 ? 'COMBO ×' + mult + '  ' : '') + '+' + pts + (got[2] ? '  ⛽' + got[2] : '') + (got[3] ? '  🔭' + got[3] : '') + (got[4] ? '  🚀' + got[4] : '') + (got[5] ? '  🪖' + got[5] : '');
-      G.fx.push({ t: 'pop', text: msg, x: W / 2, y: BY + (top() + ROWS) / 2 * S, at: now(), big: n > 1 });
+      var msg = '' + (got[2] ? '  ⛽' + got[2] : '') + (got[3] ? '  🔭' + got[3] : '') + (got[4] ? '  🚀' + got[4] : '') + (got[5] ? '  🪖' + got[5] : '');
+      if (msg) G.fx.push({ t: 'pop', text: msg.trim(), x: W / 2, y: BY + (top() + ROWS) / 2 * S + 34, at: now(), big: false });
       G.fx.push({ t: 'flash', at: now(), rows: rows, cols: cols });
       sfx('clear', n + mult - 1); [2, 3, 4, 5].forEach(function (k, i) { if (got[k]) setTimeout(function () { sfx('gain', k); }, 350 + i * 120); });
     } else {
       G.combo = 0;
     }
     calcReach();
+  }
+  function addScore(n, x, y, label) {                      // 점수 + 연출: 그 자리에서 숫자가 튀어 오른 뒤 점수판으로 날아가 꽂힌다
+    if (!n) return; G.score += n; G.fx.push({ t: 'score', n: n, x: x, y: y, label: label || '', at: now(), life: 1000 });
   }
   function calcReach() {                                  // 탱크가 연료로 갈 수 있는 칸(BFS)
     var r = {}, q = [[G.tank.x, G.tank.y]], key = G.tank.x + ',' + G.tank.y; r[key] = { d: 0, from: null };
@@ -228,7 +231,7 @@
     G.missiles.push({ x: tx, y: G.tank.y, y0: G.tank.y, y1: ty0, target: best, pred: G.vs && !!best, at: now(), fl: G.vs ? FLIGHT_MS : 1000 }); sfx('launch');
     if (G.vs) { G.freezeUntil = now() + FLIGHT_MS; G.sel = false; G.drag = null; }   /* 포격 중엔 양쪽 다 정지 */
     if (G.vs && window.NET) { NET.fired(tx, G.tank.y, true);              // 대전: 명중 판정은 맞는 쪽(병사·탱크 주인)이 한다
-      var o0 = NET.opp() || {}; G.shotWait = { at: now(), until: now() + 1000 + 2500, hp: o0.hp == null ? HP_MAX : o0.hp, sol: G.soldiers.length, x: tx }; }   // 결과(상대 체력·보병 수 변화)를 기다렸다가 명중/빗나감 표시
+      var o0 = NET.opp() || {}; G.shotWait = { at: now(), until: now() + 1000 + 2500, hp: o0.hp == null ? HP_MAX : o0.hp, sol: G.soldiers.length, x: tx, scored: !!best }; }   // 결과(상대 체력·보병 수 변화)를 기다렸다가 명중/빗나감 표시
   }
   function useUlt() {                                      // 필살기 발동 (게이지 가득 찼을 때, 문장 버튼)
     if (!G.vs || G.over || G.ult < ULT_MAX || G.collapsing) { if (G.ult < ULT_MAX) sfx('bad'); return; }
@@ -283,6 +286,7 @@
   function myRow(d) { return G.adv + d - 1; }                // 내 보병 d(1=최전방) 가 서는 내 보드 줄
   function startClash(mine, theirs, delta) {                // 대전: 전선 교전 연출 (2.5초) — 최전방 보병 수 비교, 많은 쪽이 민다
     G.clash = { mine: mine, theirs: theirs, delta: delta, at: now(), until: now() + 2500, puffs: [] };
+    if (delta < 0) setTimeout(function () { if (G && !G.over) addScore(500 * -delta, W / 2, BYY(G.adv), '전선 돌파'); }, 1600);   /* 교전 승리 */
     for (var i = 0; i < 14; i++) G.clash.puffs.push({ x: Math.random() * W, dy: (Math.random() - 0.5) * 30, r: 14 + Math.random() * 22, sp: 0.5 + Math.random() });
     sfx('clash');
   }
@@ -367,15 +371,14 @@
       var ty = m.target ? G.adv - m.target.d : -99;
       if (G.vs && m.y <= m.y1) {                                      // 대전: 착탄 연출만. 병사가 죽는지·탱크가 맞는지는 상대 쪽이 판정해 목록/체력으로 알려줌
         G.fx.push({ t: 'boomv', px: BX(m.x) + S / 2, py: rowC(m.y1), at: t, big: true }); sfx('boom', false);
-        if (m.pred) { G.score += 300; G.kills++; G.fx.push({ t: 'pop', text: '+300', x: BX(m.x) + S / 2, y: rowC(m.y1), at: t, big: false, col: '#ffd451' }); }
+        if (m.pred) { G.kills++; addScore(300, BX(m.x) + S / 2, rowC(m.y1), '보병 격파'); }
         return false;
       }
       if (m.target && G.soldiers.indexOf(m.target) >= 0 && m.y <= ty) {
         G.soldiers.splice(G.soldiers.indexOf(m.target), 1);
-        G.score += 300; G.kills++;
+        G.kills++; addScore(300, BX(m.target.x) + S / 2, slotY(m.target.d));
         G.fx.push({ t: 'boomv', px: BX(m.target.x) + S / 2, py: slotY(m.target.d), at: t, big: true });
         sfx('boom', false);
-        G.fx.push({ t: 'pop', text: '+300', x: BX(m.target.x) + S / 2, y: slotY(m.target.d), at: t, big: false, col: '#ffd451' });
         if (!G.soldiers.some(function (e) { return e.d === 1; })) {   // 최전방 줄 전멸 → 전선이 한 줄 물러남, 뒷줄이 앞으로
           G.soldiers.forEach(function (e) { e.d--; });
           if (G.adv > ADV_MIN) { G.adv--; G.nextAdv = Math.max(G.nextAdv, t + 8000); calcReach(); } spawnFront(); G.fx.push({ t: 'pop', text: '적 후퇴!', x: W / 2, y: 0, at: t + 300, big: true, col: '#9be37a' }); setTimeout(function () { sfx('retreat'); }, 250);
@@ -429,8 +432,8 @@
     G.bolts = G.bolts.filter(function (b) { return t - b.at < 700; });
     if (G.shotWait && t > G.shotWait.at + 1000) {                       // 내가 쏜 결과: 착탄 뒤 상대 쪽 판정이 오면 표시
       var sw = G.shotWait, o2 = (window.NET && NET.opp()) || {}, ohp2 = o2.hp == null ? HP_MAX : o2.hp;
-      if (ohp2 < sw.hp) { G.shotWait = null; G.fx.push({ t: 'pop', text: '상대 탱크 명중! 체력 ' + ohp2, x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); sfx('gain'); }
-      else if (G.soldiers.length < sw.sol) { G.shotWait = null; G.fx.push({ t: 'pop', text: '명중! 적 보병 격파', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); }
+      if (ohp2 < sw.hp) { G.shotWait = null; addScore(800, BX(sw.x) + S / 2, EY + 40, '탱크 명중'); G.fx.push({ t: 'pop', text: '상대 탱크 명중! 체력 ' + ohp2, x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); sfx('gain'); }
+      else if (G.soldiers.length < sw.sol) { G.shotWait = null; if (!sw.scored) addScore(300, BX(sw.x) + S / 2, BYY(G.adv) - 20, '보병 격파'); G.fx.push({ t: 'pop', text: '명중! 적 보병 격파', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); }
       else if (t > sw.until) { G.shotWait = null; G.fx.push({ t: 'pop', text: '빗나감', x: BX(sw.x) + S / 2, y: BYY(G.adv) - 14, at: t, big: false, col: '#cfd6bf' }); }
     }
     G.craters = G.craters || []; G.fx.forEach(function (f) { if (f.t === 'boom' && f.big && !f.cr && f.y >= 0) { f.cr = 1; G.craters.push({ x: f.x, y: f.y, r: Math.random() * 6 }); } }); if (G.craters.length > 8) G.craters.splice(0, G.craters.length - 8);
@@ -586,6 +589,11 @@
     if (left < 6000 && !G.over) { ctx.fillStyle = 'rgba(255,40,40,' + (0.25 + 0.25 * Math.sin(t / 90)) + ')'; ctx.fillRect(0, BYY(G.adv), W, G.adv >= 0 ? S : FS); }
     if (G.vs && V2.d_wire1) { var wh = Math.min(FS * 1.25, S * 0.85), ww = wh * V2.d_wire1.width / V2.d_wire1.height; for (var wx = -ww * 0.2, wi = 0; wx < W; wx += ww * 0.92, wi++) ctx.drawImage(wi % 2 ? V2.d_wire2 : V2.d_wire1, wx, BYY(G.adv) - wh * 0.85, ww, wh); }   /* 전선 철조망 */
     ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(0, BYY(G.adv)); ctx.lineTo(W, BYY(G.adv)); ctx.stroke(); ctx.setLineDash([]);
+    // 격자: 블록을 끌거나 탱크를 골랐을 때만 (새 배경일 때)
+    if (newBg && ((G.drag && G.drag.moved) || G.sel)) { ctx.save(); ctx.strokeStyle = 'rgba(255,230,170,.22)'; ctx.lineWidth = 1; ctx.beginPath(); for (var gx2 = 0; gx2 <= COLS; gx2++) { ctx.moveTo(gx2 * S, BYY(top())); ctx.lineTo(gx2 * S, BY + ROWS * S); } for (var gy2 = top(); gy2 <= ROWS; gy2++) { ctx.moveTo(0, BYY(gy2)); ctx.lineTo(W, BYY(gy2)); } ctx.stroke(); ctx.restore(); }
+    if (G.craters && V2.d_crater) G.craters.forEach(function (c) { if (c.y >= top()) fitImg(V2.d_crater, BX(c.x) + S / 2, BYY(c.y) + S / 2, S * 1.15, S * 0.95, 0.85, c.r); });   /* 폭발 구덩이 */
+    // 블록
+    for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
     if (t < (G.solarUntil || 0)) drawSun(BYY(top()), HY - BYY(top()), t, G.solarUntil, true);         // 내 땅에 햇살(솔라)
     if (t < (G.oppSolarUntil || 0)) drawSun(EY, fogH(), t, G.oppSolarUntil, false);                   // 상대 땅에 햇살
     // 적 병사 (정찰 중에만 보임) · 내 보병(대전, 항상 보임) · 상대 탱크(대전, 정찰 중·발사 직후)
@@ -624,11 +632,6 @@
     if (G.vs) {                                                            // 위쪽 안내 글씨
       ctx.save(); ctx.font = '600 11px Do Hyeon, system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.shadowColor = '#000'; ctx.shadowBlur = 3; ctx.fillText('▲ 상대 진영', 6, EY + 3); ctx.restore();
     }
-    // 격자: 블록을 끌거나 탱크를 골랐을 때만 (새 배경일 때)
-    if (newBg && ((G.drag && G.drag.moved) || G.sel)) { ctx.save(); ctx.strokeStyle = 'rgba(255,230,170,.22)'; ctx.lineWidth = 1; ctx.beginPath(); for (var gx2 = 0; gx2 <= COLS; gx2++) { ctx.moveTo(gx2 * S, BYY(top())); ctx.lineTo(gx2 * S, BY + ROWS * S); } for (var gy2 = top(); gy2 <= ROWS; gy2++) { ctx.moveTo(0, BYY(gy2)); ctx.lineTo(W, BYY(gy2)); } ctx.stroke(); ctx.restore(); }
-    if (G.craters && V2.d_crater) G.craters.forEach(function (c) { if (c.y >= top()) fitImg(V2.d_crater, BX(c.x) + S / 2, BYY(c.y) + S / 2, S * 1.15, S * 0.95, 0.85, c.r); });   /* 폭발 구덩이 */
-    // 블록
-    for (var y = top(); y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) drawBlock(BX(x), BYY(y), S, G.board[y][x]);
     // 갈 수 있는 칸
     var showReach = !G.drag && !G.tank.path.length && !G.over && !G.sweep && !G.collapsing && !(G.freezeUntil && t < G.freezeUntil);   /* 탱크를 누르지 않아도 갈 수 있는 칸은 늘 보인다 */
     if (showReach) for (var k in G.reach) if (G.reach[k].d) { var c = k.split(','), rcx = BX(+c[0]) + S / 2, rcy = BYY(+c[1]) + S / 2, rd = G.reach[k].d, pulse = 0.8 + 0.2 * Math.sin(t / 220 + rd);
@@ -732,6 +735,16 @@
       else if (f.t === 'flash' && IMG.fx_line) { var fal = Math.max(0, 1 - a / 600); f.rows.forEach(function (ry) { fitImg(IMG.fx_line, W / 2, BYY(ry) + S / 2, W * 1.05, S * 1.6, fal); }); f.cols.forEach(function (cx) { fitImg(IMG.fx_line, BX(cx) + S / 2, BYY((top() + ROWS) / 2), ROWS * S, S * 1.6, fal, Math.PI / 2); }); }
       else if (f.t === 'boom') { var r = (f.big ? 50 : 26) * Math.min(1, a / 250), al = 1 - a / 700; ctx.fillStyle = 'rgba(255,140,30,' + al * 0.8 + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,240,180,' + al + ')'; ctx.beginPath(); ctx.arc(BX(f.x) + S / 2, BYY(f.y) + S / 2, r * 0.45, 0, 7); ctx.fill(); }
       else if (f.t === 'shieldHit') { var sal = Math.max(0, 1 - a / 650), scx = f.px != null ? f.px : BX(G.tank.fx) + S / 2, scy = f.py != null ? f.py : BYY(G.tank.fy) + S / 2, ssz = f.sz || 1; if (V2.sh_break) fitImg(V2.sh_break, scx, scy - S * 0.12, S * ssz * (1.65 + a / 500), S * ssz * (1.2 + a / 700), sal); else { ctx.save(); ctx.strokeStyle = 'rgba(255,212,81,' + sal + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(scx, scy, S * (0.7 + a / 500), 0, 7); ctx.stroke(); ctx.restore(); } }
+      else if (f.t === 'score') {                                                       /* 0~380ms 그 자리에서 크게 튀어 오름 → 380~1000ms 점수판으로 날아감 */
+        var sp2 = scorePos(), big = f.n >= 800, fsz = big ? 34 : f.n >= 300 ? 28 : 22, px2, py2, scl, al2 = 1;
+        if (a < 380) { var q0 = a / 380; scl = q0 < 0.5 ? 0.5 + q0 * 1.6 : 1.3 - (q0 - 0.5) * 0.6; px2 = f.x; py2 = f.y - q0 * 26; }
+        else { var q1 = Math.min(1, (a - 380) / 620), e1 = q1 * q1 * (3 - 2 * q1); scl = 1 - e1 * 0.55; px2 = f.x + (sp2.x - 30 - f.x) * e1; py2 = (f.y - 26) + (sp2.y - (f.y - 26)) * e1 - Math.sin(e1 * Math.PI) * 40; al2 = 1 - Math.max(0, q1 - 0.85) / 0.15; if (q1 >= 1 && !f.hit) { f.hit = 1; G.scorePulse = t; } }
+        if (big && a < 500) for (var bi = 0; bi < 12; bi++) { var ang = bi / 12 * Math.PI * 2, rr2 = 10 + a / 7; ctx.fillStyle = 'rgba(255,215,90,' + (1 - a / 500) + ')'; ctx.beginPath(); ctx.arc(f.x + Math.cos(ang) * rr2, f.y + Math.sin(ang) * rr2 * 0.7, 3, 0, 7); ctx.fill(); }   /* 큰 점수: 금빛 불꽃 */
+        ctx.save(); ctx.globalAlpha = al2; ctx.translate(px2, py2); ctx.scale(scl, scl); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '800 ' + fsz + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 5; ctx.strokeStyle = '#2a1400'; ctx.shadowColor = '#ffb020'; ctx.shadowBlur = 12; ctx.strokeText('+' + f.n, 0, 0); var g5 = ctx.createLinearGradient(0, -fsz / 2, 0, fsz / 2); g5.addColorStop(0, '#fffbe0'); g5.addColorStop(1, '#ffb020'); ctx.fillStyle = g5; ctx.fillText('+' + f.n, 0, 0);
+        if (f.label && a < 600) { ctx.shadowBlur = 0; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeText(f.label, 0, -fsz * 0.85); ctx.fillStyle = '#ffe9a0'; ctx.fillText(f.label, 0, -fsz * 0.85); }
+        ctx.restore();
+      }
       else if (f.t === 'dead') { if (f.enemy && !(t < G.scoutUntil || (G.clash && t < G.clash.until))) return; var dimg2 = f.enemy ? V2['s_' + oppFacKey() + '_fdead'] : V2['s_' + (G.fac || 'solar') + '_dead']; if (dimg2) { var dk = solK(!f.enemy, S * 0.8), ddw = dimg2.width * dk, ddh = dimg2.height * dk; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - Math.max(0, a - 900) / 600); ctx.drawImage(dimg2, f.px - ddw / 2, f.py - ddh / 2, ddw, ddh); ctx.restore(); } }
       else if (f.t === 'debris') { var dp = Math.min(1, a / (f.life || 900)); if (V2.cr_debris) fitImg(V2.cr_debris, f.px, f.py - dp * 30, S * (1 + dp * 1.4), S * (1 + dp * 1.4), 1 - dp, f.rot + dp * 1.5); }
       else if (f.t === 'pop') { ctx.save(); ctx.globalAlpha = 1 - Math.max(0, (a - 550) / 450); ctx.font = '700 15px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; var fy = f.y - a / 40; ctx.strokeText(f.text, f.x, fy); ctx.fillStyle = f.col || '#fff'; ctx.fillText(f.text, f.x, fy); ctx.restore(); }
@@ -744,7 +757,7 @@
       ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = G.msg.col || '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
       ctx.save(); ctx.translate(W / 2, by2); ctx.scale(1 + 0.08 * (1 - mIn), 1 + 0.08 * (1 - mIn)); ctx.fillText(G.msg.text, 0, 0); ctx.restore(); ctx.restore();
     }
-    drawHud(t); drawTray(t); if (G.demo && window.DEMO) DEMO.draw(t); try { drawPanel(t); drawReroll(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(OFFX, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
+    drawHud(t); drawScore(t); drawTray(t); if (G.demo && window.DEMO) DEMO.draw(t); try { drawPanel(t); drawReroll(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(OFFX, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
     if (G.dragInf) {
       var di = G.dragInf;
@@ -912,6 +925,17 @@
     var h = Math.min(BBAR - 10, w / 3.26);   /* 버튼 그림 비율(395×121) 유지 */
     BTN = {}; keys.forEach(function (k, i) { BTN[k] = { x: gap + i * (w + gap), y: OY + (BBAR - h) / 2, w: w, h: h }; });
   }
+  function scorePos() { return G.vs ? { x: W - 12, y: TOP / 2 - 3 } : { x: W - 10, y: HY + HUD / 2 }; }
+  function drawScore(t) {                                    // 점수판: 숫자가 굴러 올라가고, 점수가 들어오면 반짝
+    var pend = 0; G.fx.forEach(function (f) { if (f.t === 'score' && !f.hit) pend += f.n; }); var tgt = G.score - pend;   /* 날아가는 중인 점수는 도착한 뒤에 더함 */
+    G.scoreShown = G.scoreShown == null ? tgt : G.scoreShown; var d = tgt - G.scoreShown; if (d > 0) G.scoreShown += Math.max(1, Math.ceil(d * 0.18)); else if (d < 0) G.scoreShown = tgt;
+    var sp = scorePos(), pa = G.scorePulse ? Math.max(0, 1 - (t - G.scorePulse) / 450) : 0, sc = 1 + 0.35 * pa, fs = G.vs ? Math.round(Math.min(26, TOP * 0.5)) : 20;
+    ctx.save(); ctx.translate(sp.x, sp.y); ctx.scale(sc, sc); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.font = '800 ' + fs + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a0e00'; ctx.shadowColor = 'rgba(255,200,60,' + (0.4 + 0.6 * pa) + ')'; ctx.shadowBlur = 6 + 14 * pa;
+    var txt = G.scoreShown.toLocaleString('en-US'); ctx.strokeText(txt, 0, 0); var gg = ctx.createLinearGradient(0, -fs / 2, 0, fs / 2); gg.addColorStop(0, '#fff3b0'); gg.addColorStop(1, '#ffb020'); ctx.fillStyle = gg; ctx.fillText(txt, 0, 0);
+    var tw0 = ctx.measureText(txt).width; ctx.shadowBlur = 0; ctx.font = '700 ' + Math.round(fs * 0.45) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('SCORE', -tw0 - 6, 1);
+    ctx.restore();
+  }
   function drawHud(t) {
     var g = ctx.createLinearGradient(0, HY, 0, HY + HUD); g.addColorStop(0, '#3a3e32'); g.addColorStop(1, '#1b1d16'); ctx.fillStyle = g; ctx.fillRect(0, HY, W, HUD);
     ctx.fillStyle = '#0a0b08'; ctx.fillRect(0, HY, W, 3);
@@ -950,11 +974,11 @@
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '600 14px Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('최전방 보병', fx0 + fw + 10, cy);
       ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; var seeE = t < G.scoutUntil || (G.clash && t < G.clash.until); ctx.fillStyle = !seeE ? '#fff' : mf > ef ? '#9be37a' : mf < ef ? '#ff8a7a' : '#fff'; ctx.fillText(mf + ' : ' + (seeE ? ef : '?'), fx0 + fw + 10 + ctx.measureText('최전방 보병 ').width + 4, cy);
     }
-    else { ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.fillText(String(G.score), W - 10, cy); ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
+    else { /* 점수는 drawScore */ ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.font = '600 11px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#cfd6bf'; ctx.fillText('BEST ' + best(), W - 10 - ctx.measureText(String(G.score)).width * 2.4 - 12, cy); }
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
     var barH = G.vs ? 12 : 6; ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - barH, W, barH); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - barH, W * p, barH); if (G.vs) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(0, TOP - barH, W * p, 3); }
-    ctx.textAlign = 'center'; ctx.font = '800 ' + (G.vs ? 20 : 13) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = left < 6000 && G.vs ? '#ffb3a8' : '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), W / 2, G.vs ? (TOP - barH) / 2 : 10); ctx.shadowBlur = 0;
+    ctx.textAlign = 'center'; ctx.font = '800 ' + (G.vs ? 20 : 13) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = left < 6000 && G.vs ? '#ffb3a8' : '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), G.vs ? W * 0.4 : W / 2, G.vs ? (TOP - barH) / 2 : 10); ctx.shadowBlur = 0;
   }
   function traySlot(i) { var w = (W - 40) / 3 - 10; return { x: 20 + i * (w + 15), y: TY + 8, w: w, h: TRAY - 16 }; }
   function drawTray(t) {

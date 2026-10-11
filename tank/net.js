@@ -164,7 +164,7 @@ window.REALNET = window.NET = (function () {
     var rf = window.__tank.FAC && window.__tank.FAC[G.fac] ? G.fac : 'solar'; $('result').style.backgroundImage = 'linear-gradient(rgba(8,10,6,.35), rgba(8,10,6,.75)), url(assets/v2/res_' + rf + '_' + (r === 'win' ? 'win' : 'lose') + '.jpg)';   // 세력별 결과 배경
     $('resTitle').textContent = r === 'win' ? 'VICTORY' : r === 'lose' ? 'DEFEAT' : 'DRAW';
     $('resTitle').className = r;
-    $('resText').textContent = detail + ' · 지운 줄 ' + G.lines + ' · 격파 ' + G.kills + ' · 보낸 보병 ' + G.sent;
+    $('resText').textContent = detail + ' · 점수 ' + G.score.toLocaleString('en-US') + ' · 지운 줄 ' + G.lines + ' · 격파 ' + G.kills + ' · 보낸 보병 ' + G.sent;
     show('result');
   }
   function again() { if (!ref) return; ref.child('players/' + uid).update({ ready: false, over: false }); if (meta.state !== 'lobby') ref.child('meta/state').set('lobby'); show('room'); renderRoom(); }
