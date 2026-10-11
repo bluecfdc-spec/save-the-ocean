@@ -34,6 +34,7 @@ window.BOT = (function () {
   function step() {
     if (!active || !me || me.over || bot.over) return;
     if (me.freezeUntil && now() < me.freezeUntil) return;                         // 포격 중엔 CPU 도 정지
+    if (bot.solarUntil && now() > bot.solarUntil) { bot.solarUntil = 0; bot.shield = 0; bot.mySol.forEach(function (e) { e.sh = 0; }); }   // CPU 솔라 5초 끝
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
     bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; }).map(function (e) { return { x: mirror(e.x), d: e.d }; });
     withBot(function () {
@@ -159,8 +160,9 @@ window.BOT = (function () {
     setTimeout(function () {
       if (!active || bot.over) return;
       var v = null; bot.mySol.forEach(function (e) { if (e.x === mx && (!v || e.d < v.d)) v = e; });
-      if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); if (!bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); T.notice('적 보병 격파!'); }
-      else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice(bot.shield ? 'CPU 태양 방패가 막았다 (1겹 남음)' : 'CPU 태양 방패가 깨졌다'); }
+      if (v && v.sh) { v.sh = 0; T.notice('CPU 태양 방패가 보병을 지켰다'); }
+      else if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); if (!bot.mySol.some(function (e) { return e.d === 1; })) bot.mySol.forEach(function (e) { e.d--; }); T.notice('적 보병 격파!'); }
+      else if (bot.tank.x === mx && bot.shield > 0) { bot.shield--; T.notice('CPU 태양 방패가 막았다'); }
       else if (bot.tank.x === mx) { bot.tank.hp--; if (bot.tank.hp <= 0) { bot.over = true; end('win', 'CPU 탱크 격파'); return; } }
       syncToPlayer();
     }, 1560);   // 포탄 비행(1.5초)이 끝나 터진 뒤에 보병이 사라진다
