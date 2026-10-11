@@ -41,17 +41,26 @@ window.SFX = (function () {
     s.connect(f); f.connect(h); h.connect(g); g.connect(dest || sfx); s.start(t); s.stop(t + dur + 0.1); return { f: f, g: g };
   }
   var S = {};
-  // 배경음악 (mp3 반복). 첫 터치 때 켜고, 화면을 내렸다 올리면 되살림
-  var bgmEl = null, bgmOn = false;
+  // 배경음악 (Suno 1번, 101초 이음새 없는 반복). 첫 터치 때 켜고, 화면을 내렸다 올리면 되살림. 결과 화면에선 멈추고 승리/패배 음악
+  var bgmEl = null, bgmOn = false, bgmHold = false, BGM_VOL = 0.38, duckT = null, resEl = null;
   S.bgmStart = function () {
-    bgmOn = true;
-    if (!bgmEl) { bgmEl = new Audio('assets/bgm.mp3'); bgmEl.loop = true; bgmEl.volume = 0.45; bgmEl.setAttribute('playsinline', ''); bgmEl.preload = 'auto'; }
+    bgmOn = true; bgmHold = false;
+    if (!bgmEl) { bgmEl = new Audio('assets/music/tank_loop.mp3?v=1'); bgmEl.loop = true; bgmEl.volume = BGM_VOL; bgmEl.setAttribute('playsinline', ''); bgmEl.preload = 'auto'; }
+    if (resEl) { resEl.pause(); resEl = null; }
     bgmEl.muted = muted; var p = bgmEl.play(); if (p && p.catch) p.catch(function () { });
   };
   S.bgmStop = function () { bgmOn = false; if (bgmEl) bgmEl.pause(); };
-  document.addEventListener('pointerdown', function () { if (!bgmOn) S.bgmStart(); else if (bgmEl && bgmEl.paused) S.bgmStart(); }, { passive: true });
-  document.addEventListener('visibilitychange', function () { if (!bgmEl) return; if (document.hidden) bgmEl.pause(); else if (bgmOn) { var p = bgmEl.play(); if (p && p.catch) p.catch(function () { }); } });
-  S.mute = function (on) { muted = on; if (master) master.gain.value = on ? 0 : 0.9; if (bgmEl) bgmEl.muted = on; };
+  S.duck = function (ms) {                                         // 교전 등: 배경음악을 잠깐 줄였다가 되돌림
+    if (!bgmEl) return; clearInterval(duckT); var lo = BGM_VOL * 0.4, t0 = Date.now(), hold = ms || 2500;
+    duckT = setInterval(function () { var e = Date.now() - t0, v = e < 250 ? BGM_VOL - (BGM_VOL - lo) * e / 250 : e < hold ? lo : e < hold + 800 ? lo + (BGM_VOL - lo) * (e - hold) / 800 : BGM_VOL; bgmEl.volume = Math.max(0, Math.min(1, v)); if (e >= hold + 800) clearInterval(duckT); }, 40);
+  };
+  S.resultMusic = function (win) {                                 // 승리/패배: 배경음악 끄고, 효과음 뒤에 결과 음악 한 번
+    bgmHold = true; S.bgmStop(); clearInterval(duckT);
+    setTimeout(function () { if (!bgmHold) return; if (resEl) resEl.pause(); resEl = new Audio('assets/music/' + (win ? 'win' : 'lose') + '.mp3?v=1'); resEl.volume = 0.7; resEl.muted = muted; resEl.setAttribute('playsinline', ''); resEl.onended = function () { bgmHold = false; }; var p = resEl.play(); if (p && p.catch) p.catch(function () { }); }, 2400);
+  };
+  document.addEventListener('pointerdown', function () { if (bgmHold) return; if (!bgmOn) S.bgmStart(); else if (bgmEl && bgmEl.paused) S.bgmStart(); }, { passive: true });
+  document.addEventListener('visibilitychange', function () { if (!bgmEl) return; if (document.hidden) { bgmEl.pause(); if (resEl) resEl.pause(); } else if (bgmOn && !bgmHold) { var p = bgmEl.play(); if (p && p.catch) p.catch(function () { }); } });
+  S.mute = function (on) { muted = on; if (master) master.gain.value = on ? 0 : 0.9; if (bgmEl) bgmEl.muted = on; if (resEl) resEl.muted = on; };
   S.click = function () { if (!ensure()) return; tone('square', 900, 700, 0.06, 0.08); };
   S.pick = function () { if (!ensure()) return; tone('triangle', 500, 760, 0.07, 0.12); };
   S.place = function () {                                          // 묵직한 "쿵"
@@ -184,7 +193,8 @@ window.SFX = (function () {
   };
   S.count = function () { if (!ensure()) return; tone('square', 660, 660, 0.12, 0.12); };
   S.go = function () { if (!ensure()) return; var t = ctx.currentTime; tone('square', 1047, 1047, 0.45, 0.16, t); tone('square', 1319, 1319, 0.45, 0.1, t); };
-  S.ambientStart = function () {                                   // 전장 배경음: 바람 + 멀리서 포성
+  S.ambientStart = function () {                                   // 게임 시작: 배경음악을 처음부터 (옛 합성 바람 소리는 음악과 겹쳐서 끔)
+    if (bgmEl) { try { bgmEl.currentTime = 0; } catch (e) { } } S.bgmStart(); return;
     if (!ensure() || ambient) return;
     var g = ctx.createGain(); g.gain.value = 0; g.connect(bgm);
     var s = ctx.createBufferSource(); s.buffer = noise(4); s.loop = true;
@@ -213,5 +223,7 @@ window.SFX = (function () {
   var synthUlt = S.ult; S.ult = function (k) { if (k === 'solar' && play('ult_solar', 1)) return; if (k === 'gale' && play('ult_gale', 1)) return; if (k === 'surge' && play('ult_surge', 1)) return; synthUlt(k); };
   S.confirm = function () { if (!play('ui_confirm', 1)) S.click(); };
   S.back = function () { if (!play('ui_back', 1)) S.click(); };
+  var winS = S.win, overS = S.over; S.win = function (a) { if (winS) winS(a); S.resultMusic(true); }; S.over = function (a) { if (overS) overS(a); S.resultMusic(false); }; S.lose = S.over;
+  var clashS = S.clash; S.clash = function (a) { S.duck(2600); if (clashS) clashS(a); };
   return S;
 })();
