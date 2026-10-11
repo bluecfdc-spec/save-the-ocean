@@ -91,7 +91,7 @@ window.BOT = (function () {
       // 보병: 있으면 투입 (탱크 줄). 쌓이지 않게 가끔 열을 옮김
       if (bot.inf > 0 && Math.random() < 0.8) {
         var col = bot.tank.x; if (bot.mySol.some(function (e) { return e.x === col; }) && bot.fuel >= 1 && Math.random() < 0.5) { var nc = Math.max(0, Math.min(COLS - 1, col + (Math.random() < 0.5 ? -1 : 1))); if (goTo(nc)) col = bot.tank.x; }
-        var d = 1; while (bot.mySol.some(function (e) { return e.x === col && e.d === d; })) d++; bot.mySol.push({ x: col, d: d }); bot.inf--;
+        var d = 1; while (bot.mySol.some(function (e) { return e.x === col && e.d === d; })) d++; bot.mySol.push({ x: col, d: d }); bot.inf--; T.fns.lineCheck && T.fns.lineCheck(); T.fns.calcReach();
       }
       // 탱크가 전선에 너무 가까우면 뒤로
       if (bot.tank.y < T.fns.top() + 2 && bot.fuel >= 2) { var k = bot.tank.x + ',' + (bot.tank.y + 2); if (bot.reach[k]) { bot.fuel -= bot.reach[k].d; bot.tank.y += 2; T.fns.calcReach(); } }

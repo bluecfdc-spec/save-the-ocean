@@ -165,7 +165,8 @@
     if (v === 2) G.fuel = Math.min(FUEL_MAX, G.fuel + FUEL_PER); else if (v === 3) G.scout = Math.min(SCOUT_MAX, G.scout + 1); else if (v === 4) G.missile = Math.min(MISSILE_MAX, G.missile + 1); else if (v === 5) G.inf = Math.min(INF_MAX, G.inf + 1);
     G.fx.push({ t: 'pop', text: LOOT_ICON[v] + ' +1', x: BX(x) + S / 2, y: BYY(y) - 6, at: now(), big: false, col: LOOT_COL[v] }); sfx('gain', v);
   }
-  function cellFilled(x, y) { return G.board[y][x] !== 0 || (G.tank.x === x && G.tank.y === y); }
+  function isBunker(x, y) { return !!(G.vs && G.mySol && G.mySol.some(function (e) { return e.x === x && G.adv + e.d - 1 === y; })); }   /* 내 벙커가 선 칸 = 블록 한 칸 */
+  function cellFilled(x, y) { return G.board[y][x] !== 0 || (G.tank.x === x && G.tank.y === y) || isBunker(x, y); }
   function canPlace(p, gx, gy) {
     for (var i = 0; i < p.cells.length; i++) {
       var x = gx + p.cells[i].dx, y = gy + p.cells[i].dy;
@@ -184,7 +185,7 @@
   }
   function lineCheck() {                                   // 줄 검사 — 숨은 기능: 탱크가 서 있는 칸도 블록 한 칸처럼 쳐서 줄을 완성시킨다 (놓을 때든, 탱크가 나중에 그 빈칸에 들어갈 때든)
     var rows = [], cols = [], y, x, full, tk = G.tank;
-    function filled(x, y) { return G.board[y][x] || (tk && !tk.path.length && tk.x === x && tk.y === y); }
+    function filled(x, y) { return G.board[y][x] || (tk && !tk.path.length && tk.x === x && tk.y === y) || isBunker(x, y); }   /* 벙커 칸도 채운 칸 */
     for (y = top(); y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!filled(x, y)) { full = false; break; } if (full) rows.push(y); }
     for (x = 0; x < COLS; x++) { full = true; for (y = top(); y < ROWS; y++) if (!filled(x, y)) { full = false; break; } if (full) cols.push(x); }
     var n = rows.length + cols.length;
@@ -300,7 +301,7 @@
       if (d >= G.fuel) continue;
       [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (v) {
         var x = c[0] + v[0], y = c[1] + v[1], k = x + ',' + y;
-        if (x < 0 || x >= COLS || y < top() || y >= ROWS || G.board[y][x] !== 0 || r[k]) return;
+        if (x < 0 || x >= COLS || y < top() || y >= ROWS || G.board[y][x] !== 0 || isBunker(x, y) || r[k]) return;
         r[k] = { d: d + 1, from: c }; q.push([x, y]);
       });
     }
@@ -397,7 +398,7 @@
     if (col == null) col = G.tank.x;
     G.inf--; G.sent++;
     var d = 1; while (G.mySol.some(function (e) { return e.x === col && e.d === d; })) d++; G.mySol.push({ x: col, d: d, runAt: now(), fromX: G.tank.x, fromY: G.tank.y, sh: now() < (G.solarUntil || 0) ? 1 : 0 });   // 탱크 해치에서 뛰어나가는 연출
-    if (window.NET) NET.pub(true); sfx('send');
+    if (window.NET) NET.pub(true); sfx('send'); lineCheck(); calcReach(); checkFit();   /* 벙커가 줄의 마지막 칸을 채우면 그 줄도 깨짐 */
     G.fx.push({ t: 'pop', text: '벙커 건설', x: BX(col) + S / 2, y: rowC(myRow(d)) - S * 0.6, at: now(), big: false });
   }
   function applyLine(L, nextTickIn) {                      // 대전: 방장이 정한 전선 위치 L(양수 = 내 땅이 그만큼 밀림, 음수 = 상대 땅을 그만큼 차지)
@@ -1232,7 +1233,7 @@
   setInterval(function () { if (document.hidden && G && G.vs && !G.over) update(now()); }, 250);   /* 화면이 숨겨져도(다른 앱 잠깐 보기) 대전 진행은 멈추지 않게 */
   newGame(false); G.over = true;   // 시작 전 배경 표시용
   loop();
-  window.__tank = { get: function () { return G; }, set: function (g) { G = g; }, fns: { canPlace: canPlace, place: place, anyFit: anyFit, calcReach: calcReach, checkFit: checkFit, top: top, makePiece: makePiece }, notice: function (txt) { if (G) { G.fx.push({ t: 'pop', text: txt, x: W / 2, y: EY + 40, at: now(), big: false }); } }, revealOpp: function (x, y) { if (!G || !G.vs) return; G.oppTank = { x: x, y: y }; G.reveal = { until: now() + 3500 }; G.lastSeen = { x: x, y: y, t: now(), how: '발사' }; }   /* 포격 경고는 incomingShot 의 사이렌 하나만 */, incomingShot: incomingShot, applyLine: applyLine, setOpp: function (o) { if (!G || !G.vs) return; if (o.fac && FAC[o.fac] && G.oppFacGuess !== o.fac) { G.oppFacGuess = o.fac; applySkin(); } if (o.tank) { var tp = o.tank.split(','); G.oppTank = { x: +tp[0], y: +tp[1] }; } if (o.sol != null) { var oldS = G.soldiers, cnt0 = {}, minD = {}; oldS.forEach(function (e) { cnt0[e.x] = (cnt0[e.x] || 0) + 1; if (minD[e.x] == null || e.d < minD[e.x]) minD[e.x] = e.d; });
+  window.__tank = { get: function () { return G; }, set: function (g) { G = g; }, fns: { lineCheck: lineCheck, canPlace: canPlace, place: place, anyFit: anyFit, calcReach: calcReach, checkFit: checkFit, top: top, makePiece: makePiece }, notice: function (txt) { if (G) { G.fx.push({ t: 'pop', text: txt, x: W / 2, y: EY + 40, at: now(), big: false }); } }, revealOpp: function (x, y) { if (!G || !G.vs) return; G.oppTank = { x: x, y: y }; G.reveal = { until: now() + 3500 }; G.lastSeen = { x: x, y: y, t: now(), how: '발사' }; }   /* 포격 경고는 incomingShot 의 사이렌 하나만 */, incomingShot: incomingShot, applyLine: applyLine, setOpp: function (o) { if (!G || !G.vs) return; if (o.fac && FAC[o.fac] && G.oppFacGuess !== o.fac) { G.oppFacGuess = o.fac; applySkin(); } if (o.tank) { var tp = o.tank.split(','); G.oppTank = { x: +tp[0], y: +tp[1] }; } if (o.sol != null) { var oldS = G.soldiers, cnt0 = {}, minD = {}; oldS.forEach(function (e) { cnt0[e.x] = (cnt0[e.x] || 0) + 1; if (minD[e.x] == null || e.d < minD[e.x]) minD[e.x] = e.d; });
         G.soldiers = o.sol ? o.sol.split(';').map(function (q) { var a = q.split(':'); return { x: COLS - 1 - (+a[0]), d: +a[1] }; }) : [];
         var cnt1 = {}; G.soldiers.forEach(function (e) { cnt1[e.x] = (cnt1[e.x] || 0) + 1; }); for (var cx in cnt0) if ((cnt1[cx] || 0) < cnt0[cx] && !G.over) G.fx.push({ t: 'dead', enemy: true, px: BX(+cx) + S / 2, py: slotY(minD[cx]), at: now(), life: 1500 }); } }, clash: startClash, enemyScout: enemyScout, BTN: function () { layoutBtns(); return BTN; }, newGame: newGame, addEnemyInf: addEnemyInf, useInfantry: useInfantry, forceOver: function (m) { G.over = true; G.overMsg = m || '테스트'; showOver(); }, place: place, canPlace: canPlace, moveTank: moveTank, useScout: useScout, useMissile: useMissile, makePiece: makePiece, checkFit: checkFit, useUlt: useUlt, skillIn: skillIn, FAC: FAC, ULT_MAX: ULT_MAX, V2: V2, applySkin: applySkin, useScout: useScout, startClash: startClash, traySlot: traySlot, ULTB: function () { return ULTB; }, L: function () { return { W: W, S: S, BY: BY, FS: FS, EY: EY, HY: HY, TY: TY, PW: PW, OFFY: OFFY, ctx: ctx }; }, drawSoldier: drawSoldier, fitImg: fitImg, IMG: IMG, BX: BX, BYY: BYY, rowC: rowC, myRow: myRow, slotY: slotY, fx: function (f) { G.fx.push(f); }, addScore: addScore, resetRound: resetRound, killTank: killTank };
 })();
