@@ -42,12 +42,13 @@ window.REALNET = window.NET = (function () {
   function roomName(c) { for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i][0] === c) return ROOMS[i][1]; return null; }
   ROOMS.forEach(function (r) { var b = document.createElement('button'); b.type = 'button'; b.id = 'rm-' + r[0]; b.appendChild(document.createTextNode(r[1])); var sm = document.createElement('small'); sm.textContent = '…'; b.appendChild(sm);
     b.addEventListener('click', function () { joinPublic(r[0]); }); $('rooms').appendChild(b); });
-  var roomsRef = null;
-  function watchRooms(on) {                                   /* 로비에 있는 동안만 4개 방 인원·상태를 실시간으로 */
-    if (roomsRef) { roomsRef.off(); roomsRef = null; } if (!on || !db) return;
-    roomsRef = db.ref('rooms/tank'); roomsRef.on('value', function (s) { var v = s.val() || {};
-      ROOMS.forEach(function (r) { var d = v[r[0]] || {}, n = Object.keys(d.players || {}).length, playing = n >= 2 && (d.meta || {}).state === 'play', b = $('rm-' + r[0]);
-        b.lastChild.textContent = n + '/2 · ' + (playing ? '대전 중' : n === 1 ? '상대 기다리는 중' : '비어 있음'); b.classList.toggle('full', n >= 2); b.classList.toggle('wait', n === 1); }); }, function () { msg('lbMsg', '전장 정보를 못 불러왔어요.'); });
+  var roomRefs = [];
+  function watchRooms(on) {                                   /* 로비에 있는 동안만 4개 방 인원·상태를 실시간으로 (규칙상 방마다 따로 읽음) */
+    roomRefs.forEach(function (r) { r.off(); }); roomRefs = []; if (!on || !db) return;
+    ROOMS.forEach(function (r) { var rf = db.ref('rooms/tank/' + r[0]); roomRefs.push(rf);
+      rf.on('value', function (s) { var d = s.val() || {}, n = Object.keys(d.players || {}).length, playing = n >= 2 && (d.meta || {}).state === 'play', b = $('rm-' + r[0]);
+        b.lastChild.textContent = n + '/2 · ' + (playing ? '대전 중' : n === 1 ? '상대 기다리는 중' : '비어 있음'); b.classList.toggle('full', n >= 2); b.classList.toggle('wait', n === 1); },
+        function () { $('rm-' + r[0]).lastChild.textContent = '연결 실패'; }); });
   }
   function joinPublic(c) {                                    /* 공개 방: 없으면 만들고(내가 방장), 있으면 들어감 */
     if (!init()) return; saveName(); msg('lbMsg', '들어가는 중…');
