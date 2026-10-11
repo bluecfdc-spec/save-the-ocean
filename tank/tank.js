@@ -403,12 +403,12 @@
     if (L > old) {
       dropLootRows(Math.max(0, old), Math.min(ROWS, L));
       for (var y = Math.max(0, old); y < Math.min(ROWS, L); y++) for (var x = 0; x < COLS; x++) { if (G.board[y][x]) G.fx.push({ t: 'cell', x: x, y: y, at: t }); G.board[y][x] = 0; }
-      G.fx.push({ t: 'pop', text: '전선이 밀렸다', x: W / 2, y: 0, at: t, big: true, col: '#ff8a7a' }); sfx('advance');
+      G.fx.push({ t: 'pop', text: '전선이 밀렸다', x: W / 2, y: 0, at: t, big: true, col: '#ff8a7a' }); if (G.collapsing) sfx('advance'); else try { SFX.stingMusic(false); } catch (e) { sfx('advance'); }   /* 교전에서 밀림 = 패배 음악 */
       G.adv = L;
       if (G.tank.y < L) { killTank('적에게 밟혔다'); return; }
       if (L >= ROWS) { G.over = true; G.overMsg = '전장을 잃었다'; sfx('ambientStop'); sfx('over'); setTimeout(showOver, 900); return; }
     } else {
-      G.adv = L; G.fx.push({ t: 'pop', text: '전선 전진!', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); sfx('retreat');
+      G.adv = L; G.fx.push({ t: 'pop', text: '전선 전진!', x: W / 2, y: 0, at: t, big: true, col: '#9be37a' }); try { SFX.stingMusic(true); } catch (e) { sfx('retreat'); }   /* 교전에서 밀어붙임 = 승리 음악 */
     }
     calcReach(); checkFit();
   }
