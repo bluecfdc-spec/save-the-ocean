@@ -22,7 +22,7 @@ window.BOT = (function () {
     think = setInterval(step, SPEED[level]);
     clashTimer = setInterval(clash, 30000);
   }
-  function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * (wave - 1))); }   /* 전투마다 CPU 판단 속도 0.2배씩 빨라짐 */
+  function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * Math.max(0, wave - 2))); }   /* 스테이지 1은 가만히, 2부터 원래 속도, 그 뒤 0.2배씩 빨라짐 */
   function nextWave(kind) {                                 /* CPU 무한 모드: 탱크 격파(tank) 또는 적진 점령(push) → 보너스 + VICTORY 화면 → '다음 스테이지' 누르면 이어서 */
     if (!active) return; var bonus = 1000 * (wave + 1);
     T.addScore(bonus, T.L().W / 2, T.L().EY + 60, kind === 'push' ? '적진 점령!' : 'CPU 탱크 격파!');
@@ -60,23 +60,25 @@ window.BOT = (function () {
     if (bot.solarUntil && now() > bot.solarUntil) { bot.solarUntil = 0; bot.shield = 0; bot.mySol.forEach(function (e) { e.sh = 0; }); }   // CPU 솔라 5초 끝
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
     bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; })   /* 최전방은 보이고, 뒷줄은 정찰할 때만(사람과 같음) */.map(function (e) { return { x: mirror(e.x), d: e.d }; });
+    if (wave <= 1) { syncToPlayer(); return; }                                       /* 스테이지 1: CPU 는 그 자리에 가만히 */
+    var full = wave >= 3;                                                             /* 스테이지 2: 블록·벙커만 / 3부터: 정찰·미사일·필살기까지 전부 */
     withBot(function () {
       if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
       if (bot.sweep) return;
       // 정찰: 내 위치를 모르거나 오래됐으면
-      if (bot.scout > 0 && (!known || now() - known.t > 12000) && Math.random() < 0.6) {
+      if (full && bot.scout > 0 && (!known || now() - known.t > 12000) && Math.random() < 0.6) {
         bot.scout--;
         if (now() < me.stormMine) { setTimeout(function () { if (active) T.notice('상대 정찰기가 폭풍우에 추락!'); }, 0); }   // 내 서지 폭풍우 → 봇 정찰기 추락
         else { known = { x: me.tank.x, y: me.tank.y, t: now() }; bot.scoutUntil = now() + SCOUT_MS; setTimeout(function () { if (active) T.enemyScout(); }, 0); }
       }
       // 필살기: 게이지가 차면 상황 봐서 발동 (게일은 내 보병이 있을 때, 솔라는 체력이 깎였거나 내 위치가 알려졌을 때, 서지는 바로)
-      if (bot.ult >= T.ULT_MAX) {
+      if (full && bot.ult >= T.ULT_MAX) {
         var ok = bot.fac === 'gale' ? bot.soldiers.length >= 2 || Math.random() < 0.15 : bot.fac === 'solar' ? (bot.tank.hp < 3 || bot.shield === 0) : true;
         if (ok) T.useUlt();
       }
       // 미사일: 내 보병이 봇 앞에 있으면 그 줄, 아니면 알고 있는 내 탱크 줄
-      if (bot.missile > 0 && now() >= bot.missileReady) {
+      if (full && bot.missile > 0 && now() >= bot.missileReady) {
         var target = null;
         var front = bot.soldiers.filter(function (e) { return e.d === 1; });     // 봇 눈에 보이는 내 보병(봇 좌표)
         if (front.length && Math.random() < 0.7) target = front[rnd(front.length)].x;

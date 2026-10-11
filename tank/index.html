@@ -83,8 +83,8 @@
   #count.check #countNum { display: none; }
   #count.check #countDone { display: flex; }
   #count .chk { display: none; }
-  #count.check .ncard { grid-template-columns: 56px 30px 1fr 52px; column-gap: 10px; font-size: 21px; white-space: nowrap; }
-  #count.check .ncard img { width: 56px; height: 56px; }
+  #count.check .ncard { grid-template-columns: 52px 28px 1fr 50px; column-gap: 8px; font-size: 19px; white-space: nowrap; padding: 12px 10px; }
+  #count.check .ncard img { width: 52px; height: 52px; }
   #count.check .chk { display: block; width: 52px; height: 52px; cursor: pointer; padding: 0; border: 0; background: url(assets/v2/btn_check_off.png?v=1) center/contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,212,81,.55)); animation: chkPulse 1s ease-in-out infinite; }
   #count.check .chk.on { animation: chkPop .3s ease-out; background-image: url(assets/v2/btn_check_on.png?v=1); filter: drop-shadow(0 0 10px #6dff3a); }
   #count.check .chk:disabled:not(.on) { opacity: .4; animation: none; }
@@ -206,7 +206,7 @@
   <div id="plist"></div>
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워서<br>탱크를 부수자!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
@@ -218,7 +218,7 @@
 <div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countDone"></div><div id="countNum">3</div>
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워서<br>탱크를 부수자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div><button class="chk" aria-label="확인"></button></div>
   </div>
 </div>
@@ -253,7 +253,7 @@
 <script src="sfx.js?v=39"></script>
 <script src="tank.js?v=104"></script>
 <script src="net.js?v=44"></script>
-<script src="bot.js?v=48"></script>
+<script src="bot.js?v=49"></script>
 <script src="demo.js?v=4"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };
