@@ -885,8 +885,16 @@
   "name": "보병 출격 — \"Hold the line! Move, move, move!\"",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [],
-  "ver": {},
+  "files": [
+   "sfx/candidates/목소리_01_1_04c0d8.mp3",
+   "sfx/candidates/목소리_01_2_72147f.mp3",
+   "sfx/candidates/목소리_01_3_52d19b.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/목소리_01_1_04c0d8.mp3": "04c0d8",
+   "sfx/candidates/목소리_01_2_72147f.mp3": "72147f",
+   "sfx/candidates/목소리_01_3_52d19b.mp3": "52d19b"
+  },
   "done": false
  },
  "목소리_02": {
