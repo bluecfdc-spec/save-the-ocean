@@ -6,20 +6,21 @@
 .c input{width:22px;height:22px}#out{position:fixed;left:0;right:0;bottom:0;background:#1b1d16;border-top:2px solid #ffd451;padding:10px 12px}#out textarea{width:100%;height:60px;background:#0b0d0a;color:#9be37a;border:1px solid #3a3e32;font:13px monospace}
 .sm{color:#8a9477;font-size:13px}</style></head><body>
 <h1>효과음 고르기</h1><div class="sm">▶ 눌러 듣고, 마음에 드는 후보 하나에 체크. 아래 상자의 글을 복사해서 Claude에게 붙여 주세요.</div>
-<div id="list">불러오는 중…</div>
+<label class="sm" style="display:block;margin:8px 0"><input type="checkbox" id="showAll"> 반영된 것도 전부 보기</label><div id="list">불러오는 중…</div>
 <div id="out"><div class="sm">선택 결과 (자동 갱신)</div><textarea id="sel" readonly></textarea></div>
 <script>
-fetch('manifest.json?t='+Date.now()).then(r=>r.json()).then(m=>{
-  const L=document.getElementById('list'); L.innerHTML=''; const games={}; Object.values(m).forEach(it=>{(games[it.game]=games[it.game]||[]).push(it)});
+function render(m){
+  const L=document.getElementById('list'); L.innerHTML=''; const all=document.getElementById('showAll').checked; const games={}; Object.values(m).forEach(it=>{(games[it.game]=games[it.game]||[]).push(it)});
   const saved=JSON.parse(localStorage.getItem('sfxpick')||'{}');
-  for(const g of ['공통','탱크','스카이','오션']){ if(!games[g])continue; const h=document.createElement('h2'); h.textContent=g; L.appendChild(h);
-    games[g].sort((a,b)=>a.num.localeCompare(b.num)).forEach(it=>{ const id=it.game+'_'+it.num; const d=document.createElement('div'); d.className='it';
+  for(const g of ['공통','탱크','스카이','오션']){ if(!games[g])continue; const vis=games[g].filter(it=>all||!it.done); if(!vis.length)continue; const h=document.createElement('h2'); h.textContent=g; L.appendChild(h);
+    games[g].sort((a,b)=>a.num.localeCompare(b.num)).forEach(it=>{ const id=it.game+'_'+it.num; if(it.done&&!all)return; const d=document.createElement('div'); d.className='it';
       d.innerHTML='<div class="nm">'+id+' · '+it.name+'</div><div class="pr">'+it.prompt+'</div>';
       it.files.forEach((f,i)=>{ const c=document.createElement('div'); c.className='c'; const b=document.createElement('button'); b.textContent='▶ 후보 '+(i+1)+' ('+(((it.ver||{})[f])||'').slice(0,4)+')'; const a=new Audio('../'+f+'?v='+((it.ver||{})[f]||'0')); b.onclick=()=>{a.currentTime=0;a.play()};
         const lb=document.createElement('label'); const r=document.createElement('input'); r.type='radio'; r.name=id; r.value=f; r.checked=saved[id]===f; r.onchange=()=>{saved[id]=f;localStorage.setItem('sfxpick',JSON.stringify(saved));out()}; lb.appendChild(r); lb.appendChild(document.createTextNode('이걸로')); c.appendChild(b); c.appendChild(lb); d.appendChild(c); });
       const c2=document.createElement('div'); c2.className='c'; const lb2=document.createElement('label'); const r2=document.createElement('input'); r2.type='radio'; r2.name=id; r2.value='다시'; r2.checked=saved[id]==='다시'; r2.onchange=()=>{saved[id]='다시';localStorage.setItem('sfxpick',JSON.stringify(saved));out()}; lb2.appendChild(r2); lb2.appendChild(document.createTextNode('다 별로 — 다시 뽑기')); c2.appendChild(lb2); d.appendChild(c2);
       L.appendChild(d); });
   }
-  function out(){ document.getElementById('sel').value=Object.entries(saved).map(([k,v])=>k+' = '+(v==='다시'?'다시':v.split('/').pop())).join('\n'); } out();
-});
+  function out(){ document.getElementById('sel').value=Object.entries(saved).filter(([k])=>!(m[k]&&m[k].done)).map(([k,v])=>k+' = '+(v==='다시'?'다시':v.split('/').pop())).join('\n'); } out();
+}
+let M=null; fetch('manifest.json?t='+Date.now()).then(r=>r.json()).then(m=>{M=m;render(m)}); document.getElementById('showAll').addEventListener('change',()=>{if(M)render(M)});
 </script></body></html>
