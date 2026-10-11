@@ -205,7 +205,7 @@ window.SFX = (function () {
   S.ambientStop = function () { if (ambient) { ambient.stop(); ambient = null; } };
   // ---------- 음원 파일(ElevenLabs 효과음, 2026-10-11) — 있으면 파일, 없으면 위 합성음 ----------
   var SAMPLES = { ui_click: 0.5, ui_confirm: 0.6, ui_back: 0.5, ui_bad: 0.55, go: 0.8, win: 0.9, lose: 0.8, ult_ready: 0.8, ult_solar: 0.9,
-    pick: 0.5, place: 0.7, clear: 0.85, launch: 0.8, boom_s: 0.8, boom_b: 1.0, scout: 0.6, clash: 0.8, retreat: 0.9, warn: 0.7, count: 0.6, ult_gale: 0.9, gain: 0.6, ult_surge: 0.9, advance: 0.9, step: 0.7, deploy_chime: 0.9 };
+    pick: 0.5, place: 0.7, clear: 0.85, launch: 0.8, boom_s: 0.8, boom_b: 1.0, scout: 0.6, clash: 0.8, retreat: 0.9, warn: 0.7, count: 0.6, ult_gale: 0.9, gain: 0.6, ult_surge: 0.9, advance: 0.9, step: 0.7, deploy5: 0.9 };
   var BUF = {}, loading = {};
   function loadAll() { if (!ensure()) return; Object.keys(SAMPLES).forEach(function (k) { if (BUF[k] || loading[k]) return; loading[k] = 1;
     fetch('assets/sfx/' + k + '.mp3?v=3').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
@@ -214,7 +214,7 @@ window.SFX = (function () {
   function play(k, vol, rate) { if (!ensure() || !BUF[k]) return false; var src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = BUF[k]; if (rate) src.playbackRate.value = rate; g.gain.value = (vol == null ? 1 : vol) * SAMPLES[k]; src.connect(g); g.connect(sfx); src.start(); return true; }
   function wrap(name, key, volFn) { var synth = S[name]; S[name] = function (a) { if (play(key, volFn ? volFn(a) : 1, null)) return; if (synth) synth(a); }; }
   wrap('click', 'ui_click'); wrap('go', 'go'); wrap('bad', 'ui_bad'); wrap('win', 'retreat'); wrap('over', 'advance'); S.lose = S.over;   /* 게임 승리 = 전선 전진 음악(탱크_12), 패배 = 전선 밀림(탱크_13) */
-  wrap('ultReady', 'ult_ready'); wrap('pick', 'pick'); wrap('place', 'place'); wrap('launch', 'launch'); wrap('scout', 'scout'); wrap('clash', 'clash'); wrap('retreat', 'retreat'); wrap('warn', 'warn'); wrap('count', 'count'); wrap('gain', 'gain'); wrap('advance', 'advance'); wrap('send', 'deploy_chime'); var synthStep = S.step, stepAt = 0; S.step = function () { var n = Date.now(); if (BUF.step) { if (n - stepAt > 1900) { stepAt = n; play('step', 1); } return; } if (synthStep) synthStep(); };
+  wrap('ultReady', 'ult_ready'); wrap('pick', 'pick'); wrap('place', 'place'); wrap('launch', 'launch'); wrap('scout', 'scout'); wrap('clash', 'clash'); wrap('retreat', 'retreat'); wrap('warn', 'warn'); wrap('count', 'count'); wrap('gain', 'gain'); wrap('advance', 'advance'); wrap('send', 'deploy5'); var synthStep = S.step, stepAt = 0; S.step = function () { var n = Date.now(); if (BUF.step) { if (n - stepAt > 1900) { stepAt = n; play('step', 1); } return; } if (synthStep) synthStep(); };
   var synthClear = S.clear; S.clear = function (n) { if (play('clear', Math.min(1.2, 0.8 + (n || 1) * 0.1), n > 2 ? 0.92 : 1)) return; synthClear(n); };
   var synthBoom = S.boom; S.boom = function (big) { if (play(big ? 'boom_b' : 'boom_s', 1, 0.95 + Math.random() * 0.1)) return; synthBoom(big); };
   var synthUlt = S.ult; S.ult = function (k) { if (k === 'solar' && play('ult_solar', 1)) return; if (k === 'gale' && play('ult_gale', 1)) return; if (k === 'surge' && play('ult_surge', 1)) return; synthUlt(k); };

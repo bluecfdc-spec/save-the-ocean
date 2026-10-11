@@ -589,8 +589,8 @@
     var bx = SOL_BOX[SOL_CASE] || SOL_BOX.A, kM = Math.min(s * bx[0] / refM.width, s * bx[1] / refM.height);
     var kMine = kM * 1.2 * 0.8; if (mine) return kMine;   /* 양쪽 다 80% */                  /* 아군(뒷모습) */
     var ef = oppFacKey(), refE = V2['s_' + ef + '_frun1'] || V2['s_' + ef + '_front']; if (!refE) return kMine;
-    if (SOL_NORM === 'height') { var refEb = V2['s_' + ef + '_stand'] || refE; return kMine * refM.height / refEb.height; }   /* 키를 같게 */
-    return kMine * headW(refM) / headW(refE);                       /* 머리 폭을 같게 */
+    if (SOL_NORM === 'height') { var refEb = V2['s_' + ef + '_stand'] || refE; return kMine * refM.height / refEb.height * 0.95; }   /* 키를 같게 */
+    return kMine * headW(refM) / headW(refE) * 0.95;                /* 머리 폭을 같게, 적은 5% 작게 */
   }
   function drawSoldier(px, py, s, mine, feetY) {
     var im = mine ? IMG.u_soldier_p : IMG.u_soldier_e;
