@@ -1,0 +1,16 @@
+name: voice-gen
+on: { workflow_dispatch: {} }
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node tools/voice-gen.mjs
+        env: { ELEVEN_API_KEY: "${{ secrets.ELEVEN_API_KEY }}" }
+      - run: |
+          git config user.name "sfx-bot"; git config user.email "sfx-bot@users.noreply.github.com"
+          git add sfx && git commit -m "sfx: 목소리 후보 생성" || echo "no change"
+          git push

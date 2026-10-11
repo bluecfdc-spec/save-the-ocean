@@ -12,7 +12,7 @@
 function render(m){
   const L=document.getElementById('list'); L.innerHTML=''; const all=document.getElementById('showAll').checked; const games={}; Object.values(m).forEach(it=>{(games[it.game]=games[it.game]||[]).push(it)});
   const saved=JSON.parse(localStorage.getItem('sfxpick')||'{}');
-  for(const g of ['공통','탱크','스카이','오션']){ if(!games[g])continue; const vis=games[g].filter(it=>all||!it.done); if(!vis.length)continue; const h=document.createElement('h2'); h.textContent=g; L.appendChild(h);
+  for(const g of ['공통','탱크','목소리','스카이','오션']){ if(!games[g])continue; const vis=games[g].filter(it=>all||!it.done); if(!vis.length)continue; const h=document.createElement('h2'); h.textContent=g; L.appendChild(h);
     games[g].sort((a,b)=>a.num.localeCompare(b.num)).forEach(it=>{ const id=it.game+'_'+it.num; if(it.done&&!all)return; const d=document.createElement('div'); d.className='it';
       d.innerHTML='<div class="nm">'+id+' · '+it.name+'</div><div class="pr">'+it.prompt+'</div>';
       it.files.forEach((f,i)=>{ const c=document.createElement('div'); c.className='c'; const b=document.createElement('button'); b.textContent='▶ 후보 '+(i+1)+' ('+(((it.ver||{})[f])||'').slice(0,4)+')'; const a=new Audio('../'+f+'?v='+((it.ver||{})[f]||'0')); b.onclick=()=>{a.currentTime=0;a.play()};
