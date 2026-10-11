@@ -920,12 +920,18 @@
   "files": [
    "sfx/candidates/목소리_01_1_8deb6e.mp3",
    "sfx/candidates/목소리_01_2_2aa804.mp3",
-   "sfx/candidates/목소리_01_3_ffe37d.mp3"
+   "sfx/candidates/목소리_01_3_ffe37d.mp3",
+   "sfx/candidates/목소리_01_4_deep_a8379d.mp3",
+   "sfx/candidates/목소리_01_5_deep_5887fe.mp3",
+   "sfx/candidates/목소리_01_6_deep_c68e17.mp3"
   ],
   "ver": {
    "sfx/candidates/목소리_01_1_8deb6e.mp3": "8deb6e",
    "sfx/candidates/목소리_01_2_2aa804.mp3": "2aa804",
-   "sfx/candidates/목소리_01_3_ffe37d.mp3": "ffe37d"
+   "sfx/candidates/목소리_01_3_ffe37d.mp3": "ffe37d",
+   "sfx/candidates/목소리_01_4_deep_a8379d.mp3": "a8379d04",
+   "sfx/candidates/목소리_01_5_deep_5887fe.mp3": "5887fe3f",
+   "sfx/candidates/목소리_01_6_deep_c68e17.mp3": "c68e17e0"
   },
   "done": false,
   "hold": false
