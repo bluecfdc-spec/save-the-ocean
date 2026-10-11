@@ -206,8 +206,9 @@
    "sfx/candidates/공통_10_3_2914d8.mp3": "2914d8a8",
    "sfx/candidates/공통_10_4_dca30d.mp3": "dca30d4e"
   },
-  "done": false,
-  "hold": false
+  "done": true,
+  "hold": false,
+  "pick": "sfx/candidates/공통_10_1_f4792a.mp3"
  },
  "공통_11": {
   "game": "공통",
@@ -339,20 +340,10 @@
   "game": "탱크",
   "num": "05",
   "name": "탱크 이동",
-  "sec": 1.2,
+  "sec": 2,
   "prompt": "tank slowly rolling forward, soft metal tracks clinking and a gentle low engine hum, quiet and smooth, not loud, no roar, short, clean",
-  "files": [
-   "sfx/candidates/탱크_05_1_bfabfd.mp3",
-   "sfx/candidates/탱크_05_2_edb87c.mp3",
-   "sfx/candidates/탱크_05_3_0434b8.mp3",
-   "sfx/candidates/탱크_05_4_aaa5e4.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/탱크_05_1_bfabfd.mp3": "bfabfd94",
-   "sfx/candidates/탱크_05_2_edb87c.mp3": "edb87c66",
-   "sfx/candidates/탱크_05_3_0434b8.mp3": "0434b897",
-   "sfx/candidates/탱크_05_4_aaa5e4.mp3": "aaa5e4d4"
-  },
+  "files": [],
+  "ver": {},
   "done": false,
   "hold": false
  },
@@ -521,8 +512,9 @@
    "sfx/candidates/탱크_13_3_125b8b.mp3": "125b8bfd",
    "sfx/candidates/탱크_13_4_c23416.mp3": "c23416c8"
   },
-  "done": false,
-  "hold": false
+  "done": true,
+  "hold": false,
+  "pick": "sfx/candidates/탱크_13_2_37ab4b.mp3"
  },
  "탱크_14": {
   "game": "탱크",
@@ -929,22 +921,8 @@
   "name": "보병 출격 — \"Hold the line! Move move move!\" (4~6번은 무전기 음색)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [
-   "sfx/candidates/목소리_01_1_04c0d8.mp3",
-   "sfx/candidates/목소리_01_2_72147f.mp3",
-   "sfx/candidates/목소리_01_3_52d19b.mp3",
-   "sfx/candidates/목소리_01_4_radio_f8644f.mp3",
-   "sfx/candidates/목소리_01_5_radio_b7354c.mp3",
-   "sfx/candidates/목소리_01_6_radio_ceba1b.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/목소리_01_1_04c0d8.mp3": "04c0d8",
-   "sfx/candidates/목소리_01_2_72147f.mp3": "72147f",
-   "sfx/candidates/목소리_01_3_52d19b.mp3": "52d19b",
-   "sfx/candidates/목소리_01_4_radio_f8644f.mp3": "f8644f09",
-   "sfx/candidates/목소리_01_5_radio_b7354c.mp3": "b7354c05",
-   "sfx/candidates/목소리_01_6_radio_ceba1b.mp3": "ceba1b16"
-  },
+  "files": [],
+  "ver": {},
   "done": false,
   "hold": false
  },
