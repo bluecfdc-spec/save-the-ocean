@@ -137,7 +137,7 @@ window.REALNET = window.NET = (function () {
     if (roomName(code) && meta && !started && meta.host && !players[meta.host] && players[uid]) ref.child('meta').update({ host: uid, state: 'lobby' });   /* 방장이 끊겼으면 넘겨받음 */
     // 둘 다 준비 → 방장이 시작 시각을 정한다
     if (meta.host === uid && meta.state === 'lobby' && o && o.ready && me().ready) {
-      ref.child('meta').update({ state: 'play', startAt: snow() + 4000, round: (meta.round || 0) + 1 });
+      ref.child('meta').update({ state: 'play', startAt: snow() + 3900, round: (meta.round || 0) + 1 });   /* 3·2·1 각 1.3초 */
     }
     // 게임 중 상대가 졌거나 나갔다 → 승리
     if (started && !resultUp) {
@@ -178,7 +178,7 @@ window.REALNET = window.NET = (function () {
   function tick() {
     var left = meta.startAt - snow();
     if (left <= 0) { startGame(); return; }
-    var c = Math.ceil(left / 1000); if ($('countNum').textContent != c) { $('countNum').textContent = c; try { SFX.count(); } catch (e) { } }
+    var c = Math.max(1, Math.min(3, Math.ceil(left / 1300))); if ($('countNum').textContent != c) { $('countNum').textContent = c; $('countTip').innerText = (window.TANK_TIPS || {})[c] || ''; try { SFX.count(); } catch (e) { } }
     startTimer = setTimeout(tick, 100);
   }
   function startGame() {

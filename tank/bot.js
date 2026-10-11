@@ -189,7 +189,7 @@ window.BOT = (function () {
   function sendInf() { }
   function over(m) { if (!active) return; end('lose', m); }
   // 결과 화면의 [다시 대전] → CPU 다시
-  $('againBtn').addEventListener('click', function () { if (window.NET === BOT) { window.REALNET.show('none'); start(); try { SFX.go(); SFX.ambientStart(); } catch (e) { } } });
+  $('againBtn').addEventListener('click', function () { if (window.NET === BOT) { window.REALNET.show('none'); window.tankCountdown(function () { start(); try { SFX.go(); SFX.ambientStart(); } catch (e) { } }); } });
   $('resLeave').addEventListener('click', function () { if (window.NET === BOT) stop(); });
   return { start: start, stop: stop, opp: opp, fired: fired, scouted: scouted, skill: skill, collapsed: collapsed, pub: pub, sendInf: sendInf, over: over, setLevel: function (l) { level = l; }, _bot: function () { return bot; }, _clash: clash, _step: step };
 })();

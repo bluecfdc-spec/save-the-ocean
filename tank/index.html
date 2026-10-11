@@ -62,6 +62,8 @@
   .rk img { width: 24px; height: 24px; }
   .rk .s { font-family: 'Black Han Sans', sans-serif; color: #fff; }
   .rk.me { background: rgba(255,212,81,.12); }
+#countTip { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 28px; line-height: 1.35; color: #fff; max-width: 92vw; text-shadow: 0 2px 0 #000, 0 0 18px #ff9a1f88; min-height: 80px; padding: 0 12px; }
+  .pickT { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 20px; color: #ffd451; text-shadow: 0 2px 0 #000, 0 0 10px #000; }
   .btn.sub { font-size: 17px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
@@ -108,7 +110,7 @@
   #facRow .fac { width: auto; flex-direction: row; justify-content: center; gap: 6px; padding: 4px 6px; border-radius: 10px; font-size: 16px; }
   #facRow .fac img { width: 30px; height: 30px; }
   #facRow .fac small { display: none; }
-  #facDesc { max-width: min(92vw, 420px); font-size: 12px; padding: 4px 10px; line-height: 1.35; }
+  #facDesc { max-width: min(92vw, 420px); font-size: 14px; padding: 5px 10px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #ov .row.two .btn { padding: 11px 0; font-size: 20px; }
   #ov .btn.wide { padding: 7px 0; font-size: 15px; }
 </style>
@@ -121,6 +123,7 @@
   <h1>TANK RUMBLE<small>TEST BUILD</small></h1>
   <p id="ovText">위는 상대 진영, 아래는 내 보드. 블록을 끌어 줄을 지우면 연료·정찰·미사일·보병을 얻는다.<br>보병은 내 최전방에 서고, 30초마다 전선 교전 — 최전방 보병이 많은 쪽이 민다. 미사일은 같은 세로줄 맨 앞의 적을(3초에 한 발), 정찰기는 상대 탱크를 찾는다.<br>보드가 꽉 차면 붕괴 — 블록이 전부 터지고 전선이 2줄 밀린다. 상대 탱크 체력 3을 깎거나 전선으로 덮치면 승리. CPU도 똑같은 규칙으로 싸운다.</p>
   <div id="ovScore" class="score hidden"></div>
+  <div class="pickT">당신의 세력을 선택하세요</div>
   <div id="facRow" class="row">
     <button class="fac" data-f="surge"><img src="assets/v2/f_surge.png" alt=""><span>서지</span><small>폭풍우</small></button>
     <button class="fac" data-f="gale"><img src="assets/v2/f_gale.png" alt=""><span>게일</span><small>낙뢰</small></button>
@@ -165,7 +168,7 @@
 </div>
 
 <!-- 카운트다운 -->
-<div id="count" class="ov hidden"><h2>동시 시작</h2><div id="countNum">3</div></div>
+<div id="count" class="ov hidden"><h2>곧 시작</h2><div id="countNum">3</div><div id="countTip"></div></div>
 
 <!-- 대전 결과 -->
 <div id="result" class="ov hidden">
@@ -178,21 +181,30 @@
 
 <script>document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script>
-(function () { var DESC = { surge: '서지 · 폭풍우 — 내 땅에 20초 폭풍우. 상대 정찰기는 뜨자마자 추락하고, 상대가 아는 내 마지막 위치도 지워진다.', gale: '게일 · 낙뢰 — 적 보병 3명에게 벼락 (최전방부터).', solar: '솔라 · 태양 방패 — 5초 동안 내 전장에 햇살. 탱크 방패 1번, 모든 보병에 방패.' };
+(function () { var DESC = { surge: '서지 · 폭풍우 — 적 정찰기를 추락시킨다', gale: '게일 · 낙뢰 — 적 보병 3명을 벼락으로 쓰러뜨린다', solar: '솔라 · 태양 방패 — 우리 편 전체에 보호막' };
   var cur = localStorage.getItem('tank_fac') || 'solar'; window.TANK_FAC = cur;
   function sel(f) { cur = f; window.TANK_FAC = f; localStorage.setItem('tank_fac', f); document.querySelectorAll('.fac').forEach(function (b) { b.classList.toggle('on', b.dataset.f === f); }); document.getElementById('facDesc').textContent = DESC[f]; }
   document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
 })();
 </script>
 <script src="sfx.js?v=37"></script>
-<script src="tank.js?v=90"></script>
-<script src="net.js?v=39"></script>
-<script src="bot.js?v=42"></script>
+<script src="tank.js?v=91"></script>
+<script src="net.js?v=40"></script>
+<script src="bot.js?v=43"></script>
 <script src="demo.js?v=4"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };
   document.getElementById('howBtn').addEventListener('click', showTut);
   if (!localStorage.getItem('tank_tut')) setTimeout(function () { var d = document.getElementById('facDesc'); if (d) d.innerHTML += '<br><b style="color:#ffd451"></b>'; }, 300);
+</script>
+<script>
+window.TANK_TIPS = { 3: '정찰기를 띄워\n적 탱크를 찾아 부숴라!', 2: '블록 줄을 지워\n아이템을 모아라!', 1: '최전방에 보병을 모아\n30초마다 전선을 밀어라!' };
+window.tankCountdown = function (cb) {   /* CPU 대전 시작: 3·2·1 + 핵심 세 가지 */
+  ['ov', 'lobby', 'room', 'result', 'rank'].forEach(function (k) { var e = document.getElementById(k); if (e) e.classList.add('hidden'); });
+  var c = document.getElementById('count'), n = 3; c.classList.remove('hidden');
+  function step() { if (n <= 0) { c.classList.add('hidden'); cb(); return; } document.getElementById('countNum').textContent = n; document.getElementById('countTip').innerText = window.TANK_TIPS[n]; try { SFX.count(); } catch (e) { } n--; setTimeout(step, 1300); }
+  step();
+};
 </script>
 </body>
 </html>

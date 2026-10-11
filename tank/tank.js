@@ -78,7 +78,7 @@
   IMG_LIST.forEach(function (n) { var i = new Image(); i.onload = function () { IMG[n] = i; }; i.src = 'assets/' + (/^(u|b|m|f|x)_/.test(n) ? '' : 'c_') + n + '.png?v=3'; });
   var BLK_IMG = { 1: 'b_plain', 2: 'b_fuel', 3: 'b_scout', 4: 'b_missile', 5: 'b_inf' };   // 정찰 = 정찰기, 보병 = 파란 병사
   // ---------- 새 그림(v2, 2026-10-11 GPT 시트) ----------
-  var V2 = {}, V2_PNG = ['b_bonus', 'b_fuel', 'b_inf', 'b_missile', 'b_plain', 'b_scout', 'ban_gold', 'ban_green', 'ban_red', 'bolt1', 'bolt2', 'bolt3', 'bolt_flash', 'btn_inf_off', 'btn_inf_on', 'btn_guide_on', 'btn_guide_off', 'btn_reroll_on', 'btn_reroll_off', 'btn_missile_off', 'btn_missile_on', 'btn_scout_off', 'btn_scout_on', 'cr_crack1', 'cr_crack2', 'cr_debris', 'cr_vignette', 'd_barrel', 'd_crater', 'd_pole', 'd_sandbag', 'd_trench1', 'd_trench2', 'd_trench3', 'd_wire1', 'd_wire2', 'e_gale', 'e_gale_dead', 'e_gale_hit', 'e_solar', 'e_solar_dead', 'e_solar_hit', 'e_surge', 'e_surge_dead', 'e_surge_hit', 'em_down', 'em_top', 'em_up', 'f_gale', 'f_gale_glow', 'f_solar', 'f_solar_glow', 'f_surge', 'f_surge_glow', 'fx_dust1', 'fx_dust2', 'fx_flash1', 'fx_flash2', 'fx_smoke', 'fx_smoke2', 'icon_1024', 'icon_180', 'icon_64', 'm_down', 'm_top', 'm_up', 'o_bad', 'o_dot', 'o_ok', 'o_sel', 'p_gale', 'p_gale_crash', 'p_solar', 'p_solar_crash', 'p_surge', 'p_surge_crash', 's_gale_dead', 's_gale_run1', 's_gale_run2', 's_gale_stand', 's_solar_dead', 's_solar_run1', 's_solar_run2', 's_solar_stand', 's_surge_dead', 's_surge_run1', 's_surge_run2', 's_surge_stand', 's_surge_front', 's_gale_front', 's_solar_front', 's_surge_frun1', 's_gale_frun1', 's_solar_frun1', 's_surge_frun2', 's_gale_frun2', 's_solar_frun2', 's_surge_fdead', 's_gale_fdead', 's_solar_fdead', 'sh_1', 'sh_2', 'sh_break', 'st_cloud', 'st_rain', 'st_splash', 'st_vortex', 't_gale', 't_gale_dead', 't_gale_hit', 't_solar', 't_solar_dead', 't_solar_hit', 't_surge', 't_surge_dead', 't_surge_hit', 'ui_card', 'ui_divider', 'ui_fuel', 'ui_hp_off', 'ui_hp_on', 'ui_score', 'ui_vgauge', 'x_b1', 'x_b2', 'x_b3', 'x_b4', 'x_b5', 'x_b6', 'x_b7', 'x_b8', 'x_s1', 'x_s2', 'x_s3', 'x_s4', 'x_s5', 'x_s6', 'x_s7', 'x_s8'], V2_JPG = ['bg_enemy', 'bg_mine', 'keyart', 'res_gale_lose', 'res_gale_win', 'res_solar_lose', 'res_solar_win', 'res_surge_lose', 'res_surge_win', 'solar_rays', 'tile_g00', 'tile_g01', 'tile_g02', 'tile_g03', 'tile_g04', 'tile_g05', 'tile_g06', 'tile_g07', 'tile_g08', 'tile_g09', 'tile_g10', 'tile_g11', 'tile_g12', 'tile_g13', 'tile_g14', 'tile_g15', 'tile_r00', 'tile_r01', 'tile_r02', 'tile_r03', 'tile_r04', 'tile_r05', 'tile_r06', 'tile_r07', 'tile_r08', 'tile_r09', 'tile_r10', 'tile_r11', 'tile_r12', 'tile_r13', 'tile_r14', 'tile_r15', 'title'], v2n = 0;
+  var V2 = {}, V2_PNG = ['b_bonus', 'b_fuel', 'b_inf', 'b_missile', 'b_plain', 'b_scout', 'ban_gold', 'ban_green', 'ban_red', 'bolt1', 'bolt2', 'bolt3', 'bolt_flash', 'btn_inf_off', 'btn_inf_on', 'btn_guide_on', 'btn_guide_off', 'btn_sound_on', 'btn_sound_off', 'btn_reroll_on', 'btn_reroll_off', 'btn_missile_off', 'btn_missile_on', 'btn_scout_off', 'btn_scout_on', 'cr_crack1', 'cr_crack2', 'cr_debris', 'cr_vignette', 'd_barrel', 'd_crater', 'd_pole', 'd_sandbag', 'd_trench1', 'd_trench2', 'd_trench3', 'd_wire1', 'd_wire2', 'e_gale', 'e_gale_dead', 'e_gale_hit', 'e_solar', 'e_solar_dead', 'e_solar_hit', 'e_surge', 'e_surge_dead', 'e_surge_hit', 'em_down', 'em_top', 'em_up', 'f_gale', 'f_gale_glow', 'f_solar', 'f_solar_glow', 'f_surge', 'f_surge_glow', 'fx_dust1', 'fx_dust2', 'fx_flash1', 'fx_flash2', 'fx_smoke', 'fx_smoke2', 'icon_1024', 'icon_180', 'icon_64', 'm_down', 'm_top', 'm_up', 'o_bad', 'o_dot', 'o_ok', 'o_sel', 'p_gale', 'p_gale_crash', 'p_solar', 'p_solar_crash', 'p_surge', 'p_surge_crash', 's_gale_dead', 's_gale_run1', 's_gale_run2', 's_gale_stand', 's_solar_dead', 's_solar_run1', 's_solar_run2', 's_solar_stand', 's_surge_dead', 's_surge_run1', 's_surge_run2', 's_surge_stand', 's_surge_front', 's_gale_front', 's_solar_front', 's_surge_frun1', 's_gale_frun1', 's_solar_frun1', 's_surge_frun2', 's_gale_frun2', 's_solar_frun2', 's_surge_fdead', 's_gale_fdead', 's_solar_fdead', 'sh_1', 'sh_2', 'sh_break', 'st_cloud', 'st_rain', 'st_splash', 'st_vortex', 't_gale', 't_gale_dead', 't_gale_hit', 't_solar', 't_solar_dead', 't_solar_hit', 't_surge', 't_surge_dead', 't_surge_hit', 'ui_card', 'ui_divider', 'ui_fuel', 'ui_hp_off', 'ui_hp_on', 'ui_score', 'ui_vgauge', 'x_b1', 'x_b2', 'x_b3', 'x_b4', 'x_b5', 'x_b6', 'x_b7', 'x_b8', 'x_s1', 'x_s2', 'x_s3', 'x_s4', 'x_s5', 'x_s6', 'x_s7', 'x_s8'], V2_JPG = ['bg_enemy', 'bg_mine', 'keyart', 'res_gale_lose', 'res_gale_win', 'res_solar_lose', 'res_solar_win', 'res_surge_lose', 'res_surge_win', 'solar_rays', 'tile_g00', 'tile_g01', 'tile_g02', 'tile_g03', 'tile_g04', 'tile_g05', 'tile_g06', 'tile_g07', 'tile_g08', 'tile_g09', 'tile_g10', 'tile_g11', 'tile_g12', 'tile_g13', 'tile_g14', 'tile_g15', 'tile_r00', 'tile_r01', 'tile_r02', 'tile_r03', 'tile_r04', 'tile_r05', 'tile_r06', 'tile_r07', 'tile_r08', 'tile_r09', 'tile_r10', 'tile_r11', 'tile_r12', 'tile_r13', 'tile_r14', 'tile_r15', 'title'], v2n = 0;
   V2_PNG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; v2n++; applySkin(); }; i.src = 'assets/v2/' + n + '.png?v=2'; });
   V2_JPG.forEach(function (n) { var i = new Image(); i.onload = function () { V2[n] = i; }; i.src = 'assets/v2/' + n + '.jpg?v=1'; });
   function oppFacKey() { var o = (window.NET && NET.opp && NET.opp()) || {}; return FAC[o.fac] ? o.fac : (G && G.oppFacGuess) || 'gale'; }
@@ -128,7 +128,7 @@
     groundImg = null;
     G.tray = [makePiece(), makePiece(), makePiece()];      // 모드가 정해진 뒤 다시 뽑음(대전이면 보병 자원 포함)
     if (!G.vs) spawnFront();
-    calcReach(); applySkin(); if (G.vs) G.intro = { at: t };   /* 매 판 시작: 이기는 방법 안내 */
+    calcReach(); applySkin();
   }
   function addEnemyInf(x) {                               // 대전: 상대가 보낸 보병이 내 안개 구역에 선다(열은 좌우 반전, 같은 열이면 뒤로 쌓임)
     var xm = COLS - 1 - x, d = 1;
@@ -646,7 +646,7 @@
       if (IMG.fog_a && IMG.fog_b) { ctx.globalAlpha = 0.75 * fa; for (var fi = 0; fi < 8; fi++) { var fim = fi % 2 ? IMG.fog_a : IMG.fog_b, fw = W * (0.6 + (fi % 3) * 0.15), fx0 = ((fi * 173 + t / (50 + fi * 9)) % (W + fw)) - fw / 2, fy0 = EY + 10 + ((fi * 67) % Math.max(30, fogH() - 20)); ctx.drawImage(fim, fx0 - fw / 2, fy0 - fw * 0.22, fw, fw * 0.45); } }
       ctx.restore();
       if (clear > 0) { ctx.save(); ctx.font = '800 13px Black Han Sans, Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; var stx = '정찰 중 — 적진이 보인다 ' + Math.ceil((G.scoutUntil - t) / 1000) + 's'; ctx.globalAlpha = clear; ctx.strokeText(stx, W / 2, EY + 4); ctx.fillStyle = '#c8f5b0'; ctx.fillText(stx, W / 2, EY + 4); ctx.restore(); }
-      else { ctx.save(); ctx.font = '700 12px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(220,230,220,.55)'; ctx.fillText('안개 — 정찰기를 띄우면 적 탱크와 뒷줄이 보인다', W / 2, EY + 14); ctx.restore(); }
+      else { ctx.save(); ctx.font = '700 12px Do Hyeon, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(220,230,220,.55)'; /* 안내 글씨 없음 */ ctx.restore(); }
     }
     if (plane && !G.vs) {                                                    // 정찰기 아래는 숲이 또렷하게(서치라이트)
       ctx.save(); ctx.beginPath(); ctx.rect(0, EY, W, fogH()); ctx.clip();
@@ -983,12 +983,20 @@
     if (OFFX > 0) { ctx.fillStyle = '#0b0d0a'; ctx.fillRect(-OFFX, -OFFY, OFFX, HL); ctx.fillRect(WT, -OFFY, OFFX + 2, HL); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0, cx = x0 + PW / 2;
     var gbH = Math.max(34, Math.min(56, EY + OFFY - 8)), gbY = Math.max(-OFFY + 4, EY - gbH - 4);   /* 상대 카드 위 빈 칸: 가이드(HOW TO PLAY) 켜기/끄기 */
-    TGL = TGL || {}; TGL.gd = { x: x0 + 6, y: gbY, w: PW - 12, h: gbH }; var gon = true, gb2 = TGL.gd;
-    if (V2.btn_guide_on && V2.btn_guide_off) ctx.drawImage(gon ? V2.btn_guide_on : V2.btn_guide_off, gb2.x, gb2.y, gb2.w, gb2.h);
-    else { var gg8 = ctx.createLinearGradient(0, gb2.y, 0, gb2.y + gb2.h); gg8.addColorStop(0, gon ? '#ffe284' : '#5e6152'); gg8.addColorStop(1, gon ? '#e8a21a' : '#33362c'); ctx.save(); if (gon) { ctx.shadowColor = 'rgba(255,212,81,' + (0.5 + 0.4 * Math.sin(t / 300)) + ')'; ctx.shadowBlur = 12; } rr(gb2.x, gb2.y, gb2.w, gb2.h, 10); ctx.fillStyle = gg8; ctx.fill(); ctx.restore(); ctx.strokeStyle = gon ? '#fff2a8' : '#777'; ctx.lineWidth = 2; rr(gb2.x, gb2.y, gb2.w, gb2.h, 10); ctx.stroke(); }
-    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; function fitTxt(tx, max, sz, wt, fam) { var z = sz; do { ctx.font = wt + ' ' + z + 'px ' + fam; if (ctx.measureText(tx).width <= max) break; z--; } while (z > 8); }
-    fitTxt('💡 HOW TO PLAY', gb2.w - 12, Math.round(gb2.h * 0.36), '800', 'Black Han Sans, Do Hyeon, system-ui'); ctx.fillStyle = gon ? '#2a1a00' : '#bbb'; ctx.fillText('💡 HOW TO PLAY', gb2.x + gb2.w / 2, gb2.y + gb2.h * 0.36);
-    fitTxt('이기는 방법 보기', gb2.w - 12, Math.round(gb2.h * 0.3), '700', 'Do Hyeon, system-ui'); ctx.fillStyle = '#5a3b00'; ctx.fillText('이기는 방법 보기', gb2.x + gb2.w / 2, gb2.y + gb2.h * 0.73); ctx.restore();
+    TGL = TGL || {}; TGL.gd = null; TGL.spk = { x: x0 + 6, y: gbY, w: PW - 12, h: gbH }; var son = !muted(), sb2 = TGL.spk;   /* 상대 카드 위: 소리 켜기/끄기 */
+    if (V2.btn_sound_on && V2.btn_sound_off) ctx.drawImage(son ? V2.btn_sound_on : V2.btn_sound_off, sb2.x, sb2.y, sb2.w, sb2.h);
+    else { var gg9 = ctx.createLinearGradient(0, sb2.y, 0, sb2.y + sb2.h); gg9.addColorStop(0, son ? '#3a3220' : '#2a2c24'); gg9.addColorStop(1, son ? '#1a160c' : '#15170f'); rr(sb2.x, sb2.y, sb2.w, sb2.h, 10); ctx.fillStyle = gg9; ctx.fill();
+      var gb9 = ctx.createLinearGradient(0, sb2.y, 0, sb2.y + sb2.h); gb9.addColorStop(0, son ? '#fff0a0' : '#8a8a80'); gb9.addColorStop(0.5, son ? '#d9a530' : '#55584c'); gb9.addColorStop(1, son ? '#8a5a10' : '#3a3c34'); ctx.strokeStyle = gb9; ctx.lineWidth = 3; rr(sb2.x + 1.5, sb2.y + 1.5, sb2.w - 3, sb2.h - 3, 9); ctx.stroke();
+      [[0.12, 0.25], [0.88, 0.25], [0.12, 0.75], [0.88, 0.75]].forEach(function (q) { ctx.fillStyle = son ? '#e6b84a' : '#666'; ctx.beginPath(); ctx.arc(sb2.x + sb2.w * q[0], sb2.y + sb2.h * q[1], 2.2, 0, 7); ctx.fill(); }); }
+    (function () {                                               /* 스피커 그림(선으로 직접) */
+      var ic = Math.min(sb2.h * 0.62, sb2.w * 0.3), cx9 = sb2.x + sb2.w / 2 - ic * 0.25, cy9 = sb2.y + sb2.h / 2, col = son ? '#ffd451' : '#888';
+      ctx.save(); if (son) { ctx.shadowColor = 'rgba(255,212,81,.7)'; ctx.shadowBlur = 8; } ctx.fillStyle = col; ctx.beginPath();
+      ctx.moveTo(cx9 - ic * 0.5, cy9 - ic * 0.18); ctx.lineTo(cx9 - ic * 0.22, cy9 - ic * 0.18); ctx.lineTo(cx9 + ic * 0.12, cy9 - ic * 0.46); ctx.lineTo(cx9 + ic * 0.12, cy9 + ic * 0.46); ctx.lineTo(cx9 - ic * 0.22, cy9 + ic * 0.18); ctx.lineTo(cx9 - ic * 0.5, cy9 + ic * 0.18); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, ic * 0.09); ctx.lineCap = 'round';
+      if (son) { [0.3, 0.52, 0.74].forEach(function (r, k) { ctx.globalAlpha = 1 - k * 0.2; ctx.beginPath(); ctx.arc(cx9 + ic * 0.12, cy9, ic * r, -0.75, 0.75); ctx.stroke(); }); }
+      else { var xx = cx9 + ic * 0.5; ctx.strokeStyle = '#ff6a5a'; ctx.beginPath(); ctx.moveTo(xx - ic * 0.2, cy9 - ic * 0.2); ctx.lineTo(xx + ic * 0.2, cy9 + ic * 0.2); ctx.moveTo(xx + ic * 0.2, cy9 - ic * 0.2); ctx.lineTo(xx - ic * 0.2, cy9 + ic * 0.2); ctx.stroke(); }
+      ctx.restore();
+    })();
     var top0 = EY + 4, bot0 = OY - 8, avail = bot0 - top0, inner = PW - 24;   // 패널 쓸 수 있는 세로 (교체 버튼은 바닥 띠에)
     ULTB = null;
     var ttl = 28;                                                // 제목 띠 높이. 카드 높이는 내용물 크기에서 계산하고 남는 세로는 전선 게이지가 가져감
@@ -1093,10 +1101,8 @@
     // 진격 타이머
     var left = Math.max(0, G.nextAdv - t), p = left / advMs(t);
     var barH = G.vs ? 12 : 6; ctx.fillStyle = '#111'; ctx.fillRect(0, TOP - barH, W, barH); ctx.fillStyle = left < 6000 ? '#ff3b3b' : '#9bbd55'; ctx.fillRect(0, TOP - barH, W * p, barH); if (G.vs) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(0, TOP - barH, W * p, 3); }
-    var tb = Math.max(30, Math.min(44, TOP - barH - 4)), ty0 = (TOP - barH - tb) / 2; TGL = TGL || {}; TGL.snd = { x: 6, y: ty0, w: tb * 1.7, h: tb };   /* 게임 안: 소리 켜기/끄기(크게) */
-    (function () { var b = TGL.snd, on = !muted(); ctx.save(); var gs = ctx.createLinearGradient(0, b.y, 0, b.y + b.h); gs.addColorStop(0, on ? '#ffe284' : '#5e6152'); gs.addColorStop(1, on ? '#e8a21a' : '#33362c'); rr(b.x, b.y, b.w, b.h, 8); ctx.fillStyle = gs; ctx.fill(); ctx.strokeStyle = on ? '#fff2a8' : '#777'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.font = Math.round(b.h * 0.5) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(on ? '🔊' : '🔇', b.x + b.w * 0.34, b.y + b.h / 2 + 1); ctx.font = '800 ' + Math.round(b.h * 0.3) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = on ? '#2a1a00' : '#ccc'; ctx.fillText(on ? 'ON' : 'OFF', b.x + b.w * 0.74, b.y + b.h / 2 + 1); ctx.restore(); })();
-    if (G.vs && G.wave) { ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('전투 ' + G.wave, 14 + tb * 1.7, (TOP - barH) / 2); ctx.restore(); }
+    TGL = TGL || {}; TGL.snd = null;
+    if (G.vs && G.wave) { ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '800 14px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = '#ffd451'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText('전투 ' + G.wave, 8, (TOP - barH) / 2); ctx.restore(); }
     ctx.textAlign = G.vs ? 'right' : 'center'; ctx.font = '800 ' + (G.vs ? 17 : 13) + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.fillStyle = left < 6000 && G.vs ? '#ffb3a8' : '#fff'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(G.sweep ? '적군 돌파!' : G.vs ? ('교전까지 ' + Math.ceil(Math.max(0, left) / 1000) + 's') : ('적 진격까지 ' + Math.ceil(left / 1000) + 's (' + (advMs(t) / 1000) + '초 간격)  ·  적 병사 ' + G.soldiers.length), G.vs ? W - 8 : W / 2, G.vs ? (TOP - barH) / 2 : 10); ctx.shadowBlur = 0;
   }
   function traySlot(i) { var w = (W - 40) / 3 - 10; return { x: 20 + i * (w + 15), y: TY + 8, w: w, h: TRAY - 16 }; }
@@ -1120,7 +1126,7 @@
   cv.addEventListener('pointerdown', function (ev) {
     if (!G || G.over || G.sweep || G.collapsing) return;
     var p = pos(ev); if (G.demo) { if (window.DEMO) DEMO.tap(p); return; }
-    if (TGL && TGL.snd && inB(TGL.snd, p)) { setMute(!muted()); return; }
+    if (TGL && TGL.spk && inB(TGL.spk, p)) { setMute(!muted()); return; }
     if (TGL && TGL.gd && inB(TGL.gd, p)) { showIntro(); return; }
     if (false) { setGuide(!guideOn()); G.fx.push({ t: 'pop', text: guideOn() ? '💡 가이드 켜짐' : '💡 가이드 꺼짐', x: W / 2, y: EY + 40, at: now(), big: false, col: '#ffd451' }); return; }
     if (G.intro && INTROB) { G.intro = null; INTROB = null; return; }   /* 시작 안내 닫기 */
@@ -1175,7 +1181,7 @@
     ovScore.textContent = G.score; ovScore.classList.remove('hidden');
     startBtn.textContent = 'RETRY'; ov.classList.remove('hidden');
   }
-  startBtn.addEventListener('click', function () { ov.classList.add('hidden'); if (window.BOT) { BOT.start(); } else { newGame(false); } sfx('go'); sfx('ambientStart'); });
+  startBtn.addEventListener('click', function () { ov.classList.add('hidden'); try { SFX.bgmStart(); } catch (e) { } window.tankCountdown(function () { if (window.BOT) { BOT.start(); } else { newGame(false); } sfx('go'); sfx('ambientStart'); }); });
   document.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { sfx('click'); }); });
   function loop() { var t = now(); if (G) { update(t); draw(t); } requestAnimationFrame(loop); }
   setInterval(function () { if (document.hidden && G && G.vs && !G.over) update(now()); }, 250);   /* 화면이 숨겨져도(다른 앱 잠깐 보기) 대전 진행은 멈추지 않게 */
