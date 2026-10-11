@@ -1,0 +1,19 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>소리 시험</title>
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0b0d0a;color:#f3efe0;font:17px 'Do Hyeon',system-ui;padding:16px;max-width:520px;margin:0 auto}h1{color:#ffd451;font-size:22px}
+button{display:block;width:100%;margin:10px 0;font:19px 'Do Hyeon';padding:16px;border-radius:12px;border:2px solid #ffcf4a;background:linear-gradient(#ffe284,#e8a21a);color:#2a1a00}
+button.b{background:#1b1d16;color:#ffd451}.d{font-size:14px;color:#8a9477;margin:-4px 0 8px}</style></head><body>
+<h1>보병 소리 시험</h1><p class="d">하나씩 눌러서 들어 보세요. 게임에서 "북소리"로 들린 게 몇 번인지 알려 주세요.</p>
+<button id="a">① 보병 출격 소리 (고르신 소리)</button><p class="d">보병 투입 버튼 누를 때 나는 소리 — 장전 찰칵 + 브라스 두 음</p>
+<button id="b" class="b">② 교전 10초 전 경고 북</button><p class="d">최전방에 보병이 있으면 교전 10초 전부터 2초마다 울리던 소리</p>
+<button id="c" class="b">③ 적 보병 등장 소리</button><p class="d">상대가 보병을 보냈을 때</p>
+<button id="d" class="b">④ 교전 소리</button><p class="d">30초마다 교전할 때</p>
+<p id="st" class="d"></p>
+<script src="sfx.js?v=37"></script>
+<script>
+var st=document.getElementById('st');
+document.getElementById('a').onclick=function(){var x=new Audio('assets/sfx/deploy_chime.mp3?v=3');x.play().then(function(){st.textContent='① 재생: deploy_chime.mp3'}).catch(function(e){st.textContent='재생 실패 '+e})};
+document.getElementById('b').onclick=function(){SFX.drum();st.textContent='② 재생: 교전 경고 북(합성음)'};
+document.getElementById('c').onclick=function(){SFX.inf();st.textContent='③ 재생: 적 보병 등장(합성음)'};
+document.getElementById('d').onclick=function(){SFX.clash();st.textContent='④ 재생: 교전'};
+</script></body></html>
