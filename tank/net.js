@@ -218,7 +218,7 @@ window.REALNET = window.NET = (function () {
     var rf = window.__tank.FAC && window.__tank.FAC[G.fac] ? G.fac : 'solar'; $('result').style.backgroundImage = 'linear-gradient(rgba(8,10,6,.35), rgba(8,10,6,.75)), url(assets/v2/res_' + rf + '_' + (r === 'win' ? 'win' : 'lose') + '.jpg)';   // 세력별 결과 배경
     $('resTitle').textContent = r === 'win' ? 'VICTORY' : r === 'lose' ? 'DEFEAT' : 'DRAW';
     $('resTitle').className = r;
-    var cpu = window.NET === window.BOT; lastScore = G.score | 0; subDone = false; $('sub').style.display = cpu && lastScore > 0 ? '' : 'none'; $('subMsg').textContent = ''; $('subBtn').disabled = false; $('subName').value = name || '';
+    var cpu = window.NET === window.BOT; lastScore = G.score | 0; subDone = false; $('sub').style.display = cpu && lastScore > 0 ? '' : 'none'; $('subMsg').textContent = ''; $('subBtn').disabled = false; $('subName').value = name || ''; $('resRank').style.display = cpu ? '' : 'none'; if (cpu) loadRank('resRank');
     $('resText').textContent = detail + ' · 점수 ' + G.score.toLocaleString('en-US') + ' · 지운 줄 ' + G.lines + ' · 격파 ' + G.kills + ' · 보낸 보병 ' + G.sent;
     show('result');
   }
@@ -236,13 +236,14 @@ window.REALNET = window.NET = (function () {
   // ---------- 스코어보드 (CPU 대전 점수) ----------
   var RANK_COL = 'tank_scores_test', lastScore = 0, subDone = false;
   function fs() { init(); return app.firestore(); }
-  function openRank() {
-    if (!init()) return; show('rank'); $('rankList').textContent = '불러오는 중…';
-    login().then(function () { return fs().collection(RANK_COL).orderBy('score', 'desc').limit(30).get(); }).then(function (q) {
+  function openRank() { show('rank'); loadRank('rankList'); }
+  function loadRank(box) {                                     /* TOP 10 */
+    if (!init()) return; $(box).textContent = '불러오는 중…';
+    login().then(function () { return fs().collection(RANK_COL).orderBy('score', 'desc').limit(10).get(); }).then(function (q) {
       var html = '', i = 0; q.forEach(function (d) { var v = d.data(); i++; var f = (window.DG_FAC_BY_ID || {})[v.faction] || 'solar';
         html += '<div class="rk' + (v.uid === uid ? ' me' : '') + '"><span class="n">' + i + '</span><img src="assets/v2/f_' + f + '.png" alt=""><span>' + esc(v.name) + '</span><span class="s">' + (v.score | 0).toLocaleString('en-US') + '</span></div>'; });
-      $('rankList').innerHTML = html || '<div class="pl dim">아직 기록이 없어요. 첫 기록을 세워 보세요!</div>';
-    }).catch(function (e) { $('rankList').textContent = '불러오지 못했어요: ' + (e.message || e); });
+      $(box).innerHTML = html || '<div class="pl dim">아직 기록이 없어요. 첫 기록을 세워 보세요!</div>';
+    }).catch(function (e) { $(box).textContent = '불러오지 못했어요: ' + (e.message || e); });
   }
   function submitScore() {
     if (subDone || !lastScore) return; var nm = ($('subName').value || '').trim().slice(0, 12); if (!nm) { $('subMsg').textContent = '이름을 넣어 주세요.'; return; }
@@ -253,7 +254,7 @@ window.REALNET = window.NET = (function () {
       b.set(fs().collection('users').doc(uid), { last: ts });
       b.set(fs().collection(RANK_COL).doc(), { name: nm, score: Math.min(1000000, lastScore | 0), date: date, flag: '', faction: f ? f.id : 3, uid: uid });
       return b.commit();
-    }).then(function () { subDone = true; $('subMsg').textContent = '등록 완료! 🏆 스코어보드에서 확인하세요.'; $('sub').style.display = 'none'; })
+    }).then(function () { subDone = true; $('subMsg').textContent = '등록 완료!'; $('sub').style.display = 'none'; loadRank('resRank'); })
       .catch(function (e) { $('subBtn').disabled = false; $('subMsg').textContent = (String(e.message || e).indexOf('permission') >= 0 ? '잠시 후 다시 시도해 주세요(20초에 한 번).' : '등록 실패: ' + (e.message || e)); });
   }
   // ---------- 버튼 ----------

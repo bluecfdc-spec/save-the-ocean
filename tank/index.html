@@ -158,7 +158,7 @@
 <!-- 스코어보드 -->
 <div id="rank" class="ov hidden">
   <h2>🏆 스코어보드</h2>
-  <p class="hint">CPU 대전 최고 점수 (테스트 기간)</p>
+  <p class="hint">CPU 대전 TOP 10</p>
   <div id="rankList" class="ranklist">불러오는 중…</div>
   <button id="rankBack" class="btn sub">뒤로</button>
 </div>
@@ -205,6 +205,7 @@
   <p id="resText"></p>
   <div id="sub" class="row" style="display:none"><input id="subName" maxlength="12" placeholder="이름"><button id="subBtn" class="btn sub">점수 등록</button></div>
   <p id="subMsg" class="hint"></p>
+  <div id="resRank" class="ranklist" style="display:none;max-height:38vh"></div>
   <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
 </div>
 
@@ -217,8 +218,8 @@
 })();
 </script>
 <script src="sfx.js?v=37"></script>
-<script src="tank.js?v=91"></script>
-<script src="net.js?v=42"></script>
+<script src="tank.js?v=92"></script>
+<script src="net.js?v=43"></script>
 <script src="bot.js?v=44"></script>
 <script src="demo.js?v=4"></script>
 <script>

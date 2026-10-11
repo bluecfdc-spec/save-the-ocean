@@ -682,7 +682,7 @@
     if (cj) { if (V2['s_' + oe + '_frun2']) IMG.u_soldier_e = V2['s_' + oe + (rf ? '_frun2' : '_frun1')]; if (V2['s_' + mf2 + '_run2']) IMG.u_soldier_p = V2['s_' + mf2 + (rf ? '_run2' : '_run1')]; }   /* 교전: 양쪽 달리기 2프레임 */
     if (scouting || G.vs) G.soldiers.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return;   /* 최전방은 늘 보이고, 뒷줄은 정찰할 때만 */ var ss = G.vs ? S * 0.8 : FS * 1.05; ctx.save(); ctx.globalAlpha = (!G.vs || scouting || cj) ? 1 : 0.45;   /* 안개 속 최전방 적: 흐릿 */ /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만. 크기는 내 보병과 같게, 흔들림 없음 */ var ejx = cj * (Math.random() - 0.5) * 6; drawSoldier(BX(e.x) + (S - ss) / 2 + ejx, slotY(e.d) - ss / 2, ss, false, slotY(e.d) + FS * 0.45); if (t < (G.oppSolarUntil || 0)) drawSolDome(BX(e.x) + S / 2 + ejx, slotY(e.d) + FS * 0.45, t); ctx.restore(); });
     if (G.vs) {
-      G.mySol.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return;
+      G.mySol.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return;   /* 화면 위(최전방)부터 그려서 아래(뒷줄)가 위에 겹침 */
         var dx = BX(e.x) + (S - ss) / 2, dy = rowC(ry) - ss / 2, bob = 0;
         if (e.runAt && t - e.runAt < 900) {                                                    // 탱크에서 튀어나와 최전방까지 달려감
           var rp = t - e.runAt, sx = BX(e.fromX) + (S - ss) / 2, sy = BYY(e.fromY) + (S - ss) / 2;
