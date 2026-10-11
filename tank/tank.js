@@ -736,7 +736,7 @@
     if (G.reroll <= 0) { sfx('bad'); G.fx.push({ t: 'pop', text: '교체 횟수 없음', x: W / 2, y: TY + TRAY / 2, at: now(), big: false, col: '#ff8a7a' }); return; }
     G.reroll--; G.tray = [makePiece(), makePiece(), makePiece()]; sfx('pick'); G.fx.push({ t: 'pop', text: '블록 교체 (남은 ' + G.reroll + '회)', x: W / 2, y: TY + TRAY / 2, at: now(), big: false, col: '#ffd451' }); checkFit();
   }
-  var PANEL_STYLE = (function () { try { var q = /[?&]panel=([ABC])/.exec(location.search); if (q) { localStorage.setItem('tank_panel', q[1]); return q[1]; } return localStorage.getItem('tank_panel') || 'A'; } catch (e) { return 'A'; } })();   /* ?panel=B 로 시안 고르기 */
+  var PANEL_STYLE = (function () { try { var q = /[?&]panel=([ABC])/.exec(location.search); if (q) { localStorage.setItem('tank_panel', q[1]); return q[1]; } return localStorage.getItem('tank_panel') || 'C'; } catch (e) { return 'A'; } })();   /* ?panel=B 로 시안 고르기 */
   function drawReroll(t) {                                        // 블록 교체 버튼: 패널 맨 아래(바닥 버튼 띠와 같은 높이)
     var bw = PW - 16, bh = Math.min(BBAR + 12, bw / 2.44, 80), bx = W + 8, by = OY + (BBAR - bh) / 2; REROLLB = { x: bx, y: by, w: bw, h: bh };
     var on = G.reroll > 0 && !G.over;
