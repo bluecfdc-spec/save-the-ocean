@@ -5,7 +5,7 @@ window.BOT = (function () {
   'use strict';
   var T = window.__tank, $ = function (id) { return document.getElementById(id); };
   var ROWS = 9, SCOUT_MS = 5000; function COLSf() { return T.get() ? T.get().board[0].length : 9; } var COLS = 9;
-  var bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal', wave = 1;
+  var vicPending = false, bot = null, me = null, active = false, think = null, clashTimer = null, known = null, nextTick = 0, level = 'normal', wave = 1;
   var SPEED = { easy: 3400, normal: 2600, hard: 1600 };   // CPU 한 수 간격(ms) — 처음엔 예전의 절반 속도
   function withBot(fn) { var real = T.get(); T.set(bot); try { return fn(); } finally { T.set(real); } }
   function rnd(n) { return Math.floor(Math.random() * n); }
@@ -15,7 +15,7 @@ window.BOT = (function () {
   function start() {
     stop(); active = true; window.NET = BOT;
     T.newGame(true); bot = T.get(); COLS = bot.board[0].length; bot.bot = true; bot.name = 'CPU'; bot.fac = ['surge', 'gale', 'solar'][rnd(3)]; bot.ult = 0; bot.shield = 0;   // CPU 도 0에서 시작   // 먼저 만든 판이 봇, 두 번째가 나. 세력은 랜덤
-    T.newGame(true); me = T.get(); wave = 1; me.wave = 1;
+    vicPending = false; T.newGame(true); me = T.get(); wave = 1; me.wave = 1;
     known = null; nextTick = now() + 30000;
     T.applyLine(0, 30000);
     syncToPlayer();
@@ -24,7 +24,7 @@ window.BOT = (function () {
   }
   function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * Math.max(0, wave - 2))); }   /* 스테이지 1·2는 기본 속도(한 수 2.6초), 3부터 20%씩 빨라짐 */
   function nextWave(kind) {                                 /* CPU 무한 모드: 탱크 격파(tank) 또는 적진 점령(push) → 보너스 + VICTORY 화면 → '다음 스테이지' 누르면 이어서 */
-    if (!active) return; var bonus = 1000 * (wave + 1);
+    if (!active || vicPending) return; vicPending = true; var bonus = 1000 * (wave + 1);   /* 승리는 한 번만 (밀어붙임·탱크 격파가 겹쳐도) */
     T.addScore(bonus, T.L().W / 2, T.L().EY + 60, kind === 'push' ? '적진 점령!' : 'CPU 탱크 격파!');
     clearInterval(think); clearInterval(clashTimer); me.freezeUntil = now() + 1e9; me.sel = false; me.drag = null; me.dragInf = null; me.aim = null;   /* 승리 화면 동안 전부 정지 */
     var stg = wave;
@@ -38,7 +38,7 @@ window.BOT = (function () {
     }, 1300);
   }
   function contWave(kind) {                                /* 다음 스테이지: 탱크 격파든 적진 점령이든 처음부터 새 판 (점수만 이어짐, CPU 더 빨라짐) */
-    wave++; me.wave = wave; clearInterval(think); think = setInterval(step, speedMs()); known = null;
+    vicPending = false; wave++; me.wave = wave; clearInterval(think); think = setInterval(step, speedMs()); known = null;
     T.resetRound(); withBot(function () { T.resetRound(); });
     bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.ult = Math.min(bot.ult, 5); bot.tank.x = rnd(COLS); bot.tank.y = ROWS - 1; bot.tank.fx = bot.tank.x; bot.tank.fy = bot.tank.y; bot.tank.path = [];
     withBot(function () { T.fns.calcReach(); }); T.applySkin();
@@ -148,7 +148,7 @@ window.BOT = (function () {
       bot.collapsing = false; T.notice('💥 CPU 보드 붕괴! 전선 전진'); }, 4700);
   }
   function shiftLine(delta) {                              // 내 기준 delta(음수 = 내가 전진). 봇 쪽은 반대로
-    if (!active) return;
+    if (!active || vicPending) return;
     var L = Math.max(-9, Math.min(9, me.adv + delta)); T.applyLine(L, Math.max(1000, nextTick - now()));   /* -9 = 적진 끝까지 점령 */
     var badv = -L;
     withBot(function () { if (badv > bot.adv) { for (var y = Math.max(0, bot.adv); y < Math.min(ROWS, badv); y++) for (var x = 0; x < COLS; x++) bot.board[y][x] = 0; } bot.adv = badv; T.fns.calcReach(); });
@@ -171,7 +171,7 @@ window.BOT = (function () {
   }
   // ---------- 전선 교전 (방장 역할) ----------
   function clash() {
-    if (!active || !me || me.over || bot.over || me.roundFx) return;
+    if (!active || vicPending || !me || me.over || bot.over || me.roundFx) return;
     var mine = me.mySol.filter(function (e) { return e.d === 1; }).length, theirs = bot.mySol.filter(function (e) { return e.d === 1; }).length, diff = mine - theirs;
     var delta = diff === 0 ? 0 : (Math.abs(diff) >= 3 ? 2 : 1) * (diff > 0 ? -1 : 1);        // 내 기준: 음수 = 내가 전진
     T.clash(mine, theirs, delta); nextTick = now() + 30000;
@@ -182,7 +182,7 @@ window.BOT = (function () {
     if (!active) return; var mx = mirror(col == null ? x : col);   /* col: 실제로 떨어지는 열(폭풍우면 랜덤) */
     known = { x: x, y: y, t: now() };                                                 // 사람과 똑같이: 내가 쏘면 내 탱크 위치가 상대(봇)에게 노출된다
     setTimeout(function () {
-      if (!active || bot.over) return;
+      if (!active || bot.over || vicPending) return;
       var v = null; bot.mySol.forEach(function (e) { if (e.x === mx && (!v || e.d < v.d)) v = e; });
       if (v && v.sh) { v.sh = 0; T.notice('CPU 태양 방패가 보병을 지켰다'); }
       else if (v) { bot.mySol.splice(bot.mySol.indexOf(v), 1); T.notice('적 보병 격파!'); }
