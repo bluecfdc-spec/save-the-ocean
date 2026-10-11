@@ -23,18 +23,30 @@ window.BOT = (function () {
     clashTimer = setInterval(clash, 30000);
   }
   function speedMs() { return Math.max(500, SPEED[level] / (1 + 0.2 * (wave - 1))); }   /* 전투마다 CPU 판단 속도 0.2배씩 빨라짐 */
-  function nextWave(kind) {                                 /* CPU 무한 모드: 탱크 격파(tank) 또는 적진 점령(push) → 보너스, 다음 전투 */
+  function nextWave(kind) {                                 /* CPU 무한 모드: 탱크 격파(tank) 또는 적진 점령(push) → 보너스 + VICTORY 화면 → '다음 스테이지' 누르면 이어서 */
     if (!active) return; var bonus = 1000 * (wave + 1);
     T.addScore(bonus, T.L().W / 2, T.L().EY + 60, kind === 'push' ? '적진 점령!' : 'CPU 탱크 격파!');
+    clearInterval(think); clearInterval(clashTimer); me.freezeUntil = now() + 1e9; me.sel = false; me.drag = null; me.dragInf = null; me.aim = null;   /* 승리 화면 동안 전부 정지 */
+    var stg = wave;
+    setTimeout(function () { if (!active) return;
+      $('vicStage').textContent = '스테이지 ' + stg + ' 클리어!'; $('vicBonus').textContent = '+' + bonus.toLocaleString();
+      $('vicScore').textContent = '점수 ' + (me.score || 0).toLocaleString();
+      var v = $('victory'); v.classList.remove('hidden'); v.style.animation = 'none'; [].forEach.call(v.children, function (c) { c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; });
+      try { SFX.win(); } catch (e) { }
+      $('vicNext').onclick = function () { v.classList.add('hidden'); try { SFX.bgmStart(); SFX.go(); } catch (e) { }
+        if (!active) return; me.freezeUntil = 0; clashTimer = setInterval(clash, 30000); nextTick = now() + 30000; T.applyLine(me.adv, 30000); contWave(kind); };
+    }, 1300);
+  }
+  function contWave(kind) {
     wave++; me.wave = wave; clearInterval(think); think = setInterval(step, speedMs()); known = null;
     if (kind === 'tank') {                                  /* 뒤에서 새 탱크가 등장 */
       bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.tank.x = rnd(COLS); bot.tank.y = ROWS - 1; bot.tank.fx = bot.tank.x; bot.tank.fy = bot.tank.y; bot.tank.path = [];
       withBot(function () { T.fns.calcReach(); });
-      setTimeout(function () { if (!active) return; syncToPlayer(); T.revealOpp(bot.tank.x, bot.tank.y); T.notice('다음 CPU 탱크 등장 — 전투 ' + wave + ' (더 빨라짐)'); try { SFX.warn(); } catch (e) { } }, 1200);
+      setTimeout(function () { if (!active) return; syncToPlayer(); T.revealOpp(bot.tank.x, bot.tank.y); T.notice('스테이지 ' + wave + ' 시작!'); }, 1200);
     } else {                                                /* 적진 점령: 내 보병 전멸, 탱크 전진, 새 전장 */
       var L = T.L(); me.mySol.forEach(function (e) { me.fx.push({ t: 'dead', px: T.BX(e.x) + L.S / 2, py: T.rowC(T.myRow(e.d)), at: now(), life: 1700 }); }); me.mySol = [];
-      me.roundFx = { at: now(), title: '적진 점령!', sub: '전투 ' + wave + ' — 다음 전장으로 (CPU 더 빨라짐)', onReset: function () {
-        if (!active) return; var hp = bot.tank.hp; T.resetRound(); withBot(function () { T.resetRound(); }); bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.ult = Math.min(bot.ult, 5); nextTick = now() + 30000; T.applyLine(0, 30000); syncToPlayer(); T.notice('전투 ' + wave + ' 시작'); try { SFX.go(); } catch (e) { } } };
+      me.roundFx = { at: now(), title: '스테이지 ' + wave, sub: '', onReset: function () {
+        if (!active) return; var hp = bot.tank.hp; T.resetRound(); withBot(function () { T.resetRound(); }); bot.over = false; bot.tank.hp = 3; bot.shield = 0; bot.ult = Math.min(bot.ult, 5); nextTick = now() + 30000; T.applyLine(0, 30000); syncToPlayer(); T.notice('스테이지 ' + wave + ' 시작!'); try { SFX.go(); } catch (e) { } } };
       try { SFX.retreat(); } catch (e) { }
     }
   }

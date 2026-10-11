@@ -85,14 +85,20 @@
   #count .chk { display: none; }
   #count.check .ncard { grid-template-columns: 56px 30px 1fr 52px; column-gap: 10px; font-size: 21px; white-space: nowrap; }
   #count.check .ncard img { width: 56px; height: 56px; }
-  #count.check .chk { display: block; width: 50px; height: 50px; border-radius: 12px; cursor: pointer; position: relative; padding: 0;
-    background: linear-gradient(160deg, #2a2f22, #0d0f0a); border: 2.5px solid var(--c); box-shadow: 0 0 10px rgba(var(--g),.8), inset 0 0 10px rgba(var(--g),.35), 0 3px 0 #000; animation: chkPulse 1s ease-in-out infinite; }
-  #count.check .chk::after { content: ''; position: absolute; left: 15px; top: 7px; width: 13px; height: 24px; border: solid transparent; border-width: 0 6px 6px 0; transform: rotate(45deg); }
-  #count.check .chk.on { animation: none; background: linear-gradient(160deg, #6fe04a, #2c8a18); border-color: #d8ffc4; box-shadow: 0 0 16px #7dff4a, inset 0 2px 0 rgba(255,255,255,.5), 0 3px 0 #000; }
-  #count.check .chk.on::after { border-color: #fff; filter: drop-shadow(0 1px 1px #0008); animation: tick .3s ease-out; }
+  #count.check .chk { display: block; width: 52px; height: 52px; cursor: pointer; padding: 0; border: 0; background: url(assets/v2/btn_check_off.png?v=1) center/contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,212,81,.55)); animation: chkPulse 1s ease-in-out infinite; }
+  #count.check .chk.on { animation: chkPop .3s ease-out; background-image: url(assets/v2/btn_check_on.png?v=1); filter: drop-shadow(0 0 10px #6dff3a); }
   #count.check .chk:disabled:not(.on) { opacity: .4; animation: none; }
+  @keyframes chkPop { from { transform: scale(1.35); } to { transform: none; } }
   @keyframes chkPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-  @keyframes tick { from { transform: rotate(45deg) scale(0); } to { transform: rotate(45deg) scale(1); } }
+  #victory { background: radial-gradient(ellipse at 50% 35%, rgba(255,190,60,.35), rgba(8,10,6,.92) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; gap: 10px; }
+  #vicTitle { font-family: 'Black Han Sans', sans-serif; font-size: 76px; letter-spacing: 4px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f, 0 4px 0 #5a3b00; animation: vicIn .6s cubic-bezier(.2,1.6,.4,1) both, vicGlow 1.4s ease-in-out .6s infinite alternate; }
+  #vicStage { font-family: 'Black Han Sans', sans-serif; font-size: 30px; color: #fff; text-shadow: 0 2px 0 #000, 0 0 14px #ff9a1f88; animation: vicUp .4s ease-out .35s both; }
+  #vicBonus { font-family: 'Black Han Sans', sans-serif; font-size: 52px; color: #9be37a; text-shadow: 0 0 18px #4caf2a, 0 3px 0 #000; animation: vicUp .4s ease-out .7s both; }
+  #vicScore { font-family: 'Black Han Sans', sans-serif; font-size: 34px; color: #ffe9a8; text-shadow: 0 2px 0 #000; animation: vicUp .4s ease-out 1s both; }
+  #vicNext { font-size: 28px; padding: 16px 34px; margin-top: 14px; animation: vicUp .4s ease-out 1.3s both, chkPulse 1.2s ease-in-out 1.8s infinite; }
+  @keyframes vicIn { from { opacity: 0; transform: scale(2.4); } to { opacity: 1; transform: none; } }
+  @keyframes vicUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  @keyframes vicGlow { from { filter: brightness(1); } to { filter: brightness(1.25); } }
   #count .ncard { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s, transform .35s; }
   #count .ncard.show { opacity: 1; transform: none; }
   @keyframes neon { from { filter: brightness(.94); } to { filter: brightness(1.08); } }
@@ -200,7 +206,7 @@
   <div id="plist"></div>
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 찾아서<br>폭탄으로 격파하자!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워서<br>탱크를 부수자!</div></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
@@ -208,12 +214,22 @@
 </div>
 
 <!-- 카운트다운 -->
+<link rel="preload" as="image" href="assets/v2/btn_check_on.png?v=1">
 <div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countDone"></div><div id="countNum">3</div>
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 없애서<br>아이템을 모으자!</div><button class="chk" aria-label="확인"></button></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 찾아서<br>폭탄으로 격파하자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워서<br>탱크를 부수자!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div><button class="chk" aria-label="확인"></button></div>
   </div>
+</div>
+
+<!-- CPU 스테이지 승리 -->
+<div id="victory" class="ov hidden">
+  <div id="vicTitle">VICTORY</div>
+  <div id="vicStage">스테이지 1 클리어!</div>
+  <div id="vicBonus">+2,000</div>
+  <div id="vicScore">점수 0</div>
+  <button id="vicNext" class="btn">다음 스테이지 ▶</button>
 </div>
 
 <!-- 대전 결과 -->
@@ -235,9 +251,9 @@
 })();
 </script>
 <script src="sfx.js?v=39"></script>
-<script src="tank.js?v=102"></script>
+<script src="tank.js?v=103"></script>
 <script src="net.js?v=44"></script>
-<script src="bot.js?v=46"></script>
+<script src="bot.js?v=47"></script>
 <script src="demo.js?v=4"></script>
 <script>
   window.showTut = function () { if (window.DEMO) DEMO.start(); };
