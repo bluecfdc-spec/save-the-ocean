@@ -917,16 +917,8 @@
   "name": "보병 출격 목소리 (무전기 마린 톤 3종)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [
-   "sfx/candidates/목소리_01_1_marine_1a8aa8.mp3",
-   "sfx/candidates/목소리_01_2_marine_74760f.mp3",
-   "sfx/candidates/목소리_01_3_marine_a5bd6b.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/목소리_01_1_marine_1a8aa8.mp3": "1a8aa870",
-   "sfx/candidates/목소리_01_2_marine_74760f.mp3": "74760fe7",
-   "sfx/candidates/목소리_01_3_marine_a5bd6b.mp3": "a5bd6b38"
-  },
+  "files": [],
+  "ver": {},
   "done": false,
   "hold": false
  },
