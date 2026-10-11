@@ -338,7 +338,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='51';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='52';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -706,9 +706,9 @@ const Music=(()=>{
     }
   }
   function run(){clearInterval(timer);next=ac.currentTime+.06;timer=setInterval(sched,40)}
-  // 배경음악 (Suno 'Space Rumble - Near Miss'): 처음엔 도입부부터, 그 뒤로는 13.21~48.76초 구간만 끊김 없이 반복
-  const LS=13.212,LE=48.760;let bgRaw=null,bgm=null,src=null,bgPos=0,bgT0=0,bgOff=0,rate=1,bgGain=null;
-  try{fetch('assets/bgm.mp3?v=51').then(r=>r.ok?r.arrayBuffer():null).then(b=>{bgRaw=b;dec()}).catch(()=>{})}catch(e){}
+  // 배경음악 (Suno 'Space Rumble - Near Miss'): 처음엔 도입부부터, 그 뒤로는 11.4초~1분 0.3초 구간만 끊김 없이 반복
+  const LS=11.378,LE=60.256;let bgRaw=null,bgm=null,src=null,bgPos=0,bgT0=0,bgOff=0,rate=1,bgGain=null;
+  try{fetch('assets/bgm.mp3?v=52').then(r=>r.ok?r.arrayBuffer():null).then(b=>{bgRaw=b;dec()}).catch(()=>{})}catch(e){}
   function dec(){if(!bgRaw||!ac||bgm)return;const b=bgRaw;bgRaw=null;try{ac.decodeAudioData(b,x=>{bgm=x},()=>{})}catch(e){}}
   function pos(){let p=bgOff+(ac.currentTime-bgT0)*rate;if(p>LE)p=LS+(p-LS)%(LE-LS);return p}
   function playBg(off){src=ac.createBufferSource();src.buffer=bgm;src.loop=true;src.loopStart=LS;src.loopEnd=LE;src.playbackRate.value=rate;
