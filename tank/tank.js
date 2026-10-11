@@ -128,7 +128,7 @@
     groundImg = null;
     G.tray = [makePiece(), makePiece(), makePiece()];      // 모드가 정해진 뒤 다시 뽑음(대전이면 보병 자원 포함)
     if (!G.vs) spawnFront();
-    calcReach(); applySkin();
+    calcReach(); applySkin(); if (G.vs) G.intro = { at: t };   /* 매 판 시작: 이기는 방법 안내 */
   }
   function addEnemyInf(x) {                               // 대전: 상대가 보낸 보병이 내 안개 구역에 선다(열은 좌우 반전, 같은 열이면 뒤로 쌓임)
     var xm = COLS - 1 - x, d = 1;
@@ -213,6 +213,8 @@
     G.hintQ.push({ id: id, text: text, pt: pt }); G.hintLast[id] = now();
   }
   function guideTick(t) {
+    if (G.intro && t - G.intro.at > 5200) G.intro = null;
+    return;   /* 상세 말풍선 가이드는 쓰지 않음 — 시작 안내(intro)만 */
     if (!G.vs || G.demo || G.bot || !guideOn()) return;
     var el = t - G.start; layoutBtns();
     if (el > 900) hint('blocks', '블록을 끌어다 놓아 줄을 채우면 아이템이 나와요', function () { return { x: W / 2, y: TY + 10 }; });
@@ -227,7 +229,26 @@
     if (G.hint && t - G.hint.at > 4200) G.hint = null;
     if (!G.hint && G.hintQ && G.hintQ.length && !G.roundFx) { G.hint = G.hintQ.shift(); G.hint.at = t; G.hintLast[G.hint.id] = t; }
   }
-  var HINTB = null, TGL = null;
+  var HINTB = null, TGL = null, INTROB = null;
+  function showIntro() { if (G && G.vs) G.intro = { at: now() }; }
+  function drawIntro(t) {                                       /* 게임 시작마다: 이기는 두 가지 방법 (5초, 누르면 닫힘) */
+    INTROB = null; var it = G.intro; if (!it) return; var a = t - it.at, al = Math.min(1, a / 250) * Math.min(1, (5200 - a) / 400); if (al <= 0) return;
+    var y0 = EY, h0 = HY - EY; ctx.save(); ctx.globalAlpha = al * 0.78; ctx.fillStyle = '#05070a'; ctx.fillRect(0, y0, W, h0); ctx.globalAlpha = al;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; var cy = y0 + h0 * 0.22;
+    ctx.font = '800 26px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 6; ctx.strokeStyle = '#000'; ctx.strokeText('이기는 방법 두 가지', W / 2, cy); ctx.fillStyle = '#ffd451'; ctx.fillText('이기는 방법 두 가지', W / 2, cy);
+    function card(n, y, img, l1, l2, col) {
+      var cw = W - 28, ch = 104, cx = 14, cy2 = y; ctx.fillStyle = 'rgba(20,24,16,.92)'; rr(cx, cy2, cw, ch, 14); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 3; rr(cx, cy2, cw, ch, 14); ctx.stroke();
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx + 30, cy2 + ch / 2, 20, 0, 7); ctx.fill(); ctx.fillStyle = '#1a1000'; ctx.font = '800 24px Black Han Sans, system-ui'; ctx.fillText(n, cx + 30, cy2 + ch / 2 + 1);
+      if (img) fitImg(img, cx + 86, cy2 + ch / 2, 62, 74, 1, 0);
+      ctx.textAlign = 'left'; ctx.font = '800 20px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeText(l1, cx + 128, cy2 + ch * 0.36); ctx.fillStyle = '#fff'; ctx.fillText(l1, cx + 128, cy2 + ch * 0.36);
+      ctx.font = '700 15px Do Hyeon, system-ui'; ctx.lineWidth = 3; ctx.strokeText(l2, cx + 128, cy2 + ch * 0.68); ctx.fillStyle = '#d8e8c8'; ctx.fillText(l2, cx + 128, cy2 + ch * 0.68); ctx.textAlign = 'center';
+    }
+    var pop = function (d) { return Math.min(1, Math.max(0, (a - d) / 300)); };
+    ctx.save(); ctx.globalAlpha = al * pop(250); card('1', y0 + h0 * 0.34, IMG.u_soldier_p, '최전방에 보병을 더 많이!', '30초마다 교전 — 많은 쪽이 전선을 밀어 적진 점령', '#9be37a'); ctx.restore();
+    ctx.save(); ctx.globalAlpha = al * pop(900); card('2', y0 + h0 * 0.34 + 120, IMG.u_plane, '정찰해서 적 탱크 격파!', '정찰기로 위치를 찾고, 같은 줄에서 미사일 3발', '#ffb13d'); ctx.restore();
+    ctx.font = '600 13px Do Hyeon, system-ui'; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillText('화면을 누르면 시작', W / 2, y0 + h0 * 0.34 + 250);
+    ctx.restore(); INTROB = { x: 0, y: y0, w: W, h: h0 };
+  }
   function drawHint(t) {
     HINTB = null; var h = G.hint; if (!h) return; var a = t - h.at, al = Math.min(1, a / 200) * Math.min(1, (4200 - a) / 300); if (al <= 0) return;
     var p = h.pt(); ctx.save(); ctx.globalAlpha = al;
@@ -659,7 +680,7 @@
     var cj = G.clash && t < G.clash.until ? 1 : 0;                                   // 교전 중엔 병사들이 떨림
     var keepSE = IMG.u_soldier_e, keepSP = IMG.u_soldier_p, rf = Math.floor(t / 110) % 2, oe = oppFacKey(), mf2 = G.fac || 'solar';
     if (cj) { if (V2['s_' + oe + '_frun2']) IMG.u_soldier_e = V2['s_' + oe + (rf ? '_frun2' : '_frun1')]; if (V2['s_' + mf2 + '_run2']) IMG.u_soldier_p = V2['s_' + mf2 + (rf ? '_run2' : '_run1')]; }   /* 교전: 양쪽 달리기 2프레임 */
-    if (scouting || G.vs) G.soldiers.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return;   /* 최전방은 늘 보이고, 뒷줄은 정찰할 때만 */ var ss = G.vs ? S * 0.8 : FS * 1.05; ctx.save(); ctx.globalAlpha = 1; /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만. 크기는 내 보병과 같게, 흔들림 없음 */ var ejx = cj * (Math.random() - 0.5) * 6; drawSoldier(BX(e.x) + (S - ss) / 2 + ejx, slotY(e.d) - ss / 2, ss, false, slotY(e.d) + FS * 0.45); if (t < (G.oppSolarUntil || 0)) drawSolDome(BX(e.x) + S / 2 + ejx, slotY(e.d) + FS * 0.45, t); ctx.restore(); });
+    if (scouting || G.vs) G.soldiers.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { if (G.vs && !scouting && e.d !== 1) return;   /* 최전방은 늘 보이고, 뒷줄은 정찰할 때만 */ var ss = G.vs ? S * 0.8 : FS * 1.05; ctx.save(); ctx.globalAlpha = (!G.vs || scouting || cj) ? 1 : 0.45;   /* 안개 속 최전방 적: 흐릿 */ /* 대전: 최전방 보병만 항상 보이고 뒷줄·탱크는 정찰 중에만. 크기는 내 보병과 같게, 흔들림 없음 */ var ejx = cj * (Math.random() - 0.5) * 6; drawSoldier(BX(e.x) + (S - ss) / 2 + ejx, slotY(e.d) - ss / 2, ss, false, slotY(e.d) + FS * 0.45); if (t < (G.oppSolarUntil || 0)) drawSolDome(BX(e.x) + S / 2 + ejx, slotY(e.d) + FS * 0.45, t); ctx.restore(); });
     if (G.vs) {
       G.mySol.slice().sort(function (a, b) { return b.d - a.d; }).forEach(function (e, i) { var ss = S * 0.8, ry = myRow(e.d); if (ry >= ROWS) return;
         var dx = BX(e.x) + (S - ss) / 2, dy = rowC(ry) - ss / 2, bob = 0;
@@ -838,7 +859,7 @@
         ctx.font = '700 15px Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeText(G.roundFx.sub || '', W / 2, (EY + HY) / 2 + 18); ctx.fillStyle = '#fff'; ctx.fillText(G.roundFx.sub || '', W / 2, (EY + HY) / 2 + 18); ctx.restore(); }
     }
     drawHud(t); drawScore(t); drawTray(t); if (G.demo && window.DEMO) DEMO.draw(t); try { drawPanel(t); drawReroll(t); } catch (e) { ctx.setTransform(scale * dpr, 0, 0, scaleY * dpr, 0, 0); ctx.translate(OFFX, OFFY); }   // 패널 그리기 오류가 게임을 멈추지 않게
-    drawHint(t);
+    drawHint(t); drawIntro(t);
     if (G.drag && G.drag.px != null) { var d2 = G.drag; d2.p.cells.forEach(function (c) { drawBlock(d2.ox + c.dx * S, d2.oy + c.dy * S, S, c.r, 0.85); }); }
     if (G.dragInf) {
       var di = G.dragInf;
@@ -962,12 +983,12 @@
     if (OFFX > 0) { ctx.fillStyle = '#0b0d0a'; ctx.fillRect(-OFFX, -OFFY, OFFX, HL); ctx.fillRect(WT, -OFFY, OFFX + 2, HL); }
     var o = (window.NET && NET.opp()) || {}, ohp = o.hp == null ? HP_MAX : o.hp, of = FAC[o.fac] || null, oult = o.ult | 0, cx = x0 + PW / 2;
     var gbH = Math.max(34, Math.min(56, EY + OFFY - 8)), gbY = Math.max(-OFFY + 4, EY - gbH - 4);   /* 상대 카드 위 빈 칸: 가이드(HOW TO PLAY) 켜기/끄기 */
-    TGL = TGL || {}; TGL.gd = { x: x0 + 6, y: gbY, w: PW - 12, h: gbH }; var gon = guideOn(), gb2 = TGL.gd;
+    TGL = TGL || {}; TGL.gd = { x: x0 + 6, y: gbY, w: PW - 12, h: gbH }; var gon = true, gb2 = TGL.gd;
     if (V2.btn_guide_on && V2.btn_guide_off) ctx.drawImage(gon ? V2.btn_guide_on : V2.btn_guide_off, gb2.x, gb2.y, gb2.w, gb2.h);
     else { var gg8 = ctx.createLinearGradient(0, gb2.y, 0, gb2.y + gb2.h); gg8.addColorStop(0, gon ? '#ffe284' : '#5e6152'); gg8.addColorStop(1, gon ? '#e8a21a' : '#33362c'); ctx.save(); if (gon) { ctx.shadowColor = 'rgba(255,212,81,' + (0.5 + 0.4 * Math.sin(t / 300)) + ')'; ctx.shadowBlur = 12; } rr(gb2.x, gb2.y, gb2.w, gb2.h, 10); ctx.fillStyle = gg8; ctx.fill(); ctx.restore(); ctx.strokeStyle = gon ? '#fff2a8' : '#777'; ctx.lineWidth = 2; rr(gb2.x, gb2.y, gb2.w, gb2.h, 10); ctx.stroke(); }
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; function fitTxt(tx, max, sz, wt, fam) { var z = sz; do { ctx.font = wt + ' ' + z + 'px ' + fam; if (ctx.measureText(tx).width <= max) break; z--; } while (z > 8); }
     fitTxt('💡 HOW TO PLAY', gb2.w - 12, Math.round(gb2.h * 0.36), '800', 'Black Han Sans, Do Hyeon, system-ui'); ctx.fillStyle = gon ? '#2a1a00' : '#bbb'; ctx.fillText('💡 HOW TO PLAY', gb2.x + gb2.w / 2, gb2.y + gb2.h * 0.36);
-    fitTxt(gon ? '가이드 켜짐' : '가이드 꺼짐', gb2.w - 12, Math.round(gb2.h * 0.3), '700', 'Do Hyeon, system-ui'); ctx.fillStyle = gon ? '#5a3b00' : '#aaa'; ctx.fillText(gon ? '가이드 켜짐' : '가이드 꺼짐', gb2.x + gb2.w / 2, gb2.y + gb2.h * 0.73); ctx.restore();
+    fitTxt('이기는 방법 보기', gb2.w - 12, Math.round(gb2.h * 0.3), '700', 'Do Hyeon, system-ui'); ctx.fillStyle = '#5a3b00'; ctx.fillText('이기는 방법 보기', gb2.x + gb2.w / 2, gb2.y + gb2.h * 0.73); ctx.restore();
     var top0 = EY + 4, bot0 = OY - 8, avail = bot0 - top0, inner = PW - 24;   // 패널 쓸 수 있는 세로 (교체 버튼은 바닥 띠에)
     ULTB = null;
     var ttl = 28;                                                // 제목 띠 높이. 카드 높이는 내용물 크기에서 계산하고 남는 세로는 전선 게이지가 가져감
@@ -1100,7 +1121,9 @@
     if (!G || G.over || G.sweep || G.collapsing) return;
     var p = pos(ev); if (G.demo) { if (window.DEMO) DEMO.tap(p); return; }
     if (TGL && TGL.snd && inB(TGL.snd, p)) { setMute(!muted()); return; }
-    if (TGL && TGL.gd && inB(TGL.gd, p)) { setGuide(!guideOn()); G.fx.push({ t: 'pop', text: guideOn() ? '💡 가이드 켜짐' : '💡 가이드 꺼짐', x: W / 2, y: EY + 40, at: now(), big: false, col: '#ffd451' }); return; }
+    if (TGL && TGL.gd && inB(TGL.gd, p)) { showIntro(); return; }
+    if (false) { setGuide(!guideOn()); G.fx.push({ t: 'pop', text: guideOn() ? '💡 가이드 켜짐' : '💡 가이드 꺼짐', x: W / 2, y: EY + 40, at: now(), big: false, col: '#ffd451' }); return; }
+    if (G.intro && INTROB) { G.intro = null; INTROB = null; return; }   /* 시작 안내 닫기 */
     if (HINTB && G.hint && inB(HINTB, p)) { G.hint = null; HINTB = null; return; }   /* 가이드 닫기 */
     if (G.freezeUntil && now() < G.freezeUntil) return;              /* 포격 중: 양쪽 다 정지 */
     if (G.roundFx) return;
