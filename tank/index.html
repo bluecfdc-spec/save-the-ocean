@@ -101,6 +101,16 @@
   .tcard .dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3a3e32; margin: 0 3px; }
   .tcard .dots span.on { background: #ffd451; }
   .tcard .key { color: #9be37a; font-weight: 700; }
+
+  /* 시작 화면: 세력 고르기를 납작하게 (탱크 그림을 가리지 않게) */
+  #ov { gap: 7px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+  #facRow { width: min(92vw, 420px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #facRow .fac { width: auto; flex-direction: row; justify-content: center; gap: 6px; padding: 4px 6px; border-radius: 10px; font-size: 16px; }
+  #facRow .fac img { width: 30px; height: 30px; }
+  #facRow .fac small { display: none; }
+  #facDesc { max-width: min(92vw, 420px); font-size: 12px; padding: 4px 10px; line-height: 1.35; }
+  #ov .row.two .btn { padding: 11px 0; font-size: 20px; }
+  #ov .btn.wide { padding: 7px 0; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -170,7 +180,7 @@
 <script>
 (function () { var DESC = { surge: '서지 · 폭풍우 — 내 땅에 20초 폭풍우. 상대 정찰기는 뜨자마자 추락하고, 상대가 아는 내 마지막 위치도 지워진다.', gale: '게일 · 낙뢰 — 적 보병 3명에게 벼락 (최전방부터).', solar: '솔라 · 태양 방패 — 5초 동안 내 전장에 햇살. 탱크 방패 1번, 모든 보병에 방패.' };
   var cur = localStorage.getItem('tank_fac') || 'solar'; window.TANK_FAC = cur;
-  function sel(f) { cur = f; window.TANK_FAC = f; localStorage.setItem('tank_fac', f); document.querySelectorAll('.fac').forEach(function (b) { b.classList.toggle('on', b.dataset.f === f); }); document.getElementById('facDesc').textContent = DESC[f] + ' 블록 줄 10개를 지우면 게이지가 찬다.'; }
+  function sel(f) { cur = f; window.TANK_FAC = f; localStorage.setItem('tank_fac', f); document.querySelectorAll('.fac').forEach(function (b) { b.classList.toggle('on', b.dataset.f === f); }); document.getElementById('facDesc').textContent = DESC[f]; }
   document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
 })();
 </script>
