@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 새 버전 자동 반영: 폰 브라우저가 옛 화면을 들고 있으면 최신 버전 번호로 다시 연다 */
-(function () { var BUILD = '118'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '119'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -270,7 +270,7 @@
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록은 <em class="dd">Drag &amp; Drop</em>으로!<br><em class="hl">탱크</em>는 눌러서 이동!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div><em class="hl">정찰기</em>로 확인하고<br><em class="hl">미사일</em>로 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">벙커</em>를 지어<br><em class="hl">전선</em>을 밀자!</div></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">최전방 벙커</em>로 <em class="hl">전선</em> 확보!<br><em class="hl">벙커</em>·<em class="hl">탱크</em>도 블록 한 칸!</div></div>
   </div>
   <div class="row three"><button id="readyBtn" class="btn" disabled>준비!</button><button id="shareBtn" class="btn sub">📨 초대</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
@@ -282,7 +282,7 @@
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록은 <em class="dd">Drag &amp; Drop</em>으로!<br><em class="hl">탱크</em>는 눌러서 이동!</div><button class="chk" aria-label="확인"></button></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div><em class="hl">정찰기</em>로 확인하고<br><em class="hl">미사일</em>로 탱크를 부숴라!</div><button class="chk" aria-label="확인"></button></div>
-    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">벙커</em>를 지어<br><em class="hl">전선</em>을 밀자!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">최전방 벙커</em>로 <em class="hl">전선</em> 확보!<br><em class="hl">벙커</em>·<em class="hl">탱크</em>도 블록 한 칸!</div><button class="chk" aria-label="확인"></button></div>
   </div>
 </div>
 
