@@ -36,7 +36,7 @@ window.BOT = (function () {
     if (me.freezeUntil && now() < me.freezeUntil) return;                         // 포격 중엔 CPU 도 정지
     if (bot.solarUntil && now() > bot.solarUntil) { bot.solarUntil = 0; bot.shield = 0; bot.mySol.forEach(function (e) { e.sh = 0; }); }   // CPU 솔라 5초 끝
     var seeAll = now() < bot.scoutUntil;                                              // 봇도 사람과 같은 눈: 내 최전방 보병만 보이고, 뒷줄은 자기 정찰기가 떠 있는 동안만
-    bot.soldiers = me.mySol.filter(function (e) { return seeAll; })   /* 안개: 정찰할 때만 내 보병이 보인다(사람과 같음) */.map(function (e) { return { x: mirror(e.x), d: e.d }; });
+    bot.soldiers = me.mySol.filter(function (e) { return seeAll || e.d === 1; })   /* 최전방은 보이고, 뒷줄은 정찰할 때만(사람과 같음) */.map(function (e) { return { x: mirror(e.x), d: e.d }; });
     withBot(function () {
       if (bot.sweep || bot.collapsing) return;
       placeBest();                                        // 블록 하나
