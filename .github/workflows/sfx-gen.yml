@@ -1,0 +1,20 @@
+name: sfx-gen
+on:
+  workflow_dispatch:
+    inputs:
+      count: { description: '항목당 후보 수', default: '3' }
+      game: { description: '공통|탱크|스카이|오션|all', default: 'all' }
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node tools/sfx-gen.mjs "${{ github.event.inputs.count }}" "${{ github.event.inputs.game }}"
+        env: { ELEVEN_API_KEY: "${{ secrets.ELEVEN_API_KEY }}" }
+      - run: |
+          git config user.name "sfx-bot"; git config user.email "sfx-bot@users.noreply.github.com"
+          git add sfx && git commit -m "sfx: 효과음 후보 생성 (${{ github.event.inputs.game }} × ${{ github.event.inputs.count }})" || echo "no change"
+          git push
