@@ -914,18 +914,18 @@
  "목소리_01": {
   "game": "목소리",
   "num": "01",
-  "name": "보병 출격 목소리 (4~6번은 지지직 무전기 버전)",
+  "name": "보병 출격 목소리 (무전기 마린 톤 3종)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
   "files": [
-   "sfx/candidates/목소리_01_1_db478c.mp3",
-   "sfx/candidates/목소리_01_2_70ba16.mp3",
-   "sfx/candidates/목소리_01_3_9a2e9c.mp3"
+   "sfx/candidates/목소리_01_1_marine_1a8aa8.mp3",
+   "sfx/candidates/목소리_01_2_marine_74760f.mp3",
+   "sfx/candidates/목소리_01_3_marine_a5bd6b.mp3"
   ],
   "ver": {
-   "sfx/candidates/목소리_01_1_db478c.mp3": "db478c",
-   "sfx/candidates/목소리_01_2_70ba16.mp3": "70ba16",
-   "sfx/candidates/목소리_01_3_9a2e9c.mp3": "9a2e9c"
+   "sfx/candidates/목소리_01_1_marine_1a8aa8.mp3": "1a8aa870",
+   "sfx/candidates/목소리_01_2_marine_74760f.mp3": "74760fe7",
+   "sfx/candidates/목소리_01_3_marine_a5bd6b.mp3": "a5bd6b38"
   },
   "done": false,
   "hold": false
