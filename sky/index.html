@@ -6,9 +6,12 @@
 <meta name="theme-color" content="#05030f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>SKY RUMBLE (test)</title>
-<meta property="og:title" content="스페이스 서바이버 SPACE SURVIVOR">
-<meta property="og:description" content="몇 초나 버틸 수 있나요? 국기를 걸고 겨루는 우주 회피 게임">
-<meta property="og:image" content="https://bluecfdc-spec.github.io/save-the-ocean/sky/title.jpg">
+<meta property="og:title" content="SKY RUMBLE">
+<meta property="og:description" content="몇 초나 버틸 수 있나요? 세력을 걸고 겨루는 우주 회피 게임">
+<meta property="og:image" content="https://bluecfdc-spec.github.io/save-the-ocean/sky/og.jpg?v=44">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<link rel="icon" type="image/png" href="favicon.png?v=44">
+<link rel="apple-touch-icon" href="icon-180.png?v=44">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overscroll-behavior:none;background:#05030f}
@@ -85,11 +88,9 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 #field{flex:1 1 0;touch-action:none}
 #pad{flex:0 0 calc(50% - 80px);min-height:0;position:relative;overflow:hidden;touch-action:none;cursor:crosshair;
-  background:
-    linear-gradient(rgba(34,230,255,.09) 1px,transparent 1px) 0 0/100% 40px,
-    linear-gradient(90deg,rgba(34,230,255,.09) 1px,transparent 1px) 0 0/40px 100%,
-    linear-gradient(180deg,#0e1d29,var(--panel));
-  box-shadow:0 0 0 1.5px var(--cyan) inset,0 0 24px rgba(34,230,255,.18) inset}
+  background:url(assets/pad.jpg?v=44) center/100% 100% no-repeat,#04121a}
+#pad .stats{top:18px!important;left:24px!important;right:24px!important}
+#pad .hint{bottom:22px!important;left:110px!important;right:20px!important;font-size:13px!important;text-align:right!important}
 #pad .stats{position:absolute;top:8px;left:16px;right:16px;display:flex;justify-content:space-between;gap:8px;
   font-size:11px;letter-spacing:.1em;color:var(--dim);pointer-events:none}
 #pad .stats b{color:var(--ink);font-weight:400;font-variant-numeric:tabular-nums}
@@ -116,19 +117,19 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #flags,#mpFlags{display:grid;grid-template-columns:repeat(3,92px);gap:8px 12px;justify-content:center}
 #flags button,#mpFlags button{width:92px;padding:8px 4px 6px;border-radius:14px;border:2px solid var(--panel-edge);
   background:#0c1c28;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#cfe6ff;font:700 13px var(--display);opacity:.75}
-#flags button img,#mpFlags button img{width:56px;height:56px}
+#flags button img,#mpFlags button img{width:72px;height:72px}
 #flags button small,#mpFlags button small{font:500 10px var(--display);color:#8aa3b8}
 #flags button[aria-pressed="true"],#mpFlags button[aria-pressed="true"]{opacity:1;border-color:var(--cyan);background:#0b3946;box-shadow:0 0 14px var(--cyan);color:#fff}
 #flags button[aria-pressed="true"][id$=surge]{border-color:#4fd8ff;box-shadow:0 0 16px #4fd8ff88}
 #flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
 #flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
 #pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
-#ult{position:absolute;left:14px;bottom:14px;width:74px;height:74px;border-radius:50%;padding:0;border:3px solid #2a3a48;background:#0c1c28;cursor:pointer;z-index:3;touch-action:none;overflow:hidden}
-#ult img{width:100%;height:100%;object-fit:cover;opacity:.35;display:block}
+#ult{position:absolute;left:12px;bottom:12px;width:92px;height:92px;border-radius:50%;padding:0;border:0;background:transparent;cursor:pointer;z-index:3;touch-action:none;overflow:hidden}
+#ult img{width:100%;height:100%;object-fit:contain;opacity:1;display:block}
 #ult .fill{position:absolute;left:0;right:0;bottom:0;height:0%;overflow:hidden}
-#ult .fill img{position:absolute;left:0;bottom:0;opacity:1}
-#ult.on{border-color:#ffd451;box-shadow:0 0 18px #ffd451aa;animation:ultp 1s ease-in-out infinite}
-#ult .lb{position:absolute;left:0;right:0;bottom:4px;text-align:center;font:800 9px var(--display);color:#fff;text-shadow:0 0 4px #000}
+#ult .fill img{position:absolute;left:0;bottom:0;opacity:1;width:92px;height:92px}
+#ult.on{animation:ultp 1s ease-in-out infinite}
+#ult .lb{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);white-space:nowrap;padding:1px 7px;border-radius:9px;background:rgba(0,0,0,.6);font:800 13px var(--display);color:#fff}
 @keyframes ultp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #title{position:absolute;inset:0;z-index:10;background:var(--void);cursor:pointer;display:flex;align-items:center;justify-content:center}
 #title img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
@@ -213,8 +214,21 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #res{display:flex;flex-direction:column;gap:4px;font-size:14px;min-width:220px}
 #res div{display:flex;gap:8px;justify-content:space-between}
 #res .w{color:var(--amber)}
-#homeBg{position:absolute;left:0;top:0;width:100%;max-width:none;z-index:-1}
-#homeBlur{position:absolute;inset:-24px;background:url(home.jpg) center/cover;filter:blur(22px) brightness(.85);z-index:-2}
+#homeBg{position:absolute;left:0;top:0;width:100%;height:auto;max-height:100%;max-width:none;object-fit:cover;object-position:center top;z-index:-1;-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+#overlay{background:linear-gradient(rgba(5,3,15,.55),rgba(5,3,15,.7)),url(assets/result_bg.jpg?v=44) center/cover #05030f}
+#overlay.home{justify-content:flex-end;padding-bottom:max(9vh,40px)}
+#overlay.home #go,#overlay.home #mpB,#overlay.home #rankB,#overlay #chg,#overlay #homeB,#overlay #rankB,#go{border:0!important;box-shadow:none!important;background:url(assets/btn_on.png?v=44) center/100% 100% no-repeat!important;
+  color:#e9fbff!important;text-shadow:0 0 10px #22e6ff,0 2px 3px #000;min-height:64px}
+#overlay #chg,#overlay #homeB{background-image:url(assets/btn_off.png?v=44)!important;text-shadow:0 2px 3px #000}
+#pause,#snd{border:0!important;border-radius:50%!important;box-shadow:none!important;background:url(assets/btn_round.png?v=44) center/contain no-repeat!important;width:46px!important;height:46px!important}
+#snd{right:68px!important}
+#rooms button{background-size:cover!important;background-position:center 80%!important;text-shadow:0 0 8px #000,0 2px 3px #000;min-height:72px}
+#room-mars{background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),url(assets/bg_mars.jpg?v=44)!important}
+#room-mercury{background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),url(assets/bg_mercury.jpg?v=44)!important}
+#room-jupiter{background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),url(assets/bg_jupiter.jpg?v=44)!important}
+#room-earth{background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),url(assets/bg_earth.jpg?v=44)!important}
+#board h2::after,#mp h2::after{content:"";display:block;width:160px;height:32px;margin-top:2px;background:url(assets/divider.png?v=44) left center/contain no-repeat}
+#homeBlur{position:absolute;inset:-24px;background:url(assets/title_bg.jpg?v=44) center bottom/cover;filter:blur(22px) brightness(.85);z-index:-2}
 #overlay.art{background:#05030f;overflow:hidden}
 #overlay.home.art #go,#overlay.home.art #mpB,#overlay.home.art #rankB{position:absolute;margin:0;padding:0;min-width:0;border:0;border-radius:16px;
   background:transparent;box-shadow:none;color:transparent;font-size:0;-webkit-tap-highlight-color:transparent}
@@ -251,13 +265,13 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <div class="stats">
       <span>BULLETS <b id="timeV">0</b></span><span>BEST <b id="bestV">0.00</b></span>
     </div>
-    <div class="hint">PILOT CONTROL · TOUCH &amp; MOVE</div>
+    <div class="hint">TOUCH &amp; MOVE</div>
     <div id="mark" hidden></div>
-    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/f_solar.png" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/f_solar.png" alt=""></div><div class="lb" id="ultLb">0%</div></button>
+    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/ult_solar_off.png?v=44" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/ult_solar_on.png?v=44" alt=""></div><div class="lb" id="ultLb">0%</div></button>
   </div>
   <div id="overlay">
     <div id="homeBlur"></div>
-    <img id="homeBg" src="home.jpg" alt="" onerror="this.dataset.bad=1;this.hidden=true;if(window.__home)window.__home()">
+    <img id="homeBg" src="assets/title_bg.jpg?v=44" alt="" onerror="this.dataset.bad=1;this.hidden=true;if(window.__home)window.__home()">
     <h1 id="ovT">SPACE SURVIVOR</h1>
     <div class="big" id="ovS" hidden>0</div>
     <p id="ovP">날아오는 탄을 전부 피하세요. 몇 초를 버티는지가 기록입니다.<br>버티면 필살기 게이지가 차요 — 왼쪽 아래 문장을 누르세요.</p>
@@ -317,7 +331,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='43';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='44';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -338,17 +352,32 @@ const FLAGS=['surge','gale','solar'];
 const FAC={surge:{name:'서지',skill:'격류',col:'#4fd8ff',glow:'rgba(79,216,255,',desc:'6초 동안 모든 탄이 느려진다',sym:'🌊'},
   gale:{name:'게일',skill:'뇌격',col:'#c58bff',glow:'rgba(197,139,255,',desc:'주변의 탄을 전부 날려 버린다',sym:'⚡'},
   solar:{name:'솔라',skill:'태양 방패',col:'#ffd451',glow:'rgba(255,212,81,',desc:'10초 동안 한 발을 막아 주는 방패',sym:'☀'}};
-const ULT_FILL=12;   // 게이지가 차는 데 걸리는 초
+const ULT_FILL=/[?&]god\b/.test(location.search)?2:12;   // 게이지가 차는 데 걸리는 초
 let flag=(window.TANK_FAC||'solar');
 try{const f=localStorage.getItem('tank_fac');if(FLAGS.includes(f))flag=f}catch(e){}
 function flagOf(c){return FAC[c]?FAC[c].sym:''}
 const FIMG={};FLAGS.forEach(c=>{const i=new Image();i.onload=()=>{FIMG[c]=i};i.src='assets/f_'+c+'.png'});
-function facBtn(c,id){const b=document.createElement('button');b.type='button';b.id=id+c;const im=document.createElement('img');im.src='assets/f_'+c+'.png';im.alt='';b.appendChild(im);
+// ───── 그림 에셋 (주문서 1~18번) ─────
+const AV='44',IMG={};
+function img(n){if(IMG[n])return IMG[n];const i=new Image();i.src='assets/'+n+(n.endsWith('.jpg')?'':'.png')+'?v='+AV;IMG[n]=i;return i}
+function ok(i){return i&&i.complete&&i.naturalWidth>0}
+const SHOTN={'#ff2d6b':'red','#ffa424':'orange','#4db8ff':'blue'};
+['bg_main.jpg','bg_mars.jpg','bg_jupiter.jpg','bg_earth.jpg','bg_mercury.jpg'].forEach(n=>{img(n).onload=()=>paintBg()});
+FLAGS.forEach(f=>{['ship_','rival_','debris_','tail_','ult_'].forEach(p=>img(p+f+(p==='ult_'?'_off':'')));img('ship_'+f+'_ult');img('ship_'+f+'_crack');img('ult_'+f+'_on');img('emb_'+f);img('emb_'+f+'_on')});
+['red','orange','blue','snipe'].forEach(n=>{img('shotT_'+n)});['red','orange','blue'].forEach(n=>img('graze_'+n));
+['boom0','boom1','boom2','surge_layer','surge_ring1','surge_ring2','surge_drops','gale_ring1','gale_ring2','gale_bolt','gale_shards','shield0','shield1','shield2'].forEach(img);
+// 이미지를 가운데 기준으로 그린다 (h 를 주지 않으면 비율 유지)
+function dimg(i,x,y,w,h,rot){if(!ok(i))return false;h=h||w*i.naturalHeight/i.naturalWidth;
+  if(rot){ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.drawImage(i,-w/2,-h/2,w,h);ctx.restore()}else ctx.drawImage(i,x-w/2,y-h/2,w,h);return true}
+var bgRoom='';let fx=[];   // 그림 효과: {n:그림이름 또는 배열, x,y,t,d:지속,s0,s1:크기,a0:시작 투명도,rot}
+function facBtn(c,id){const b=document.createElement('button');b.type='button';b.id=id+c;const im=document.createElement('img');im.src='assets/emb_'+c+'.png?v=44';im.alt='';b.appendChild(im);
   const sp=document.createElement('span');sp.textContent=FAC[c].name;b.appendChild(sp);const sm=document.createElement('small');sm.textContent=FAC[c].skill;b.appendChild(sm);b.setAttribute('aria-label',FAC[c].name);return b}
 FLAGS.forEach(c=>{const b=facBtn(c,'flag-');b.setAttribute('aria-pressed',c===flag);
   b.addEventListener('click',()=>{flag=c;try{localStorage.setItem('tank_fac',c)}catch(e){}
-    [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x===b));$('facDesc').textContent=FAC[c].name+' · '+FAC[c].skill+' — '+FAC[c].desc});
+    [...$('flags').children].forEach(x=>{x.setAttribute('aria-pressed',x===b);embOn(x)});$('facDesc').textContent=FAC[c].name+' · '+FAC[c].skill+' — '+FAC[c].desc});
   $('flags').appendChild(b)});
+function embOn(b){const c=b.id.split('-').pop(),im=b.querySelector('img');if(im&&FAC[c])im.src='assets/emb_'+c+(b.getAttribute('aria-pressed')==='true'?'_on':'')+'.png?v=44'}
+[...$('flags').children].forEach(embOn);
 
 // 국기 이모지를 따로 그려 실제 그림 영역을 재고, 그 정중앙을 쓴다 (기기마다 글자 위치가 달라 잘리는 문제 방지)
 const flagCache={};
@@ -379,6 +408,8 @@ function paintBg(){
   bg=document.createElement('canvas');bg.width=Math.max(1,W*dpr);bg.height=Math.max(1,H*dpr);
   const g=bg.getContext('2d');g.scale(dpr,dpr);
   g.fillStyle='#05030f';g.fillRect(0,0,W,H);
+  const bi=IMG[(bgRoom?'bg_'+bgRoom:'bg_main')+'.jpg'];
+  if(ok(bi)){const k=Math.max(W/bi.naturalWidth,H/bi.naturalHeight),w=bi.naturalWidth*k,h=bi.naturalHeight*k;g.drawImage(bi,(W-w)/2,H-h,w,h);return}
   const neb=[[.25,.25,'rgba(190,40,200,.28)'],[.8,.3,'rgba(40,80,255,.26)'],[.6,.75,'rgba(120,40,220,.22)'],[.15,.6,'rgba(30,60,200,.2)']];
   for(const n of neb){const r=Math.max(W,H)*.45,gr=g.createRadialGradient(n[0]*W,n[1]*H,0,n[0]*W,n[1]*H,r);
     gr.addColorStop(0,n[2]);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,W,H)}
@@ -405,7 +436,7 @@ function spawn(k){
   // 나오는 순간의 비행기 위치를 겨냥. 그 뒤로는 직진만 하고 추적하지 않는다
   // 조준을 살짝 흩뜨려 한 점으로 모이지 않게 한다 (저격탄은 정확히 겨냥)
   const a=Math.atan2(ship.y-y,ship.x-x)+(k?0:(Math.random()-.5)*.7),sp=k?60*k:(60+Math.random()*80)*(.8+.2*Math.min(1,time/30));   // 초반 30초는 속도도 조금 느리게 시작
-  objs.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,c:COLORS[Math.random()*3|0],g:false});
+  objs.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,c:COLORS[Math.random()*3|0],g:false,s:!!k});
 }
 // 패턴: 한쪽에서 밀려오는 빛의 벽, 빈틈 하나. 레이더에 먼저 찍힌다.
 function wall(){
@@ -472,7 +503,7 @@ function update(dt){
     if(o.x<-M-80||o.x>W+M+80||o.y<-M-80||o.y>H+M+80){objs.splice(i,1);continue}
     const d=Math.hypot(o.x-ship.x,o.y-ship.y),hit=(o.rock?o.r*.85:o.r)+5;
     if(d-hit<near)near=d-hit;
-    if(d<hit){if(ult.shield>0){ult.shield=0;objs.splice(i,1);rings.push({x:ship.x,y:ship.y,t:0,m:70});pops.push({x:ship.x,y:ship.y-20,t:0,s:'방패!'});Music.boom();continue}die();return}
+    if(d<hit){if(ult.shield>0){ult.shield=0;objs.splice(i,1);rings.push({x:ship.x,y:ship.y,t:0,m:70});fx.push({n:'shield2',x:ship.x,y:ship.y,t:0,d:.5,s0:50,s1:90});pops.push({x:ship.x,y:ship.y-20,t:0,s:'방패!'});Music.boom();continue}die();return}
     if(!o.g&&d<hit+12){o.g=true;if(time-nearT>.1){nearT=time;nears.push({t:0,a:Math.atan2(o.y-ship.y,o.x-ship.x),c:o.c});Music.blip()}} // 스침: 점수 없이 연출만
   }
   for(let i=pops.length-1;i>=0;i--){pops[i].t+=dt;if(pops[i].t>.8)pops.splice(i,1)}
@@ -482,9 +513,11 @@ function hud(near){
   $('scoreV').textContent=time.toFixed(2);
   $('timeV').textContent=objs.length;
 }
+const GOD=/[?&]god\b/.test(location.search);   // 화면 점검용: ?god 이면 안 죽고 게이지가 빨리 찬다
 function die(){
+  if(GOD)return;
   state='over';Music.stop();
-  boom(ship.x,ship.y);
+  fx.push({n:'ship_'+(FAC[flag]?flag:'solar')+'_crack',x:ship.x,y:ship.y,t:0,d:.35,s0:34,s1:40});boom(ship.x,ship.y,flag);
   if(mp.on){mpDied();return}
   const fin=Math.round(time*100)/100;
   const rec=fin>best;if(rec){best=fin;try{localStorage.setItem('stargraze_best_t',best)}catch(e){}}
@@ -503,7 +536,9 @@ function draw(dt){
   if(shakeT>0){shakeT-=dt;const q=shakeT/.3*9;ctx.fillStyle='#05030f';ctx.fillRect(0,0,W,H);ctx.translate((Math.random()-.5)*q,(Math.random()-.5)*q)}
   if(bg)ctx.drawImage(bg,0,0,W,H);
   if(ult.flashT>0){ctx.fillStyle=(FAC[flag]||FAC.solar).glow+(ult.flashT*.6)+')';ctx.fillRect(0,0,W,H)}
-  if(time<ult.slowUntil&&state==='play'){ctx.fillStyle='rgba(40,120,255,.12)';ctx.fillRect(0,0,W,H)}
+  if(time<ult.slowUntil&&state==='play'){ctx.fillStyle='rgba(40,120,255,.12)';ctx.fillRect(0,0,W,H);   // 격류: 화면이 푸른 물결에 잠긴다
+    const li=IMG.surge_layer;if(ok(li)){const left=ult.slowUntil-time,a=Math.min(1,(6-left)*3,left*1.5)*.32,o=(performance.now()/40)%W;
+      ctx.globalAlpha=a;ctx.drawImage(li,-o,0,W,H);ctx.drawImage(li,W-o,0,W,H);ctx.globalAlpha=1}}
   ctx.lineCap='round';
   for(const o of objs){
     if(o.rock){
@@ -511,12 +546,20 @@ function draw(dt){
       o.rock.forEach((k,i)=>{const a=i/o.rock.length*Math.PI*2;ctx[i?'lineTo':'moveTo'](Math.cos(a)*o.r*k,Math.sin(a)*o.r*k)});
       ctx.closePath();ctx.fillStyle='#2a2630';ctx.fill();ctx.strokeStyle='#8a8594';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     }else{
-      ctx.fillStyle=o.c;ctx.shadowColor=o.c;ctx.shadowBlur=12;
+      const si=IMG['shotT_'+(o.s?'snipe':SHOTN[o.c]||'red')];
+      if(ok(si)){const h=o.s?14:20,w=h*si.naturalWidth/si.naturalHeight,cx=(o.s?56.2/96:64.5/96)*w;   // 빛 구슬 중심을 탄 위치에 맞춘다
+        ctx.save();ctx.translate(o.x,o.y);ctx.rotate(Math.atan2(o.vy,o.vx));ctx.drawImage(si,-cx,-h/2,w,h);ctx.restore()}
+      else{ctx.fillStyle=o.c;ctx.shadowColor=o.c;ctx.shadowBlur=12;
       ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill();
-      ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(o.x,o.y,2.2,0,7);ctx.fill();
+      ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(o.x,o.y,2.2,0,7);ctx.fill()}
     }
   }
-  if(trail.length>1&&state!=='over'){
+  const ti=IMG['tail_'+(FAC[flag]?flag:'solar')];
+  if(trail.length>4&&state!=='over'&&ok(ti)&&ship){   // 세력 꼬리 빛: 지나온 방향으로 길게
+    const p0=trail[Math.max(0,trail.length-14)],dx=ship.x-p0.x,dy=ship.y-p0.y,d=Math.hypot(dx,dy);
+    if(d>3){const L=Math.min(90,14+d*1.6),h=18;ctx.save();ctx.translate(ship.x,ship.y);ctx.rotate(Math.atan2(dy,dx));
+      ctx.globalAlpha=Math.min(1,d/20);ctx.drawImage(ti,-L+4,-h/2,L,h);ctx.restore();ctx.globalAlpha=1}
+  }else if(trail.length>1&&state!=='over'){
     ctx.lineCap='round';ctx.strokeStyle='#ffffff';ctx.shadowColor='#ffffff';ctx.shadowBlur=10;
     for(let i=1;i<trail.length;i++){const k=i/trail.length;ctx.globalAlpha=k*k*.6;ctx.lineWidth=1+k*6;
       ctx.beginPath();ctx.moveTo(trail[i-1].x,trail[i-1].y);ctx.lineTo(trail[i].x,trail[i].y);ctx.stroke()}
@@ -527,13 +570,19 @@ function draw(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
     if(p.t>.9){parts.splice(i,1);continue}
     ctx.globalAlpha=1-p.t/.9;ctx.fillStyle=p.c;const z=p.s||4;ctx.fillRect(p.x-z/2,p.y-z/2,z,z)}
+  for(let i=fx.length-1;i>=0;i--){const e=fx[i];e.t+=dt;if(e.t>e.d){fx.splice(i,1);continue}if(e.t<0)continue;
+    const k=e.t/e.d,n=Array.isArray(e.n)?e.n[Math.min(e.n.length-1,k*e.n.length|0)]:e.n,sz=e.s0+(e.s1-e.s0)*Math.sqrt(k);
+    ctx.globalAlpha=(e.a0==null?1:e.a0)*(e.hold?Math.min(1,(1-k)/.4):1-k);dimg(IMG[n],e.f?ship.x:e.x,e.f?ship.y:e.y,sz,sz,e.rot||0)}
+  ctx.globalAlpha=1;
   for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.t+=dt;if(r.t>.55){rings.splice(i,1);continue}if(r.t<0)continue;
     const k=r.t/.55;ctx.globalAlpha=(1-k)*.9;ctx.strokeStyle=k<.3?'#ffffff':'#ffa424';ctx.lineWidth=7*(1-k)+1;
     ctx.beginPath();ctx.arc(r.x,r.y,8+k*r.m,0,7);ctx.stroke();
     if(k<.18){ctx.globalAlpha=(.18-k)/.18*.8;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(r.x,r.y,26,0,7);ctx.fill()}}
   ctx.globalAlpha=1;
   for(let i=nears.length-1;i>=0;i--){const n=nears[i];n.t+=dt;if(n.t>.25||!ship){nears.splice(i,1);continue}
-    const k=n.t/.25;ctx.globalAlpha=1-k;ctx.strokeStyle=n.c;ctx.lineWidth=3.5-k*2;ctx.shadowColor=n.c;ctx.shadowBlur=10;
+    const k=n.t/.25;ctx.globalAlpha=1-k;const gi=IMG['graze_'+(SHOTN[n.c]||'red')];
+    if(ok(gi)){const r=13+k*10,h=30+k*14;dimg(gi,ship.x+Math.cos(n.a)*r,ship.y+Math.sin(n.a)*r,h*gi.naturalWidth/gi.naturalHeight,h,n.a+Math.PI);continue}
+    ctx.strokeStyle=n.c;ctx.lineWidth=3.5-k*2;ctx.shadowColor=n.c;ctx.shadowBlur=10;
     ctx.beginPath();ctx.arc(ship.x,ship.y,12+k*12,n.a-.85,n.a+.85);ctx.stroke();ctx.shadowBlur=0}   // 스친 쪽에만, 그 미사일 색으로 뜨는 반달
   ctx.globalAlpha=1;
   ctx.textAlign='center';ctx.font='800 20px Orbitron, Arial Black, sans-serif';
@@ -557,8 +606,12 @@ function drawPlane(x,y,f,al){
     g.addColorStop(0,fc.glow+(.85*pu)+')');g.addColorStop(.45,fc.glow+(.3*pu)+')');g.addColorStop(1,fc.glow+'0)');
     ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.fill();          // 네온 후광 (판정과 무관)
     ctx.shadowColor=fc.col;ctx.shadowBlur=14*dpr;
-    if(ult.shield>0){ctx.strokeStyle='#ffd451';ctx.lineWidth=3;ctx.shadowColor='#ffd451';ctx.beginPath();ctx.arc(0,0,16+Math.sin(performance.now()/90)*1.5,0,7);ctx.stroke()}   // 태양 방패
-    if(time<ult.slowUntil){ctx.strokeStyle='rgba(79,216,255,.7)';ctx.lineWidth=2;for(let k=0;k<3;k++){const r=18+((performance.now()/14+k*22)%66);ctx.globalAlpha=al*(1-(r-18)/66);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}ctx.globalAlpha=al}}   // 격류 물결
+    if(ult.shield>0&&!ok(IMG.shield0)){ctx.strokeStyle='#ffd451';ctx.lineWidth=3;ctx.shadowColor='#ffd451';ctx.beginPath();ctx.arc(0,0,16+Math.sin(performance.now()/90)*1.5,0,7);ctx.stroke()}   // 태양 방패
+    if(time<ult.slowUntil){const ri=IMG.surge_ring1;for(let k=0;k<3;k++){const r=18+((performance.now()/14+k*22)%66);ctx.globalAlpha=al*(1-(r-18)/66);
+      if(ok(ri))ctx.drawImage(ri,-r,-r,2*r,2*r);else{ctx.strokeStyle='rgba(79,216,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}}ctx.globalAlpha=al}}   // 격류 물결
+  const busyU=mine&&(time<ult.slowUntil||ult.shield>0||ult.flashT>0),sp=IMG[(mine?'ship_':'rival_')+(FAC[f]?f:'solar')+(busyU?'_ult':'')];
+  if(ok(sp)){ctx.shadowBlur=0;if(mine&&ult.shield>0){const si=IMG[time>ult.shieldUntil-2.5?'shield1':'shield0'];if(ok(si)){ctx.globalAlpha=.85+.15*Math.sin(performance.now()/120);ctx.drawImage(si,-25,-25,50,50);ctx.globalAlpha=al}}
+    const z=mine?32:26;ctx.drawImage(sp,-z/2,-z/2,z,z);ctx.restore();return}   // 세력 기체 그림 (판정 반지름 9는 그대로)
   ctx.fillStyle=mine?fc.col:'#fff';ctx.beginPath();ctx.arc(0,0,9,0,7);ctx.fill();ctx.shadowBlur=0;
   ctx.beginPath();ctx.arc(0,0,mine?7:8,0,7);ctx.clip();
   const fi=flagImg(f);if(fi){const k=16/fi.h,w=fi.w*k;ctx.fillStyle='#fff';ctx.fillRect(-9,-9,18,18);ctx.drawImage(fi.c,fi.x,fi.y,fi.w,fi.h,-w/2,-8,w,16)}
@@ -567,11 +620,13 @@ function drawPlane(x,y,f,al){
 // ───── 경쟁자: 솔플은 CPU 4대(15초마다 한 대씩 탈락), 멀티는 다른 사람. 서로 부딪히지 않고 내 판정과 무관 ─────
 let rivals=[],mpWon=false,countN=0,countF=0;
 let rings=[],shakeT=0;
-function boom(x,y){   // 폭발: 파편 70개 + 번지는 충격파 고리 2개 + 화면 흔들림 + 폭발음
+function boom(x,y,f){   // 폭발: 섬광→파편→흩어짐 그림 + 세력 잔해 + 파편 + 충격파 + 화면 흔들림 + 폭발음
   const C=['#ffffff','#ffa424','#ff2d6b','#fff38a'];
-  for(let i=0;i<70;i++){const a=Math.random()*7,v=60+Math.random()*380;
+  fx.push({n:['boom0','boom1','boom2'],x,y,t:0,d:.6,s0:70,s1:130,a0:1,hold:1});
+  if(f&&FAC[f])fx.push({n:'debris_'+f,x,y,t:0,d:.8,s0:30,s1:90,a0:.95,rot:Math.random()*6});
+  for(let i=0;i<40;i++){const a=Math.random()*7,v=60+Math.random()*380;
     parts.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,c:C[i%4],s:3+Math.random()*5})}
-  rings.push({x:x,y:y,t:0,m:95},{x:x,y:y,t:-.08,m:55});shakeT=.3;Music.boom();
+  rings.push({x:x,y:y,t:0,m:95});shakeT=.3;Music.boom();
 }
 function initCpus(){
   const fl=[0,1,2,3].map(()=>FLAGS[Math.random()*3|0]);
@@ -581,7 +636,7 @@ function initCpus(){
 function updateCpus(dt){
   for(const r of rivals){
     if(!r.cpu||!r.alive)continue;
-    if(time>=r.dieAt){r.alive=false;boom(r.x,r.y);continue}
+    if(time>=r.dieAt){r.alive=false;boom(r.x,r.y,r.flag);continue}
     r.wt-=dt;if(r.wt<=0){r.wt=.8+Math.random()*1.5;r.wx=W*(.1+Math.random()*.8);r.wy=H*(.1+Math.random()*.8)}
     let ax=r.wx-r.x,ay=r.wy-r.y;const d0=Math.hypot(ax,ay)||1;ax/=d0;ay/=d0;
     for(const o of objs){const dx=r.x-o.x,dy=r.y-o.y,d=Math.hypot(dx,dy);   // 가까운 미사일에서 멀어지려는 힘
@@ -681,20 +736,20 @@ const Music=(()=>{
   };
 })();
 function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
-  if(b.dataset.f!==flag){b.dataset.f=flag;$('ultBg').src=$('ultFg').src='assets/f_'+flag+'.png'}
+  if(b.dataset.f!==flag){b.dataset.f=flag;$('ultBg').src='assets/ult_'+flag+'_off.png?v=44';$('ultFg').src='assets/ult_'+flag+'_on.png?v=44'}
   const full=ult.g>=1;$('ultFill').style.height=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
   $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?f.skill:Math.round(ult.g*100)+'%'}
 function useUlt(){
   if(state!=='play'||ult.g<1||!ship)return;ult.g=0;ult.flashT=.5;Music.boom();
-  if(flag==='surge'){ult.slowUntil=time+6;pops.push({x:ship.x,y:ship.y-24,t:0,s:'격류!'})}
+  if(flag==='surge'){ult.slowUntil=time+6;fx.push({n:'surge_ring2',f:1,t:0,d:.7,s0:40,s1:260},{n:'surge_drops',f:1,t:-.05,d:.6,s0:40,s1:150});pops.push({x:ship.x,y:ship.y-24,t:0,s:'격류!'})}
   else if(flag==='gale'){let n=0;for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(Math.hypot(o.x-ship.x,o.y-ship.y)<170){objs.splice(i,1);n++;
       const a=Math.atan2(o.y-ship.y,o.x-ship.x);parts.push({x:o.x,y:o.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,t:0,c:'#c58bff',s:5})}}
-    rings.push({x:ship.x,y:ship.y,t:0,m:170},{x:ship.x,y:ship.y,t:-.1,m:120});shakeT=.25;pops.push({x:ship.x,y:ship.y-24,t:0,s:'뇌격! '+n})}
-  else{ult.shield=1;ult.shieldUntil=time+10;pops.push({x:ship.x,y:ship.y-24,t:0,s:'태양 방패!'})}
+    fx.push({n:'gale_bolt',x:ship.x,y:ship.y,t:0,d:.45,s0:80,s1:330,rot:Math.random()*6},{n:'gale_ring2',x:ship.x,y:ship.y,t:0,d:.5,s0:40,s1:350},{n:'gale_ring1',x:ship.x,y:ship.y,t:-.1,d:.5,s0:30,s1:260},{n:'gale_shards',x:ship.x,y:ship.y,t:0,d:.6,s0:60,s1:240});shakeT=.25;pops.push({x:ship.x,y:ship.y-24,t:0,s:'뇌격! '+n})}
+  else{ult.shield=1;ult.shieldUntil=time+10;fx.push({n:'shield0',f:1,t:0,d:.35,s0:120,s1:50,a0:.9});pops.push({x:ship.x,y:ship.y-24,t:0,s:'태양 방패!'})}
   ultUi();
 }
 $('ult').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();useUlt()});
-function start(){reset();initCpus();mpWon=false;countN=0;state='count';mp.startAt=Date.now()+mp.off+3000;$('overlay').hidden=true;Music.unlock();Music.launch()}   // 3,2,1 뒤에 시작
+function start(){bgRoom=mp.on?mp.room:'';paintBg();reset();initCpus();mpWon=false;countN=0;state='count';mp.startAt=Date.now()+mp.off+3000;$('overlay').hidden=true;Music.unlock();Music.launch()}   // 3,2,1 뒤에 시작
 $('snd').addEventListener('click',()=>{const o=Music.toggle();$('snd').style.opacity=o?1:.4;$('snd').setAttribute('aria-pressed',o);
   if(o&&state==='play')Music.start()});
 function pause(){
@@ -834,14 +889,9 @@ function rt(){
   return rtdb;
 }
 // 첫 화면 그림 속 버튼 위치 (그림 941x1375 기준 [x,y,폭,높이]). 그림은 화면에 맞춰 통째로 줄어들고, 투명한 버튼이 그 위에 정확히 겹친다
-const IW=941,IH=1375,HOT={go:[92,415,756,197],mpB:[85,635,767,187],rankB:[85,853,767,189]};
+const HOT={go:0,mpB:0,rankB:0};   // 첫 화면은 17번 타이틀 그림 위에 진짜 버튼 세 개
 function layoutHome(){
-  const o=$('overlay');if(!o.classList.contains('art'))return;
-  const w=o.clientWidth,h=o.clientHeight;
-  // 그림 전체가 보이게 맞추되, 세로로 긴 화면에서는 좌우를 7%씩까지 잘라 더 크게 채운다 (버튼은 잘리지 않는 범위)
-  const k=Math.max(w/IW,Math.min(h/IH,w/(IW*.86))),ox=(w-IW*k)/2,oy=(h-IH*k)/2,b=$('homeBg').style;
-  b.width=IW*k+'px';b.height=IH*k+'px';b.left=ox+'px';b.top=oy+'px';
-  for(const id in HOT){const r=HOT[id],e=$(id).style;e.left=ox+r[0]*k+'px';e.top=oy+r[1]*k+'px';e.width=r[2]*k+'px';e.height=r[3]*k+'px'}
+  return;
 }
 addEventListener('resize',layoutHome);
 function plain(){$('overlay').classList.remove('home','art');$('homeBlur').hidden=true;for(const id in HOT)$(id).style.cssText='';$('homeBg').hidden=true;$('ovT').hidden=false;$('homeB').hidden=true}
@@ -849,7 +899,7 @@ function plain(){$('overlay').classList.remove('home','art');$('homeBlur').hidde
 function homeScreen(){
   state='ready';rivals=[];mpWon=false;
   const bad=$('homeBg').dataset.bad;
-  $('overlay').classList.add('home');$('overlay').classList.toggle('art',!bad);$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SKY RUMBLE';
+  $('overlay').classList.add('home');$('overlay').classList.remove('art');$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SKY RUMBLE';
   $('ovS').hidden=true;$('res').hidden=true;$('gap').hidden=true;$('ovP').hidden=true;$('pick').hidden=true;$('chg').hidden=true;$('homeB').hidden=true;
   $('go').hidden=false;$('go').textContent='출격';$('mpB').hidden=false;$('rankB').hidden=false;
   $('overlay').hidden=false;layoutHome();
@@ -859,7 +909,7 @@ function showPick(){
   plain();$('ovT').hidden=true;$('ovS').hidden=true;$('res').hidden=true;$('gap').hidden=true;$('ovP').hidden=true;
   $('pick').hidden=false;$('chg').hidden=true;$('go').hidden=false;$('go').textContent='출격';$('mpB').hidden=true;$('rankB').hidden=true;
   $('homeB').hidden=false;$('homeB').textContent='뒤로';
-  [...$('flags').children].forEach(x=>x.setAttribute('aria-pressed',x.id==='flag-'+flag));$('facDesc').textContent=FAC[flag].name+' · '+FAC[flag].skill+' — '+FAC[flag].desc;
+  [...$('flags').children].forEach(x=>{x.setAttribute('aria-pressed',x.id==='flag-'+flag);embOn(x)});$('facDesc').textContent=FAC[flag].name+' · '+FAC[flag].skill+' — '+FAC[flag].desc;
   $('overlay').hidden=false;
 }
 ROOMS.forEach(r=>{const b=document.createElement('button');b.type='button';b.id='room-'+r[0];
@@ -956,7 +1006,7 @@ function renderRoom(){
   ids.forEach((id,i)=>{const q=mp.players[id];
     pl.appendChild(mkRow(i===0?'★':'',q.flag?flagOf(q.flag):'',q.name||'',i===0?'방장':'',q.flag?(cnt[q.flag]>1?'국기 중복':'준비 완료'):'고르는 중',(id===myId?'me':'')+(q.flag&&cnt[q.flag]>1?' dup':'')))});
   const mine=(mp.players[myId]||{}).flag||'';
-  [...$('mpFlags').children].forEach(x=>{x.setAttribute('aria-pressed',x.id==='mpflag-'+mine)});
+  [...$('mpFlags').children].forEach(x=>{x.setAttribute('aria-pressed',x.id==='mpflag-'+mine);embOn(x)});
   const dup=false,allReady=ids.length>0&&ids.every(id=>mp.players[id].flag),host=isHost();
   const playing=mp.meta.state==='play'&&!mp.ended;
   const ok=!dup&&allReady&&ids.length>=2&&!playing;
