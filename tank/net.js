@@ -138,7 +138,7 @@ window.REALNET = window.NET = (function () {
     if (roomName(code) && meta && !started && meta.host && !players[meta.host] && players[uid]) ref.child('meta').update({ host: uid, state: 'lobby' });   /* 방장이 끊겼으면 넘겨받음 */
     // 둘 다 준비 → 방장이 시작 시각을 정한다
     if (meta.host === uid && meta.state === 'lobby' && o && o.ready && me().ready) {
-      ref.child('meta').update({ state: 'play', startAt: snow() + 3900, round: (meta.round || 0) + 1 });   /* 3·2·1 각 1.3초 */
+      ref.child('meta').update({ state: 'play', startAt: snow() + 5150, round: (meta.round || 0) + 1 });   /* 1·2·3 각 1.3초 + 1초 */
     }
     // 게임 중 상대가 졌거나 나갔다 → 승리
     if (started && !resultUp) {
@@ -172,14 +172,14 @@ window.REALNET = window.NET = (function () {
       ref.child('players/' + uid).update({ ready: false, over: false, msg: '', t: 0, fire: null, scout: null, hp: 3, front: 0, sol: '', tank: '4,6', collapses: 0, skill: null, ult: 0, shield: 0 }); lastFire = 0; lastClash = 0; lastScout = 0; lastSkill = 0; myCollapses = 0; oppCollapses = 0;
       if (isHost()) ref.child('meta').update({ line: 0, nextTick: meta.startAt + 30000, clash: null });
       ref.child('inbox/' + uid).remove();
-      try { window.tankCards(); } catch (e) { } show('count'); lastPub = ''; prevOpp = {}; tick();
+      try { window.tankCards(); window.__cstep = -1; window.tankCountStep(0); } catch (e) { } show('count'); lastPub = ''; prevOpp = {}; tick();
     }
     if (meta.state === 'lobby' && !started) { show('room'); renderRoom(); }
   }
   function tick() {
     var left = meta.startAt - snow();
     if (left <= 0) { startGame(); return; }
-    var c = Math.max(1, Math.min(3, Math.ceil(left / 1300))); if ($('countNum').textContent != c) { $('countNum').textContent = c; try { SFX.count(); } catch (e) { } }
+    var el = 5150 - left, c = el < 250 ? 0 : Math.min(3, Math.floor((el - 250) / 1300) + 1); if (window.__cstep !== c) { window.__cstep = c; window.tankCountStep(c); if (c) try { SFX.count(); } catch (e) { } }
     startTimer = setTimeout(tick, 100);
   }
   function startGame() {

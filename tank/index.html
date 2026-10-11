@@ -63,9 +63,9 @@
   .rk .s { font-family: 'Black Han Sans', sans-serif; color: #fff; }
   .rk.me { background: rgba(255,212,81,.12); }
 #count { gap: 8px; }
-  #count #countNum { font-size: 96px; line-height: 1; }
+  #count #countNum { font-size: 96px; line-height: 1; transition: transform .2s; }
   .cards { display: flex; flex-direction: column; gap: 12px; width: min(92vw, 420px); }
-  .ncard { --c: #4fd8ff; --g: 79,216,255; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; text-align: left;
+  .ncard { --c: #4fd8ff; --g: 79,216,255; display: grid; grid-template-columns: 64px 34px 1fr; align-items: center; column-gap: 12px; padding: 12px 14px; border-radius: 16px; text-align: left;
     background: linear-gradient(135deg, rgba(var(--g),.16), rgba(6,8,12,.86) 55%, rgba(var(--g),.10)); border: 2px solid var(--c);
     box-shadow: 0 0 10px rgba(var(--g),.85), 0 0 26px rgba(var(--g),.45), inset 0 0 16px rgba(var(--g),.28), inset 0 1px 0 rgba(255,255,255,.25);
     font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 24px; line-height: 1.25; color: #fff; text-shadow: 0 0 8px rgba(var(--g),.6), 0 2px 0 #000; animation: neon 1.8s ease-in-out infinite alternate; }
@@ -73,9 +73,11 @@
   .ncard.c2 { --c: #c58bff; --g: 197,139,255; }    /* 게일 */
   .ncard.c3 { --c: #ffd451; --g: 255,212,81; }     /* 솔라 */
   .ncard img { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; filter: drop-shadow(0 0 6px rgba(var(--g),.6)); }
-  .ncard b { display: inline-block; width: 30px; height: 30px; line-height: 28px; text-align: center; border-radius: 50%; margin-right: 8px; vertical-align: 2px; font-size: 18px;
+  .ncard b { display: inline-block; width: 30px; height: 30px; line-height: 28px; text-align: center; border-radius: 50%; font-size: 18px;
     color: #fff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(var(--g),.55) 45%, rgba(var(--g),.18) 100%); border: 1.5px solid rgba(var(--g),.9);
     box-shadow: 0 0 8px rgba(var(--g),.6), inset 0 -2px 4px rgba(0,0,0,.35); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  #count .ncard { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s, transform .35s; }
+  #count .ncard.show { opacity: 1; transform: none; }
   @keyframes neon { from { filter: brightness(.94); } to { filter: brightness(1.08); } }
   #room .cards { margin: 4px 0; }
   .chatflash { color: #ffb3a8; font-size: 13px; text-align: center; }
@@ -180,9 +182,9 @@
   <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><div><b>1</b>블록 줄을 지워<br>아이템을 모아라!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><div><b>2</b>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><div><b>3</b>보병을 모아<br>전선을 밀어라!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
+    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><b>3</b><div>보병을 모아<br>전선을 밀어라!</div></div>
   </div>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
@@ -191,9 +193,9 @@
 <!-- 카운트다운 -->
 <div id="count" class="ov hidden"><div id="countNum">3</div>
   <div class="cards">
-    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><div><b>1</b>블록 줄을 지워<br>아이템을 모아라!</div></div>
-    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><div><b>2</b>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><div><b>3</b>보병을 모아<br>전선을 밀어라!</div></div>
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
+    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><b>3</b><div>보병을 모아<br>전선을 밀어라!</div></div>
   </div>
 </div>
 
@@ -216,7 +218,7 @@
 </script>
 <script src="sfx.js?v=37"></script>
 <script src="tank.js?v=91"></script>
-<script src="net.js?v=41"></script>
+<script src="net.js?v=42"></script>
 <script src="bot.js?v=44"></script>
 <script src="demo.js?v=4"></script>
 <script>
@@ -227,11 +229,15 @@
 <script>
 window.TANK_TIPS = { 3: '정찰기를 띄워\n적 탱크를 찾아 부숴라!', 2: '블록 줄을 지워\n아이템을 모아라!', 1: '최전방에 보병을 모아\n30초마다 전선을 밀어라!' };
 window.tankCards = function () { var f = localStorage.getItem('tank_fac') || 'solar'; document.querySelectorAll('.ncard.c2 img').forEach(function (i) { i.src = 'assets/v2/p_' + f + '.png'; }); document.querySelectorAll('.ncard.c3 img').forEach(function (i) { i.src = 'assets/v2/s_' + f + '_run1.png'; }); };
-window.tankCountdown = function (cb) { window.tankCards();   /* CPU 대전 시작: 3·2·1 + 핵심 세 가지 */
+window.tankCountStep = function (n) {   /* n: 0=아무것도, 1~3 = 그 번호까지 카드 표시 */
+  document.getElementById('countNum').textContent = n ? n : '';
+  document.querySelectorAll('#count .ncard').forEach(function (c, k) { c.classList.toggle('show', k < n); });
+};
+window.tankCountdown = function (cb) { window.tankCards();
   ['ov', 'lobby', 'room', 'result', 'rank'].forEach(function (k) { var e = document.getElementById(k); if (e) e.classList.add('hidden'); });
-  var c = document.getElementById('count'), n = 3; c.classList.remove('hidden');
-  function step() { if (n <= 0) { c.classList.add('hidden'); cb(); return; } document.getElementById('countNum').textContent = n; try { SFX.count(); } catch (e) { } n--; setTimeout(step, 1300); }
-  step();
+  var c = document.getElementById('count'), n = 0; window.tankCountStep(0); c.classList.remove('hidden');
+  function step() { n++; if (n > 3) { c.classList.add('hidden'); cb(); return; } window.tankCountStep(n); try { SFX.count(); } catch (e) { } setTimeout(step, n === 3 ? 2300 : 1300); }   /* 3이 뜬 뒤 1초 더 */
+  setTimeout(step, 250);
 };
 </script>
 </body>
