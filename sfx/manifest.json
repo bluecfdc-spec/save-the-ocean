@@ -917,22 +917,8 @@
   "name": "보병 출격 목소리 (4~6번은 더 낮고 묵직한 무전기 버전)",
   "sec": 2,
   "prompt": "Hold the line! Move, move, move!",
-  "files": [
-   "sfx/candidates/목소리_01_1_8deb6e.mp3",
-   "sfx/candidates/목소리_01_2_2aa804.mp3",
-   "sfx/candidates/목소리_01_3_ffe37d.mp3",
-   "sfx/candidates/목소리_01_4_deep_a8379d.mp3",
-   "sfx/candidates/목소리_01_5_deep_5887fe.mp3",
-   "sfx/candidates/목소리_01_6_deep_c68e17.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/목소리_01_1_8deb6e.mp3": "8deb6e",
-   "sfx/candidates/목소리_01_2_2aa804.mp3": "2aa804",
-   "sfx/candidates/목소리_01_3_ffe37d.mp3": "ffe37d",
-   "sfx/candidates/목소리_01_4_deep_a8379d.mp3": "a8379d04",
-   "sfx/candidates/목소리_01_5_deep_5887fe.mp3": "5887fe3f",
-   "sfx/candidates/목소리_01_6_deep_c68e17.mp3": "c68e17e0"
-  },
+  "files": [],
+  "ver": {},
   "done": false,
   "hold": false
  },

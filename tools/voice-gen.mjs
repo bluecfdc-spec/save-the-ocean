@@ -2,7 +2,7 @@
 import fs from 'fs'; import { createHash } from 'crypto';
 const KEY = process.env.ELEVEN_API_KEY; if (!KEY) { console.error('no key'); process.exit(1); }
 const LINES = [
-  { num: '01', name: '보병 출격 — "Hold the line! Move, move, move!"', text: '[shouting] [strained] [desperate] [out of breath] HOLD THE LINE!' },
+  { num: '01', name: '보병 출격 — "Hold the line! Move, move, move!"', text: '[shouting] [urgent] [commanding] HOLD THE LINE!' },
   { num: '02', name: '교전 — "Contact! Open fire!"', text: 'Contact! Open fire!' },
   { num: '03', name: '전선 전진 — "Push forward! Advance!"', text: 'Push forward! Advance!' },
   { num: '04', name: '전선 밀림 — "Fall back! Fall back!"', text: 'Fall back! Fall back!' },
