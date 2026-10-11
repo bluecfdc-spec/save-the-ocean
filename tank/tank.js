@@ -737,7 +737,7 @@
     G.reroll--; G.tray = [makePiece(), makePiece(), makePiece()]; sfx('pick'); G.fx.push({ t: 'pop', text: '블록 교체 (남은 ' + G.reroll + '회)', x: W / 2, y: TY + TRAY / 2, at: now(), big: false, col: '#ffd451' }); checkFit();
   }
   function drawReroll(t) {                                        // 오른쪽 패널 아래(블록 받침 옆)에 교체 버튼
-    var bw = PW - 16, bh = Math.min(TRAY - 16, bw / 2.75, 70), bx = W + 8, by = TY + 8; REROLLB = { x: bx, y: by, w: bw, h: bh };   /* 금테 프레임 비율(420×120) */
+    var bw = PW - 16, bh = Math.min(TRAY - 16, bw / 2.44, 80), bx = W + 8, by = TY + 8; REROLLB = { x: bx, y: by, w: bw, h: bh };   /* 금테 프레임 비율(420×120) */
     var on = G.reroll > 0 && !G.over;
     if (V2.btn_reroll_on) { ctx.drawImage(on ? V2.btn_reroll_on : V2.btn_reroll_off, bx, by, bw, bh); }
     else if (V2.ui_fuel) { ctx.save(); if (!on) ctx.filter = 'grayscale(1) brightness(.6)'; ctx.drawImage(V2.ui_fuel, bx, by, bw, bh); ctx.restore(); }
