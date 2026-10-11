@@ -504,7 +504,7 @@
       img.__hw = best; } catch (e) { img.__hw = img.width * 0.6; }
     return img.__hw;
   }
-  var SOL_CASE = (function () { try { var q = /[?&]sol=([ABCD])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'A'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
+  var SOL_CASE = (function () { try { var q = /[?&]sol=([ABCD])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'D'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
   var SOL_BOX = { A: [0.8, 1.05], B: [1.1, 1.3], C: [0.95, 1.18], D: [1.35, 1.6] };   /* 상자 [가로, 세로] 배수 */
   function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 한 시트 안에선 같은 배율(뒷모습·정면·쓰러짐 비율 유지), 세력끼리는 키를 같게
     var f = G.fac || 'solar', refM = V2['s_' + f + '_stand'] || IMG.u_soldier_p; if (!refM) return 1;
