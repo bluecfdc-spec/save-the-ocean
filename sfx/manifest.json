@@ -450,7 +450,8 @@
    "sfx/candidates/탱크_10_3_war_3c1017.mp3": "3c101767",
    "sfx/candidates/탱크_10_4_war_01c526.mp3": "01c52693"
   },
-  "done": false
+  "done": true,
+  "pick": "sfx/candidates/탱크_10_1_war_d11bb4.mp3"
  },
  "탱크_11": {
   "game": "탱크",

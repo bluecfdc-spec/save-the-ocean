@@ -212,7 +212,7 @@ window.SFX = (function () {
     pick: 0.5, place: 0.7, clear: 0.85, launch: 0.8, boom_s: 0.8, boom_b: 1.0, scout: 0.6, clash: 0.8, retreat: 0.9, warn: 0.7, count: 0.6, ult_gale: 0.9, gain: 0.6, ult_surge: 0.9, advance: 0.9, step: 0.7, send: 0.9 };
   var BUF = {}, loading = {};
   function loadAll() { if (!ensure()) return; Object.keys(SAMPLES).forEach(function (k) { if (BUF[k] || loading[k]) return; loading[k] = 1;
-    fetch('assets/sfx/' + k + '.mp3?v=1').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
+    fetch('assets/sfx/' + k + '.mp3?v=2').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
   document.addEventListener('pointerdown', function () { loadAll(); }, { passive: true });
   function play(k, vol, rate) { if (!ensure() || !BUF[k]) return false; var src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = BUF[k]; if (rate) src.playbackRate.value = rate; g.gain.value = (vol == null ? 1 : vol) * SAMPLES[k]; src.connect(g); g.connect(sfx); src.start(); return true; }
   function wrap(name, key, volFn) { var synth = S[name]; S[name] = function (a) { if (play(key, volFn ? volFn(a) : 1, null)) return; if (synth) synth(a); }; }
