@@ -122,7 +122,7 @@
       scoutUntil: 0, nextAdv: t + ADV_MS, start: t,
       missiles: [], fx: [],
       tray: [makePiece(), makePiece(), makePiece()], drag: null, dragInf: null, reach: null, sweep: false, reveal: null, reroll: 3, freezeUntil: 0, lastT: t,
-      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: ULT_MAX, /* 테스트: 필살기 게이지 가득 찬 채로 시작 (정식에선 0) */ shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
+      fac: (window.TANK_FAC || localStorage.getItem('tank_fac') || 'solar'), ult: 0, /* 필살기 게이지는 0에서 시작 — 줄 10개 지우면 가득 */ shield: 0, stormMine: 0, stormOpp: 0, bolts: [], oppFac: null, oppUlt: 0, oppShield: 0
     };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     groundImg = null;
@@ -516,12 +516,15 @@
     return img.__hw;
   }
   var SOL_CASE = (function () { try { var q = /[?&]sol=([ABCD])/.exec(location.search); if (q) { localStorage.setItem('tank_sol', q[1]); return q[1]; } return localStorage.getItem('tank_sol') || 'D'; } catch (e) { return 'A'; } })();   /* 보병 크기 시안 */
+  var SOL_NORM = (function () { try { var q = /[?&]norm=(head|height)/.exec(location.search); if (q) { localStorage.setItem('tank_norm', q[1]); return q[1]; } return localStorage.getItem('tank_norm') || 'head'; } catch (e) { return 'head'; } })();   /* 보병 크기 기준 */
   var SOL_BOX = { A: [0.8, 1.05], B: [1.1, 1.3], C: [0.95, 1.18], D: [1.35, 1.6] };   /* 상자 [가로, 세로] 배수 */
   function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 한 시트 안에선 같은 배율(뒷모습·정면·쓰러짐 비율 유지), 세력끼리는 키를 같게
     var f = G.fac || 'solar', refM = V2['s_' + f + '_stand'] || IMG.u_soldier_p; if (!refM) return 1;
     var bx = SOL_BOX[SOL_CASE] || SOL_BOX.A, kM = Math.min(s * bx[0] / refM.width, s * bx[1] / refM.height);
-    if (mine) return kM * 1.2;                                     /* 아군(뒷모습)은 화면 아래쪽이라 작아 보여서 20% 크게 */
-    var refE = V2['s_' + oppFacKey() + '_stand']; return refE ? kM * refM.height / refE.height : kM;
+    var kMine = kM * 1.2; if (mine) return kMine;                  /* 아군(뒷모습) */
+    var ef = oppFacKey(), refE = V2['s_' + ef + '_frun1'] || V2['s_' + ef + '_front']; if (!refE) return kMine;
+    if (SOL_NORM === 'height') { var refEb = V2['s_' + ef + '_stand'] || refE; return kMine * refM.height / refEb.height; }   /* 키를 같게 */
+    return kMine * headW(refM) / headW(refE);                       /* 머리 폭을 같게 */
   }
   function drawSoldier(px, py, s, mine, feetY) {
     var im = mine ? IMG.u_soldier_p : IMG.u_soldier_e;
