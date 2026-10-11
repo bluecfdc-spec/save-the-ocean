@@ -184,7 +184,7 @@
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><b>3</b><div>보병을 모아<br>전선을 밀어라!</div></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀어라!</div></div>
   </div>
   <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
@@ -195,7 +195,7 @@
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록 줄을 지워<br>아이템을 모아라!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기를 띄워<br>적 탱크를 부숴라!</div></div>
-    <div class="ncard c3"><img src="assets/v2/s_solar_run1.png" alt=""><b>3</b><div>보병을 모아<br>전선을 밀어라!</div></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀어라!</div></div>
   </div>
 </div>
 
@@ -218,7 +218,7 @@
 })();
 </script>
 <script src="sfx.js?v=37"></script>
-<script src="tank.js?v=93"></script>
+<script src="tank.js?v=95"></script>
 <script src="net.js?v=43"></script>
 <script src="bot.js?v=44"></script>
 <script src="demo.js?v=4"></script>
@@ -229,7 +229,7 @@
 </script>
 <script>
 window.TANK_TIPS = { 3: '정찰기를 띄워\n적 탱크를 찾아 부숴라!', 2: '블록 줄을 지워\n아이템을 모아라!', 1: '최전방에 보병을 모아\n30초마다 전선을 밀어라!' };
-window.tankCards = function () { var f = localStorage.getItem('tank_fac') || 'solar'; document.querySelectorAll('.ncard.c2 img').forEach(function (i) { i.src = 'assets/v2/p_' + f + '.png'; }); document.querySelectorAll('.ncard.c3 img').forEach(function (i) { i.src = 'assets/v2/s_' + f + '_run1.png'; }); };
+window.tankCards = function () { var f = localStorage.getItem('tank_fac') || 'solar'; document.querySelectorAll('.ncard.c2 img').forEach(function (i) { i.src = 'assets/v2/p_' + f + '.png'; }); document.querySelectorAll('.ncard.c3 img').forEach(function (i) { i.src = 'assets/v2/k_' + f + '_m2.png'; }); };
 window.tankCountStep = function (n) {   /* n: 0=아무것도, 1~3 = 그 번호까지 카드 표시 */
   document.getElementById('countNum').textContent = n ? n : '';
   document.querySelectorAll('#count .ncard').forEach(function (c, k) { c.classList.toggle('show', k < n); });
