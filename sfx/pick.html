@@ -61,7 +61,7 @@ function render(){
 }
 fetch('manifest.json?t='+Date.now()).then(r=>r.json()).then(m=>{M=m;
   const order=['공통','탱크','목소리','스카이','오션'];
-  items=Object.entries(m).map(([id,it])=>Object.assign({id},it)).filter(it=>!it.done&&it.files&&it.files.length).sort((a,b)=>order.indexOf(a.game)-order.indexOf(b.game)||a.num.localeCompare(b.num));
+  items=Object.entries(m).map(([id,it])=>Object.assign({id},it)).filter(it=>!it.done&&!it.hold&&it.files&&it.files.length).sort((a,b)=>order.indexOf(a.game)-order.indexOf(b.game)||a.num.localeCompare(b.num));
   // 반영된 항목의 옛 선택은 지움
   Object.keys(saved).forEach(k=>{const id=k.replace(/^#/,'');if(m[id]&&m[id].done)delete saved[k]});save();
   idx=items.findIndex(it=>!saved[it.id]); if(idx<0)idx=items.length; render();});

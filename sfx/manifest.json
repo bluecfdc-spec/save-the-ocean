@@ -17,7 +17,8 @@
    "sfx/candidates/공통_01_3_ca29b7.mp3": "ca29b7e1",
    "sfx/candidates/공통_01_4_3a2d3b.mp3": "3a2d3bb8"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_02": {
   "game": "공통",
@@ -37,7 +38,8 @@
    "sfx/candidates/공통_02_3_85b401.mp3": "85b40191",
    "sfx/candidates/공통_02_4_fa99e5.mp3": "fa99e593"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_03": {
   "game": "공통",
@@ -57,7 +59,8 @@
    "sfx/candidates/공통_03_3_d5a00a.mp3": "d5a00afe",
    "sfx/candidates/공통_03_4_22f10f.mp3": "22f10fc2"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_04": {
   "game": "공통",
@@ -77,7 +80,8 @@
    "sfx/candidates/공통_04_3_6b2f35.mp3": "6b2f357a",
    "sfx/candidates/공통_04_4_23af1a.mp3": "23af1a1d"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_05": {
   "game": "공통",
@@ -97,7 +101,8 @@
    "sfx/candidates/공통_05_3_0241c2.mp3": "0241c253",
    "sfx/candidates/공통_05_4_8ac26e.mp3": "8ac26e58"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_06": {
   "game": "공통",
@@ -117,7 +122,8 @@
    "sfx/candidates/공통_06_3_bce600.mp3": "bce60099",
    "sfx/candidates/공통_06_4_153ab4.mp3": "153ab4f0"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_07": {
   "game": "공통",
@@ -137,7 +143,8 @@
    "sfx/candidates/공통_07_3_479102.mp3": "47910200",
    "sfx/candidates/공통_07_4_b65fbc.mp3": "b65fbc2e"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_08": {
   "game": "공통",
@@ -157,7 +164,8 @@
    "sfx/candidates/공통_08_3_643f91.mp3": "643f919b",
    "sfx/candidates/공통_08_4_ff4563.mp3": "ff456381"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_09": {
   "game": "공통",
@@ -177,7 +185,8 @@
    "sfx/candidates/공통_09_3_622d08.mp3": "622d08e3",
    "sfx/candidates/공통_09_4_8dddeb.mp3": "8dddebe2"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_10": {
   "game": "공통",
@@ -197,7 +206,8 @@
    "sfx/candidates/공통_10_3_2914d8.mp3": "2914d8a8",
    "sfx/candidates/공통_10_4_dca30d.mp3": "dca30d4e"
   },
-  "done": false
+  "done": false,
+  "hold": false
  },
  "공통_11": {
   "game": "공통",
@@ -217,7 +227,8 @@
    "sfx/candidates/공통_11_3_d9cfa0.mp3": "d9cfa05a",
    "sfx/candidates/공통_11_4_40289e.mp3": "40289ecf"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "공통_12": {
   "game": "공통",
@@ -237,7 +248,8 @@
    "sfx/candidates/공통_12_3_411cc8.mp3": "411cc8a4",
    "sfx/candidates/공통_12_4_952e03.mp3": "952e0347"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_01": {
   "game": "탱크",
@@ -257,7 +269,8 @@
    "sfx/candidates/탱크_01_3_90c673.mp3": "90c67376",
    "sfx/candidates/탱크_01_4_96c84f.mp3": "96c84fac"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_02": {
   "game": "탱크",
@@ -277,7 +290,8 @@
    "sfx/candidates/탱크_02_3_7c974d.mp3": "7c974d9e",
    "sfx/candidates/탱크_02_4_7d939b.mp3": "7d939bb7"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_03": {
   "game": "탱크",
@@ -297,7 +311,8 @@
    "sfx/candidates/탱크_03_3_8e4283.mp3": "8e428359",
    "sfx/candidates/탱크_03_4_501c11.mp3": "501c114e"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_04": {
   "game": "탱크",
@@ -317,7 +332,8 @@
    "sfx/candidates/탱크_04_3_5d574b.mp3": "5d574b93",
    "sfx/candidates/탱크_04_4_b5d4fc.mp3": "b5d4fcdf"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_05": {
   "game": "탱크",
@@ -337,7 +353,8 @@
    "sfx/candidates/탱크_05_3_0434b8.mp3": "0434b897",
    "sfx/candidates/탱크_05_4_aaa5e4.mp3": "aaa5e4d4"
   },
-  "done": false
+  "done": false,
+  "hold": false
  },
  "탱크_06": {
   "game": "탱크",
@@ -357,7 +374,8 @@
    "sfx/candidates/탱크_06_3_c89a41.mp3": "c89a4136",
    "sfx/candidates/탱크_06_4_075c8d.mp3": "075c8d08"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_07": {
   "game": "탱크",
@@ -377,7 +395,8 @@
    "sfx/candidates/탱크_07_3_81e666.mp3": "81e6664c",
    "sfx/candidates/탱크_07_4_8acb1f.mp3": "8acb1fa5"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_08": {
   "game": "탱크",
@@ -397,7 +416,8 @@
    "sfx/candidates/탱크_08_3_c79676.mp3": "c7967646",
    "sfx/candidates/탱크_08_4_24d282.mp3": "24d282c4"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_09": {
   "game": "탱크",
@@ -417,7 +437,8 @@
    "sfx/candidates/탱크_09_3_9335ab.mp3": "9335abf4",
    "sfx/candidates/탱크_09_4_189c8a.mp3": "189c8a4b"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_10": {
   "game": "탱크",
@@ -437,7 +458,8 @@
    "sfx/candidates/탱크_10_3_63249a.mp3": "63249a3b",
    "sfx/candidates/탱크_10_4_ac0645.mp3": "ac06452c"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_11": {
   "game": "탱크",
@@ -457,7 +479,8 @@
    "sfx/candidates/탱크_11_3_86d49f.mp3": "86d49fb4",
    "sfx/candidates/탱크_11_4_83918c.mp3": "83918cf5"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_12": {
   "game": "탱크",
@@ -477,7 +500,8 @@
    "sfx/candidates/탱크_12_3_6d2f5c.mp3": "6d2f5ce5",
    "sfx/candidates/탱크_12_4_c4b959.mp3": "c4b95917"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "탱크_13": {
   "game": "탱크",
@@ -497,7 +521,8 @@
    "sfx/candidates/탱크_13_3_125b8b.mp3": "125b8bfd",
    "sfx/candidates/탱크_13_4_c23416.mp3": "c23416c8"
   },
-  "done": false
+  "done": false,
+  "hold": false
  },
  "탱크_14": {
   "game": "탱크",
@@ -517,7 +542,8 @@
    "sfx/candidates/탱크_14_3_336c13.mp3": "336c132a",
    "sfx/candidates/탱크_14_4_e80356.mp3": "e8035603"
   },
-  "done": true
+  "done": true,
+  "hold": false
  },
  "스카이_01": {
   "game": "스카이",
@@ -537,7 +563,8 @@
    "sfx/candidates/스카이_01_3_ad5ddb.mp3": "ad5ddbda",
    "sfx/candidates/스카이_01_4_1195cc.mp3": "1195cce3"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_02": {
   "game": "스카이",
@@ -557,7 +584,8 @@
    "sfx/candidates/스카이_02_3_8cebed.mp3": "8cebed96",
    "sfx/candidates/스카이_02_4_1c4827.mp3": "1c4827a7"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_03": {
   "game": "스카이",
@@ -577,7 +605,8 @@
    "sfx/candidates/스카이_03_3_6bb946.mp3": "6bb94629",
    "sfx/candidates/스카이_03_4_8958cb.mp3": "8958cbdb"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_04": {
   "game": "스카이",
@@ -597,7 +626,8 @@
    "sfx/candidates/스카이_04_3_161bc7.mp3": "161bc77c",
    "sfx/candidates/스카이_04_4_246cc6.mp3": "246cc640"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_05": {
   "game": "스카이",
@@ -617,7 +647,8 @@
    "sfx/candidates/스카이_05_3_f6b72d.mp3": "f6b72d5c",
    "sfx/candidates/스카이_05_4_5921d1.mp3": "5921d123"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_06": {
   "game": "스카이",
@@ -637,7 +668,8 @@
    "sfx/candidates/스카이_06_3_23a021.mp3": "23a0212a",
    "sfx/candidates/스카이_06_4_87917a.mp3": "87917a78"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_07": {
   "game": "스카이",
@@ -657,7 +689,8 @@
    "sfx/candidates/스카이_07_3_33fe5f.mp3": "33fe5f94",
    "sfx/candidates/스카이_07_4_fe4503.mp3": "fe45037c"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "스카이_08": {
   "game": "스카이",
@@ -677,7 +710,8 @@
    "sfx/candidates/스카이_08_3_b60ccd.mp3": "b60ccd48",
    "sfx/candidates/스카이_08_4_36d32b.mp3": "36d32bb9"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_01": {
   "game": "오션",
@@ -697,7 +731,8 @@
    "sfx/candidates/오션_01_3_183b46.mp3": "183b46e6",
    "sfx/candidates/오션_01_4_bfe324.mp3": "bfe324b1"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_02": {
   "game": "오션",
@@ -717,7 +752,8 @@
    "sfx/candidates/오션_02_3_2f3264.mp3": "2f3264fc",
    "sfx/candidates/오션_02_4_c6f184.mp3": "c6f184b6"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_03": {
   "game": "오션",
@@ -737,7 +773,8 @@
    "sfx/candidates/오션_03_3_11bab0.mp3": "11bab080",
    "sfx/candidates/오션_03_4_c0affc.mp3": "c0affca9"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_04": {
   "game": "오션",
@@ -757,7 +794,8 @@
    "sfx/candidates/오션_04_3_0a6366.mp3": "0a636684",
    "sfx/candidates/오션_04_4_792b57.mp3": "792b572f"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_05": {
   "game": "오션",
@@ -777,7 +815,8 @@
    "sfx/candidates/오션_05_3_92594a.mp3": "92594a96",
    "sfx/candidates/오션_05_4_69caa2.mp3": "69caa2b5"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_06": {
   "game": "오션",
@@ -797,7 +836,8 @@
    "sfx/candidates/오션_06_3_0ed624.mp3": "0ed624d8",
    "sfx/candidates/오션_06_4_2e3fa5.mp3": "2e3fa516"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_07": {
   "game": "오션",
@@ -817,7 +857,8 @@
    "sfx/candidates/오션_07_3_d1a778.mp3": "d1a778ae",
    "sfx/candidates/오션_07_4_704daf.mp3": "704dafc3"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_08": {
   "game": "오션",
@@ -837,7 +878,8 @@
    "sfx/candidates/오션_08_3_fd16f3.mp3": "fd16f3c0",
    "sfx/candidates/오션_08_4_a234f2.mp3": "a234f2a4"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_09": {
   "game": "오션",
@@ -857,7 +899,8 @@
    "sfx/candidates/오션_09_3_9d5207.mp3": "9d5207bb",
    "sfx/candidates/오션_09_4_65b195.mp3": "65b19516"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "오션_10": {
   "game": "오션",
@@ -877,7 +920,8 @@
    "sfx/candidates/오션_10_3_1bcbff.mp3": "1bcbffba",
    "sfx/candidates/오션_10_4_388874.mp3": "38887418"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "목소리_01": {
   "game": "목소리",
@@ -901,7 +945,8 @@
    "sfx/candidates/목소리_01_5_radio_b7354c.mp3": "b7354c05",
    "sfx/candidates/목소리_01_6_radio_ceba1b.mp3": "ceba1b16"
   },
-  "done": false
+  "done": false,
+  "hold": false
  },
  "목소리_02": {
   "game": "목소리",
@@ -919,7 +964,8 @@
    "sfx/candidates/목소리_02_2_9b064e.mp3": "9b064eb2",
    "sfx/candidates/목소리_02_3_9814dd.mp3": "9814ddd5"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "목소리_03": {
   "game": "목소리",
@@ -937,7 +983,8 @@
    "sfx/candidates/목소리_03_2_df378f.mp3": "df378fc9",
    "sfx/candidates/목소리_03_3_8468a6.mp3": "8468a6c2"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "목소리_04": {
   "game": "목소리",
@@ -955,7 +1002,8 @@
    "sfx/candidates/목소리_04_2_6173de.mp3": "6173de57",
    "sfx/candidates/목소리_04_3_d262d3.mp3": "d262d38e"
   },
-  "done": false
+  "done": false,
+  "hold": true
  },
  "목소리_05": {
   "game": "목소리",
@@ -973,6 +1021,7 @@
    "sfx/candidates/목소리_05_2_83d181.mp3": "83d18183",
    "sfx/candidates/목소리_05_3_2c5e15.mp3": "2c5e1542"
   },
-  "done": false
+  "done": false,
+  "hold": true
  }
 }
