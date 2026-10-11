@@ -743,8 +743,8 @@
     else if (V2.ui_fuel) { ctx.save(); if (!on) ctx.filter = 'grayscale(1) brightness(.6)'; ctx.drawImage(V2.ui_fuel, bx, by, bw, bh); ctx.restore(); }
     else { var gg = ctx.createLinearGradient(bx, by, bx, by + bh); gg.addColorStop(0, on ? '#ffe284' : '#6b6f60'); gg.addColorStop(1, on ? '#e8a21a' : '#3e4138'); rr(bx, by, bw, bh, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke(); }
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(255,220,120,.6)'; ctx.shadowBlur = on ? 6 : 0;
-    var fsz = Math.round(Math.min(bh * 0.5, bw / 6.5));
-    ctx.font = '800 ' + fsz + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a1000'; var lbl = (bw < 150 ? '교체 ×' : '블록 교체  ×') + G.reroll, lx = V2.btn_reroll_on ? bx + bw * 0.64 : bx + bw / 2; ctx.strokeText(lbl, lx, by + bh / 2 + 1); ctx.fillStyle = on ? '#ffe28a' : '#777'; ctx.fillText(lbl, lx, by + bh / 2 + 1); ctx.restore();
+    var fsz = Math.round(V2.btn_reroll_on ? Math.min(bh * 0.36, bw / 9) : Math.min(bh * 0.5, bw / 6.5));
+    ctx.font = '800 ' + fsz + 'px Black Han Sans, Do Hyeon, system-ui'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a1000'; var lbl = (bw < 150 ? '교체 ×' : '블록 교체  ×') + G.reroll, lx = V2.btn_reroll_on ? bx + bw * 0.62 : bx + bw / 2; ctx.strokeText(lbl, lx, by + bh / 2 + 1); ctx.fillStyle = on ? '#ffe28a' : '#777'; ctx.fillText(lbl, lx, by + bh / 2 + 1); ctx.restore();
   }
   function drawPanel(t) {                                         // 오른쪽 정보 패널: [상대] 탱크+체력 / 문장 게이지 · 전선 게이지 · [나] 탱크+체력 / 문장 게이지(버튼)
     var x0 = W, g = ctx.createLinearGradient(x0, 0, x0 + PW, 0); g.addColorStop(0, '#15170f'); g.addColorStop(1, '#23261b'); ctx.fillStyle = g; ctx.fillRect(x0, -OFFY, PW, HL);
