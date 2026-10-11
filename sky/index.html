@@ -124,14 +124,15 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #flags button[aria-pressed="true"][id$=gale]{border-color:#c58bff;box-shadow:0 0 16px #c58bff88}
 #flags button[aria-pressed="true"][id$=solar]{border-color:#ffd451;box-shadow:0 0 16px #ffd45188}
 #pick .fd{margin:8px 0 0;font-size:12px;color:#cfe6ff;max-width:32ch}
-#ult{position:absolute;left:18px;top:18px;width:10%;min-width:36px;aspect-ratio:2/3;border-radius:8px;padding:0;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.85);cursor:pointer;z-index:3;touch-action:none;overflow:hidden}   /* 필살기: 터치패드 왼쪽 위 세로 네모 (폭 10%) */
-#ult img{position:absolute;left:10%;top:50%;width:80%;height:auto;transform:translateY(-50%);opacity:.45;z-index:1;pointer-events:none}
-#ult .fill{position:absolute;left:0;right:0;bottom:0;height:0%;background:var(--fc,#ffd451);opacity:.45}
+#ult{position:absolute;left:12px;bottom:10px;width:46%;height:38px;border-radius:10px;padding:0 10px 0 40px;border:2px solid var(--fc,#ffd451);background:rgba(4,16,24,.82);cursor:pointer;z-index:3;touch-action:none;overflow:hidden}   /* 필살기: 전장 왼쪽 아래(터치패드 바로 위) 가로 막대 */
+#ult img{position:absolute;left:3px;top:50%;width:32px;height:32px;transform:translateY(-50%);opacity:.5;z-index:2;pointer-events:none}
+#ult .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--fc,#ffd451);opacity:.4}
 #ult .fill img{display:none}
 #ult.on{box-shadow:0 0 14px var(--fc,#ffd451);animation:ultp 1s ease-in-out infinite}
 #ult.on img{opacity:1}
-#ult .lb{display:none}
-#pad .stats{left:calc(10% + 30px)!important}
+#ult .lb{position:relative;z-index:2;display:block;text-align:center;font:800 15px var(--display);color:#fff;text-shadow:0 0 4px #000,0 1px 2px #000}
+#ult.ubB{top:64px;bottom:auto}
+#ult.ubC{left:0;right:0;width:auto;bottom:0;height:34px;border-radius:0;border-width:2px 0 0}
 @keyframes ultp{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #title{position:absolute;inset:0;z-index:10;background:var(--void);cursor:pointer;display:flex;align-items:center;justify-content:center}
 #title img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
@@ -260,6 +261,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     <canvas id="cv"></canvas>
     <div id="score"><small>TIME</small><b id="scoreV">0.00</b></div>
     <button id="pause" type="button" aria-label="일시정지">II</button>
+    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/emb_solar_on.png?v=44" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/ult_solar_on.png?v=44" alt=""></div><div class="lb" id="ultLb">0%</div></button>
     <div id="spec" hidden><span id="specT"></span><button id="specB" type="button">방으로 나가기</button></div>
     <button id="snd" type="button" aria-label="음악 켜기/끄기" aria-pressed="true">♪</button>
   </div>
@@ -269,7 +271,6 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </div>
     <div class="hint">TOUCH &amp; MOVE</div>
     <div id="mark" hidden></div>
-    <button id="ult" type="button" aria-label="필살기"><img id="ultBg" src="assets/emb_solar_on.png?v=44" alt=""><div class="fill" id="ultFill"><img id="ultFg" src="assets/ult_solar_on.png?v=44" alt=""></div><div class="lb" id="ultLb">0%</div></button>
   </div>
   <div id="overlay">
     <div id="homeBlur"></div>
@@ -333,7 +334,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='47';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='48';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -354,6 +355,7 @@ const FLAGS=['surge','gale','solar'];
 const FAC={surge:{name:'서지',skill:'격류',col:'#4fd8ff',glow:'rgba(79,216,255,',desc:'6초 동안 모든 탄이 느려진다',sym:'🌊'},
   gale:{name:'게일',skill:'뇌격',col:'#c58bff',glow:'rgba(197,139,255,',desc:'주변의 탄을 전부 날려 버린다',sym:'⚡'},
   solar:{name:'솔라',skill:'태양 방패',col:'#ffd451',glow:'rgba(255,212,81,',desc:'10초 동안 한 발을 막아 주는 방패',sym:'☀'}};
+const UB=(location.search.match(/[?&]ub=([ABC])/)||[])[1];if(UB&&UB!=='A')document.getElementById('ult').classList.add('ub'+UB);
 const ULT_FILL=/[?&]god\b/.test(location.search)?2:12;   // 게이지가 차는 데 걸리는 초
 let flag=(window.TANK_FAC||'solar');
 try{const f=localStorage.getItem('tank_fac');if(FLAGS.includes(f))flag=f}catch(e){}
@@ -731,7 +733,7 @@ const Music=(()=>{
 })();
 function ultUi(){const b=$('ult');if(!b)return;const f=FAC[flag]||FAC.solar;
   if(b.dataset.f!==flag){b.dataset.f=flag;b.style.setProperty('--fc',f.col);$('ultBg').src='assets/emb_'+flag+'_on.png?v=44'}
-  const full=ult.g>=1;$('ultFill').style.height=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
+  const full=ult.g>=1;$('ultFill').style.width=(ult.g*100)+'%';b.classList.toggle('on',full&&state==='play');
   $('ultLb').textContent=time<ult.slowUntil?'격류':ult.shield>0?'방패':full?f.skill:Math.round(ult.g*100)+'%'}
 function useUlt(){
   if(state!=='play'||ult.g<1||!ship)return;ult.g=0;ult.flashT=.5;Music.boom();
