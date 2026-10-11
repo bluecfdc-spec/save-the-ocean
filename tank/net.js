@@ -103,7 +103,7 @@ window.REALNET = window.NET = (function () {
       ref.child('players').on('value', onPlayers);
       ref.child('meta').on('value', onMeta);
       ref.child('inbox/' + uid).on('child_added', onInbox);
-      try { window.tankCards(); } catch (e) { } watchRooms(false); lobbyChat(false); $('roomCode').textContent = roomName(code) || code; $('shareBtn').style.display = roomName(code) ? 'none' : ''; show('room'); renderRoom();
+      try { window.tankCards(); } catch (e) { } watchRooms(false); lobbyChat(false); $('roomCode').textContent = roomName(code) || code; show('room'); renderRoom();
     }).catch(function (e) { msg('lbMsg', '입장 실패: ' + (e.message || e)); });
   }
   function leave() {
@@ -115,7 +115,7 @@ window.REALNET = window.NET = (function () {
   function link() { return location.origin + location.pathname + '?room=' + code; }
   function share() {
     var l = link();
-    if (navigator.share) navigator.share({ title: 'TANK RUMBLE 대전', text: '탱크 럼블 1:1 대전 초대 — 코드 ' + code, url: l }).catch(function () { });
+    if (navigator.share) navigator.share({ title: 'TANK RUMBLE 대전', text: '탱크 럼블 1:1 대전 초대 — ' + (roomName(code) ? roomName(code) + ' 전장' : '코드 ' + code), url: l }).catch(function () { });
     else if (navigator.clipboard) navigator.clipboard.writeText(l).then(function () { msg('roomMsg', '초대 링크를 복사했어요.'); });
     else prompt('초대 링크', l);
   }
@@ -271,6 +271,6 @@ window.REALNET = window.NET = (function () {
   $('againBtn').addEventListener('click', again);
   $('resLeave').addEventListener('click', leave);
   // 초대 링크로 들어온 경우
-  try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); $('code').value = rq.toUpperCase(); if (name) join(rq); else msg('lbMsg', '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
+  try { var rq = new URLSearchParams(location.search).get('room'); if (rq) { openLobby(); rq = rq.toUpperCase(); $('code').value = rq; if (name && roomName(rq)) joinPublic(rq); else if (name) join(rq); else msg('lbMsg', roomName(rq) ? '이름을 넣고 [' + roomName(rq) + ']을 누르세요.' : '이름을 넣고 [참가]를 누르세요.'); } } catch (e) { }
   return { finish: finish, show: show, opp: opp, sendInf: sendInf, fired: fired, scouted: scouted, skill: skill, collapsed: collapsed, _hostTick: hostTick, pub: pub, over: over, uid: function () { return uid; }, _state: function () { return { code: code, players: players, meta: meta, started: started }; } };
 })();

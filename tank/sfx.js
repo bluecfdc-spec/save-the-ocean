@@ -44,7 +44,7 @@ window.SFX = (function () {
   // 배경음악 (Suno 1번, 101초 이음새 없는 반복). 첫 터치 때 켜고, 화면을 내렸다 올리면 되살림. 결과 화면에선 멈추고 승리/패배 음악
   var bgmEl = null, bgmOn = false, bgmHold = false, BGM_VOL = 0.38, duckT = null, resEl = null;
   S.bgmStart = function () {
-    bgmOn = true; bgmHold = false; sting = false;
+    bgmOn = true; bgmHold = false; sting = false; stopMusic();
     if (!bgmEl) { bgmEl = new Audio('assets/music/tank_loop.mp3?v=1'); bgmEl.loop = true; bgmEl.volume = BGM_VOL; bgmEl.setAttribute('playsinline', ''); bgmEl.preload = 'auto'; }
     if (resEl) { resEl.pause(); resEl = null; }
     bgmEl.muted = muted; var p = bgmEl.play(); if (p && p.catch) p.catch(function () { });
@@ -52,7 +52,23 @@ window.SFX = (function () {
   S.bgmStop = function () { bgmOn = false; if (bgmEl) bgmEl.pause(); };
   var sting = false;
   function resPlaying(win) { return resEl && !resEl.paused && !resEl.ended && resEl._win === win; }
-  S.stingMusic = function (win) {                                  // 교전 결과: 전선을 밀면 승리 음악, 밀리면 패배 음악 한 번 → 끝나면 배경음악 다시
+  var MBUF = {}, mLoading = {}, cur = null;                        // 승리/패배 음악은 Web Audio 로 재생 (아이폰은 나중에 새로 만든 <audio> 재생을 막음)
+  function loadMusic() { if (!ensure()) return; ['win', 'lose'].forEach(function (k) { if (MBUF[k] || mLoading[k]) return; mLoading[k] = 1;
+    fetch('assets/music/' + k + '.mp3?v=1').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return new Promise(function (ok, no) { ctx.decodeAudioData(ab, ok, no); }); }).then(function (b) { MBUF[k] = b; }).catch(function () { mLoading[k] = 0; }); }); }
+  document.addEventListener('pointerdown', function () { loadMusic(); }, { passive: true });
+  function stopMusic() { if (cur) { try { cur.src.onended = null; cur.src.stop(); } catch (e) { } cur = null; } }
+  function musicOn(win) { return cur && cur.win === win; }
+  function playMusic(win, onend) {
+    if (!ensure() || !MBUF[win ? 'win' : 'lose']) return false; revive(); stopMusic();
+    var src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = MBUF[win ? 'win' : 'lose']; g.gain.value = 0.75; src.connect(g); g.connect(master);
+    var me = { src: src, win: win }; cur = me; src.onended = function () { if (cur === me) cur = null; if (onend) onend(); }; src.start(); return true;
+  }
+  S.stingMusic = function (win) {
+    if (musicOn(win)) return; if (resEl) resEl.pause(); clearInterval(duckT); if (bgmEl) bgmEl.pause(); sting = true;
+    if (playMusic(win, function () { sting = false; if (bgmOn && !bgmHold) S.bgmStart(); })) return;
+    S.stingMusicEl(win);
+  };
+  S.stingMusicEl = function (win) {                                  // 교전 결과: 전선을 밀면 승리 음악, 밀리면 패배 음악 한 번 → 끝나면 배경음악 다시
     if (resPlaying(win)) return; if (resEl) resEl.pause(); clearInterval(duckT);
     if (bgmEl) bgmEl.pause(); sting = true;
     resEl = new Audio('assets/music/' + (win ? 'win' : 'lose') + '.mp3?v=1'); resEl._win = win; resEl.volume = 0.7; resEl.muted = muted; resEl.setAttribute('playsinline', '');
@@ -64,7 +80,10 @@ window.SFX = (function () {
     duckT = setInterval(function () { var e = Date.now() - t0, v = e < 250 ? BGM_VOL - (BGM_VOL - lo) * e / 250 : e < hold ? lo : e < hold + 800 ? lo + (BGM_VOL - lo) * (e - hold) / 800 : BGM_VOL; bgmEl.volume = Math.max(0, Math.min(1, v)); if (e >= hold + 800) clearInterval(duckT); }, 40);
   };
   S.resultMusic = function (win) {                                 // 승리/패배: 배경음악 끄고, 효과음 뒤에 결과 음악 한 번
-    bgmHold = true; S.bgmStop(); clearInterval(duckT); if (resPlaying(win)) { resEl.onended = function () { sting = false; bgmHold = false; }; return; }   /* 같은 음악이 이미 나오는 중이면 이어서 */
+    bgmHold = true; S.bgmStop(); clearInterval(duckT);
+    if (musicOn(win)) { var c0 = cur; c0.src.onended = function () { if (cur === c0) cur = null; sting = false; bgmHold = false; }; return; }   /* 같은 음악이 이미 나오는 중이면 이어서 */
+    if (playMusic(win, function () { sting = false; bgmHold = false; })) return;   /* 승리·패배 화면: 바로 음악 */
+    if (resPlaying(win)) { resEl.onended = function () { sting = false; bgmHold = false; }; return; }
     setTimeout(function () { if (!bgmHold) return; if (resEl) resEl.pause(); resEl = new Audio('assets/music/' + (win ? 'win' : 'lose') + '.mp3?v=1'); resEl.volume = 0.7; resEl.muted = muted; resEl.setAttribute('playsinline', ''); resEl.onended = function () { bgmHold = false; }; var p = resEl.play(); if (p && p.catch) p.catch(function () { }); }, 2400);
   };
   document.addEventListener('pointerdown', function () { if (bgmHold || sting) return; if (!bgmOn) S.bgmStart(); else if (bgmEl && bgmEl.paused) S.bgmStart(); }, { passive: true });
@@ -220,7 +239,7 @@ window.SFX = (function () {
   function loadAll() { if (!ensure()) return; Object.keys(SAMPLES).forEach(function (k) { if (BUF[k] || loading[k]) return; loading[k] = 1;
     fetch('assets/sfx/' + k + '.mp3?v=3').then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return ctx.decodeAudioData(ab); }).then(function (b) { BUF[k] = b; }).catch(function () { loading[k] = 0; }); }); }
   document.addEventListener('pointerdown', function () { loadAll(); }, { passive: true });
-  try { loadAll(); } catch (e) { }   /* 페이지 열리자마자 미리 받기 */
+  try { loadAll(); loadMusic(); } catch (e) { }   /* 페이지 열리자마자 미리 받기 */
   function play(k, vol, rate) { if (!ensure() || !BUF[k]) return false; var src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = BUF[k]; if (rate) src.playbackRate.value = rate; g.gain.value = (vol == null ? 1 : vol) * SAMPLES[k]; src.connect(g); g.connect(sfx); src.start(); return true; }
   function wrap(name, key, volFn) { var synth = S[name]; S[name] = function (a) { if (play(key, volFn ? volFn(a) : 1, null)) return; if (synth) synth(a); }; }
   wrap('click', 'ui_click'); wrap('go', 'go'); wrap('bad', 'ui_bad'); wrap('win', 'retreat'); wrap('over', 'advance'); S.lose = S.over;   /* 게임 승리 = 전선 전진 음악(탱크_12), 패배 = 전선 밀림(탱크_13) */
@@ -230,7 +249,7 @@ window.SFX = (function () {
   var synthUlt = S.ult; S.ult = function (k) { if (k === 'solar' && play('ult_solar', 1)) return; if (k === 'gale' && play('ult_gale', 1)) return; if (k === 'surge' && play('ult_surge', 1)) return; synthUlt(k); };
   S.confirm = function () { if (!play('ui_confirm', 1)) S.click(); };
   S.back = function () { if (!play('ui_back', 1)) S.click(); };
-  var winS = S.win, overS = S.over; S.win = function (a) { if (winS) winS(a); S.resultMusic(true); }; S.over = function (a) { if (overS) overS(a); S.resultMusic(false); }; S.lose = S.over;
+  var winS = S.win, overS = S.over; S.win = function (a) { if (!MBUF.win && winS) winS(a); S.resultMusic(true); }; S.over = function (a) { if (!MBUF.lose && overS) overS(a); S.resultMusic(false); }; S.lose = S.over;   /* 음악이 준비돼 있으면 음악만 */
   var clashS = S.clash; S.clash = function (a) { S.duck(2600); if (clashS) clashS(a); };
   return S;
 })();

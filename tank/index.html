@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 새 버전 자동 반영: 폰 브라우저가 옛 화면을 들고 있으면 최신 버전 번호로 다시 연다 */
-(function () { var BUILD = '112'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '113'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -206,6 +206,8 @@
   #room .ncard img { width: 40px; height: 40px; flex: 0 0 40px; }
   #room .ncard b { width: 22px; height: 22px; line-height: 20px; font-size: 13px; }
   #room .pl { margin: 2px 0; padding: 6px 12px; }
+  #room .row.three { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; width: min(94vw, 420px); }
+  #room .row.three .btn { padding: 2px 0; border-width: 10px 18px; border-image-width: 10px 18px; }
   #room .btn { font-size: 20px; }
   #room .btn.sub { font-size: 17px; }
   #ov .row.two .btn { padding: 0; font-size: 24px; line-height: 1.15; border-width: 9px 26px; border-image-width: 9px 26px; }
@@ -262,14 +264,13 @@
 <div id="room" class="ov hidden">
   <h2>전장</h2>
   <div id="roomCode" class="code">----</div>
-  <div class="row"><button id="shareBtn" class="btn sub">초대 링크 보내기</button></div>
   <div id="plist"></div>
   <div class="cards">
     <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록을 드래그 앤 드랍으로<br>아이템을 모으자!</div></div>
     <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div>정찰기로 확인하고<br>미사일로 탱크를 부숴라!</div></div>
     <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div>벙커를 지어<br>전선을 밀자!</div></div>
   </div>
-  <div class="row"><button id="readyBtn" class="btn" disabled>준비!</button><button id="leaveBtn" class="btn sub">나가기</button></div>
+  <div class="row three"><button id="readyBtn" class="btn" disabled>준비!</button><button id="shareBtn" class="btn sub">📨 초대</button><button id="leaveBtn" class="btn sub">나가기</button></div>
   <p id="roomMsg" class="hint"></p>
 </div>
 
@@ -310,9 +311,9 @@
   document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
 })();
 </script>
-<script src="sfx.js?v=40"></script>
+<script src="sfx.js?v=41"></script>
 <script src="tank.js?v=108"></script>
-<script src="net.js?v=44"></script>
+<script src="net.js?v=45"></script>
 <script src="bot.js?v=49"></script>
 <script src="demo.js?v=4"></script>
 <script>
