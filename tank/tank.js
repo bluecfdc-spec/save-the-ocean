@@ -971,9 +971,9 @@
     if (V2.btn_reroll_on) { ctx.drawImage(on ? V2.btn_reroll_on : V2.btn_reroll_off, bx, by, bw, bh); }
     else { var gg = ctx.createLinearGradient(bx, by, bx, by + bh); gg.addColorStop(0, on ? '#ffe284' : '#6b6f60'); gg.addColorStop(1, on ? '#e8a21a' : '#3e4138'); rr(bx, by, bw, bh, 10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = on ? '#ffd451' : '#2a2c24'; ctx.lineWidth = 2; ctx.stroke(); }
     ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';   /* 글씨: 검은 테두리를 먼저(그림자 없이) 그리고 그 위에 글자 — 선이 글자 위로 얹히지 않게 */
-    var fsz = Math.round(V2.btn_reroll_on ? Math.min(bh * 0.36, bw / 8.2) : Math.min(bh * 0.5, bw / 6.5));
-    ctx.font = fsz + 'px Black Han Sans, Do Hyeon, system-ui'; try { ctx.letterSpacing = Math.max(1, Math.round(fsz * 0.06)) + 'px'; } catch (e) { }
-    var lbl = (bw < 150 ? '교체 ×' : '블록 교체 ×') + G.reroll, lx = V2.btn_reroll_on ? bx + bw * 0.63 : bx + bw / 2, ly = by + bh / 2 + 1;
+    var lbl = (bw < 150 ? '교체 ' : '블록 교체 ') + G.reroll, fsz = Math.round(V2.btn_reroll_on ? Math.min(bh * 0.44, bw * 0.58 / (lbl.length * 0.78)) : Math.min(bh * 0.5, bw / 6.5));
+    ctx.font = fsz + 'px Black Han Sans, Do Hyeon, system-ui'; try { ctx.letterSpacing = '1px'; } catch (e) { }
+    var lx = V2.btn_reroll_on ? bx + bw * 0.64 : bx + bw / 2, ly = by + bh / 2 + 1;
     ctx.lineJoin = 'round'; ctx.miterLimit = 2; ctx.lineWidth = Math.max(3, fsz * 0.28); ctx.strokeStyle = '#120a00'; ctx.strokeText(lbl, lx, ly);
     ctx.fillStyle = on ? '#fff1b8' : '#8a8a80'; ctx.fillText(lbl, lx, ly); ctx.restore();
   }
