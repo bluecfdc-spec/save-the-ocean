@@ -436,22 +436,12 @@
  "탱크_10": {
   "game": "탱크",
   "num": "10",
-  "name": "보병 출격",
+  "name": "보병 출격 (목소리 대신 전자음)",
   "sec": 2,
   "prompt": "space marine squad charging, soldier shouts \"Hold the line! Move move move!\" in a gruff military radio voice with boots running and gear rattling, near-future military, 2 seconds",
-  "files": [
-   "sfx/candidates/탱크_10_1_71738b.mp3",
-   "sfx/candidates/탱크_10_2_b82ea5.mp3",
-   "sfx/candidates/탱크_10_3_63249a.mp3",
-   "sfx/candidates/탱크_10_4_ac0645.mp3"
-  ],
-  "ver": {
-   "sfx/candidates/탱크_10_1_71738b.mp3": "71738b09",
-   "sfx/candidates/탱크_10_2_b82ea5.mp3": "b82ea52a",
-   "sfx/candidates/탱크_10_3_63249a.mp3": "63249a3b",
-   "sfx/candidates/탱크_10_4_ac0645.mp3": "ac06452c"
-  },
-  "done": true
+  "files": [],
+  "ver": {},
+  "done": false
  },
  "탱크_11": {
   "game": "탱크",
@@ -928,7 +918,7 @@
    "sfx/candidates/목소리_01_3_marine_d69e13.mp3": "d69e1338"
   },
   "done": true,
-  "hold": false,
+  "hold": true,
   "pick": "sfx/candidates/목소리_01_1_marine_6c9b0f.mp3"
  },
  "목소리_02": {

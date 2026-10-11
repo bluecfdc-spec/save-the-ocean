@@ -29,7 +29,7 @@ let M={}, items=[], idx=0, saved={}, audio=null, playingBtn=null;
 try{saved=JSON.parse(localStorage.getItem('sfxpick')||'{}')}catch(e){}
 function save(){try{localStorage.setItem('sfxpick',JSON.stringify(saved))}catch(e){}}
 const DESC={'공통_10':'서지(물) 필살기 발동 소리. 파도가 바위에 부딪히는 쏴아 — 저음 울림이 아니어야 함',
- '탱크_05':'탱크가 칸을 옮길 때. 짧고 조용한 궤도 소리',
+ '탱크_05':'탱크가 칸을 옮길 때. 짧고 조용한 궤도 소리', '탱크_10':'보병 투입 버튼을 누를 때. 공통_02 확인 소리처럼 기분 좋은 전자음 (사람 목소리 없음)',
  '탱크_13':'전선이 밀릴 때. 모래주머니·바리케이드가 터지는 폭파 (게임은 계속됨)',
  '목소리_01':'보병 투입 때 나오는 군인 목소리 — 무전기 마린 톤 3종. 고르면 제가 발소리와 섞어 완성'};
 const TITLE={'목소리_01':'탱크_10 · 보병 출격 목소리'};
