@@ -520,7 +520,7 @@
   function solK(mine, s) {                                        // 화면 1px 당 그림 배율. 한 시트 안에선 같은 배율(뒷모습·정면·쓰러짐 비율 유지), 세력끼리는 키를 같게
     var f = G.fac || 'solar', refM = V2['s_' + f + '_stand'] || IMG.u_soldier_p; if (!refM) return 1;
     var bx = SOL_BOX[SOL_CASE] || SOL_BOX.A, kM = Math.min(s * bx[0] / refM.width, s * bx[1] / refM.height);
-    if (mine) return kM;
+    if (mine) return kM * 1.2;                                     /* 아군(뒷모습)은 화면 아래쪽이라 작아 보여서 20% 크게 */
     var refE = V2['s_' + oppFacKey() + '_stand']; return refE ? kM * refM.height / refE.height : kM;
   }
   function drawSoldier(px, py, s, mine, feetY) {
