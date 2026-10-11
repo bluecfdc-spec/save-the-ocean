@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05030f">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>SKY RUMBLE (test)</title>
-<meta property="og:title" content="SKY RUMBLE">
+<title>SPACE RUMBLE (test)</title>
+<meta property="og:title" content="SPACE RUMBLE">
 <meta property="og:description" content="몇 초나 버틸 수 있나요? 세력을 걸고 겨루는 우주 회피 게임">
 <meta property="og:image" content="https://bluecfdc-spec.github.io/save-the-ocean/sky/og.jpg?v=44">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -272,7 +272,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   <div id="overlay">
     <div id="homeBlur"></div>
     <img id="homeBg" src="assets/title_bg.jpg?v=44" alt="" onerror="this.dataset.bad=1;this.hidden=true;if(window.__home)window.__home()">
-    <h1 id="ovT">SPACE SURVIVOR</h1>
+    <h1 id="ovT">SPACE RUMBLE</h1>
     <div class="big" id="ovS" hidden>0</div>
     <p id="ovP">날아오는 탄을 전부 피하세요. 몇 초를 버티는지가 기록입니다.<br>버티면 필살기 게이지가 차요 — 왼쪽 아래 문장을 누르세요.</p>
     <p id="gap" hidden></p>
@@ -331,7 +331,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='44';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='45';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -899,7 +899,7 @@ function plain(){$('overlay').classList.remove('home','art');$('homeBlur').hidde
 function homeScreen(){
   state='ready';rivals=[];mpWon=false;
   const bad=$('homeBg').dataset.bad;
-  $('overlay').classList.add('home');$('overlay').classList.remove('art');$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SKY RUMBLE';
+  $('overlay').classList.add('home');$('overlay').classList.remove('art');$('homeBlur').hidden=!!bad;$('homeBg').hidden=!!bad;$('ovT').hidden=!bad;$('ovT').textContent='SPACE RUMBLE';
   $('ovS').hidden=true;$('res').hidden=true;$('gap').hidden=true;$('ovP').hidden=true;$('pick').hidden=true;$('chg').hidden=true;$('homeB').hidden=true;
   $('go').hidden=false;$('go').textContent='출격';$('mpB').hidden=false;$('rankB').hidden=false;
   $('overlay').hidden=false;layoutHome();
