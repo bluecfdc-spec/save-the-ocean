@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>제네시스 출시 일정표</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#f3f4f7; --paper:#ffffff; --ink:#151a2b; --muted:#5c6378; --line:#dfe2ea;
+  --accent:#c9861a; --accent-ink:#ffffff; --weekend:#fff6e6;
+  --c-acct:#2f6fb0; --c-game:#1f8f7d; --c-test:#7a4fc2; --c-video:#c24f6a; --c-launch:#c9861a;
+  --late:#c0392b; --done:#8b92a6;
+  --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1220; --paper:#171b2c; --ink:#e8eaf2; --muted:#9aa1b8; --line:#2a3046;
+  --accent:#e3a23a; --accent-ink:#1a1305; --weekend:#241f14;
+  --c-acct:#6ea6e0; --c-game:#4cc3ad; --c-test:#a988e6; --c-video:#e7809a; --c-launch:#e3a23a;
+  --late:#f07a6c; --done:#6c7389; color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:20px 60px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,6vw,38px);margin:0;letter-spacing:.5px}
+.sub{color:var(--muted);margin:4px 0 0}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.me{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.count{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 14px}
+.cd{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.cd b{display:block;font-family:var(--f-display);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.cd span{font-size:12px;color:var(--muted)}
+.cd.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cd.main span{color:var(--bg);opacity:.75}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+.prog{flex:1 1 200px;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button,.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:99px;padding:5px 12px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--c)}
+.week{margin-top:22px}
+.wk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:4px;margin-bottom:6px;flex-wrap:wrap}
+.wk-h h2{font-family:var(--f-display);font-weight:400;font-size:20px;margin:0}
+.wk-h small{color:var(--muted);font-size:12px}
+.task{display:grid;grid-template-columns:58px 26px 1fr;gap:4px 10px;padding:10px 8px;border-bottom:1px solid var(--line);align-items:start}
+.task.we{background:var(--weekend)}
+.task.today{outline:2px solid var(--accent);outline-offset:-2px;border-radius:6px}
+.d{font-family:var(--f-mono);font-size:13px;color:var(--muted);line-height:1.3}
+.d b{display:block;font-family:var(--f-body);font-weight:700;color:var(--ink);font-size:14px}
+.task.we .d b{color:var(--accent)}
+.ck{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+.body{min-width:0}
+.t{font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.who{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;background:var(--wc);color:var(--bg)}
+.t .cat{font-size:11px;font-weight:500;color:var(--c);border:1px solid var(--c);border-radius:4px;padding:0 5px}
+.det{color:var(--muted);font-size:13.5px;margin-top:2px;white-space:pre-line;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:6px;font-size:12px;color:var(--muted)}
+.meta .cost{color:var(--ink);font-weight:500}
+.meta .late{color:var(--late);font-weight:700}
+.meta .ok{color:var(--c-game);font-weight:500}
+.task.done .tt{text-decoration:line-through;color:var(--done)}
+.task.done .det{opacity:.6}
+.memo{margin-top:6px;font-size:13px;background:var(--bg);border-left:3px solid var(--accent);padding:4px 8px;border-radius:0 4px 4px 0;white-space:pre-line}
+details.edit{margin-top:6px}
+details.edit summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none}
+details.edit summary::-webkit-details-marker{display:none}
+.ed{display:grid;gap:6px;margin-top:6px}
+.ed label{font-size:12px;color:var(--muted);display:grid;gap:2px}
+.ed input,.ed textarea,.ed select{font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.ed textarea{min-height:60px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.del{color:var(--late)}
+.note{font-size:13px;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin-top:14px}
+.empty{padding:30px 0;color:var(--muted);text-align:center}
+.box{margin-top:28px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px}
+.box h3{margin:0 0 6px;font-size:15px}
+.gate{max-width:420px;margin:12vh auto 0;text-align:center;padding-inline:16px}
+.gate .btn{font-size:16px;padding:10px 20px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:480px){.task{grid-template-columns:48px 24px 1fr}.cd b{font-size:22px}}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <h1>제네시스 출시 일정표</h1>
+  <p class="sub" id="gate-msg">홍균님과 아내분 구글 계정으로만 열립니다.</p>
+  <p><button class="btn pri" id="login">구글 계정으로 로그인</button></p>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <div class="top">
+    <div>
+      <h1>제네시스 출시 일정표</h1>
+      <p class="sub">평일 1~2시간(아이패드) / 토·일 PC</p>
+    </div>
+    <div class="me"><span id="me"></span><button class="btn" id="logout">로그아웃</button></div>
+  </div>
+
+  <div class="count">
+    <div class="cd"><b id="cd1">–</b><span>합본 테스트 · 11/7</span></div>
+    <div class="cd"><b id="cd2">–</b><span>심사 제출 · 11/28</span></div>
+    <div class="cd main"><b id="cd3">–</b><span>출시 · 12/19(토)</span></div>
+  </div>
+
+  <div class="bar">
+    <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+    <span id="progt" style="font-size:13px;color:var(--muted)">불러오는 중</span>
+  </div>
+  <div class="bar">
+    <div class="tabs" role="group" aria-label="보기">
+      <button id="f-open" aria-pressed="true">남은 일</button>
+      <button id="f-all" aria-pressed="false">전체</button>
+      <button id="f-done" aria-pressed="false">완료</button>
+    </div>
+    <div class="tabs" role="group" aria-label="담당">
+      <button id="w-all" aria-pressed="true">모두</button>
+      <button id="w-h" aria-pressed="false">홍균</button>
+      <button id="w-w" aria-pressed="false">아내</button>
+      <button id="w-b" aria-pressed="false">둘다</button>
+    </div>
+  </div>
+  <div class="legend">
+    <span style="--c:var(--c-acct)">계정·사업</span>
+    <span style="--c:var(--c-game)">게임·에셋</span>
+    <span style="--c:var(--c-test)">테스트</span>
+    <span style="--c:var(--c-video)">영상·홍보</span>
+    <span style="--c:var(--c-launch)">출시</span>
+  </div>
+
+  <div id="list"><p class="empty">일정을 불러오는 중입니다.</p></div>
+
+  <form class="box" id="addf">
+    <h3>할 일 추가</h3>
+    <div class="ed">
+      <div class="row">
+        <label style="flex:1 1 140px">날짜<input type="date" id="a-date" required></label>
+        <label style="flex:1 1 100px">담당<select id="a-who"><option>홍균</option><option>아내</option><option>둘다</option></select></label>
+        <label style="flex:1 1 140px">분류<select id="a-cat">
+          <option value="acct">계정·사업</option><option value="game">게임·에셋</option>
+          <option value="test">테스트</option><option value="video">영상·홍보</option><option value="launch">출시</option>
+        </select></label>
+      </div>
+      <label>할 일<input type="text" id="a-title" required maxlength="80"></label>
+      <label>설명(선택)<textarea id="a-det"></textarea></label>
+      <div class="row"><button class="btn pri" type="submit">추가</button><span id="a-msg" style="font-size:13px;color:var(--muted)"></span></div>
+    </div>
+  </form>
+
+  <details class="box" id="imp">
+    <summary style="cursor:pointer;font-weight:700">일정 가져오기 (처음 한 번)</summary>
+    <div class="ed">
+      <p style="margin:0;font-size:13px;color:var(--muted)">Claude 일정표의 "웹으로 옮기기" 버튼으로 복사한 내용을 붙여넣으세요. 같은 번호의 할 일은 덮어씁니다.</p>
+      <textarea id="imp-text" placeholder='[{"id":"t01", ...}]'></textarea>
+      <div class="row"><button class="btn pri" id="imp-go" type="button">가져오기</button><span id="imp-msg" style="font-size:13px;color:var(--muted)"></span></div>
+    </div>
+  </details>
+
+  <p class="note">홍균님과 아내분 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+const COL="genesis_tasks";
+const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
+const WHO={"홍균":"var(--c-acct)","아내":"var(--c-video)","둘다":"var(--c-test)"};
+const WD=["일","월","화","수","목","금","토"];
+let tasks=[],filter="open",whoF="all",me=null,unsub=null,openEdit=new Set();
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const parse=s=>{const [y,m,d]=String(s).split("-").map(Number);return new Date(y,m-1,d)};
+const daysTo=s=>Math.round((parse(s)-parse(todayStr()))/864e5);
+const dlabel=n=>n>0?"D-"+n:n===0?"D-DAY":"D+"+(-n);
+const md=d=>(d.getMonth()+1)+"/"+d.getDate();
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function monday(s){const d=parse(s);d.setDate(d.getDate()-(d.getDay()+6)%7);return d}
+$("cd1").textContent=dlabel(daysTo("2026-11-07"));
+$("cd2").textContent=dlabel(daysTo("2026-11-28"));
+$("cd3").textContent=dlabel(daysTo("2026-12-19"));
+$("a-date").value=todayStr();
+
+firebase.initializeApp(window.FIREBASE_CONFIG);
+const auth=firebase.auth(),db=firebase.firestore();
+const ref=id=>db.collection(COL).doc(id);
+const myName=()=>me?(me.displayName||me.email||"").split(" ")[0]:"";
+
+$("login").onclick=async()=>{
+  const p=new firebase.auth.GoogleAuthProvider();
+  try{await auth.signInWithPopup(p)}
+  catch(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"))auth.signInWithRedirect(p);else $("gate-msg").textContent="로그인하지 못했습니다. 다시 눌러 주세요."}
+};
+$("logout").onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(u=>{
+  me=u;if(unsub){unsub();unsub=null}
+  if(!u){$("app").hidden=true;$("gate").hidden=false;return}
+  $("me").textContent=u.email||"";
+  unsub=db.collection(COL).onSnapshot(s=>{
+    $("gate").hidden=true;$("app").hidden=false;
+    tasks=s.docs.map(d=>({id:d.id,...d.data()}));render();
+  },()=>{
+    $("app").hidden=true;$("gate").hidden=false;
+    $("gate-msg").textContent=u.email+" 계정은 이 일정표를 볼 수 없습니다. 홍균님께 등록을 요청하세요.";
+  });
+});
+
+function render(){
+  const total=tasks.length,done=tasks.filter(t=>t.done).length;
+  $("prog").style.width=total?(done/total*100)+"%":"0";
+  $("progt").textContent=total?`${done} / ${total} 완료`:"";
+  let view=tasks.filter(t=>filter==="all"||(filter==="open"?!t.done:t.done));
+  if(whoF!=="all")view=view.filter(t=>(t.who||"홍균")===whoF||(whoF!=="둘다"&&t.who==="둘다"));
+  view.sort((a,b)=>String(a.date).localeCompare(String(b.date))||(a.order??0)-(b.order??0));
+  if(!view.length){$("list").innerHTML=`<p class="empty">${total?"이 보기에는 할 일이 없습니다.":"아직 일정이 없습니다. 아래 '일정 가져오기'로 처음 일정을 넣어 주세요."}</p>`;return}
+  const groups=new Map();
+  for(const t of view){const m=monday(t.date),k=m.getTime();if(!groups.has(k))groups.set(k,{m,items:[]});groups.get(k).items.push(t)}
+  const today=todayStr();let html="";
+  for(const [k,g] of groups){
+    const sun=new Date(g.m);sun.setDate(sun.getDate()+6);
+    const wk=tasks.filter(t=>monday(t.date).getTime()===k),wd=wk.filter(t=>t.done).length;
+    const thisWeek=monday(today).getTime()===k;
+    html+=`<section class="week"><div class="wk-h"><h2>${md(g.m)} – ${md(sun)}${thisWeek?" · 이번 주":""}</h2><small>${wd}/${wk.length} 완료</small></div>`;
+    for(const t of g.items){
+      const d=parse(t.date),we=d.getDay()===0||d.getDay()===6,late=!t.done&&t.date<today;
+      const [cn,cc]=CATS[t.cat]||CATS.game,w=t.who||"홍균";
+      html+=`<article class="task${we?" we":""}${t.done?" done":""}${t.date===today?" today":""}" data-id="${esc(t.id)}">
+        <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}${we?" PC":""}</div>
+        <input type="checkbox" class="ck" aria-label="완료" ${t.done?"checked":""}>
+        <div class="body">
+          <div class="t"><span class="who" style="--wc:${WHO[w]||WHO["홍균"]}">${esc(w)}</span><span class="tt">${esc(t.title)}</span><span class="cat" style="--c:${cc}">${cn}</span></div>
+          ${t.detail?`<div class="det">${esc(t.detail)}</div>`:""}
+          <div class="meta">
+            ${t.time?`<span>⏱ ${esc(t.time)}</span>`:""}
+            ${t.cost?`<span class="cost">💳 ${esc(t.cost)}</span>`:""}
+            ${late?`<span class="late">밀림 (${-daysTo(t.date)}일)</span>`:""}
+            ${t.done&&t.doneAt?`<span class="ok">완료 ${esc(t.doneAt)}${t.doneByName?" · "+esc(t.doneByName):""}</span>`:""}
+          </div>
+          ${t.memo?`<div class="memo">${esc(t.memo)}</div>`:""}
+          <details class="edit"${openEdit.has(t.id)?" open":""}><summary>메모 · 날짜 · 담당 수정</summary>
+            <div class="ed">
+              <div class="row"><label style="flex:1 1 140px">날짜<input type="date" id="dt-${esc(t.id)}" value="${esc(t.date)}"></label>
+              <label style="flex:1 1 100px">담당<select id="wh-${esc(t.id)}">${["홍균","아내","둘다"].map(x=>`<option${w===x?" selected":""}>${x}</option>`).join("")}</select></label></div>
+              <label>메모<textarea id="mm-${esc(t.id)}">${esc(t.memo)}</textarea></label>
+              <div class="row"><button class="btn pri" data-act="save">저장</button><button class="btn del" data-act="del">삭제</button><span class="msg" style="font-size:12px;color:var(--muted)"></span></div>
+            </div></details>
+        </div></article>`;
+    }
+    html+="</section>";
+  }
+  $("list").innerHTML=html;
+}
+
+for(const [id,f] of [["f-open","open"],["f-all","all"],["f-done","done"]])
+  $(id).onclick=()=>{filter=f;for(const b of ["f-open","f-all","f-done"])$(b).setAttribute("aria-pressed",b===id);render()};
+for(const [id,w] of [["w-all","all"],["w-h","홍균"],["w-w","아내"],["w-b","둘다"]])
+  $(id).onclick=()=>{whoF=w;for(const b of ["w-all","w-h","w-w","w-b"])$(b).setAttribute("aria-pressed",b===id);render()};
+
+$("list").addEventListener("toggle",e=>{const a=e.target.closest&&e.target.closest(".task");if(!a)return;e.target.open?openEdit.add(a.dataset.id):openEdit.delete(a.dataset.id)},true);
+
+$("list").addEventListener("change",async e=>{
+  if(!e.target.classList.contains("ck"))return;
+  const id=e.target.closest(".task").dataset.id,done=e.target.checked,n=new Date();
+  try{await ref(id).update({done,doneAt:done?(n.getMonth()+1)+"/"+n.getDate():"",doneByName:done?myName():""})}
+  catch{e.target.checked=!done;$("progt").textContent="저장하지 못했습니다. 다시 시도해 주세요."}
+});
+
+$("list").addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-act]");if(!b)return;e.preventDefault();
+  const a=b.closest(".task"),id=a.dataset.id,msg=a.querySelector(".msg");
+  if(b.dataset.act==="save"){
+    try{await ref(id).update({date:$("dt-"+id).value,who:$("wh-"+id).value,memo:$("mm-"+id).value.trim()});msg.textContent="저장됨"}
+    catch{msg.textContent="저장 못 함: 다시 시도해 주세요"}
+  }else{
+    if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="한 번 더 누르면 삭제";return}
+    try{await ref(id).delete();openEdit.delete(id)}catch{msg.textContent="삭제 못 함"}
+  }
+});
+
+$("addf").addEventListener("submit",async e=>{
+  e.preventDefault();const title=$("a-title").value.trim();if(!title)return;
+  try{await db.collection(COL).add({date:$("a-date").value,who:$("a-who").value,cat:$("a-cat").value,title,detail:$("a-det").value.trim(),done:false,doneAt:"",doneByName:"",memo:"",order:900,time:"",cost:""});
+    $("a-title").value="";$("a-det").value="";$("a-msg").textContent="추가됨"}
+  catch{$("a-msg").textContent="추가 못 함: 다시 시도해 주세요"}
+});
+
+$("imp-go").onclick=async()=>{
+  let rows;try{rows=JSON.parse($("imp-text").value)}catch{$("imp-msg").textContent="붙여넣은 내용을 읽지 못했습니다";return}
+  if(!Array.isArray(rows)){$("imp-msg").textContent="목록 형식이 아닙니다";return}
+  const keep=["date","order","who","cat","title","detail","time","cost","done","doneAt","doneByName","memo"];
+  let n=0;
+  try{
+    for(let i=0;i<rows.length;i+=400){
+      const batch=db.batch();
+      for(const r of rows.slice(i,i+400)){
+        if(!r||!/^[A-Za-z0-9_-]{1,40}$/.test(r.id||""))continue;
+        const d={};for(const k of keep)if(k in r)d[k]=r[k];
+        batch.set(ref(r.id),d);n++;
+      }
+      await batch.commit();
+    }
+    $("imp-msg").textContent=n+"개 가져옴";$("imp-text").value="";
+  }catch{$("imp-msg").textContent="가져오지 못했습니다. 다시 시도해 주세요"}
+};
+</script>
+</body>
+</html>
