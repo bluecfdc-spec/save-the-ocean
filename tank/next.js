@@ -53,6 +53,10 @@
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     addBunker(); banner('벙커를 찾아 사냥하라!', '#ffd451');
   }
+  function mins() { return G.t / 60000; }                        // 시간이 갈수록 빡빡해짐 (6분에 최대)
+  function bunkerEvery() { return Math.max(16000, BUNKER_EVERY - mins() * 4000); }
+  function bunkerMax() { return Math.min(10, BUNKER_MAX + Math.floor(mins())); }
+  function spawnMs() { return Math.max(8000, SPAWN_MS - mins() * 2000); }
   function banner(t, col) { G.banner = { t: t, col: col || '#fff', at: G.t }; }
   function pop(t, x, y, col, big) { G.fx.push({ k: 'pop', t: t, x: x, y: y, col: col || '#fff', big: big, at: G.t }); }
 
@@ -91,7 +95,7 @@
 
   // ---------- 적 ----------
   function addBunker() {
-    if (G.bunkers.length >= BUNKER_MAX) return;
+    if (G.bunkers.length >= bunkerMax()) return;
     var spots = [];
     for (var y = 0; y < ROWS - 1; y++) for (var x = 0; x < COLS - 1; x++) {
       if (solid(x, y) || solid(x + 1, y) || solid(x, y + 1) || solid(x + 1, y + 1)) continue;
@@ -166,9 +170,10 @@
   function update(dt) {
     if (!G || G.over || G.paused) return;
     G.t += dt * 1000;
-    if (G.t >= G.nextBunker) { G.nextBunker = G.t + BUNKER_EVERY; addBunker(); }
-    if (!G.bunkers.length && G.t > G.nextBunker - BUNKER_EVERY + 4000) { G.nextBunker = G.t + BUNKER_EVERY; addBunker(); }   /* 벙커가 다 없어지면 곧 새 벙커 */
-    G.bunkers.forEach(function (b) { if (G.t >= b.spawn) { b.spawn = G.t + SPAWN_MS; spawnUnit(b); } });
+    if (G.t >= G.nextBunker) { G.nextBunker = G.t + bunkerEvery(); addBunker(); }
+    if (!G.bunkers.length && G.t > G.nextBunker - bunkerEvery() + 4000) { G.nextBunker = G.t + bunkerEvery(); addBunker(); }
+    var lv = 1 + Math.min(6, Math.floor(mins())); if (lv !== G.lv) { if (G.lv) banner('위협 레벨 ' + lv + ' — 적이 더 빨리 늘어난다', '#ff8a7a'); G.lv = lv; }   /* 벙커가 다 없어지면 곧 새 벙커 */
+    G.bunkers.forEach(function (b) { if (G.t >= b.spawn) { b.spawn = G.t + spawnMs(); spawnUnit(b); } });
     moveUnits(dt); moveTank(dt); fire(); shotsStep(dt);
     // 놓을 곳 검사 (0.2초마다)
     if (!G.fitCheck || G.t > G.fitCheck) { G.fitCheck = G.t + 200; var ok = G.tray.filter(Boolean).some(anyFit);
@@ -218,7 +223,7 @@
     var eb = IM['k_' + G.efac + '_e2'];
     G.bunkers.forEach(function (b) { fit(eb, px(b.x + 1), py(b.y + 1), S * 2.1, S * 2.2);
       var w = S * 1.8, hp = Math.max(0, b.hp) / BUNKER_HP; ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 4, w, 3); ctx.fillStyle = '#ff5a4a'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 4, w * hp, 3);
-      var left = Math.max(0, b.spawn - G.t) / SPAWN_MS; ctx.strokeStyle = 'rgba(255,170,120,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px(b.x + 2) - 2, py(b.y + 2) - 2, 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - left)); ctx.stroke(); });
+      var left = Math.max(0, b.spawn - G.t) / spawnMs(); ctx.strokeStyle = 'rgba(255,170,120,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px(b.x + 2) - 2, py(b.y + 2) - 2, 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - left)); ctx.stroke(); });
     // 병력
     G.units.forEach(function (u) { var f = Math.floor(u.ph) % 2 ? '_frun2' : '_frun1'; ctx.fillStyle = 'rgba(255,60,40,.35)'; ctx.beginPath(); ctx.ellipse(px(u.x), py(u.y) + S * 0.4, S * 0.42, S * 0.2, 0, 0, 7); ctx.fill(); fit(IM['s_' + G.efac + f], px(u.x), py(u.y) - S * 0.1, S * 1.0, S * 1.2); });   /* 보병 = 1칸 */   /* 병력: 발밑 붉은 표시 + 조금 크게(판정은 1칸) */
     // 탱크 + 사거리
@@ -242,7 +247,7 @@
       return false; });
     // 위 HUD
     ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, W, HUD);
-    text('병력 ' + G.units.length + ' · 벙커 ' + G.bunkers.length, 10, HUD / 2, 17, '#ff9a8a', 'left');
+    text('위협 ' + (G.lv || 1) + ' · 병력 ' + G.units.length + ' · 벙커 ' + G.bunkers.length, 10, HUD / 2, 16, '#ff9a8a', 'left');
     text(G.score.toLocaleString(), W / 2, HUD / 2, 26, '#fff');
     text('최고 ' + Math.max(best, G.score).toLocaleString(), W - 10, HUD / 2, 16, '#ffd451', 'right');
     // 트레이
