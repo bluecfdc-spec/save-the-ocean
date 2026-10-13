@@ -7,8 +7,8 @@
    - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
-  var COLS = 24, ROWS = 40, TRAY_H = 112,   /* 칸 크기를 앞 버전의 3배로 (폰에서 한 칸 약 16px) */ RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
-  var TANK_V = 3, UNIT_V = 4, SHOT_V = 14;
+  var COLS = 24, ROWS = 40, TRAY_H = 112,   /* 칸 크기를 앞 버전의 3배로 (폰에서 한 칸 약 16px) */ RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 3, STUCK_MS = 5000, COUNT_MS = 5000;
+  var TANK_V = 3, UNIT_V = 4, SHOT_V = 7;   /* 직선포 탄 속도: 예전의 절반 */
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
     [[0, 0], [1, 0], [0, 1], [1, 1]], [[0, 0], [0, 1], [1, 1]], [[1, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 0], [0, 1]],
@@ -51,7 +51,7 @@
       tank: { x: 12.5, y: ROWS - 4.5, tx: 12, ty: ROWS - 5, lock: null, lostAt: null, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
       up: { rate: 0, dmg: 0, move: 0 }, tray: [newPiece(), newPiece(), newPiece()], nextBunker: BUNKER_EVERY, noFit: null, count: null, paused: false, over: false, drag: null, banner: null, kills: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
-    addBunker(); banner('벙커를 찾아 사냥하라!', '#ffd451');
+    addBunker(); setTimeout(showCards, 600);   /* 시작하자마자 첫 카드 */
   }
   function mins() { return G.t / 60000; }                        // 시간이 갈수록 빡빡해짐 (6분에 최대)
   function bunkerEvery() { return Math.max(16000, BUNKER_EVERY - mins() * 4000); }
@@ -197,7 +197,7 @@
     G.t += dt * 1000;
     if (G.t >= G.nextBunker) { G.nextBunker = G.t + bunkerEvery(); addBunker(); }
     if (!G.bunkers.length && G.t > G.nextBunker - bunkerEvery() + 4000) { G.nextBunker = G.t + bunkerEvery(); addBunker(); }
-    var lv = 1 + Math.min(6, Math.floor(mins())); if (lv !== G.lv) { if (G.lv) banner('위협 레벨 ' + lv + ' — 적이 더 빨리 늘어난다', '#ff8a7a'); G.lv = lv; }   /* 벙커가 다 없어지면 곧 새 벙커 */
+       /* 벙커가 다 없어지면 곧 새 벙커 */
     G.bunkers.forEach(function (b) { if (G.t >= b.spawn) { b.spawn = G.t + spawnMs(); spawnUnit(b); } });
     moveUnits(dt); moveTank(dt); fire(); shotsStep(dt); buildOcc();
     // 놓을 곳 검사 (0.2초마다)
@@ -278,8 +278,8 @@
       return false; });
     // 위 HUD
     ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, W, HUD);
-    text('위협' + (G.lv || 1) + ' 병력' + G.units.length + ' 벙커' + G.bunkers.length, 8, HUD / 2, 14, '#ff9a8a', 'left');
-    text(G.score.toLocaleString(), W * 0.56, HUD / 2, 24, '#fff');
+    var left3 = CARD_LINES - G.cardLines; text('카드까지 ' + left3 + '줄', 10, HUD / 2, 19, '#9be37a', 'left'); for (var cd = 0; cd < CARD_LINES; cd++) { ctx.fillStyle = cd < G.cardLines ? '#9be37a' : 'rgba(255,255,255,.2)'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(138 + cd * 15, HUD / 2, 5.5, 0, 7); ctx.fill(); ctx.stroke(); }
+    text(G.score.toLocaleString(), W * 0.62, HUD / 2, 24, '#fff');
     text('최고 ' + Math.max(best, G.score).toLocaleString(), W - 10, HUD / 2, 16, '#ffd451', 'right');
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.35)'; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
@@ -288,8 +288,7 @@
     if (G.drag && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], wh2 = pieceWH(pd), gx0 = G.drag.p.x - wh2[0] * S / 2, gy0 = G.drag.p.y - 64 - wh2[1] * S / 2; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 0.9); }); }
     // 아래: 카드까지 · 강화 상태
     var by0 = H - BOT; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, by0, W, BOT);
-    var bw = Math.min(160, W * 0.38); text('카드까지 ' + G.cardLines + '/' + CARD_LINES + '줄', 12, by0 + 16, 16, '#9be37a', 'left');
-    ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(12, by0 + 30, bw, 8); ctx.fillStyle = '#9be37a'; ctx.fillRect(12, by0 + 30, bw * G.cardLines / CARD_LINES, 8);
+    text('병력 ' + G.units.length + ' · 벙커 ' + G.bunkers.length, 12, by0 + BOT / 2, 15, '#ff9a8a', 'left');
     text('연사 ' + (1 + 0.2 * G.up.rate).toFixed(1) + ' · 화력 ' + (1 + G.up.dmg) + ' · 속도 ' + (1 + 0.2 * G.up.move).toFixed(1), W - 12, by0 + BOT / 2, 15, '#ffe9a8', 'right');
     // 카운트다운
     if (G.count && !G.over) { var left = Math.max(0, COUNT_MS - (G.t - G.count)); ctx.fillStyle = 'rgba(120,0,0,' + (0.15 + 0.1 * Math.sin(now / 90)) + ')'; ctx.fillRect(OX, BY, S * COLS, S * ROWS); text(Math.ceil(left / 1000) + '', W / 2, BY + S * ROWS / 2, Math.round(S * 6), '#ff5a4a'); text('블록을 놓아라!', W / 2, BY + S * ROWS / 2 + S * 3.6, 22, '#fff'); }
