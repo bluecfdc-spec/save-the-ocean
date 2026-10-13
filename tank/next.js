@@ -7,7 +7,7 @@
    - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
-  var COLS = 24, ROWS = 40, TRAY_H = 112,   /* 칸 크기를 앞 버전의 3배로 (폰에서 한 칸 약 16px) */ RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 3, STUCK_MS = 5000, COUNT_MS = 5000;
+  var COLS = 24, ROWS = 40, TRAY_H = 112, BU = 2, UC = 11, UR = 19,   /* 블록 한 칸 = 2×2 작은 칸 (유닛 크기는 그대로) */   /* 칸 크기를 앞 버전의 3배로 (폰에서 한 칸 약 16px) */ RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 3, STUCK_MS = 5000, COUNT_MS = 5000;
   var TANK_V = 3, UNIT_V = 4, SHOT_V = 7;   /* 직선포 탄 속도: 예전의 절반 */
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
@@ -33,7 +33,7 @@
     var dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var avail = H - HUD - BOT - TRAY_H - 8;
-    if (!G || G.over) { S = W / COLS; ROWS = Math.max(24, Math.min(60, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
+    if (!G || G.over) { S = W / COLS; ROWS = Math.max(24, Math.min(60, Math.floor(avail / S))); ROWS = 2 + 2 * Math.floor((ROWS - 2) / 2); UC = (COLS - 2) / 2; UR = (ROWS - 2) / 2; }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
     S = Math.min(W / COLS, avail / ROWS);
     OX = Math.floor((W - S * COLS) / 2); BY = HUD + 4; TY = BY + ROWS * S + 4; TH = H - BOT - TY;
   }
@@ -51,6 +51,7 @@
       tank: { x: 12.5, y: ROWS - 4.5, tx: 12, ty: ROWS - 5, lock: null, lostAt: null, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
       up: { rate: 0, dmg: 0, move: 0 }, tray: [newPiece(), newPiece(), newPiece()], nextBunker: BUNKER_EVERY, noFit: null, count: null, paused: false, over: false, drag: null, banner: null, kills: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
+    G.ub = []; for (var uy = 0; uy < UR; uy++) { G.ub.push([]); for (var ux = 0; ux < UC; ux++) G.ub[uy].push(0); }
     addBunker(); setTimeout(showCards, 600);   /* 시작하자마자 첫 카드 */
   }
   function mins() { return G.t / 60000; }                        // 시간이 갈수록 빡빡해짐 (6분에 최대)
@@ -62,7 +63,7 @@
 
   // ---------- 판 ----------
   function bunkerAt(x, y) { for (var i = 0; i < G.bunkers.length; i++) { var b = G.bunkers[i]; if (x >= b.x && x < b.x + 2 && y >= b.y && y < b.y + 2) return b; } return null; }
-  function solid(x, y) { return x < 0 || y < 0 || x >= COLS || y >= ROWS || G.board[y][x] || bunkerAt(x, y); }   // 병력·탱크가 못 지나가는 칸
+  function solid(x, y) { return x <= 0 || y <= 0 || x >= COLS - 1 || y >= ROWS - 1 || G.board[y][x] || bunkerAt(x, y); }   /* 4면 끝 줄은 배경 — 병력·탱크도 못 들어감 */   // 병력·탱크가 못 지나가는 칸
   var OCC = null;
   function buildOcc() {                                     // 블록을 못 놓는 칸 지도 (블록·벙커·탱크·병력) — 칸이 많아서 한 번에 계산해 둠
     var n = COLS * ROWS; if (!OCC || OCC.length !== n) OCC = new Uint8Array(n); else OCC.fill(0);
@@ -73,10 +74,15 @@
   }
   function edge(x, y) { return x <= 0 || y <= 0 || x >= COLS - 1 || y >= ROWS - 1; }   // 전장 4면 맨 끝 줄 = 블록 못 놓음 (병력·탱크는 다닐 수 있음)
   function occupied(x, y) { if (edge(x, y)) return true; return OCC[y * COLS + x] === 1; }
-  function canPlace(p, gx, gy) { if (!OCC) buildOcc(); for (var i = 0; i < p.cells.length; i++) if (occupied(gx + p.cells[i][0], gy + p.cells[i][1])) return false; return true; }
-  function anyFit(p) { for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(p, x, y)) return true; return false; }
+  function uCell(u) { return 1 + u * BU; }                // 블록 칸 → 작은 칸 좌표
+  function canPlace(p, gx, gy) { if (!OCC) buildOcc();     // gx, gy = 블록 칸(2×2) 좌표
+    for (var i = 0; i < p.cells.length; i++) { var ux = gx + p.cells[i][0], uy = gy + p.cells[i][1]; if (ux < 0 || uy < 0 || ux >= UC || uy >= UR) return false;
+      for (var dy = 0; dy < BU; dy++) for (var dx = 0; dx < BU; dx++) if (occupied(uCell(ux) + dx, uCell(uy) + dy)) return false; }
+    return true; }
+  function anyFit(p) { for (var y = 0; y < UR; y++) for (var x = 0; x < UC; x++) if (canPlace(p, x, y)) return true; return false; }
+  function setU(ux, uy, v) { G.ub[uy][ux] = v; for (var dy = 0; dy < BU; dy++) for (var dx = 0; dx < BU; dx++) G.board[uCell(uy) + dy][uCell(ux) + dx] = v; }
   function place(i, gx, gy) {
-    var p = G.tray[i]; p.cells.forEach(function (c) { G.board[gy + c[1]][gx + c[0]] = p.tint; });
+    var p = G.tray[i]; p.cells.forEach(function (c) { setU(gx + c[0], gy + c[1], p.tint); });
     G.tray[i] = null; if (!G.tray.some(Boolean)) G.tray = [newPiece(), newPiece(), newPiece()];
     sfx('place'); G.score += p.cells.length * 2; G.noFit = null; G.count = null;
     if (!lineCheck()) G.combo = 0;
@@ -84,11 +90,11 @@
   }
   function lineCheck() {
     var rows = [], cols = [], x, y, full;
-    for (y = 1; y < ROWS - 1; y++) { full = true; for (x = 1; x < COLS - 1; x++) if (!G.board[y][x]) { full = false; break; } if (full) rows.push(y); }   /* 줄 = 끝 줄을 뺀 안쪽 칸 */
-    for (x = 1; x < COLS - 1; x++) { full = true; for (y = 1; y < ROWS - 1; y++) if (!G.board[y][x]) { full = false; break; } if (full) cols.push(x); }
+    for (y = 0; y < UR; y++) { full = true; for (x = 0; x < UC; x++) if (!G.ub[y][x]) { full = false; break; } if (full) rows.push(y); }   /* 줄 = 블록 칸 기준 (가로 11칸) */
+    for (x = 0; x < UC; x++) { full = true; for (y = 0; y < UR; y++) if (!G.ub[y][x]) { full = false; break; } if (full) cols.push(x); }
     var n = rows.length + cols.length; if (!n) return false;
-    rows.forEach(function (y) { for (var x = 1; x < COLS - 1; x++) { G.board[y][x] = 0; G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); } });
-    cols.forEach(function (x) { for (var y = 1; y < ROWS - 1; y++) { if (G.board[y][x]) G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); G.board[y][x] = 0; } });
+    rows.forEach(function (y) { for (var x = 0; x < UC; x++) { if (G.ub[y][x]) G.fx.push({ k: 'cell', x: uCell(x), y: uCell(y), tint: G.ub[y][x], at: G.t }); setU(x, y, 0); } });
+    cols.forEach(function (x) { for (var y = 0; y < UR; y++) { if (G.ub[y][x]) G.fx.push({ k: 'cell', x: uCell(x), y: uCell(y), tint: G.ub[y][x], at: G.t }); setU(x, y, 0); } });
     G.fx.push({ k: 'flash', rows: rows, cols: cols, at: G.t });
     G.combo++; var mult = Math.min(5, G.combo), pts = (n * 100 + (n - 1) * 100) * mult; G.score += pts;
     pop((mult > 1 ? 'COMBO ×' + mult + '  ' : '') + '+' + pts, px(COLS / 2), py(ROWS / 2), '#ffe066', true); sfx('clear', n + mult - 1);
@@ -124,8 +130,8 @@
       var step = UNIT_V * dt, nx = u.x + Math.cos(u.a) * step, ny = u.y + Math.sin(u.a) * step, r = 0.36;
       function free(x, y) { return !solid(Math.floor(x - r), Math.floor(y - r)) && !solid(Math.floor(x + r), Math.floor(y - r)) && !solid(Math.floor(x - r), Math.floor(y + r)) && !solid(Math.floor(x + r), Math.floor(y + r)); }
       var stuck = !free(u.x, u.y);                                       /* 순간이동 없음: 막히면 방향만 바꿈 (혹시 끼어 있으면 걸어서 빠져나옴) */
-      if (stuck || free(nx, u.y)) u.x = Math.max(0.4, Math.min(COLS - 0.4, nx)); else u.a = Math.PI - u.a + (Math.random() - 0.5) * 0.6;
-      if (stuck || free(u.x, ny)) u.y = Math.max(0.4, Math.min(ROWS - 0.4, ny)); else u.a = -u.a + (Math.random() - 0.5) * 0.6;
+      if (stuck || free(nx, u.y)) u.x = Math.max(1.4, Math.min(COLS - 1.4, nx)); else u.a = Math.PI - u.a + (Math.random() - 0.5) * 0.6;
+      if (stuck || free(u.x, ny)) u.y = Math.max(1.4, Math.min(ROWS - 1.4, ny)); else u.a = -u.a + (Math.random() - 0.5) * 0.6;
       u.ph += dt * 12;
     });
   }
@@ -226,7 +232,7 @@
   function slotRect(i) { var w = S * COLS / 3; return { x: OX + i * w, y: TY + 4, w: w, h: TH - 8 }; }
   function inR(r, p) { return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
   function pieceWH(pc) { var w = 0, h = 0; pc.cells.forEach(function (c) { w = Math.max(w, c[0] + 1); h = Math.max(h, c[1] + 1); }); return [w, h]; }
-  function dropCell(p) { var wh = pieceWH(G.tray[G.drag.i]), cx = p.x - wh[0] * S / 2, cy = p.y - 64 - wh[1] * S / 2; return { gx: Math.round((cx - OX) / S), gy: Math.round((cy - BY) / S) }; }
+  function dropCell(p) { var U = S * BU, wh = pieceWH(G.tray[G.drag.i]), cx = p.x - wh[0] * U / 2, cy = p.y - 64 - wh[1] * U / 2; return { gx: Math.round((cx - px(1)) / U), gy: Math.round((cy - py(1)) / U) }; }
   cv.addEventListener('pointerdown', function (e) { if (!G || G.over || G.paused) return; var p = { x: e.clientX, y: e.clientY }; for (var i = 0; i < 3; i++) if (G.tray[i] && inR(slotRect(i), p)) { G.drag = { i: i, p: p }; sfx('pick'); return; } });
   cv.addEventListener('pointermove', function (e) { if (G && G.drag) G.drag.p = { x: e.clientX, y: e.clientY }; });
   cv.addEventListener('pointerup', function (e) { if (!G || !G.drag) return; var p = { x: e.clientX, y: e.clientY }, d = dropCell(p), i = G.drag.i; G.drag = null; if (!G.over && !G.paused && canPlace(G.tray[i], d.gx, d.gy)) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); });
@@ -240,12 +246,12 @@
     ctx.clearRect(0, 0, W, H); cover(IM.bg_mine, 0, 0, W, H);
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(OX, BY, S * COLS, S * ROWS);
     if (!G) return;
-    ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx += 1) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy += 1) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();   /* 격자 */
+    ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 1; gx <= COLS - 1; gx += BU) { ctx.moveTo(px(gx), py(1)); ctx.lineTo(px(gx), py(ROWS - 1)); } for (var gy = 1; gy <= ROWS - 1; gy += BU) { ctx.moveTo(px(1), py(gy)); ctx.lineTo(px(COLS - 1), py(gy)); } ctx.stroke();   /* 격자 */
     ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.38)'; ctx.fillRect(OX, BY, S * COLS, S); ctx.fillRect(OX, py(ROWS - 1), S * COLS, S); ctx.fillRect(OX, py(1), S, S * (ROWS - 2)); ctx.fillRect(px(COLS - 1), py(1), S, S * (ROWS - 2));   /* 끝 줄 = 블록 못 놓는 곳 */
     ctx.strokeStyle = 'rgba(214,170,70,.45)'; ctx.lineWidth = 1.5; ctx.strokeRect(px(1), py(1), S * (COLS - 2), S * (ROWS - 2)); ctx.restore();
-    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) block(px(x), py(y), S, G.board[y][x]);
+    for (var y = 0; y < UR; y++) for (var x = 0; x < UC; x++) if (G.ub[y][x]) block(px(uCell(x)), py(uCell(y)), S * BU, G.ub[y][x]);
     // 놓을 자리 미리보기
-    if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < 0 || Y >= ROWS) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(X) + 1, py(Y) + 1, S - 2, S - 2); }); }
+    if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= UC || Y < 0 || Y >= UR) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(uCell(X)) + 1, py(uCell(Y)) + 1, S * BU - 2, S * BU - 2); }); }
     // 벙커
     var eb = IM['k_' + G.efac + '_e2'];
     G.bunkers.forEach(function (b) { fit(eb, px(b.x + 1), py(b.y + 1), S * 2.1, S * 2.2);
@@ -266,8 +272,8 @@
     G.lobs.forEach(function (l) { var p = (G.t - l.t0) / l.dur, tx = l.b.x + 1, ty = l.b.y + 1, x = l.sx + (tx - l.sx) * p, yy = l.sy + (ty - l.sy) * p - Math.sin(p * Math.PI) * 2.2; fit(IM.m_up, px(x), py(yy), S * 0.8, S * 1.2); });
     // 효과
     G.fx = G.fx.filter(function (f) { var a = G.t - f.at;
-      if (f.k === 'cell') { if (a > 320) return false; block(px(f.x), py(f.y), S, '#fff', 1 - a / 320); return true; }
-      if (f.k === 'flash') { if (a > 280) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 280)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(px(1), py(y), S * (COLS - 2), S); }); f.cols.forEach(function (x) { ctx.fillRect(px(x), py(1), S, S * (ROWS - 2)); }); return true; }
+      if (f.k === 'cell') { if (a > 360) return false; var sc = 1 + a / 600, U3 = S * BU * sc; block(px(f.x) + S * BU / 2 - U3 / 2, py(f.y) + S * BU / 2 - U3 / 2, U3, '#fff', 1 - a / 360); return true; }
+      if (f.k === 'flash') { if (a > 280) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 280)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(px(1), py(uCell(y)), S * (COLS - 2), S * BU); }); f.cols.forEach(function (x) { ctx.fillRect(px(uCell(x)), py(1), S * BU, S * (ROWS - 2)); }); return true; }
       if (f.k === 'boom') { var life = 500; if (a > life) return false; var fr = Math.min(8, 1 + Math.floor(a / life * 8)), sz = S * (f.small ? 1.4 : 2.2); fit(IM['x_b' + fr], px(f.x), py(f.y) - sz * 0.15, sz, sz); return true; }
       if (f.k === 'dead') { if (a > 700) return false; fit(IM['s_' + G.efac + '_fdead'], px(f.x), py(f.y), S * 1.0, S * 1.0, 1 - a / 700); return true; }
       if (f.k === 'ruin') { if (a > 1200) return false; fit(IM['k_' + G.efac + '_e4'], px(f.x + 1), py(f.y + 1), S * 2.1, S * 2.1, 1 - a / 1200); return true; }
@@ -283,9 +289,9 @@
     text('최고 ' + Math.max(best, G.score).toLocaleString(), W - 10, HUD / 2, 16, '#ffd451', 'right');
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.35)'; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
-      var pc2 = G.tray[i]; if (!pc2 || (G.drag && G.drag.i === i)) continue; var wh = pieceWH(pc2), cs = Math.min(22, (rc.w - 16) / wh[0], (rc.h - 12) / wh[1]), ox = rc.x + (rc.w - wh[0] * cs) / 2, oy = rc.y + (rc.h - wh[1] * cs) / 2;
+      var pc2 = G.tray[i]; if (!pc2 || (G.drag && G.drag.i === i)) continue; var wh = pieceWH(pc2), cs = Math.min(26, (rc.w - 16) / wh[0], (rc.h - 12) / wh[1]), ox = rc.x + (rc.w - wh[0] * cs) / 2, oy = rc.y + (rc.h - wh[1] * cs) / 2;
       pc2.cells.forEach(function (c) { block(ox + c[0] * cs, oy + c[1] * cs, cs, pc2.tint); }); }
-    if (G.drag && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], wh2 = pieceWH(pd), gx0 = G.drag.p.x - wh2[0] * S / 2, gy0 = G.drag.p.y - 64 - wh2[1] * S / 2; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 0.9); }); }
+    if (G.drag && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], wh2 = pieceWH(pd), U2 = S * BU, gx0 = G.drag.p.x - wh2[0] * U2 / 2, gy0 = G.drag.p.y - 64 - wh2[1] * U2 / 2; pd.cells.forEach(function (c) { block(gx0 + c[0] * U2, gy0 + c[1] * U2, U2, pd.tint, 0.9); }); }
     // 아래: 카드까지 · 강화 상태
     var by0 = H - BOT; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, by0, W, BOT);
     text('병력 ' + G.units.length + ' · 벙커 ' + G.bunkers.length, 12, by0 + BOT / 2, 15, '#ff9a8a', 'left');
