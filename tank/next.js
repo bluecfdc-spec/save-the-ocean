@@ -7,7 +7,7 @@
    - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
-  var COLS = 72, ROWS = 72, TRAY_H = 112, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
+  var COLS = 24, ROWS = 40, TRAY_H = 112,   /* 칸 크기를 앞 버전의 3배로 (폰에서 한 칸 약 16px) */ RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
   var TANK_V = 3, UNIT_V = 4, SHOT_V = 14;
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
@@ -33,7 +33,7 @@
     var dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var avail = H - HUD - BOT - TRAY_H - 8;
-    if (!G || G.over) { S = W / COLS; ROWS = Math.max(72, Math.min(140, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
+    if (!G || G.over) { S = W / COLS; ROWS = Math.max(24, Math.min(60, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
     S = Math.min(W / COLS, avail / ROWS);
     OX = Math.floor((W - S * COLS) / 2); BY = HUD + 4; TY = BY + ROWS * S + 4; TH = H - BOT - TY;
   }
@@ -48,7 +48,7 @@
     G = null; layout();
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
     G = { t: 0, score: 0, combo: 0, lines: 0, cardLines: 0, fac: fac, efac: efs[rnd(2)], board: [], bunkers: [], units: [], shots: [], lobs: [], fx: [],
-      tank: { x: 36.5, y: ROWS - 10.5, tx: 36, ty: ROWS - 11, lock: null, lostAt: null, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
+      tank: { x: 12.5, y: ROWS - 4.5, tx: 12, ty: ROWS - 5, lock: null, lostAt: null, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
       up: { rate: 0, dmg: 0, move: 0 }, tray: [newPiece(), newPiece(), newPiece()], nextBunker: BUNKER_EVERY, noFit: null, count: null, paused: false, over: false, drag: null, banner: null, kills: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     addBunker(); banner('벙커를 찾아 사냥하라!', '#ffd451');
@@ -102,7 +102,7 @@
     var spots = [];
     for (var y = 0; y < ROWS - 1; y++) for (var x = 0; x < COLS - 1; x++) {
       if (solid(x, y) || solid(x + 1, y) || solid(x, y + 1) || solid(x + 1, y + 1)) continue;
-      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 18) continue;
+      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 7) continue;
       if (G.units.some(function (u) { return u.x > x - 0.5 && u.x < x + 2.5 && u.y > y - 0.5 && u.y < y + 2.5; })) continue;
       spots.push([x, y]); }
     if (!spots.length) return;
@@ -173,7 +173,8 @@
     var t = G.tank, rate = 1 + 0.2 * G.up.rate;
     if (G.t > t.fireT) { var tgt = null, bd = 99;
       G.units.forEach(function (u) { var d = Math.hypot(u.x - t.x, u.y - t.y); if (d <= RANGE && d < bd && los(t.x, t.y, u.x, u.y)) { bd = d; tgt = u; } });
-      if (tgt) { var a = Math.atan2(tgt.y - t.y, tgt.x - t.x); G.shots.push({ x: t.x, y: t.y, sx: t.x, sy: t.y, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, life: RANGE / SHOT_V + 0.1 }); G.fx.push({ k: 'muzzle', x: t.x + Math.cos(a) * 0.9, y: t.y + Math.sin(a) * 0.9, at: G.t }); t.fireT = G.t + 1000 / rate; t.aim = a; sfx('launch'); } }
+      if (tgt) { if (!t.lock || t.lock.ref !== tgt) { t.lock = { kind: 'u', ref: tgt }; t.lostAt = null; t.plan = 0; }   /* 지나가다 바로 맞출 수 있는 병력이 있으면 즉시 그쪽으로 록온 변경 */
+        var a = Math.atan2(tgt.y - t.y, tgt.x - t.x); G.shots.push({ x: t.x, y: t.y, sx: t.x, sy: t.y, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, life: RANGE / SHOT_V + 0.1 }); G.fx.push({ k: 'muzzle', x: t.x + Math.cos(a) * 0.9, y: t.y + Math.sin(a) * 0.9, at: G.t }); t.fireT = G.t + 1000 / rate; t.aim = a; sfx('launch'); } }
     if (G.t > t.lobT) { var bt = null, bb = 99;
       G.bunkers.forEach(function (b) { var cx = Math.max(b.x, Math.min(b.x + 2, t.x)), cy = Math.max(b.y, Math.min(b.y + 2, t.y)), d = Math.hypot(cx - t.x, cy - t.y); if (d <= RANGE && d < bb) { bb = d; bt = b; } });
       if (bt) { G.lobs.push({ sx: t.x, sy: t.y, b: bt, t0: G.t, dur: 600 }); t.lobT = G.t + 1000; sfx('launch'); } }
@@ -238,7 +239,7 @@
     ctx.clearRect(0, 0, W, H); cover(IM.bg_mine, 0, 0, W, H);
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(OX, BY, S * COLS, S * ROWS);
     if (!G) return;
-    ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx += 6) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy += 6) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();   /* 칸이 작아서 6칸마다만 격자 */
+    ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx += 1) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy += 1) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();   /* 격자 */
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) block(px(x), py(y), S, G.board[y][x]);
     // 놓을 자리 미리보기
     if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < 0 || Y >= ROWS) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(X) + 1, py(Y) + 1, S - 2, S - 2); }); }
