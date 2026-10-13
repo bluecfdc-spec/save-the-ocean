@@ -97,7 +97,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 
 <div class="gate" id="gate">
   <h1>제네시스 출시 일정표</h1>
-  <p class="sub" id="gate-msg">홍균님과 아내분 구글 계정으로만 열립니다.</p>
+  <p class="sub" id="gate-msg">홍균·시뇽 구글 계정으로만 열립니다.</p>
   <p><button class="btn pri" id="login">구글 계정으로 로그인</button></p>
 </div>
 
@@ -129,7 +129,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     <div class="tabs" role="group" aria-label="담당">
       <button id="w-all" aria-pressed="true">모두</button>
       <button id="w-h" aria-pressed="false">홍균</button>
-      <button id="w-w" aria-pressed="false">아내</button>
+      <button id="w-w" aria-pressed="false">시뇽</button>
       <button id="w-b" aria-pressed="false">둘다</button>
     </div>
   </div>
@@ -148,7 +148,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     <div class="ed">
       <div class="row">
         <label style="flex:1 1 140px">날짜<input type="date" id="a-date" required></label>
-        <label style="flex:1 1 100px">담당<select id="a-who"><option>홍균</option><option>아내</option><option>둘다</option></select></label>
+        <label style="flex:1 1 100px">담당<select id="a-who"><option>홍균</option><option>시뇽</option><option>둘다</option></select></label>
         <label style="flex:1 1 140px">분류<select id="a-cat">
           <option value="acct">계정·사업</option><option value="game">게임·에셋</option>
           <option value="test">테스트</option><option value="video">영상·홍보</option><option value="launch">출시</option>
@@ -169,7 +169,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     </div>
   </details>
 
-  <p class="note">홍균님과 아내분 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
+  <p class="note">홍균·시뇽 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -179,7 +179,8 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 <script>
 const COL="genesis_tasks";
 const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
-const WHO={"홍균":"var(--c-acct)","아내":"var(--c-video)","둘다":"var(--c-test)"};
+const WHO={"홍균":"var(--c-acct)","시뇽":"var(--c-video)","둘다":"var(--c-test)"};
+const whoOf=t=>t.who==="아내"?"시뇽":(t.who||"홍균");
 const WD=["일","월","화","수","목","금","토"];
 let tasks=[],filter="open",whoF="all",me=null,unsub=null,openEdit=new Set();
 const $=id=>document.getElementById(id);
@@ -217,7 +218,7 @@ auth.onAuthStateChanged(u=>{
     tasks=s.docs.map(d=>({id:d.id,...d.data()}));render();
   },()=>{
     $("app").hidden=true;$("gate").hidden=false;
-    $("gate-msg").textContent=u.email+" 계정은 이 일정표를 볼 수 없습니다. 홍균님께 등록을 요청하세요.";
+    $("gate-msg").textContent=u.email+" 계정은 이 일정표를 볼 수 없습니다. 홍균에게 등록을 요청하세요.";
   });
 });
 
@@ -226,7 +227,7 @@ function render(){
   $("prog").style.width=total?(done/total*100)+"%":"0";
   $("progt").textContent=total?`${done} / ${total} 완료`:"";
   let view=tasks.filter(t=>filter==="all"||(filter==="open"?!t.done:t.done));
-  if(whoF!=="all")view=view.filter(t=>(t.who||"홍균")===whoF||(whoF!=="둘다"&&t.who==="둘다"));
+  if(whoF!=="all")view=view.filter(t=>whoOf(t)===whoF||(whoF!=="둘다"&&whoOf(t)==="둘다"));
   view.sort((a,b)=>String(a.date).localeCompare(String(b.date))||(a.order??0)-(b.order??0));
   if(!view.length){$("list").innerHTML=`<p class="empty">${total?"이 보기에는 할 일이 없습니다.":"아직 일정이 없습니다. 아래 '일정 가져오기'로 처음 일정을 넣어 주세요."}</p>`;return}
   const groups=new Map();
@@ -239,7 +240,7 @@ function render(){
     html+=`<section class="week"><div class="wk-h"><h2>${md(g.m)} – ${md(sun)}${thisWeek?" · 이번 주":""}</h2><small>${wd}/${wk.length} 완료</small></div>`;
     for(const t of g.items){
       const d=parse(t.date),we=d.getDay()===0||d.getDay()===6,late=!t.done&&t.date<today;
-      const [cn,cc]=CATS[t.cat]||CATS.game,w=t.who||"홍균";
+      const [cn,cc]=CATS[t.cat]||CATS.game,w=whoOf(t);
       html+=`<article class="task${we?" we":""}${t.done?" done":""}${t.date===today?" today":""}" data-id="${esc(t.id)}">
         <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}${we?" PC":""}</div>
         <input type="checkbox" class="ck" aria-label="완료" ${t.done?"checked":""}>
@@ -256,7 +257,7 @@ function render(){
           <details class="edit"${openEdit.has(t.id)?" open":""}><summary>✏️ 메모 · 날짜 · 담당 수정</summary>
             <div class="ed">
               <div class="row"><label style="flex:1 1 140px">날짜<input type="date" id="dt-${esc(t.id)}" value="${esc(t.date)}"></label>
-              <label style="flex:1 1 100px">담당<select id="wh-${esc(t.id)}">${["홍균","아내","둘다"].map(x=>`<option${w===x?" selected":""}>${x}</option>`).join("")}</select></label></div>
+              <label style="flex:1 1 100px">담당<select id="wh-${esc(t.id)}">${["홍균","시뇽","둘다"].map(x=>`<option${w===x?" selected":""}>${x}</option>`).join("")}</select></label></div>
               <label>메모<textarea id="mm-${esc(t.id)}">${esc(t.memo)}</textarea></label>
               <div class="row"><button class="btn pri" data-act="save">저장</button><button class="btn del" data-act="del">삭제</button><span class="msg" style="font-size:12px;color:var(--muted)"></span></div>
             </div></details>
@@ -269,7 +270,7 @@ function render(){
 
 for(const [id,f] of [["f-open","open"],["f-all","all"],["f-done","done"]])
   $(id).onclick=()=>{filter=f;for(const b of ["f-open","f-all","f-done"])$(b).setAttribute("aria-pressed",b===id);render()};
-for(const [id,w] of [["w-all","all"],["w-h","홍균"],["w-w","아내"],["w-b","둘다"]])
+for(const [id,w] of [["w-all","all"],["w-h","홍균"],["w-w","시뇽"],["w-b","둘다"]])
   $(id).onclick=()=>{whoF=w;for(const b of ["w-all","w-h","w-w","w-b"])$(b).setAttribute("aria-pressed",b===id);render()};
 
 $("list").addEventListener("toggle",e=>{const a=e.target.closest&&e.target.closest(".task");if(!a)return;e.target.open?openEdit.add(a.dataset.id):openEdit.delete(a.dataset.id)},true);
