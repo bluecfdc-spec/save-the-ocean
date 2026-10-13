@@ -67,9 +67,14 @@ h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,6vw,38px);m
 .task.done .tt{text-decoration:line-through;color:var(--done)}
 .task.done .det{opacity:.6}
 .memo{margin-top:6px;font-size:13px;background:var(--bg);border-left:3px solid var(--accent);padding:4px 8px;border-radius:0 4px 4px 0;white-space:pre-line}
-details.edit{margin-top:6px}
-details.edit summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none}
+details.edit{margin-top:8px}
+details.edit summary{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 10px 6px 12px;min-height:36px;-webkit-user-select:none;user-select:none}
 details.edit summary::-webkit-details-marker{display:none}
+details.edit summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+details.edit[open] summary{border-color:var(--accent);border-bottom-left-radius:0;border-bottom-right-radius:0}
+details.edit[open] summary::after{transform:translateY(2px) rotate(-135deg)}
+details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8px;padding:10px;margin-top:-1px;background:var(--paper)}
+@media (prefers-reduced-motion:reduce){details.edit summary::after{transition:none}}
 .ed{display:grid;gap:6px;margin-top:6px}
 .ed label{font-size:12px;color:var(--muted);display:grid;gap:2px}
 .ed input,.ed textarea,.ed select{font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
@@ -248,7 +253,7 @@ function render(){
             ${t.done&&t.doneAt?`<span class="ok">완료 ${esc(t.doneAt)}${t.doneByName?" · "+esc(t.doneByName):""}</span>`:""}
           </div>
           ${t.memo?`<div class="memo">${esc(t.memo)}</div>`:""}
-          <details class="edit"${openEdit.has(t.id)?" open":""}><summary>메모 · 날짜 · 담당 수정</summary>
+          <details class="edit"${openEdit.has(t.id)?" open":""}><summary>✏️ 메모 · 날짜 · 담당 수정</summary>
             <div class="ed">
               <div class="row"><label style="flex:1 1 140px">날짜<input type="date" id="dt-${esc(t.id)}" value="${esc(t.date)}"></label>
               <label style="flex:1 1 100px">담당<select id="wh-${esc(t.id)}">${["홍균","아내","둘다"].map(x=>`<option${w===x?" selected":""}>${x}</option>`).join("")}</select></label></div>
