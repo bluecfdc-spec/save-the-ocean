@@ -4,7 +4,7 @@
    - 병력·벙커·탱크가 있는 곳엔 블록을 못 놓음 → 병력이 늘수록 놓기 어려워짐.
    - 놓을 곳이 5초 넘게 없으면 5초 카운트다운 → 그때까지 못 놓으면 게임 오버.
    - 탱크는 스스로 움직이며 사냥: 사거리 3칸, 병력은 직선포(1방), 벙커는 곡사포(5방), 둘 다 1초에 1발. 플레이어는 블록으로 길을 막아 유도.
-   - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 +1(최대 +5) / 이동속도 +0.2배(최대 2.6배). */
+   - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
   var COLS = 18, ROWS = 18, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
@@ -176,7 +176,7 @@
 
   // ---------- 카드 ----------
   var CARDS = [{ k: 'rate', name: '직선포 연사', desc: '발사 속도 +0.2배', max: 10, fmt: function (n) { return (1 + 0.2 * n).toFixed(1) + '배'; } },
-    { k: 'dmg', name: '곡사포 화력', desc: '벙커 데미지 +1', max: 5, fmt: function (n) { return '+' + n; } },
+    { k: 'dmg', name: '곡사포 화력', desc: '벙커 데미지 +1', max: 4, fmt: function (n) { return '데미지 ' + (1 + n); } },   /* 데미지 1 → 최대 5 (벙커 5방 → 한 방) */
     { k: 'move', name: '엔진 강화', desc: '이동 속도 +0.2배', max: 8, fmt: function (n) { return (1 + 0.2 * n).toFixed(1) + '배'; } }];
   function showCards() {
     if (!G || G.over) return; G.paused = true; G.drag = null; sfx('ultReady');
@@ -247,7 +247,7 @@
     var by0 = H - BOT; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, by0, W, BOT);
     var bw = Math.min(160, W * 0.38); text('카드까지 ' + G.cardLines + '/' + CARD_LINES + '줄', 12, by0 + 16, 16, '#9be37a', 'left');
     ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(12, by0 + 30, bw, 8); ctx.fillStyle = '#9be37a'; ctx.fillRect(12, by0 + 30, bw * G.cardLines / CARD_LINES, 8);
-    text('연사 ' + (1 + 0.2 * G.up.rate).toFixed(1) + ' · 화력 +' + G.up.dmg + ' · 속도 ' + (1 + 0.2 * G.up.move).toFixed(1), W - 12, by0 + BOT / 2, 15, '#ffe9a8', 'right');
+    text('연사 ' + (1 + 0.2 * G.up.rate).toFixed(1) + ' · 화력 ' + (1 + G.up.dmg) + ' · 속도 ' + (1 + 0.2 * G.up.move).toFixed(1), W - 12, by0 + BOT / 2, 15, '#ffe9a8', 'right');
     // 카운트다운
     if (G.count && !G.over) { var left = Math.max(0, COUNT_MS - (G.t - G.count)); ctx.fillStyle = 'rgba(120,0,0,' + (0.15 + 0.1 * Math.sin(now / 90)) + ')'; ctx.fillRect(OX, BY, S * COLS, S * ROWS); text(Math.ceil(left / 1000) + '', W / 2, BY + S * ROWS / 2, Math.round(S * 6), '#ff5a4a'); text('블록을 놓아라!', W / 2, BY + S * ROWS / 2 + S * 3.6, 22, '#fff'); }
     else if (G.noFit != null && !G.over) text('놓을 곳이 없다…', W / 2, BY + S * ROWS - S, 18, '#ffb3a8');
