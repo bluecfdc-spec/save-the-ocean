@@ -29,13 +29,21 @@
   #end.lose #endT { color: #ff6a5a; text-shadow: 0 0 24px #a01000, 0 4px 0 #300; }
   #endS { font-size: 28px; } #endB { font-size: 48px; color: #9be37a; text-shadow: 0 0 18px #4caf2a, 0 3px 0 #000; } #end.lose #endB { display: none; }
   #endScore { font-size: 32px; color: #ffe9a8; }
+  #cards { background: rgba(6,8,4,.82); justify-content: center; gap: 14px; }
+  #cards h3 { margin: 0; font-size: 30px; color: #ffd451; text-shadow: 0 0 16px #ff9a1f, 0 3px 0 #000; }
+  #cardList { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(94vw, 440px); }
+  .card { border: 0; padding: 14px 6px; border-radius: 12px; background: linear-gradient(160deg, #3a2f1a, #15110a); box-shadow: 0 0 0 2px #d6aa46, 0 0 18px rgba(255,190,60,.35); color: #fff; font-family: 'Black Han Sans', sans-serif; display: flex; flex-direction: column; gap: 8px; align-items: center; animation: cardIn .35s ease-out both; }
+  .card b { font-size: 19px; color: #ffe066; font-weight: 400; } .card span { font: 15px 'Do Hyeon', sans-serif; color: #e8e0c8; } .card i { font-style: normal; font-size: 17px; color: #9be37a; }
+  .card:nth-child(2) { animation-delay: .08s; } .card:nth-child(3) { animation-delay: .16s; } .card.full { filter: saturate(.4); }
+  .card:active { transform: scale(.96); }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(24px) scale(.9); } to { opacity: 1; transform: none; } }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
 <div id="title" class="ov">
-  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">NEW RULES · 새 규칙 시험판</div>① <em>Drag &amp; Drop</em>으로 줄 깨기 → <em>탱크 발사</em>로 적 포탑 격파<br>② 줄 <em>3개</em>마다 내 포탑 +1 · <em>보급</em>을 탱크로 주워도 +1<br>③ <em>30초</em>마다 포탑이 많은 쪽이 <em>절점</em>을 민다</div>
+  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">NEW RULES · 새 규칙 시험판</div>① <em>탱크</em>는 스스로 적을 사냥 — 나는 <em>블록</em>으로 길을 막아 유도<br>② 적 <em>병력</em>이 있는 곳엔 블록을 못 놓는다<br>③ <em>5초</em> 넘게 놓을 곳이 없으면 위험! · 줄 <em>10개</em>마다 강화 카드</div>
   <div class="pick">당신의 세력을 선택하세요</div>
   <div class="facs">
     <button class="fac" data-f="surge" style="--fc:#4fd8ff"><img src="assets/v2/f_surge.png" alt="">서지</button>
@@ -44,6 +52,8 @@
   </div>
   <button id="go" class="btn">출격!</button>
 </div>
+
+<div id="cards" class="ov hidden"><h3>강화 카드 — 하나 고르세요</h3><div id="cardList"></div></div>
 
 <div id="end" class="ov hidden">
   <div id="endT">VICTORY</div>
@@ -54,6 +64,6 @@
 </div>
 
 <script src="sfx.js?v=41"></script>
-<script src="next.js?v=6"></script>
+<script src="next.js?v=8"></script>
 </body>
 </html>
