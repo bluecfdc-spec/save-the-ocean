@@ -1,0 +1,38 @@
+name: 일정표 반영
+
+on:
+  push:
+    paths:
+      - "ops/plan/*.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plan-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: firebase-admin 설치
+        run: npm install --no-save firebase-admin@12.7.0
+      - name: Firestore 에 반영
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+        run: node tools/plan-sync.mjs
+      - name: 반영한 파일 정리
+        run: |
+          if git diff --quiet -- ops/plan; then echo "정리할 것 없음"; exit 0; fi
+          git config user.name "plan-bot"
+          git config user.email "plan-bot@users.noreply.github.com"
+          git add -A ops/plan
+          git commit -m "일정표 반영 완료"
+          git pull --rebase -q
+          git push
