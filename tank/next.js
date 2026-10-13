@@ -197,6 +197,7 @@
   // ---------- 그리기 ----------
   function cover(im, x, y, w, h) { if (!im) return; var r = Math.max(w / im.width, h / im.height), dw = im.width * r, dh = im.height * r; ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.drawImage(im, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh); ctx.restore(); }
   function fit(im, cx, cy, w, h, a) { if (!im) return; var r = Math.min(w / im.width, h / im.height); ctx.save(); if (a != null) ctx.globalAlpha = a; ctx.drawImage(im, cx - im.width * r / 2, cy - im.height * r / 2, im.width * r, im.height * r); ctx.restore(); }
+  function fitW(im, cx, bottom, w) { if (!im) return; var h = w * im.height / im.width; ctx.drawImage(im, cx - w / 2, bottom - h, w, h); }
   function text(t, x, y, size, col, align) { ctx.save(); ctx.font = size + 'px "Black Han Sans", "Do Hyeon", sans-serif'; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(3, size * 0.22); ctx.strokeStyle = '#000'; ctx.strokeText(t, x, y); ctx.fillStyle = col || '#fff'; ctx.fillText(t, x, y); ctx.restore(); }
   function block(x, y, s, tint, a, item) {
     ctx.save(); if (a != null) ctx.globalAlpha = a;
@@ -227,6 +228,7 @@
     if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy);
       pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < B0() || Y >= TOTAL) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.35)' : 'rgba(255,90,70,.3)'; ctx.fillRect(bx(X) + 2, by(Y) + 2, S - 4, S - 4); }); }
     // 포탑: 적(절점 위 줄) · 나(절점 아래 줄)
+    for (var mx2 = 0; mx2 < COLS; mx2++) if (G.myT[mx2]) fitW(IM['k_' + G.fac + '_m2'], bx(mx2) + S / 2, by(G.L + 1) - S * 0.04, S * 0.8);   /* 내 포탑 먼저(절점 막대가 위로 지나가게) — 양쪽 같은 폭 */
     // 절점: 30초 시한폭탄 게이지
     var left = Math.max(0, G.roundAt - t), prog = 1 - left / ROUND, m = cnt(G.myT), e = cnt(G.enT);
     if (IM.d_wire1) { var wh = S * 0.62, ww = wh * IM.d_wire1.width / IM.d_wire1.height; ctx.save(); ctx.globalAlpha = 0.85; for (var wx = OX - ww * 0.2; wx < OX + S * COLS; wx += ww * 0.9) ctx.drawImage(IM.d_wire1, wx, lineY - wh * 0.55, ww, wh); ctx.restore(); }
@@ -241,7 +243,7 @@
     text('나 ' + m + ' : ' + e + ' 적', OX + S * COLS / 2, lineY, Math.round(S * 0.36), '#fff');
     text(Math.ceil(left / 1000) + '', OX + S * COLS / 2 + bw / 2 + S * 0.45, lineY, Math.round(S * (urgent ? 0.62 : 0.46)), urgent ? '#ff6a5a' : '#ffe9a8');
     var eim = IM['k_' + G.efac + '_e2'], mim = IM['k_' + G.fac + '_m2'];   /* 포탑은 배지 위에 그려서 가리지 않게 */
-    for (var ex = 0; ex < COLS; ex++) { if (G.enT[ex]) fit(eim, bx(ex) + S / 2, by(G.L - 1) + S * 0.5, S * 0.95, S * 0.95); if (G.myT[ex]) fit(mim, bx(ex) + S / 2, by(G.L) + S * 0.5, S * 0.95, S * 0.95);   /* 양쪽 같은 크기 */ }
+    for (var ex = 0; ex < COLS; ex++) { if (G.enT[ex]) fitW(eim, bx(ex) + S / 2, by(G.L) - S * 0.06, S * 0.8);   /* 양쪽 같은 폭(그림 비율이 달라도 같은 크기로 보이게), 바닥을 줄에 맞춤 */ }
     if (t < G.freezeUntil) text('폭풍우 — 적 보충 멈춤 ' + Math.ceil((G.freezeUntil - t) / 1000) + 's', W / 2, by(G.L - 2) + S / 2, Math.round(S * 0.4), '#bfe9ff');
     // 탱크
     var tk = G.tank, mv = tk.path.length ? 1 : 0; ctx.save(); ctx.translate(bx(tk.fx) + S / 2, by(tk.fy) + S / 2);
@@ -255,7 +257,7 @@
       if (f.k === 'cell') { if (a > 350) return false; block(bx(f.x) + S * a / 1400, by(f.y) + S * a / 1400, S * (1 - a / 700), '#fff', 1 - a / 350); return true; }
       if (f.k === 'flash') { if (a > 300) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 300)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(OX, by(y), S * COLS, S); }); f.cols.forEach(function (x) { ctx.fillRect(bx(x), by(B0()), S, S * (TOTAL - B0())); }); return true; }
       if (f.k === 'boom') { if (a > 520) return false; var fr = Math.min(8, 1 + Math.floor(a / 520 * 8)), sz = S * (f.small ? 0.9 : 1.5); fit(IM['x_b' + fr], f.px, f.py - sz * 0.15, sz, sz); return true; }
-      if (f.k === 'ruin') { if (a > 800) return false; fit(IM['k_' + G.efac + '_e4'], bx(f.x) + S / 2, by(G.L - 1) + S * 0.55, S * 0.98, S, 1 - a / 800); return true; }
+      if (f.k === 'ruin') { if (a > 800) return false; ctx.save(); ctx.globalAlpha = 1 - a / 800; fitW(IM['k_' + G.efac + '_e4'], bx(f.x) + S / 2, by(G.L) - S * 0.04, S * 0.86); ctx.restore(); return true; }
       if (f.k === 'build' || f.k === 'ebuild') { if (a > 500) return false; var yy2 = f.k === 'build' ? by(G.L) : by(G.L - 1); ctx.save(); ctx.globalAlpha = 1 - a / 500; ctx.strokeStyle = f.k === 'build' ? '#9be37a' : '#ff6a5a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(bx(f.x) + S / 2, yy2 + S / 2, S * (0.3 + a / 900), 0, 7); ctx.stroke(); ctx.restore(); return true; }
       if (f.k === 'bolt') { if (a > 400) return false; ctx.strokeStyle = 'rgba(220,190,255,' + (1 - a / 400) + ')'; ctx.lineWidth = 4; ctx.beginPath(); var X = bx(f.x) + S / 2, Y2 = by(G.L - 1) + S / 2; ctx.moveTo(X, 0); for (var q = 1; q <= 6; q++) ctx.lineTo(X + (Math.random() - 0.5) * S * 0.6, Y2 * q / 6); ctx.stroke(); return true; }
       if (f.k === 'plane') { if (a > 1400) return false; var px2 = -S * 2 + (W + S * 4) * (a / 1400); fit(IM['p_' + G.fac] || IM.m_up, px2, FY + S * 0.8, S * 1.6, S * 1.6); return true; }
