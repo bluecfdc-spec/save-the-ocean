@@ -7,7 +7,7 @@
    - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
-  var COLS = 18, ROWS = 18, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
+  var COLS = 36, ROWS = 36, TRAY_H = 112, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
   var TANK_V = 3, UNIT_V = 4, SHOT_V = 14;
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
@@ -32,7 +32,9 @@
   function layout() {
     var dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    S = Math.floor(Math.min(W / COLS, (H - HUD - BOT - 120) / ROWS));
+    var avail = H - HUD - BOT - TRAY_H - 8;
+    if (!G || G.over) { S = W / COLS; ROWS = Math.max(36, Math.min(64, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
+    S = Math.min(W / COLS, avail / ROWS);
     OX = Math.floor((W - S * COLS) / 2); BY = HUD + 4; TY = BY + ROWS * S + 4; TH = H - BOT - TY;
   }
   window.addEventListener('resize', layout); layout();
@@ -43,9 +45,10 @@
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_next_best') || 0; } catch (e) { }
   function newPiece() { return { cells: SHAPES[rnd(SHAPES.length)], tint: TINT[rnd(TINT.length)] }; }
   function start() {
+    G = null; layout();
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
     G = { t: 0, score: 0, combo: 0, lines: 0, cardLines: 0, fac: fac, efac: efs[rnd(2)], board: [], bunkers: [], units: [], shots: [], lobs: [], fx: [],
-      tank: { x: 9, y: 14, tx: 9, ty: 14, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
+      tank: { x: 18.5, y: ROWS - 5.5, tx: 18, ty: ROWS - 6, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
       up: { rate: 0, dmg: 0, move: 0 }, tray: [newPiece(), newPiece(), newPiece()], nextBunker: BUNKER_EVERY, noFit: null, count: null, paused: false, over: false, drag: null, banner: null, kills: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     addBunker(); banner('벙커를 찾아 사냥하라!', '#ffd451');
@@ -58,7 +61,7 @@
   function solid(x, y) { return x < 0 || y < 0 || x >= COLS || y >= ROWS || G.board[y][x] || bunkerAt(x, y); }   // 병력·탱크가 못 지나가는 칸
   function occupied(x, y) {                                 // 블록을 못 놓는 칸 (블록·벙커·탱크·병력)
     if (solid(x, y)) return true;
-    var t = G.tank; if (Math.abs(t.x - (x + 0.5)) < 1.2 && Math.abs(t.y - (y + 0.5)) < 1.2) return true;
+    var t = G.tank; if (Math.abs(t.x - (x + 0.5)) < 1 && Math.abs(t.y - (y + 0.5)) < 1) return true;   /* 탱크 = 1칸 */
     for (var i = 0; i < G.units.length; i++) { var u = G.units[i]; if (u.x > x - 0.42 && u.x < x + 1.42 && u.y > y - 0.42 && u.y < y + 1.42) return true; }
     return false;
   }
@@ -92,7 +95,7 @@
     var spots = [];
     for (var y = 0; y < ROWS - 1; y++) for (var x = 0; x < COLS - 1; x++) {
       if (solid(x, y) || solid(x + 1, y) || solid(x, y + 1) || solid(x + 1, y + 1)) continue;
-      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 6) continue;
+      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 10) continue;
       if (G.units.some(function (u) { return u.x > x - 0.5 && u.x < x + 2.5 && u.y > y - 0.5 && u.y < y + 2.5; })) continue;
       spots.push([x, y]); }
     if (!spots.length) return;
@@ -193,7 +196,7 @@
   function slotRect(i) { var w = S * COLS / 3; return { x: OX + i * w, y: TY + 4, w: w, h: TH - 8 }; }
   function inR(r, p) { return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
   function pieceWH(pc) { var w = 0, h = 0; pc.cells.forEach(function (c) { w = Math.max(w, c[0] + 1); h = Math.max(h, c[1] + 1); }); return [w, h]; }
-  function dropCell(p) { var wh = pieceWH(G.tray[G.drag.i]), cx = p.x - wh[0] * S / 2, cy = p.y - S * 3 - wh[1] * S / 2; return { gx: Math.round((cx - OX) / S), gy: Math.round((cy - BY) / S) }; }
+  function dropCell(p) { var wh = pieceWH(G.tray[G.drag.i]), cx = p.x - wh[0] * S / 2, cy = p.y - 64 - wh[1] * S / 2; return { gx: Math.round((cx - OX) / S), gy: Math.round((cy - BY) / S) }; }
   cv.addEventListener('pointerdown', function (e) { if (!G || G.over || G.paused) return; var p = { x: e.clientX, y: e.clientY }; for (var i = 0; i < 3; i++) if (G.tray[i] && inR(slotRect(i), p)) { G.drag = { i: i, p: p }; sfx('pick'); return; } });
   cv.addEventListener('pointermove', function (e) { if (G && G.drag) G.drag.p = { x: e.clientX, y: e.clientY }; });
   cv.addEventListener('pointerup', function (e) { if (!G || !G.drag) return; var p = { x: e.clientX, y: e.clientY }, d = dropCell(p), i = G.drag.i; G.drag = null; if (!G.over && !G.paused && canPlace(G.tray[i], d.gx, d.gy)) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); });
@@ -207,33 +210,33 @@
     ctx.clearRect(0, 0, W, H); cover(IM.bg_mine, 0, 0, W, H);
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(OX, BY, S * COLS, S * ROWS);
     if (!G) return;
-    ctx.strokeStyle = 'rgba(255,230,170,.07)'; ctx.lineWidth = 1; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx++) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy++) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,230,170,.045)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx++) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy++) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) block(px(x), py(y), S, G.board[y][x]);
     // 놓을 자리 미리보기
     if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < 0 || Y >= ROWS) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(X) + 1, py(Y) + 1, S - 2, S - 2); }); }
     // 벙커
     var eb = IM['k_' + G.efac + '_e2'];
     G.bunkers.forEach(function (b) { fit(eb, px(b.x + 1), py(b.y + 1), S * 2.1, S * 2.2);
-      var w = S * 1.8, hp = Math.max(0, b.hp) / BUNKER_HP; ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 6, w, 5); ctx.fillStyle = '#ff5a4a'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 6, w * hp, 5);
-      var left = Math.max(0, b.spawn - G.t) / SPAWN_MS; ctx.strokeStyle = 'rgba(255,170,120,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px(b.x + 2) - 3, py(b.y + 2) - 3, 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - left)); ctx.stroke(); });
+      var w = S * 1.8, hp = Math.max(0, b.hp) / BUNKER_HP; ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 4, w, 3); ctx.fillStyle = '#ff5a4a'; ctx.fillRect(px(b.x + 1) - w / 2, py(b.y) - 4, w * hp, 3);
+      var left = Math.max(0, b.spawn - G.t) / SPAWN_MS; ctx.strokeStyle = 'rgba(255,170,120,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px(b.x + 2) - 2, py(b.y + 2) - 2, 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - left)); ctx.stroke(); });
     // 병력
-    G.units.forEach(function (u) { var f = Math.floor(u.ph) % 2 ? '_frun2' : '_frun1'; ctx.fillStyle = 'rgba(255,60,40,.35)'; ctx.beginPath(); ctx.ellipse(px(u.x), py(u.y) + S * 0.35, S * 0.5, S * 0.22, 0, 0, 7); ctx.fill(); fit(IM['s_' + G.efac + f], px(u.x), py(u.y) - S * 0.25, S * 1.4, S * 1.7); });   /* 병력: 발밑 붉은 표시 + 조금 크게(판정은 1칸) */
+    G.units.forEach(function (u) { var f = Math.floor(u.ph) % 2 ? '_frun2' : '_frun1'; ctx.fillStyle = 'rgba(255,60,40,.35)'; ctx.beginPath(); ctx.ellipse(px(u.x), py(u.y) + S * 0.4, S * 0.42, S * 0.2, 0, 0, 7); ctx.fill(); fit(IM['s_' + G.efac + f], px(u.x), py(u.y) - S * 0.1, S * 1.0, S * 1.2); });   /* 보병 = 1칸 */   /* 병력: 발밑 붉은 표시 + 조금 크게(판정은 1칸) */
     // 탱크 + 사거리
     var t = G.tank; ctx.strokeStyle = 'rgba(255,230,120,.22)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px(t.x), py(t.y), RANGE * S, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-    ctx.save(); ctx.translate(px(t.x), py(t.y)); ctx.rotate(t.ang + Math.PI / 2); ctx.shadowColor = FACCOL[G.fac]; ctx.shadowBlur = 10; fit(IM['t_' + G.fac], 0, 0, S * 1.7, S * 2.0); ctx.restore();
+    ctx.save(); ctx.translate(px(t.x), py(t.y)); ctx.rotate(t.ang + Math.PI / 2); ctx.shadowColor = FACCOL[G.fac]; ctx.shadowBlur = 10; fit(IM['t_' + G.fac], 0, 0, S * 1.05, S * 1.2); ctx.restore();   /* 탱크 = 1칸 */
     // 포탄
-    G.shots.forEach(function (s) { var tl = 1.4, tx0 = s.x - s.vx / SHOT_V * tl, ty0 = s.y - s.vy / SHOT_V * tl; ctx.save(); var gr = ctx.createLinearGradient(px(tx0), py(ty0), px(s.x), py(s.y)); gr.addColorStop(0, 'rgba(255,200,80,0)'); gr.addColorStop(1, 'rgba(255,230,120,.95)'); ctx.strokeStyle = gr; ctx.lineWidth = Math.max(3, S * 0.22); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px(tx0), py(ty0)); ctx.lineTo(px(s.x), py(s.y)); ctx.stroke();
-      ctx.fillStyle = '#fff6c0'; ctx.shadowColor = '#ffb13d'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(px(s.x), py(s.y), Math.max(3.5, S * 0.24), 0, 7); ctx.fill(); ctx.restore(); });   /* 직선포: 꼬리 달린 밝은 탄 */
-    G.lobs.forEach(function (l) { var p = (G.t - l.t0) / l.dur, tx = l.b.x + 1, ty = l.b.y + 1, x = l.sx + (tx - l.sx) * p, yy = l.sy + (ty - l.sy) * p - Math.sin(p * Math.PI) * 2.2; fit(IM.m_up, px(x), py(yy), S * 0.7, S * 1.1); });
+    G.shots.forEach(function (s) { var tl = 1.4, tx0 = s.x - s.vx / SHOT_V * tl, ty0 = s.y - s.vy / SHOT_V * tl; ctx.save(); var gr = ctx.createLinearGradient(px(tx0), py(ty0), px(s.x), py(s.y)); gr.addColorStop(0, 'rgba(255,200,80,0)'); gr.addColorStop(1, 'rgba(255,230,120,.95)'); ctx.strokeStyle = gr; ctx.lineWidth = Math.max(2, S * 0.22); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px(tx0), py(ty0)); ctx.lineTo(px(s.x), py(s.y)); ctx.stroke();
+      ctx.fillStyle = '#fff6c0'; ctx.shadowColor = '#ffb13d'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(px(s.x), py(s.y), Math.max(2, S * 0.24), 0, 7); ctx.fill(); ctx.restore(); });   /* 직선포: 꼬리 달린 밝은 탄 */
+    G.lobs.forEach(function (l) { var p = (G.t - l.t0) / l.dur, tx = l.b.x + 1, ty = l.b.y + 1, x = l.sx + (tx - l.sx) * p, yy = l.sy + (ty - l.sy) * p - Math.sin(p * Math.PI) * 2.2; fit(IM.m_up, px(x), py(yy), S * 0.8, S * 1.2); });
     // 효과
     G.fx = G.fx.filter(function (f) { var a = G.t - f.at;
       if (f.k === 'cell') { if (a > 320) return false; block(px(f.x), py(f.y), S, '#fff', 1 - a / 320); return true; }
       if (f.k === 'flash') { if (a > 280) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 280)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(OX, py(y), S * COLS, S); }); f.cols.forEach(function (x) { ctx.fillRect(px(x), BY, S, S * ROWS); }); return true; }
-      if (f.k === 'boom') { var life = 500; if (a > life) return false; var fr = Math.min(8, 1 + Math.floor(a / life * 8)), sz = S * (f.small ? 1.4 : 2.4); fit(IM['x_b' + fr], px(f.x), py(f.y) - sz * 0.15, sz, sz); return true; }
-      if (f.k === 'dead') { if (a > 700) return false; fit(IM['s_' + G.efac + '_fdead'], px(f.x), py(f.y), S * 1.2, S * 1.2, 1 - a / 700); return true; }
+      if (f.k === 'boom') { var life = 500; if (a > life) return false; var fr = Math.min(8, 1 + Math.floor(a / life * 8)), sz = S * (f.small ? 1.4 : 2.2); fit(IM['x_b' + fr], px(f.x), py(f.y) - sz * 0.15, sz, sz); return true; }
+      if (f.k === 'dead') { if (a > 700) return false; fit(IM['s_' + G.efac + '_fdead'], px(f.x), py(f.y), S * 1.0, S * 1.0, 1 - a / 700); return true; }
       if (f.k === 'ruin') { if (a > 1200) return false; fit(IM['k_' + G.efac + '_e4'], px(f.x + 1), py(f.y + 1), S * 2.1, S * 2.1, 1 - a / 1200); return true; }
-      if (f.k === 'muzzle') { if (a > 120) return false; ctx.fillStyle = 'rgba(255,240,170,' + (1 - a / 120) + ')'; ctx.beginPath(); ctx.arc(px(f.x), py(f.y), S * 0.55, 0, 7); ctx.fill(); return true; }
-      if (f.k === 'hit') { if (a > 260) return false; ctx.strokeStyle = 'rgba(255,255,255,' + (1 - a / 260) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px(f.x), py(f.y), S * (0.4 + a / 130), 0, 7); ctx.stroke(); return true; }
+      if (f.k === 'muzzle') { if (a > 120) return false; ctx.fillStyle = 'rgba(255,240,170,' + (1 - a / 120) + ')'; ctx.beginPath(); ctx.arc(px(f.x), py(f.y), S * 0.5, 0, 7); ctx.fill(); return true; }
+      if (f.k === 'hit') { if (a > 260) return false; ctx.strokeStyle = 'rgba(255,255,255,' + (1 - a / 260) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px(f.x), py(f.y), S * (0.4 + a / 130), 0, 7); ctx.stroke(); return true; }
       if (f.k === 'ring') { if (a > 900) return false; ctx.strokeStyle = 'rgba(255,90,70,' + (1 - a / 900) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px(f.x), py(f.y), S * (1 + a / 300), 0, 7); ctx.stroke(); return true; }
       if (f.k === 'pop') { if (a > 1100) return false; ctx.save(); ctx.globalAlpha = Math.min(1, (1100 - a) / 300); text(f.t, f.x, f.y - a * 0.03, f.big ? 24 : 17, f.col); ctx.restore(); return true; }
       return false; });
@@ -244,9 +247,9 @@
     text('최고 ' + Math.max(best, G.score).toLocaleString(), W - 10, HUD / 2, 16, '#ffd451', 'right');
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.35)'; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
-      var pc2 = G.tray[i]; if (!pc2 || (G.drag && G.drag.i === i)) continue; var wh = pieceWH(pc2), cs = Math.min(S * 1.3, (rc.w - 16) / wh[0], (rc.h - 12) / wh[1]), ox = rc.x + (rc.w - wh[0] * cs) / 2, oy = rc.y + (rc.h - wh[1] * cs) / 2;
+      var pc2 = G.tray[i]; if (!pc2 || (G.drag && G.drag.i === i)) continue; var wh = pieceWH(pc2), cs = Math.min(22, (rc.w - 16) / wh[0], (rc.h - 12) / wh[1]), ox = rc.x + (rc.w - wh[0] * cs) / 2, oy = rc.y + (rc.h - wh[1] * cs) / 2;
       pc2.cells.forEach(function (c) { block(ox + c[0] * cs, oy + c[1] * cs, cs, pc2.tint); }); }
-    if (G.drag && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], wh2 = pieceWH(pd), gx0 = G.drag.p.x - wh2[0] * S / 2, gy0 = G.drag.p.y - S * 3 - wh2[1] * S / 2; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 0.9); }); }
+    if (G.drag && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], wh2 = pieceWH(pd), gx0 = G.drag.p.x - wh2[0] * S / 2, gy0 = G.drag.p.y - 64 - wh2[1] * S / 2; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 0.9); }); }
     // 아래: 카드까지 · 강화 상태
     var by0 = H - BOT; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, by0, W, BOT);
     var bw = Math.min(160, W * 0.38); text('카드까지 ' + G.cardLines + '/' + CARD_LINES + '줄', 12, by0 + 16, 16, '#9be37a', 'left');
