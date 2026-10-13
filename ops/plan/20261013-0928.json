@@ -1,0 +1,5 @@
+[
+  {"op": "update", "id": "w01", "data": {"done": true, "doneAt": "10/13", "doneByName": "Claude"}},
+  {"op": "update", "id": "w02", "data": {"done": true, "doneAt": "10/13", "doneByName": "Claude"}},
+  {"op": "update", "id": "w04", "data": {"done": true, "doneAt": "10/13", "doneByName": "Claude", "date": "2026-10-13", "memo": "10/17 예정이던 걸 오늘 아이패드로 끝냄"}}
+]
