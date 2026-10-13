@@ -71,7 +71,8 @@
     function mark(cx, cy, r) { for (var y = Math.floor(cy - r); y <= Math.floor(cy + r); y++) for (var x = Math.floor(cx - r); x <= Math.floor(cx + r); x++) if (x >= 0 && y >= 0 && x < COLS && y < ROWS) OCC[y * COLS + x] = 1; }
     mark(G.tank.x, G.tank.y, 0.49); G.units.forEach(function (u) { mark(u.x, u.y, 0.42); });
   }
-  function occupied(x, y) { if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true; return OCC[y * COLS + x] === 1; }
+  function edge(x, y) { return x <= 0 || y <= 0 || x >= COLS - 1 || y >= ROWS - 1; }   // 전장 4면 맨 끝 줄 = 블록 못 놓음 (병력·탱크는 다닐 수 있음)
+  function occupied(x, y) { if (edge(x, y)) return true; return OCC[y * COLS + x] === 1; }
   function canPlace(p, gx, gy) { if (!OCC) buildOcc(); for (var i = 0; i < p.cells.length; i++) if (occupied(gx + p.cells[i][0], gy + p.cells[i][1])) return false; return true; }
   function anyFit(p) { for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(p, x, y)) return true; return false; }
   function place(i, gx, gy) {
@@ -83,11 +84,11 @@
   }
   function lineCheck() {
     var rows = [], cols = [], x, y, full;
-    for (y = 0; y < ROWS; y++) { full = true; for (x = 0; x < COLS; x++) if (!G.board[y][x]) { full = false; break; } if (full) rows.push(y); }
-    for (x = 0; x < COLS; x++) { full = true; for (y = 0; y < ROWS; y++) if (!G.board[y][x]) { full = false; break; } if (full) cols.push(x); }
+    for (y = 1; y < ROWS - 1; y++) { full = true; for (x = 1; x < COLS - 1; x++) if (!G.board[y][x]) { full = false; break; } if (full) rows.push(y); }   /* 줄 = 끝 줄을 뺀 안쪽 칸 */
+    for (x = 1; x < COLS - 1; x++) { full = true; for (y = 1; y < ROWS - 1; y++) if (!G.board[y][x]) { full = false; break; } if (full) cols.push(x); }
     var n = rows.length + cols.length; if (!n) return false;
-    rows.forEach(function (y) { for (var x = 0; x < COLS; x++) { G.board[y][x] = 0; G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); } });
-    cols.forEach(function (x) { for (var y = 0; y < ROWS; y++) { if (G.board[y][x]) G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); G.board[y][x] = 0; } });
+    rows.forEach(function (y) { for (var x = 1; x < COLS - 1; x++) { G.board[y][x] = 0; G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); } });
+    cols.forEach(function (x) { for (var y = 1; y < ROWS - 1; y++) { if (G.board[y][x]) G.fx.push({ k: 'cell', x: x, y: y, at: G.t }); G.board[y][x] = 0; } });
     G.fx.push({ k: 'flash', rows: rows, cols: cols, at: G.t });
     G.combo++; var mult = Math.min(5, G.combo), pts = (n * 100 + (n - 1) * 100) * mult; G.score += pts;
     pop((mult > 1 ? 'COMBO ×' + mult + '  ' : '') + '+' + pts, px(COLS / 2), py(ROWS / 2), '#ffe066', true); sfx('clear', n + mult - 1);
@@ -240,6 +241,8 @@
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(OX, BY, S * COLS, S * ROWS);
     if (!G) return;
     ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx += 1) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy += 1) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();   /* 격자 */
+    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.38)'; ctx.fillRect(OX, BY, S * COLS, S); ctx.fillRect(OX, py(ROWS - 1), S * COLS, S); ctx.fillRect(OX, py(1), S, S * (ROWS - 2)); ctx.fillRect(px(COLS - 1), py(1), S, S * (ROWS - 2));   /* 끝 줄 = 블록 못 놓는 곳 */
+    ctx.strokeStyle = 'rgba(214,170,70,.45)'; ctx.lineWidth = 1.5; ctx.strokeRect(px(1), py(1), S * (COLS - 2), S * (ROWS - 2)); ctx.restore();
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) block(px(x), py(y), S, G.board[y][x]);
     // 놓을 자리 미리보기
     if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < 0 || Y >= ROWS) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(X) + 1, py(Y) + 1, S - 2, S - 2); }); }
@@ -264,7 +267,7 @@
     // 효과
     G.fx = G.fx.filter(function (f) { var a = G.t - f.at;
       if (f.k === 'cell') { if (a > 320) return false; block(px(f.x), py(f.y), S, '#fff', 1 - a / 320); return true; }
-      if (f.k === 'flash') { if (a > 280) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 280)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(OX, py(y), S * COLS, S); }); f.cols.forEach(function (x) { ctx.fillRect(px(x), BY, S, S * ROWS); }); return true; }
+      if (f.k === 'flash') { if (a > 280) return false; ctx.fillStyle = 'rgba(255,240,180,' + (0.5 * (1 - a / 280)) + ')'; f.rows.forEach(function (y) { ctx.fillRect(px(1), py(y), S * (COLS - 2), S); }); f.cols.forEach(function (x) { ctx.fillRect(px(x), py(1), S, S * (ROWS - 2)); }); return true; }
       if (f.k === 'boom') { var life = 500; if (a > life) return false; var fr = Math.min(8, 1 + Math.floor(a / life * 8)), sz = S * (f.small ? 1.4 : 2.2); fit(IM['x_b' + fr], px(f.x), py(f.y) - sz * 0.15, sz, sz); return true; }
       if (f.k === 'dead') { if (a > 700) return false; fit(IM['s_' + G.efac + '_fdead'], px(f.x), py(f.y), S * 1.0, S * 1.0, 1 - a / 700); return true; }
       if (f.k === 'ruin') { if (a > 1200) return false; fit(IM['k_' + G.efac + '_e4'], px(f.x + 1), py(f.y + 1), S * 2.1, S * 2.1, 1 - a / 1200); return true; }
