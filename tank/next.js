@@ -7,7 +7,7 @@
    - 줄 10개를 깰 때마다 멈추고 카드 3장 중 1장: 직선포 발사속도 +0.2배(최대 3배) / 곡사포 데미지 1→최대 5 / 이동속도 +0.2배(최대 2.6배). */
 (function () {
   'use strict';
-  var COLS = 36, ROWS = 36, TRAY_H = 112, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
+  var COLS = 72, ROWS = 72, TRAY_H = 112, RANGE = 3, BUNKER_HP = 5, SPAWN_MS = 20000, BUNKER_EVERY = 40000, BUNKER_MAX = 4, CARD_LINES = 10, STUCK_MS = 5000, COUNT_MS = 5000;
   var TANK_V = 3, UNIT_V = 4, SHOT_V = 14;
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
@@ -33,7 +33,7 @@
     var dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var avail = H - HUD - BOT - TRAY_H - 8;
-    if (!G || G.over) { S = W / COLS; ROWS = Math.max(36, Math.min(64, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
+    if (!G || G.over) { S = W / COLS; ROWS = Math.max(72, Math.min(140, Math.floor(avail / S))); }   /* 새 판을 시작할 때 화면 높이에 맞춰 세로 줄 수를 정함 (빈 띠 없이) */
     S = Math.min(W / COLS, avail / ROWS);
     OX = Math.floor((W - S * COLS) / 2); BY = HUD + 4; TY = BY + ROWS * S + 4; TH = H - BOT - TY;
   }
@@ -48,7 +48,7 @@
     G = null; layout();
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
     G = { t: 0, score: 0, combo: 0, lines: 0, cardLines: 0, fac: fac, efac: efs[rnd(2)], board: [], bunkers: [], units: [], shots: [], lobs: [], fx: [],
-      tank: { x: 18.5, y: ROWS - 5.5, tx: 18, ty: ROWS - 6, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
+      tank: { x: 36.5, y: ROWS - 10.5, tx: 36, ty: ROWS - 11, lock: null, lostAt: null, path: [], ang: 0, plan: 0, fireT: 0, lobT: 0, target: null },
       up: { rate: 0, dmg: 0, move: 0 }, tray: [newPiece(), newPiece(), newPiece()], nextBunker: BUNKER_EVERY, noFit: null, count: null, paused: false, over: false, drag: null, banner: null, kills: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     addBunker(); banner('벙커를 찾아 사냥하라!', '#ffd451');
@@ -63,13 +63,16 @@
   // ---------- 판 ----------
   function bunkerAt(x, y) { for (var i = 0; i < G.bunkers.length; i++) { var b = G.bunkers[i]; if (x >= b.x && x < b.x + 2 && y >= b.y && y < b.y + 2) return b; } return null; }
   function solid(x, y) { return x < 0 || y < 0 || x >= COLS || y >= ROWS || G.board[y][x] || bunkerAt(x, y); }   // 병력·탱크가 못 지나가는 칸
-  function occupied(x, y) {                                 // 블록을 못 놓는 칸 (블록·벙커·탱크·병력)
-    if (solid(x, y)) return true;
-    var t = G.tank; if (Math.abs(t.x - (x + 0.5)) < 1 && Math.abs(t.y - (y + 0.5)) < 1) return true;   /* 탱크 = 1칸 */
-    for (var i = 0; i < G.units.length; i++) { var u = G.units[i]; if (u.x > x - 0.42 && u.x < x + 1.42 && u.y > y - 0.42 && u.y < y + 1.42) return true; }
-    return false;
+  var OCC = null;
+  function buildOcc() {                                     // 블록을 못 놓는 칸 지도 (블록·벙커·탱크·병력) — 칸이 많아서 한 번에 계산해 둠
+    var n = COLS * ROWS; if (!OCC || OCC.length !== n) OCC = new Uint8Array(n); else OCC.fill(0);
+    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) OCC[y * COLS + x] = 1;
+    G.bunkers.forEach(function (b) { for (var y = b.y; y < b.y + 2; y++) for (var x = b.x; x < b.x + 2; x++) OCC[y * COLS + x] = 1; });
+    function mark(cx, cy, r) { for (var y = Math.floor(cy - r); y <= Math.floor(cy + r); y++) for (var x = Math.floor(cx - r); x <= Math.floor(cx + r); x++) if (x >= 0 && y >= 0 && x < COLS && y < ROWS) OCC[y * COLS + x] = 1; }
+    mark(G.tank.x, G.tank.y, 0.49); G.units.forEach(function (u) { mark(u.x, u.y, 0.42); });
   }
-  function canPlace(p, gx, gy) { for (var i = 0; i < p.cells.length; i++) if (occupied(gx + p.cells[i][0], gy + p.cells[i][1])) return false; return true; }
+  function occupied(x, y) { if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true; return OCC[y * COLS + x] === 1; }
+  function canPlace(p, gx, gy) { if (!OCC) buildOcc(); for (var i = 0; i < p.cells.length; i++) if (occupied(gx + p.cells[i][0], gy + p.cells[i][1])) return false; return true; }
   function anyFit(p) { for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(p, x, y)) return true; return false; }
   function place(i, gx, gy) {
     var p = G.tray[i]; p.cells.forEach(function (c) { G.board[gy + c[1]][gx + c[0]] = p.tint; });
@@ -99,7 +102,7 @@
     var spots = [];
     for (var y = 0; y < ROWS - 1; y++) for (var x = 0; x < COLS - 1; x++) {
       if (solid(x, y) || solid(x + 1, y) || solid(x, y + 1) || solid(x + 1, y + 1)) continue;
-      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 10) continue;
+      if (Math.hypot(x + 1 - G.tank.x, y + 1 - G.tank.y) < 18) continue;
       if (G.units.some(function (u) { return u.x > x - 0.5 && u.x < x + 2.5 && u.y > y - 0.5 && u.y < y + 2.5; })) continue;
       spots.push([x, y]); }
     if (!spots.length) return;
@@ -128,19 +131,39 @@
   function nearestFree(cx, cy) { for (var r = 1; r < 6; r++) for (var y = cy - r; y <= cy + r; y++) for (var x = cx - r; x <= cx + r; x++) if (!solid(x, y)) return [x, y]; return null; }
 
   // ---------- 탱크 (스스로 사냥) ----------
-  function bfs(sx, sy) { var dist = {}, prev = {}, q = [[sx, sy]]; dist[sx + ',' + sy] = 0;
-    while (q.length) { var c = q.shift(), d = dist[c[0] + ',' + c[1]];
-      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (v) { var x = c[0] + v[0], y = c[1] + v[1], k = x + ',' + y; if (solid(x, y) || k in dist) return; dist[k] = d + 1; prev[k] = c; q.push([x, y]); }); }
-    return { dist: dist, prev: prev }; }
-  function planTank() {
-    var t = G.tank, cx = Math.floor(t.x), cy = Math.floor(t.y), r = bfs(cx, cy), best = null;
-    G.units.forEach(function (u) { var k = Math.floor(u.x) + ',' + Math.floor(u.y), d = r.dist[k]; if (d != null && (!best || d < best.d)) best = { d: d, k: k }; });
-    G.bunkers.forEach(function (b) { for (var y = b.y - 1; y <= b.y + 2; y++) for (var x = b.x - 1; x <= b.x + 2; x++) { var k = x + ',' + y, d = r.dist[k]; if (d != null && (!best || d + 1 < best.d)) best = { d: d + 1, k: k }; } });   /* 병력이 우선, 비슷하면 벙커 */
-    t.path = [];
-    if (best) { var cur = best.k.split(',').map(Number); while (cur && !(cur[0] === cx && cur[1] === cy)) { t.path.unshift(cur); cur = r.prev[cur[0] + ',' + cur[1]]; } }
+  var DIST = null, PREV = null;
+  function bfs(sx, sy) {                                   // 탱크가 갈 수 있는 칸 전부 (블록·벙커는 못 지나감)
+    var n = COLS * ROWS; if (!DIST || DIST.length !== n) { DIST = new Int32Array(n); PREV = new Int32Array(n); }
+    DIST.fill(-1); var q = new Int32Array(n), h = 0, tl = 0, s0 = sy * COLS + sx; if (solid(sx, sy)) return; DIST[s0] = 0; PREV[s0] = -1; q[tl++] = s0;
+    while (h < tl) { var c = q[h++], cx = c % COLS, cy = (c / COLS) | 0, d = DIST[c];
+      if (cx > 0 && DIST[c - 1] < 0 && !solid(cx - 1, cy)) { DIST[c - 1] = d + 1; PREV[c - 1] = c; q[tl++] = c - 1; }
+      if (cx < COLS - 1 && DIST[c + 1] < 0 && !solid(cx + 1, cy)) { DIST[c + 1] = d + 1; PREV[c + 1] = c; q[tl++] = c + 1; }
+      if (cy > 0 && DIST[c - COLS] < 0 && !solid(cx, cy - 1)) { DIST[c - COLS] = d + 1; PREV[c - COLS] = c; q[tl++] = c - COLS; }
+      if (cy < ROWS - 1 && DIST[c + COLS] < 0 && !solid(cx, cy + 1)) { DIST[c + COLS] = d + 1; PREV[c + COLS] = c; q[tl++] = c + COLS; } }
+  }
+  function goalCell(tg) {                                  // 목표가 지금 '갈 수 있는' 칸 (병력: 그 칸 / 벙커: 둘레 칸 중 가장 가까운 곳). 못 가면 -1
+    if (tg.kind === 'u') { var k = Math.floor(tg.ref.y) * COLS + Math.floor(tg.ref.x); return DIST[k] >= 0 ? k : -1; }
+    var b = tg.ref, best = -1; for (var y = b.y - 1; y <= b.y + 2; y++) for (var x = b.x - 1; x <= b.x + 2; x++) { if (x < 0 || y < 0 || x >= COLS || y >= ROWS) continue; var k2 = y * COLS + x; if (DIST[k2] >= 0 && (best < 0 || DIST[k2] < DIST[best])) best = k2; }
+    return best;
+  }
+  function alive(tg) { return tg && (tg.kind === 'u' ? G.units.indexOf(tg.ref) >= 0 : G.bunkers.indexOf(tg.ref) >= 0); }
+  function pickTarget() {                                  // 갈 수 있는 가장 가까운 병력, 없으면 벙커
+    var best = null, bd = 1e9;
+    G.units.forEach(function (u) { var k = Math.floor(u.y) * COLS + Math.floor(u.x); if (DIST[k] >= 0 && DIST[k] < bd) { bd = DIST[k]; best = { kind: 'u', ref: u }; } });
+    if (!best) G.bunkers.forEach(function (b) { var g = goalCell({ kind: 'b', ref: b }); if (g >= 0 && DIST[g] < bd) { bd = DIST[g]; best = { kind: 'b', ref: b }; } });
+    return best;
+  }
+  function planTank() {                                    // 한 번 노린 목표는 죽일 때까지 쫓아감. 길이 막히면 3초 기다렸다가 다른 목표로
+    var t = G.tank, cx = Math.floor(t.x), cy = Math.floor(t.y); bfs(cx, cy); t.path = [];
+    if (!alive(t.lock)) { t.lock = pickTarget(); t.lostAt = null; }
+    if (!t.lock) return;
+    var g = goalCell(t.lock);
+    if (g < 0) { if (t.lostAt == null) t.lostAt = G.t; if (G.t - t.lostAt >= 3000) { var nt = pickTarget(); if (nt) { t.lock = nt; t.lostAt = null; g = goalCell(nt); } } if (g < 0) return; }
+    else t.lostAt = null;
+    var cur = g, s0 = cy * COLS + cx; while (cur >= 0 && cur !== s0) { t.path.unshift([cur % COLS, (cur / COLS) | 0]); cur = PREV[cur]; }
   }
   function moveTank(dt) {
-    var t = G.tank; if (G.t > t.plan) { planTank(); t.plan = G.t + 350; }
+    var t = G.tank; if (G.t > t.plan) { planTank(); t.plan = G.t + 300; }
     var v = TANK_V * (1 + 0.2 * G.up.move) * dt;
     if (t.path.length) { var n = t.path[0], gx = n[0] + 0.5, gy = n[1] + 0.5, dx = gx - t.x, dy = gy - t.y, d = Math.hypot(dx, dy);
       if (d < 0.05) { t.path.shift(); } else { var s = Math.min(v, d); t.x += dx / d * s; t.y += dy / d * s; t.ang = Math.atan2(dy, dx); } }
@@ -174,7 +197,7 @@
     if (!G.bunkers.length && G.t > G.nextBunker - bunkerEvery() + 4000) { G.nextBunker = G.t + bunkerEvery(); addBunker(); }
     var lv = 1 + Math.min(6, Math.floor(mins())); if (lv !== G.lv) { if (G.lv) banner('위협 레벨 ' + lv + ' — 적이 더 빨리 늘어난다', '#ff8a7a'); G.lv = lv; }   /* 벙커가 다 없어지면 곧 새 벙커 */
     G.bunkers.forEach(function (b) { if (G.t >= b.spawn) { b.spawn = G.t + spawnMs(); spawnUnit(b); } });
-    moveUnits(dt); moveTank(dt); fire(); shotsStep(dt);
+    moveUnits(dt); moveTank(dt); fire(); shotsStep(dt); buildOcc();
     // 놓을 곳 검사 (0.2초마다)
     if (!G.fitCheck || G.t > G.fitCheck) { G.fitCheck = G.t + 200; var ok = G.tray.filter(Boolean).some(anyFit);
       if (ok) { if (!G.count) G.noFit = null; } else if (G.noFit == null) G.noFit = G.t;
@@ -215,7 +238,7 @@
     ctx.clearRect(0, 0, W, H); cover(IM.bg_mine, 0, 0, W, H);
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(OX, BY, S * COLS, S * ROWS);
     if (!G) return;
-    ctx.strokeStyle = 'rgba(255,230,170,.045)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx++) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy++) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,230,170,.05)'; ctx.lineWidth = 0.5; ctx.beginPath(); for (var gx = 0; gx <= COLS; gx += 6) { ctx.moveTo(px(gx), BY); ctx.lineTo(px(gx), BY + S * ROWS); } for (var gy = 0; gy <= ROWS; gy += 6) { ctx.moveTo(OX, py(gy)); ctx.lineTo(OX + S * COLS, py(gy)); } ctx.stroke();   /* 칸이 작아서 6칸마다만 격자 */
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) block(px(x), py(y), S, G.board[y][x]);
     // 놓을 자리 미리보기
     if (G.drag && G.tray[G.drag.i]) { var d = dropCell(G.drag.p), pc = G.tray[G.drag.i], ok = canPlace(pc, d.gx, d.gy); pc.cells.forEach(function (c) { var X = d.gx + c[0], Y = d.gy + c[1]; if (X < 0 || X >= COLS || Y < 0 || Y >= ROWS) return; ctx.fillStyle = ok ? 'rgba(155,227,122,.45)' : 'rgba(255,90,70,.4)'; ctx.fillRect(px(X) + 1, py(Y) + 1, S - 2, S - 2); }); }
@@ -227,7 +250,11 @@
     // 병력
     G.units.forEach(function (u) { var f = Math.floor(u.ph) % 2 ? '_frun2' : '_frun1'; ctx.fillStyle = 'rgba(255,60,40,.35)'; ctx.beginPath(); ctx.ellipse(px(u.x), py(u.y) + S * 0.4, S * 0.42, S * 0.2, 0, 0, 7); ctx.fill(); fit(IM['s_' + G.efac + f], px(u.x), py(u.y) - S * 0.1, S * 1.0, S * 1.2); });   /* 보병 = 1칸 */   /* 병력: 발밑 붉은 표시 + 조금 크게(판정은 1칸) */
     // 탱크 + 사거리
-    var t = G.tank; ctx.strokeStyle = 'rgba(255,230,120,.22)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px(t.x), py(t.y), RANGE * S, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    var t = G.tank;
+    if (alive(t.lock)) { var lx = t.lock.kind === 'u' ? t.lock.ref.x : t.lock.ref.x + 1, ly = t.lock.kind === 'u' ? t.lock.ref.y : t.lock.ref.y + 1, lr = (t.lock.kind === 'u' ? 1.1 : 2) * S + 2, lost = t.lostAt != null;   /* 록온 표시 */
+      ctx.strokeStyle = lost ? 'rgba(255,200,80,.9)' : 'rgba(255,60,40,.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px(lx), py(ly), lr, 0, 7); ctx.moveTo(px(lx) - lr - 3, py(ly)); ctx.lineTo(px(lx) - lr + 3, py(ly)); ctx.moveTo(px(lx) + lr - 3, py(ly)); ctx.lineTo(px(lx) + lr + 3, py(ly)); ctx.stroke();
+      if (lost) text('길 막힘 ' + Math.max(0, 3 - (G.t - t.lostAt) / 1000).toFixed(1), px(lx), py(ly) - lr - 8, 12, '#ffd451'); }
+    ctx.strokeStyle = 'rgba(255,230,120,.22)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px(t.x), py(t.y), RANGE * S, 0, 7); ctx.stroke(); ctx.setLineDash([]);
     ctx.save(); ctx.translate(px(t.x), py(t.y)); ctx.rotate(t.ang + Math.PI / 2); ctx.shadowColor = FACCOL[G.fac]; ctx.shadowBlur = 10; fit(IM['t_' + G.fac], 0, 0, S * 1.05, S * 1.2); ctx.restore();   /* 탱크 = 1칸 */
     // 포탄
     G.shots.forEach(function (s) { var tl = 1.4, tx0 = s.x - s.vx / SHOT_V * tl, ty0 = s.y - s.vy / SHOT_V * tl; ctx.save(); var gr = ctx.createLinearGradient(px(tx0), py(ty0), px(s.x), py(s.y)); gr.addColorStop(0, 'rgba(255,200,80,0)'); gr.addColorStop(1, 'rgba(255,230,120,.95)'); ctx.strokeStyle = gr; ctx.lineWidth = Math.max(2, S * 0.22); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px(tx0), py(ty0)); ctx.lineTo(px(s.x), py(s.y)); ctx.stroke();
@@ -247,8 +274,8 @@
       return false; });
     // 위 HUD
     ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, W, HUD);
-    text('위협 ' + (G.lv || 1) + ' · 병력 ' + G.units.length + ' · 벙커 ' + G.bunkers.length, 10, HUD / 2, 16, '#ff9a8a', 'left');
-    text(G.score.toLocaleString(), W / 2, HUD / 2, 26, '#fff');
+    text('위협' + (G.lv || 1) + ' 병력' + G.units.length + ' 벙커' + G.bunkers.length, 8, HUD / 2, 14, '#ff9a8a', 'left');
+    text(G.score.toLocaleString(), W * 0.56, HUD / 2, 24, '#fff');
     text('최고 ' + Math.max(best, G.score).toLocaleString(), W - 10, HUD / 2, 16, '#ffd451', 'right');
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.35)'; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
