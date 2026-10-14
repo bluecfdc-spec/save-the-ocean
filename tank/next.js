@@ -34,13 +34,17 @@
   // ---------- 화면 ----------
   var cv = document.getElementById('c'), ctx = cv.getContext('2d'), W = 0, H = 0, S = 40, OX = 0, HUD = 54, BOT = 14, EY = 0, BY = 0, TY = 0, TH = 0, ER = 36;
   function layout() {
-    var dpr = Math.min(3, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+    var dpr = Math.min(3, window.devicePixelRatio || 1), rc = cv.getBoundingClientRect(); W = Math.round(rc.width) || window.innerWidth; H = Math.round(rc.height) || window.innerHeight;   // 실제 화면에 보이는 캔버스 크기 기준
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     S = Math.floor(Math.min(W / COLS, (H - HUD - BOT - 8) / (ROWS + EROWS * 0.9 + 2.8)));
     OX = Math.floor((W - S * COLS) / 2); ER = S * 0.9; TH = S * 2.8;
     TY = H - BOT - TH; BY = TY - ROWS * S; EY = BY - EROWS * ER;
   }
   window.addEventListener('resize', layout); layout();
+  ['orientationchange', 'pageshow', 'focusout'].forEach(function (ev) { window.addEventListener(ev, function () { setTimeout(function () { window.scrollTo(0, 0); layout(); }, 120); }); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(layout, 60); });
+  function pt(e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * (W / (r.width || W)), y: (e.clientY - r.top) * (H / (r.height || H)) }; }   // 손가락 좌표를 그림 좌표로 정확히 변환
+  function freshScreen() { try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) { } window.scrollTo(0, 0); layout(); }   // 이름 입력 키보드 등으로 틀어진 화면 바로잡기
   function bx(x) { return OX + x * S; } function by(y) { return BY + y * S; }
   function ey(r) { return EY + r * ER; }
 
@@ -50,7 +54,7 @@
   function newPiece() { var sh = SHAPES[rnd(SHAPES.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
     if (Math.random() < itemRate()) pc.item = { i: rnd(sh.length), kind: Math.random() < planeRate() ? 'plane' : 'mark' };   // 아이템 블록: 비행기 / 내 세력 마크
     return pc; }
-  function start() {
+  function start() { freshScreen();
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
     G = { score: 0, combo: 0, moves: 0, kills: 0, fac: fac, efac: efs[rnd(2)], board: [], tank: { x: 4, y: 9, fx: 4, fy: 9, path: [], at: 0, trail: [] },
       tray: [newPiece(), newPiece(), newPiece()], en: [], dying: [], items: {}, loot: {}, planes: [], fx: [], parts: [], shots: [], shells: [], drag: null, over: false, banner: null, shake: 0, boostUntil: 0 };
@@ -95,7 +99,7 @@
   function spawnGap(t) { var sec = (t - G.t0) / 1000, base;          // 0~20초 여유 → 20~60초 빠르게 조임 → 이후 더 정신없게
     if (sec < 20) base = 7500; else if (sec < 60) base = 7500 - (sec - 20) * (4200 / 40); else base = Math.max(2400, 3300 - (sec - 60) * (900 / 90));
     return base * rr(0.85, 1.15); }
-  function reloadMs() { var sec = gsec(); return sec < 60 ? RELOAD : Math.max(13000, RELOAD - (sec - 60) * (5000 / 60)); }   // 1분 이후 장전 18초 → 2분에 13초
+  function reloadMs() { var sec = gsec(); return sec < 60 ? RELOAD : Math.max(8000, RELOAD - (sec - 60) * (5000 / 60)); }   // 1분 이후 장전 18초 → 2분 13초 → 3분 8초(최소)
   function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
@@ -315,15 +319,15 @@
     if (p.y < TY) return -1; var i = Math.max(0, Math.min(2, Math.floor((p.x - OX) / (S * COLS / 3)))); return G.tray[i] ? i : -1;
   }
   cv.addEventListener('pointerdown', function (e) {
-    if (!G || G.over) return; var p = { x: e.clientX, y: e.clientY };
+    if (!G || G.over) return; var p = pt(e);
     try { cv.setPointerCapture(e.pointerId); } catch (er) { }
     if (G.tut) { if (!tutDown(p)) return; }
     var i = trayHit(p); if (i >= 0) { G.drag = { i: i, p: p }; G.touch = null; sfx('pick'); return; }
     G.touch = { p: p, g: tankGoal(p) };
   });
-  cv.addEventListener('pointermove', function (e) { if (!G) return; var p = { x: e.clientX, y: e.clientY }; if (G.drag) G.drag.p = p; else if (G.touch) { G.touch.p = p; G.touch.g = tankGoal(p); } });
+  cv.addEventListener('pointermove', function (e) { if (!G) return; var p = pt(e); if (G.drag) G.drag.p = p; else if (G.touch) { G.touch.p = p; G.touch.g = tankGoal(p); } });
   function release(e, cancel) {
-    if (!G) return; var p = { x: e.clientX, y: e.clientY };
+    if (!G) return; var p = pt(e);
     if (G.drag) { var r0p = G.drag.p0, d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
       if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && tutDropOk(p, r0p)) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
       if (!G.over && d.ok) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); return; }
@@ -602,7 +606,7 @@
     { act: 'end', after: '훈련 끝!\n제군들, 출격하라!' }
   ];
   var TUTC = null;
-  function startTut() {
+  function startTut() { freshScreen();
     clockResume(); start(); var t = now(); G.banner = null; G.spawnAt = Infinity; G.en = []; G.tray = [null, null, null];
     G.tut = { i: -1, kills: 0, acted: false, paused: false, pauseAt: 0, lure: false, shownAt: 0 };
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) G.board[y][x] = 0;
@@ -727,7 +731,9 @@
     if (st.act === 'tap' || st.act === 'mark') { var fq = (rt % 1400) / 1400, fb = fq < 0.45 ? (1 - fq / 0.45) : 0; finger(bx(st.tgt[0]) + S / 2, by(st.tgt[1]) + S * 0.5 + fb * S * 0.4, rt, false); }   // 조준이 잠기는 순간 손가락이 콕
   }
   var LERR = null;
-  function loop() { requestAnimationFrame(loop); var t = now();           // 한 프레임에서 오류가 나도 게임이 멈추지 않게
+  var szN = 0;
+  function loop() { requestAnimationFrame(loop); var t = now();
+    if (++szN % 20 === 0) { var rc2 = cv.getBoundingClientRect(); if (Math.abs(rc2.width - W) > 1 || Math.abs(rc2.height - H) > 1) layout(); }   // 화면 크기가 몰래 바뀌면(주소창·키보드) 바로 맞춤           // 한 프레임에서 오류가 나도 게임이 멈추지 않게
     try { update(t); } catch (er) { LERR = LERR || ('U ' + er.message); }
     try { draw(t); drawTut(t); } catch (er) { LERR = LERR || ('D ' + er.message); try { ctx.restore(); } catch (e2) { } }
     if (LERR) { ctx.save(); ctx.setTransform(cv.width / W, 0, 0, cv.width / W, 0, 0); ctx.font = '14px sans-serif'; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0, H - 22, W, 22); ctx.fillStyle = '#ff8a7a'; ctx.fillText('오류: ' + LERR.slice(0, 60), 6, H - 6); ctx.restore(); } }
