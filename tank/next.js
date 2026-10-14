@@ -23,7 +23,7 @@
   function sfx(k, a) { try { if (window.SFX && SFX[k]) SFX[k](a); } catch (e) { } }
 
   // ---------- 그림 ----------
-  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'm_up.png'];
+  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'm_up.png', 'm_drill.png'];
   ['surge', 'gale', 'solar'].forEach(function (f) { LIST.push('t_' + f + '.png', 'f_' + f + '.png'); });
   for (var i = 1; i <= 8; i++) LIST.push('x_b' + i + '.png');
   LIST.forEach(function (n) { var im = new Image(); im.onload = function () { IM[n.replace(/\.(png|jpg)$/, '')] = im; }; im.src = 'assets/v2/' + n + '?v=6'; });
@@ -149,30 +149,34 @@
       G.boostUntil = t + BOOST; var px = bx(tk.x) + S / 2, py = by(tk.y) + S / 2;
       ring(px, py, S * 0.4, S * 4, 'rgba(255,214,80,', 600, 7); ring(px, py, S * 0.2, S * 2.4, 'rgba(255,255,255,', 380, 4);
       G.fx.push({ k: 'flashAll', at: t, col: '255,214,80' });
-      G.fx.push({ k: 'bigtext', t: 'TANK STRIKE!', sub: '속도 ×1.5', at: t });
+      G.banner = null; G.fx.push({ k: 'bigtext', t: 'TANK STRIKE!', sub: '관통 드릴탄 + 속도 ×1.5', at: t });
       sfx('ultReady');
     }
-    fire(n); shake(5 + n * 3); return true;
+    fire(n, gold); shake(5 + n * 3); return true;
   }
-  function fire(n) {                                        // 내 탱크 세로줄로 미사일
+  function fire(n, pierce) {                                // 내 탱크 세로줄로 미사일 (내 탱크로 채워 깨면 가운데 줄은 관통 드릴탄)
     var tx = G.tank.x, w = n >= 3 ? 2 : n >= 2 ? 1 : 0, t = now(), k = 0, y0 = by(G.tank.y) + S * 0.2;
     sfx('launch');
     G.fx.push({ k: 'muzzle', x: bx(tx) + S / 2, y: y0, ang: 0, at: t + 120, big: true });
     for (var d = -w; d <= w; d++) { var c = tx + d; if (c < 0 || c >= COLS) continue;
+      if (pierce && c === tx) {                                // 관통탄: 그 세로줄에 줄 선 적 탱크 전부
+        var all = G.en.filter(function (e) { return e.x === c; }).sort(function (a, b) { return b.r - a.r; }), ps = { x: c, at: t + 120, y0: y0, ty: EY - S * 3, dur: 820, pierce: true, tgts: [], hits: 0 };
+        all.forEach(function (e) { G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: ps.at + ps.dur + 200 }; G.dying.push(dd); ps.tgts.push(dd); G.kills++; });
+        G.shots.push(ps); k++; sfx('ultReady'); continue; }
       var tgt = null; G.en.forEach(function (e) { if (e.x === c && (!tgt || e.r > tgt.r)) tgt = e; });
       var s = { x: c, at: t + 120 + k * 90, y0: y0, ty: tgt ? enemyY(tgt, t + 640 + k * 90) : EY - S * 2, dur: 520, tgt: tgt };
       if (tgt) { G.en.splice(G.en.indexOf(tgt), 1); G.dying.push({ e: tgt, until: s.at + s.dur }); G.score += 300; G.kills++; }
       G.shots.push(s); k++; }
   }
-  function shotLand(s) {
-    var px = bx(s.x) + S / 2, py = s.ty, t = now();
-    if (!s.tgt) return;
+  function shotLand(s) { if (s.tgt) explode(s.x, s.ty, s.tgt.ang, 300); }
+  function explode(x, py, ang, pts, label) {
+    var px = bx(x) + S / 2, t = now(); G.score += 0;
     G.fx.push({ k: 'boom', px: px, py: py, at: t, big: true });
-    G.fx.push({ k: 'wreck', x: s.x, py: py, ang: s.tgt.ang, at: t });
+    G.fx.push({ k: 'wreck', x: x, py: py, ang: ang, at: t });
     G.fx.push({ k: 'flashAll', at: t, col: '255,150,60', a: 0.22 });
     ring(px, py, S * 0.3, S * 2.2, 'rgba(255,190,90,', 500, 6); ring(px, py, S * 0.2, S * 1.3, 'rgba(255,255,255,', 280, 3);
     burst(px, py, 22, ['#fff3c0', '#ffb13d', '#ff6a2a', '#3a3530', '#6b6055'], 7, 6, 0.2, 900);
-    pop('+300', px, py - ER * 0.6, '#ffb13d', true);
+    pop(label || '+' + pts, px, py - ER * 0.6, label ? '#ffe066' : '#ffb13d', true);
     shake(12); sfx('boom', true);
   }
   function checkFit() {
@@ -252,6 +256,10 @@
     });
     G.shells = G.shells.filter(function (s) { if (t - s.at >= s.dur) { if (!G.over) shellLand(s); return false; } return true; });
     G.shots = G.shots.filter(function (s) { if (t < s.at) return true;
+      if (s.pierce) { var pp = Math.min(1, (t - s.at) / s.dur), py2 = s.y0 + (s.ty - s.y0) * pp * pp * (0.6 + 0.4 * pp) / 1, xx2 = bx(s.x) + S / 2;
+        s.tgts.forEach(function (dd) { if (dd.done) return; var ty2 = enemyY(dd.e); if (py2 - S * 0.5 <= ty2) { dd.done = true; dd.until = 0; s.hits++; var pts = 300 * s.hits; G.score += pts; explode(s.x, ty2, dd.e.ang, pts, s.hits > 1 ? '관통 ×' + s.hits + '  +' + pts : null); } });
+        for (var q = 0; q < 3; q++) G.parts.push({ x: xx2 + rr(-S * 0.25, S * 0.25), y: py2 + S * 0.5, vx: rr(-2.5, 2.5), vy: rr(0.5, 3), g: 0.15, s: rr(2, 4), c: ['#fff6c0', '#ffd451', '#ff9a1f'][rnd(3)], at: t, life: 380 });
+        if (t - s.at >= s.dur) return false; return true; }
       if (t - s.at >= s.dur) { shotLand(s); return false; }
       var p = (t - s.at) / s.dur, yy = s.y0 + (s.ty - s.y0) * ease(p);
       if (Math.random() < 0.9) G.parts.push({ x: bx(s.x) + S / 2 + rr(-3, 3), y: yy + S * 0.45, vx: rr(-0.4, 0.4), vy: rr(0.5, 1.4), g: 0, s: rr(4, 8), c: Math.random() < 0.4 ? '#ffb13d' : 'rgba(200,190,180,.7)', at: t, life: 420, smoke: true });
@@ -339,7 +347,12 @@
     if (boosted) { ctx.fillStyle = 'rgba(255,214,80,' + (0.25 + 0.15 * Math.sin(t / 70)) + ')'; ctx.beginPath(); ctx.arc(0, 0, S * 0.62, 0, 7); ctx.fill(); }
     ctx.shadowColor = boosted ? '#ffd451' : FAC[G.fac].col; ctx.shadowBlur = boosted ? 22 : 10; fit(timg, 0, mv ? Math.sin(t / 40) * 1.5 : 0, S * 0.95, S * 1.05); ctx.restore();
     // 내 미사일
-    G.shots.forEach(function (s) { if (t < s.at) return; var p = (t - s.at) / s.dur, yy = s.y0 + (s.ty - s.y0) * ease(p), xx = bx(s.x) + S / 2;
+    G.shots.forEach(function (s) { if (t < s.at) return;
+      if (s.pierce) { var pp = Math.min(1, (t - s.at) / s.dur), py2 = s.y0 + (s.ty - s.y0) * pp * pp * (0.6 + 0.4 * pp), xx2 = bx(s.x) + S / 2;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; var gl = ctx.createLinearGradient(0, py2, 0, s.y0); gl.addColorStop(0, 'rgba(255,220,100,.55)'); gl.addColorStop(1, 'rgba(255,140,40,0)'); ctx.fillStyle = gl; ctx.fillRect(xx2 - S * 0.3, py2, S * 0.6, s.y0 - py2); ctx.restore();
+        var im = IM.m_drill; if (im) { var dw = S * 0.62, dh = dw * im.height / im.width; ctx.save(); ctx.translate(xx2, py2); ctx.rotate(Math.PI); ctx.scale(1 + 0.08 * Math.sin(t / 18), 1); ctx.shadowColor = '#ffb13d'; ctx.shadowBlur = 18; ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
+        return; }
+      var p = (t - s.at) / s.dur, yy = s.y0 + (s.ty - s.y0) * ease(p), xx = bx(s.x) + S / 2;
       ctx.save(); var gr = ctx.createRadialGradient(xx, yy + S * 0.4, 0, xx, yy + S * 0.4, S * 0.5); gr.addColorStop(0, 'rgba(255,240,180,.9)'); gr.addColorStop(1, 'rgba(255,120,30,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(xx, yy + S * 0.4, S * 0.5, 0, 7); ctx.fill(); ctx.restore();
       fit(IM.m_up, xx, yy, S * 0.55, S * 1.0); });
     // 적이 쏜 블록 (포물선 + 꼬리)
