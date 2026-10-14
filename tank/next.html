@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '36'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '37'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,11 +17,10 @@
   #c { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; }
   .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); box-sizing: border-box; color: #fff; text-align: center; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; }
   .hidden { display: none !important; }
-  /* 시작 화면: 로고(그림 높이의 74% 지점에서 끝남)가 아래 버튼(약 250px)에 가리지 않도록 그림 크기를 화면에 맞춤. 양옆·아래 남는 곳은 같은 그림을 흐리게 깔아 빈 띠 없음 */
-  #title { --th: min(calc(100vw * 1.6), calc((100vh - 250px) / 0.74)); --th: min(calc(100vw * 1.6), calc((100dvh - 250px) / 0.74)); isolation: isolate;
- background: #1a120a; }
-  #title::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(12,9,5,0) calc(var(--th) * 0.8), rgba(12,9,5,.85) calc(var(--th) * 0.98), rgba(12,9,5,.92) 100%), url(assets/v2/title3.jpg?v=1) top center / auto var(--th) no-repeat; }
+  /* 시작 화면: 폰은 그림을 가로로 꽉 채우고(양옆 빈 곳 없음), 로고가 버튼(약 250px) 위에 오도록 그림을 위로 올림(하늘이 조금 잘림). 아주 넓은 PC만 양옆을 흐린 그림으로 채움 */
+  #title { --th: min(calc(100vw * 1.12 * 1.5), calc((100vh - 250px) / 0.39)); --th: min(calc(100vw * 1.12 * 1.5), calc((100dvh - 250px) / 0.39)); --ty: min(0px, calc(100vh - 250px - var(--th) * 0.74)); --ty: min(0px, calc(100dvh - 250px - var(--th) * 0.74)); isolation: isolate; background: #1a120a; }
   #title::before { content: ''; position: absolute; inset: -30px; z-index: -1; background: url(assets/v2/title3.jpg?v=1) center 30% / cover no-repeat, #1a120a; filter: blur(18px) brightness(.5); }
+  #title::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(12,9,5,0) calc(var(--ty) + var(--th) * 0.8), rgba(12,9,5,.85) calc(var(--ty) + var(--th) * 0.98), rgba(12,9,5,.92) 100%), url(assets/v2/title3.jpg?v=1) center var(--ty) / auto var(--th) no-repeat; }
   .tag { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 3px; color: #ffe066; text-shadow: 0 0 8px #ff9a1f; }
   .pick { font-size: 18px; color: #ffd451; text-shadow: 0 2px 0 #000; }
   .facs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(92vw, 420px); }
