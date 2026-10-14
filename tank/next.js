@@ -286,7 +286,7 @@
   function pcSize(pc) { var w = 0, h = 0; pc.cells.forEach(function (c) { w = Math.max(w, c[0] + 1); h = Math.max(h, c[1] + 1); }); return { w: w, h: h }; }
   function dropRaw(p) { var z = pcSize(G.tray[G.drag.i]); var cx = p.x - z.w * S / 2, cy = p.y - S * 1.7 - z.h * S / 2; return { fx: (cx - OX) / S, fy: (cy - BY) / S }; }
   function dropCell(p) {                                    // 손가락 위치에서 가장 가까운 '놓을 수 있는' 자리로 살짝 맞춰 줌
-    if (G.tut) { var tst = TUT[G.tut.i]; if (tst && tst.act === 'drag') return { gx: tst.tgt[0], gy: tst.tgt[1], ok: p.y < TY }; }   // 튜토리얼: 판 위 어디에 놓아도 정답 자리로
+    if (G.tut) { var tst = TUT[G.tut.i]; if (tst && tst.act === 'drag') return { gx: tst.tgt[0], gy: tst.tgt[1], ok: tutDropOk(p, G.drag && G.drag.p0) }; }   // 튜토리얼: 판 위 어디에 놓아도 정답 자리로
     var r = dropRaw(p), gx = Math.round(r.fx), gy = Math.round(r.fy), pc = G.tray[G.drag.i];
     if (canPlace(pc, gx, gy)) return { gx: gx, gy: gy, ok: true };
     var c = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(function (d) { return { gx: gx + d[0], gy: gy + d[1], dd: Math.hypot(gx + d[0] - r.fx, gy + d[1] - r.fy) }; })
@@ -302,6 +302,8 @@
     var path = pathTo(gx, gy, from[0], from[1]); if (!path) return { gx: gx, gy: gy, ok: false };
     return { gx: gx, gy: gy, ok: true, path: tk.path.length ? [from].concat(path) : path };
   }
+  function tutDropOk(p, p0) {                                // 튜토리얼: 조금만 끌어 올려도(또는 판 위면) 정답 자리에 들어감
+    if (p.y < TY) return true; if (!p0) return false; return p0.y - p.y > S * 0.5 || Math.hypot(p.x - p0.x, p.y - p0.y) > S * 1.1; }
   function trayHit(p) {                                     // 아래 조각 칸: 칸 사이·가장자리까지 넓게 잡힘
     if (p.y < TY) return -1; var i = Math.max(0, Math.min(2, Math.floor((p.x - OX) / (S * COLS / 3)))); return G.tray[i] ? i : -1;
   }
@@ -315,8 +317,8 @@
   cv.addEventListener('pointermove', function (e) { if (!G) return; var p = { x: e.clientX, y: e.clientY }; if (G.drag) G.drag.p = p; else if (G.touch) { G.touch.p = p; G.touch.g = tankGoal(p); } });
   function release(e, cancel) {
     if (!G) return; var p = { x: e.clientX, y: e.clientY };
-    if (G.drag) { var d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
-      if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && p.y < TY) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
+    if (G.drag) { var r0p = G.drag.p0, d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
+      if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && tutDropOk(p, r0p)) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
       if (!G.over && d.ok) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); return; }
     if (G.touch && !G.over) { var g = cancel ? null : tankGoal(p); G.touch = null; if (!g) return;
       if (G.tut) { var st2 = TUT[G.tut.i]; if (!(st2.act === 'tap' || st2.act === 'mark') || g.gx !== st2.tgt[0] || g.gy !== st2.tgt[1] || !g.ok) { sfx('bad'); return; } G.tut.acted = true; }
@@ -623,7 +625,7 @@
     if (T.paused) { if (performance.now() - T.shownAt < 450) return false; T.paused = false; clockResume();
       if (st.act === 'end') { tutFinish(); return false; } tutNext(); return false; }
     if (T.acted || T.pauseAt) return false;
-    if (st.act === 'drag') { if (p.y >= TY - S * 0.3) { G.drag = { i: 1, p: p }; G.touch = null; sfx('pick'); } return false; }   // 아래 조각 칸 어디를 눌러도 집힘
+    if (st.act === 'drag') { if (p.y >= TY - S * 0.3) { G.drag = { i: 1, p: p, p0: p }; G.touch = null; sfx('pick'); } return false; }   // 아래 조각 칸 어디를 눌러도 집힘
     if (st.act === 'tap' || st.act === 'mark') return p.y < TY;
     return false;
   }
@@ -632,6 +634,16 @@
   function finger(x, y, t, press) { ctx.save(); ctx.translate(x, y); var sc = press ? 1 - 0.12 * Math.max(0, Math.sin(t / 160)) : 1; ctx.scale(sc, sc);
     ctx.font = Math.round(S * 1.15) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 10; ctx.fillText('👆', 0, -S * 0.05); ctx.restore();
     if (press) { var rp = (t % 900) / 900; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - rp) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, S * (0.2 + 0.5 * rp), 0, 7); ctx.stroke(); ctx.restore(); } }
+  function reticle(x, y, rt) {                               // 누를 칸: 조준경이 조여들며 고정(좌표 찍는 느낌)
+    var q = (rt % 1400) / 1400, lock = Math.min(1, q / 0.45), e = 1 - Math.pow(1 - lock, 3), r = S * (1.25 - 0.62 * e), arm = S * 0.28, col = '#ffffff';
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; var gg = ctx.createRadialGradient(x, y, S * 0.1, x, y, S * 0.9); gg.addColorStop(0, 'rgba(255,255,255,' + (0.18 + 0.2 * e) + ')'); gg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = gg; ctx.fillRect(x - S, y - S, S * 2, S * 2); ctx.restore();
+    ctx.save(); ctx.strokeStyle = col; ctx.shadowColor = '#9fe8ff'; ctx.shadowBlur = 12; ctx.lineWidth = Math.max(3, S * 0.07); ctx.lineCap = 'round';
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (k) { var cx = x + k[0] * r, cy = y + k[1] * r; ctx.beginPath(); ctx.moveTo(cx, cy - k[1] * arm); ctx.lineTo(cx, cy); ctx.lineTo(cx - k[0] * arm, cy); ctx.stroke(); });   // 네 모서리 꺾쇠
+    ctx.lineWidth = Math.max(2, S * 0.045); ctx.globalAlpha = 0.85; var g0 = S * 0.18, g1 = S * 0.42;                    // 가운데 십자선
+    ctx.beginPath(); ctx.moveTo(x - g1, y); ctx.lineTo(x - g0, y); ctx.moveTo(x + g0, y); ctx.lineTo(x + g1, y); ctx.moveTo(x, y - g1); ctx.lineTo(x, y - g0); ctx.moveTo(x, y + g0); ctx.lineTo(x, y + g1); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.fillStyle = lock >= 1 ? '#ff4a3a' : col; ctx.beginPath(); ctx.arc(x, y, S * 0.07, 0, 7); ctx.fill();
+    if (lock >= 1) { var rp = (q - 0.45) / 0.55; ctx.globalAlpha = 1 - rp; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, S * (0.3 + 0.55 * rp), 0, 7); ctx.stroke(); }
+    ctx.restore(); }
   function dialogBox(x, y, w, h) {                            // 대화 상자 테두리(9칸 늘이기: 네 모서리 고정, 위 가운데 장식 고정, 나머지 늘림)
     var im = IM.ui_dialog; if (!im) { ctx.save(); ctx.fillStyle = 'rgba(10,8,4,.88)'; ctx.strokeStyle = '#d6aa46'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 12) : ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke(); ctx.restore(); return 10; }
     var iw = im.width, ih = im.height, cs = 82, k = Math.min(S * 0.34 / 29, h / (cs * 2), w / (cs * 2.4)), d = cs * k, cm = 30, dm = cm * k;
@@ -673,7 +685,7 @@
       if (st.act === 'drag') { var sr = slotRect(1); holes.push([sr.x, sr.y - 4, sr.w, sr.h + 8]); st.piece.forEach(function (c) { holes.push(cellR(st.tgt[0] + c[0], st.tgt[1] + c[1])); });
         var pz = { w: 0, h: 0 }; st.piece.forEach(function (c) { pz.w = Math.max(pz.w, c[0] + 1); pz.h = Math.max(pz.h, c[1] + 1); });
         lanes.push([sr.x + sr.w / 2, sr.y + sr.h / 2, bx(st.tgt[0]) + pz.w * S / 2, by(st.tgt[1]) + pz.h * S / 2, S * 1.25]); }   // 손가락이 지나가는 길
-      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); T.tapHole = true; }   // 누를 칸만 밝게
+      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); T.tapHole = true; } else T.tapHole = false;   // 누를 칸만 밝게
     }
     var dim = T.paused || (!T.acted && !T.pauseAt && st.act !== 'volley');
     if (dim) {                                                   // 어둡게 깔고 구멍(할 곳 + 지나가는 길)만 지움 — 겹쳐도 다시 어두워지지 않게 따로 그림
@@ -684,11 +696,8 @@
       lanes.forEach(function (l) { g.globalAlpha = 0.85; g.lineCap = 'round'; g.lineWidth = l[4]; g.beginPath(); g.moveTo(l[0], l[1]); g.lineTo(l[2], l[3]); g.strokeStyle = '#000'; g.stroke(); g.globalAlpha = 1; });
       g.globalCompositeOperation = 'source-over'; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(oc, 0, 0); ctx.restore();
       lanes.forEach(function (l) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.35 + 0.3 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.lineDashOffset = -rt / 25; ctx.beginPath(); ctx.moveTo(l[0], l[1]); ctx.lineTo(l[2], l[3]); ctx.stroke(); ctx.restore(); });
-      holes.forEach(function (h) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.5 + 0.5 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -rt / 40; ctx.strokeRect(h[0], h[1], h[2], h[3]); ctx.restore(); });
-      if ((st.act === 'tap' || st.act === 'mark') && !T.paused) { var tcx = bx(st.tgt[0]) + S / 2, tcy = by(st.tgt[1]) + S / 2, pz = (rt % 1100) / 1100;   // 누를 칸 강조: 빛나는 링이 퍼지고 노란 테두리가 숨 쉬듯
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; var gg = ctx.createRadialGradient(tcx, tcy, S * 0.2, tcx, tcy, S * 1.1); gg.addColorStop(0, 'rgba(255,230,120,.45)'); gg.addColorStop(1, 'rgba(255,200,60,0)'); ctx.fillStyle = gg; ctx.fillRect(tcx - S * 1.2, tcy - S * 1.2, S * 2.4, S * 2.4); ctx.restore();
-        ctx.save(); ctx.strokeStyle = 'rgba(255,230,120,' + (1 - pz) + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(tcx, tcy, S * (0.5 + 0.9 * pz), 0, 7); ctx.stroke(); ctx.restore();
-        ctx.save(); ctx.strokeStyle = '#ffe066'; ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 16; ctx.lineWidth = 4 + 2 * Math.sin(rt / 120); ctx.strokeRect(tcx - S / 2 - 6, tcy - S / 2 - 6, S + 12, S + 12); ctx.restore(); } }
+      if (!T.tapHole || T.paused) holes.forEach(function (h) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.5 + 0.5 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -rt / 40; ctx.strokeRect(h[0], h[1], h[2], h[3]); ctx.restore(); });
+      if ((st.act === 'tap' || st.act === 'mark') && !T.paused) reticle(bx(st.tgt[0]) + S / 2, by(st.tgt[1]) + S / 2, rt); }
     if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; var chh = caption(st.after, cy, true, T.shownAt); var ky = Math.min(TY - S * 0.7, cy + chh / 2 + S * 0.95), kp = 0.5 + 0.5 * Math.sin(rt / 180), kw = Math.min(W - 24, S * 6.4), kh = S * 1.15;   // 크게 강조한 '화면을 눌러 계속'
       ctx.save(); ctx.translate(W / 2, ky); ctx.scale(1 + 0.04 * kp, 1 + 0.04 * kp); ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 18 + 10 * kp; ctx.fillStyle = 'rgba(20,16,6,.92)'; ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-kw / 2, -kh / 2, kw, kh, kh / 2) : ctx.rect(-kw / 2, -kh / 2, kw, kh); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
@@ -701,7 +710,7 @@
       ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 12; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 1); }); ctx.restore(); return; }
     if (st.act === 'drag') { var s0 = slotRect(1), q = (rt % 1800) / 1800, e2 = Math.min(1, q / 0.7), ee = e2 * e2 * (3 - 2 * e2), x0 = s0.x + s0.w / 2, y0 = s0.y + s0.h / 2, x1 = bx(st.tgt[0]) + S, y1 = by(st.tgt[1]) + S * 0.5 + S * 1.7;
       if (q < 0.85) { ctx.save(); ctx.globalAlpha = 0.55; st.piece.forEach(function (c) { block(x0 + (x1 - x0) * ee - S + c[0] * S, y0 + (y1 - y0) * ee - S * 1.7 - S * 0.5 + c[1] * S, S, '#fff0'); }); ctx.restore(); finger(x0 + (x1 - x0) * ee, y0 + (y1 - y0) * ee, rt, false); } }
-    if (st.act === 'tap' || st.act === 'mark') finger(bx(st.tgt[0]) + S / 2, by(st.tgt[1]) + S / 2, rt, true);
+    if (st.act === 'tap' || st.act === 'mark') { var fq = (rt % 1400) / 1400, fb = fq < 0.45 ? (1 - fq / 0.45) : 0; finger(bx(st.tgt[0]) + S * 0.62, by(st.tgt[1]) + S * 0.62 + fb * S * 0.35, rt, false); }   // 조준이 잠기는 순간 손가락이 콕
   }
   function loop() { var t = now(); update(t); draw(t); drawTut(t); requestAnimationFrame(loop); }
   loop();
