@@ -326,6 +326,13 @@
     if (!G) return;
     var dt = Math.min(50, t - (lastT || t)); lastT = t;
     var tk = G.tank, sm = stepMs(t);
+    if (!G.over && tk.path.length && tk.path.some(function (c) { return G.board[c[1]][c[0]]; })) {   // 가는 길에 블록(적 포탄·내가 놓은 블록)이 생기면 뚫고 가지 않음
+      var dest = tk.path[tk.path.length - 1], nb = G.board[tk.path[0][1]][tk.path[0][0]];
+      var np = null, ok = dest && !G.board[dest[1]][dest[0]], n0 = tk.path[0];
+      if (nb) { tk.at = t; if (ok) np = pathTo(dest[0], dest[1]); }                             // 바로 앞 칸이 막힘 → 제자리에서 다시 길 찾기
+      else if (ok) { var rest = (n0[0] === dest[0] && n0[1] === dest[1]) ? [] : pathTo(dest[0], dest[1], n0[0], n0[1]); if (rest) np = [n0].concat(rest); }   // 더 앞이 막힘 → 지금 가던 한 칸은 마저 가고 돌아감
+      if (np && np.length) tk.path = np; else { tk.path = []; pop('길이 막혔다!', bx(tk.x) + S / 2, by(tk.y) - S * 0.2, '#ff8a7a'); sfx('bad'); lineCheck(); checkFit(); }
+    }
     if (!G.over && tk.path.length && t - tk.at >= sm) { var c = tk.path.shift(); tk.x = c[0]; tk.y = c[1]; tk.at = t; pickup(tk.x, tk.y, t); if (!tk.path.length) { lineCheck(); checkFit(); } }
     // 탱크 머리 방향: 탱크대전처럼 가는 쪽으로 돌면서 이동, 멈추면 다시 정면(위)
     var angT = 0; if (tk.path.length) { var nx = tk.path[0][0] - tk.x, ny = tk.path[0][1] - tk.y; if (nx || ny) angT = Math.atan2(nx, -ny); }
