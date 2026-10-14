@@ -23,7 +23,7 @@
   function sfx(k, a) { try { if (window.SFX && SFX[k]) SFX[k](a); } catch (e) { } }
 
   // ---------- 그림 ----------
-  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_drill.png'];
+  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_down.png', 'm_drill.png'];
   ['surge', 'gale', 'solar'].forEach(function (f) { LIST.push('t_' + f + '.png', 't_' + f + '_dead.png', 'f_' + f + '.png', 'p_' + f + '.png'); });
   for (var i = 1; i <= 8; i++) LIST.push('x_b' + i + '.png');
   LIST.forEach(function (n) { var im = new Image(); im.onload = function () { IM[n.replace(/\.(png|jpg)$/, '')] = im; }; im.src = 'assets/v2/' + n + '?v=6'; });
@@ -188,9 +188,8 @@
     var px = bx(x) + S / 2, py = by(y) + S / 2; ring(px, py, S * 0.3, S * 1.8, 'rgba(160,255,140,', 420, 5); burst(px, py, 14, ['#fff', '#9be37a', '#ffe066'], 4, 4, 0.1, 500); sfx('gain');
     if (L.kind === 'plane') callPlane(t); else useMark(t); }
   function callPlane(t) {                                   // 비행기: 적진을 돌며 랜덤으로 최대 3대 폭격
-    var pool = G.en.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
-    var pl = { at: t, dur: 3200, drops: pool.map(function (e, i) { return { e: e, at: t + 900 + i * 650, done: false }; }) };
-    G.planes.push(pl); G.fx.push({ k: 'bigtext', t: '공습!', sub: '적 탱크 ' + pool.length + '대 폭격', at: t }); G.banner = null; sfx('scout');
+    var pl = { at: t, dur: 3800, left: 3, nextDrop: t + 850 };   // 상공을 도는 동안 그때 있는 적 탱크를 골라 투하 (나중에 나온 탱크도 맞음)
+    G.planes.push(pl); G.fx.push({ k: 'bigtext', t: '공습!', sub: '적 탱크 최대 3대 폭격', at: t }); G.banner = null; sfx('scout');
   }
   function planePos(pl, t) { var q = Math.min(1, (t - pl.at) / pl.dur), cx = OX + S * COLS / 2, cy = EY + EROWS * ER * 0.5, rx = S * COLS * 0.38, ry = EROWS * ER * 0.42;
     if (q < 0.18) { var a = q / 0.18; return { x: cx + (1 - a) * W * 0.1, y: H + S * 2 - (H + S * 2 - (cy + ry)) * a, h: -Math.PI / 2 }; }      // 아래에서 날아 올라옴
@@ -202,11 +201,12 @@
       var n = 0; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x] === ROCK) { G.board[y][x] = 0; n++; var d = y; G.fx.push({ k: 'cell', x: x, y: y, at: t + d * 45, tint: ROCK }); (function (x, y, d) { setTimeout(function () { if (G) burst(bx(x) + S / 2, by(y) + S / 2, 8, ['#bff4ff', '#4fd8ff', '#ffffff'], 4, 4, 0.15, 600); }, d * 45); })(x, y, d); }
       G.fx.push({ k: 'wave', at: t }); G.fx.push({ k: 'bigtext', t: '서지 해일!', sub: '적 블록 ' + n + '개 쓸어버림', at: t }); G.score += n * 30;
     } else if (f === 'gale') {                               // 게일: 맨 앞 한 줄 적 탱크 번개로 괴멸
-      var front = -9; G.en.forEach(function (e) { front = Math.max(front, e.r); });
-      var hit = G.en.filter(function (e) { return e.r >= front - 0.5; });
-      hit.forEach(function (e, i) { G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 2000 }; G.dying.push(dd); G.kills++;
-        setTimeout(function () { if (!G) return; var py = enemyY(e); dd.until = 0; G.fx.push({ k: 'bolt', x: e.x, py: py, at: now() }); explode(e.x, py, e.ang, 300); G.score += 300; }, 120 + i * 110); });
-      G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: hit.length ? '맨 앞줄 ' + hit.length + '대 괴멸' : '적이 없다', at: t });
+      // 게일: 적 경계선(맨 앞 가로줄)에만 번개가 가로로 번쩍 → 그 줄에 있는 적 탱크만 전부 괴멸, 뒤에 있는 탱크는 그대로
+      var lineR = EROWS - 1, hit = G.en.filter(function (e) { return e.r >= lineR - 0.5; });
+      G.fx.push({ k: 'hbolt', y: ey(lineR) + ER / 2, at: t + 80 }); G.fx.push({ k: 'hbolt', y: ey(lineR) + ER / 2, at: t + 260 });
+      hit.sort(function (a, b) { return a.x - b.x; }).forEach(function (e, i) { G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 2000 }; G.dying.push(dd); G.kills++;
+        setTimeout(function () { if (!G) return; var py = enemyY(e); dd.until = 0; explode(e.x, py, e.ang, 300); G.score += 300; }, 180 + i * 70); });
+      G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: hit.length ? '맨 앞줄 ' + hit.length + '대 괴멸' : '맨 앞줄에 적이 없다', at: t });
     } else {                                                 // 솔라: 내가 놓은 블록 전부 사라짐
       var m = 0; for (var y2 = 0; y2 < ROWS; y2++) for (var x2 = 0; x2 < COLS; x2++) { var v = G.board[y2][x2]; if (v && v !== ROCK) { G.board[y2][x2] = 0; dropItem(x2, y2, t); m++; var d2 = Math.abs(x2 - G.tank.x) + Math.abs(y2 - G.tank.y); G.fx.push({ k: 'cell', x: x2, y: y2, at: t + d2 * 30, tint: v, gold: true }); } }
       G.fx.push({ k: 'flashAll', at: t, col: '255,220,120', a: 0.45 }); G.fx.push({ k: 'sun', at: t }); G.fx.push({ k: 'bigtext', t: '솔라 플레어!', sub: '블록 ' + m + '개 정리', at: t }); G.score += m * 10;
@@ -340,9 +340,11 @@
     });
     G.shells = G.shells.filter(function (s) { if (t - s.at >= s.dur) { if (!G.over) shellLand(s); return false; } return true; });
     G.planes = G.planes.filter(function (pl) {
-      pl.drops.forEach(function (d) { if (d.done || t < d.at) return; d.done = true; var e = d.e; if (G.en.indexOf(e) < 0) return;   // 그새 다른 걸로 죽었으면 패스
-        var pp = planePos(pl, t); G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 420 }; G.dying.push(dd); G.kills++; G.score += 300;
-        G.bombs = G.bombs || []; G.bombs.push({ x0: pp.x, y0: pp.y, e: e, at: t, dur: 420 }); });
+      var q = (t - pl.at) / pl.dur;
+      if (!G.over && pl.left > 0 && q > 0.2 && q < 0.86 && t >= pl.nextDrop) { var live = G.en.filter(function (e) { return e.r > -0.6; });
+        if (live.length) { var e = live[rnd(live.length)], pp = planePos(pl, t); pl.left--; pl.nextDrop = t + 520;
+          G.en.splice(G.en.indexOf(e), 1); G.dying.push({ e: e, until: t + 460 }); G.kills++; G.score += 300;
+          G.bombs = G.bombs || []; G.bombs.push({ x0: pp.x, y0: pp.y, e: e, at: t, dur: 460 }); sfx('launch'); } }
       return t - pl.at < pl.dur; });
     G.bombs = (G.bombs || []).filter(function (b) { if (t - b.at < b.dur) return true; explode(b.e.x, enemyY(b.e), b.e.ang, 300); return false; });
     G.shots = G.shots.filter(function (s) { if (t < s.at) return true;
@@ -507,6 +509,12 @@
         var q = a / f.dur, hx = f.x0 + (f.x1 - f.x0) * q, hy = f.y0 + (f.y1 - f.y0) * q, q0 = Math.max(0, q - 0.35), tx0 = f.x0 + (f.x1 - f.x0) * q0, ty0 = f.y0 + (f.y1 - f.y0) * q0;
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,120,60,.8)'; ctx.lineWidth = S * 0.14; ctx.beginPath(); ctx.moveTo(tx0, ty0); ctx.lineTo(hx, hy); ctx.stroke(); ctx.strokeStyle = 'rgba(255,240,200,.95)'; ctx.lineWidth = S * 0.05; ctx.stroke(); ctx.restore(); return true; }
       if (f.k === 'goal') { if (a > 350) return false; var gq = a / 350; ctx.save(); ctx.strokeStyle = 'rgba(141,255,106,' + (1 - gq) + ')'; ctx.lineWidth = 3; var gs = S * (0.6 + 0.6 * gq); ctx.strokeRect(bx(f.x) + S / 2 - gs / 2, by(f.y) + S / 2 - gs / 2, gs, gs); ctx.restore(); return true; }
+      if (f.k === 'hbolt') { if (a > 520) return false; var hy = f.y, al = 1 - a / 520;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; var hg = ctx.createLinearGradient(0, hy - ER, 0, hy + ER); hg.addColorStop(0, 'rgba(197,139,255,0)'); hg.addColorStop(0.5, 'rgba(210,170,255,' + (0.55 * al) + ')'); hg.addColorStop(1, 'rgba(197,139,255,0)'); ctx.fillStyle = hg; ctx.fillRect(-12, hy - ER, W + 24, ER * 2);
+        for (var bl = 0; bl < 3; bl++) { ctx.beginPath(); ctx.moveTo(-10, hy + rr(-ER * 0.3, ER * 0.3)); for (var bk = 1; bk <= 16; bk++) ctx.lineTo(W * bk / 16, hy + rr(-ER * 0.45, ER * 0.45));
+          ctx.strokeStyle = 'rgba(200,160,255,' + al + ')'; ctx.shadowColor = '#c58bff'; ctx.shadowBlur = 22; ctx.lineWidth = bl ? 2.5 : 5; ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,' + al + ')'; ctx.lineWidth = bl ? 1 : 2; ctx.stroke(); }
+        for (var bv = 0; bv < 6; bv++) { var vx = rr(0, W); ctx.beginPath(); ctx.moveTo(vx, hy); for (var bk2 = 1; bk2 <= 4; bk2++) ctx.lineTo(vx + rr(-S * 0.3, S * 0.3), hy - ER * 0.9 * bk2 / 4 * (bv % 2 ? 1 : -1)); ctx.strokeStyle = 'rgba(220,190,255,' + (al * 0.7) + ')'; ctx.lineWidth = 1.5; ctx.stroke(); }
+        ctx.restore(); if (a < 70) { ctx.fillStyle = 'rgba(200,170,255,.22)'; ctx.fillRect(-12, -12, W + 24, H + 24); } return true; }
       if (f.k === 'pop') { if (a > 1100) return false; ctx.save(); ctx.globalAlpha = Math.min(1, (1100 - a) / 300); text(f.t, f.x, f.y - a * 0.03, Math.round(S * (f.big ? 0.62 : 0.46)), f.col); ctx.restore(); return true; }
       return false; });
     // 입자
@@ -514,7 +522,9 @@
       if (p.smoke) { ctx.beginPath(); ctx.arc(p.x, p.y, p.s * (1.6 - a), 0, 7); ctx.fill(); } else if (p.sq) ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); else { ctx.beginPath(); ctx.arc(p.x, p.y, p.s / 2, 0, 7); ctx.fill(); } ctx.restore(); });
     // 공습 비행기 + 폭탄
     (G.bombs || []).forEach(function (b) { var q = (t - b.at) / b.dur, tx = bx(b.e.x) + S / 2, ty = enemyY(b.e), xx = b.x0 + (tx - b.x0) * q, yy = b.y0 + (ty - b.y0) * q, sz = S * (0.5 - 0.2 * q);
-      ctx.save(); ctx.fillStyle = '#2a2622'; ctx.strokeStyle = '#ffb13d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(xx, yy, sz * 0.32, sz * 0.5, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); });
+      var im = IM.m_down, ang = Math.atan2(-(tx - b.x0), ty - b.y0);   // 탱크대전 미사일(아래 향함)을 목표 쪽으로 돌려서
+      if (Math.random() < 0.8) G.parts.push({ x: xx - Math.sin(-ang) * S * 0.3, y: yy - Math.cos(ang) * S * 0.3, vx: rr(-0.3, 0.3), vy: rr(-0.3, 0.3), g: 0, s: rr(3, 6), c: Math.random() < 0.4 ? '#ffb13d' : 'rgba(200,190,180,.6)', at: t, life: 360, smoke: true });
+      if (im) { var mw = S * 0.5, mh = mw * im.height / im.width; ctx.save(); ctx.translate(xx, yy); ctx.rotate(ang); ctx.drawImage(im, -mw / 2, -mh / 2, mw, mh); ctx.restore(); } });
     G.planes.forEach(function (pl) { var pp = planePos(pl, t), im = IM['p_' + G.fac]; if (!im) return; var q = (t - pl.at) / pl.dur, sc = 1.25 - 0.25 * Math.sin(Math.min(1, q) * Math.PI);
       ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(pp.x + S * 0.6, pp.y + S * 1.4, S * 0.7 * sc, S * 0.25 * sc, 0, 0, 7); ctx.fill(); ctx.restore();
       ctx.save(); ctx.translate(pp.x, pp.y); ctx.rotate(pp.h + Math.PI / 2); var bank = Math.cos(q * Math.PI * 4) * 0.25; ctx.scale(1 - Math.abs(bank), 1); var pw = S * 1.9 * sc, ph = pw * im.height / im.width; ctx.drawImage(im, -pw / 2, -ph / 2, pw, ph); ctx.restore(); });
