@@ -26,7 +26,7 @@
   function sfx(k, a) { try { if (window.SFX && SFX[k]) SFX[k](a); } catch (e) { } }
 
   // ---------- 그림 ----------
-  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_down.png', 'm_drill.png', 'sera_full.png'];
+  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_down.png', 'm_drill.png', 'sera_full.png', 'ui_dialog.png'];
   ['surge', 'gale', 'solar'].forEach(function (f) { LIST.push('t_' + f + '.png', 't_' + f + '_dead.png', 'f_' + f + '.png', 'p_' + f + '.png'); });
   for (var i = 1; i <= 8; i++) LIST.push('x_b' + i + '.png');
   LIST.forEach(function (n) { var im = new Image(); im.onload = function () { IM[n.replace(/\.(png|jpg)$/, '')] = im; }; im.src = 'assets/v2/' + n + '?v=6'; });
@@ -615,18 +615,29 @@
   function finger(x, y, t, press) { ctx.save(); ctx.translate(x, y); var sc = press ? 1 - 0.12 * Math.max(0, Math.sin(t / 160)) : 1; ctx.scale(sc, sc);
     ctx.font = Math.round(S * 1.15) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 10; ctx.fillText('👆', 0, -S * 0.05); ctx.restore();
     if (press) { var rp = (t % 900) / 900; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - rp) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, S * (0.2 + 0.5 * rp), 0, 7); ctx.stroke(); ctx.restore(); } }
+  function dialogBox(x, y, w, h) {                            // 대화 상자 테두리(9칸 늘이기: 네 모서리 고정, 위 가운데 장식 고정, 나머지 늘림)
+    var im = IM.ui_dialog; if (!im) { ctx.save(); ctx.fillStyle = 'rgba(10,8,4,.88)'; ctx.strokeStyle = '#d6aa46'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 12) : ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke(); ctx.restore(); return 10; }
+    var iw = im.width, ih = im.height, cs = 82, k = Math.min(S * 0.34 / 29, h / (cs * 2), w / (cs * 2.4)), d = cs * k, cm = 30, dm = cm * k;
+    function p(sx, sy, sw, sh, dx, dy, dw, dh) { if (dw > 0 && dh > 0) ctx.drawImage(im, sx, sy, sw, sh, dx, dy, dw, dh); }
+    var sw2 = (iw - cs * 2 - cm) / 2, dw2 = (w - d * 2 - dm) / 2;
+    p(0, 0, cs, cs, x, y, d, d); p(iw - cs, 0, cs, cs, x + w - d, y, d, d); p(0, ih - cs, cs, cs, x, y + h - d, d, d); p(iw - cs, ih - cs, cs, cs, x + w - d, y + h - d, d, d);
+    p(cs, 0, sw2, cs, x + d, y, dw2, d); p(cs + sw2, 0, cm, cs, x + d + dw2, y, dm, d); p(cs + sw2 + cm, 0, sw2, cs, x + d + dw2 + dm, y, dw2, d);   // 위 (가운데 장식 고정)
+    p(cs, ih - cs, iw - cs * 2, cs, x + d, y + h - d, w - d * 2, d);
+    p(0, cs, cs, ih - cs * 2, x, y + d, d, h - d * 2); p(iw - cs, cs, cs, ih - cs * 2, x + w - d, y + d, d, h - d * 2);
+    p(cs, cs, iw - cs * 2, ih - cs * 2, x + d, y + d, w - d * 2, h - d * 2);
+    return 34 * k + 4; }
   function caption(txt, cy, big, shownAt) {                     // 설명 상자 + 왼쪽에 전신 지휘관 세라(뻗은 손이 상자 위에서 상자를 가리킴)
     var im = IM.sera_full, fs = Math.round(S * (big ? 0.52 : 0.5)), font = fs + 'px "Black Han Sans", "Do Hyeon", sans-serif';
     var sh = Math.min(H * 0.33, S * 6.8), sw = im ? sh * im.width / im.height : 0, x0 = im ? 4 + sw * 0.6 : 8, w = W - x0 - 8;
     ctx.save(); ctx.font = font; var lines = [];                  // 상자 폭에 맞게 줄바꿈 (글씨는 줄이지 않음)
-    txt.split('\n').forEach(function (para, pi) { var cur = ''; para.split(' ').forEach(function (wd) { var tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > w - 24 && cur) { lines.push([cur, pi]); cur = wd; } else cur = tr; }); lines.push([cur, pi]); });
+    txt.split('\n').forEach(function (para, pi) { var cur = ''; para.split(' ').forEach(function (wd) { var tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > w - S * 1.2 && cur) { lines.push([cur, pi]); cur = wd; } else cur = tr; }); lines.push([cur, pi]); });
     ctx.restore();
-    var lh = fs * 1.3, h = lines.length * lh + fs * 0.9, top = cy - h / 2, sTop = top - sh * 0.244 - S * 0.4;
+    var bpad = S * 0.34 / 29 * 34 + 4, lh = fs * 1.3, h = lines.length * lh + fs * 0.6 + bpad * 2, top = cy - h / 2, sTop = top - sh * 0.244 - S * 0.4;
     if (sTop < HUD + 4) { top += HUD + 4 - sTop; sTop = HUD + 4; }
     var ap = shownAt ? Math.min(1, (performance.now() - shownAt) / 260) : 1, slide = (1 - ap) * -sw * 0.35;
     if (im) { ctx.save(); ctx.globalAlpha = ap; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 14; ctx.drawImage(im, 2 + slide, sTop, sw, sh); ctx.restore(); }
-    ctx.save(); ctx.fillStyle = 'rgba(10,8,4,.88)'; ctx.strokeStyle = '#d6aa46'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, top, w, h, 12) : ctx.rect(x0, top, w, h); ctx.fill(); ctx.stroke(); ctx.restore();
-    lines.forEach(function (l, i) { text(l[0], x0 + w / 2, top + fs * 0.45 + lh * (i + 0.5), fs, l[1] === 0 ? '#ffe066' : '#fff'); });
+    dialogBox(x0, top, w, h);
+    lines.forEach(function (l, i) { ctx.save(); if (l[1] === 0) { ctx.shadowColor = 'rgba(160,210,255,.85)'; ctx.shadowBlur = 10; } text(l[0], x0 + w / 2, top + bpad + fs * 0.3 + lh * (i + 0.5), fs, l[1] === 0 ? '#eaf4ff' : '#ffffff', 'center', Math.max(3, fs * 0.16)); ctx.restore(); });
     return h; }
   function drawTut(t) {
     var T = G && G.tut; if (!T || T.i < 0) return; var st = TUT[T.i], rt = performance.now(), holes = [], lanes = [];
