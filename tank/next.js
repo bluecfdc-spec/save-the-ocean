@@ -555,19 +555,20 @@
   // =================== 튜토리얼 ===================
   // 실제 게임판에서 상황을 만들어 두고, 해야 할 곳만 밝게 + 손가락이 움직이며 안내 → 플레이어가 직접 함 → 결과 순간에 잠깐 멈추고 설명
   var TUT = [
-    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [6, 8], text: '블록을 끌어다 놓아\n가로줄을 채워 보세요', kills: 1, focus: [[4, 'col']],
-      after: '줄을 지우면 내 탱크가 미사일 발사!\n같은 세로줄 맨 앞 적을 부숴요\n블록은 미사일을 막지 않아요' },
-    { act: 'tap', tgt: [2, 8], text: '칸을 누르면 탱크가 그쪽으로 가요\n아이템을 먹어 보세요!', kills: 3, after: '비행기 공습!\n적 탱크 3대를 폭격해요' },
-    { act: 'tap', tgt: [7, 7], lure: true, text: '한 칸 남은 줄!\n내 탱크로 채워 보세요', kills: 3, focus: [[7, 'col']],
-      after: '내 탱크로 줄을 채우면 관통 드릴탄!\n뒤에 줄 선 적까지 한 번에\n잠깐 속도도 1.5배' },
-    { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '이번엔 두 줄을\n한 번에 지워 보세요', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
-      after: '두 줄 이상 지우면\n미사일이 3갈래로 나가요!' },
-    { act: 'volley', after: '적 탱크는 돌덩이 블록을 쏴요\n줄을 지워서 치우세요' },
-    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 먹어 보세요\n먹자마자 기술이 터져요', after: '서지 해일\n적이 쏜 돌덩이를 모두 쓸어버려요' },
-    { act: 'mark', fac: 'gale', tgt: [2, 8], text: '다음 마크도 먹어 보세요', after: '게일 낙뢰\n맨 앞줄 적 탱크를 모두 괴멸시켜요' },
-    { act: 'mark', fac: 'solar', tgt: [6, 8], text: '마지막 마크!', after: '솔라 플레어\n내 판의 블록을 모두 정리해요\n실전에선 고른 세력 마크만 나와요' },
-    { act: 'end', after: '준비 완료!\n이제 실전이에요' }
+    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [6, 8], text: '제군들, 들어라!\n블록을 끌어다 가로줄을 채워라!', kills: 1, focus: [[4, 'col']],
+      after: '줄을 지우면 탱크가 미사일을 쏜다!\n같은 세로줄 맨 앞 적을 부술 수 있다\n블록은 미사일을 막지 않는다' },
+    { act: 'tap', tgt: [2, 8], text: '칸을 누르면 탱크가 그곳으로 간다\n아이템을 손에 넣어라!', kills: 3, after: '공습이다!\n비행기가 적 탱크 3대를 폭격한다' },
+    { act: 'tap', tgt: [7, 7], lure: true, text: '한 칸 남은 줄이다!\n탱크로 직접 메워라!', kills: 3, focus: [[7, 'col']],
+      after: '탱크로 줄을 메우면 관통 드릴탄!\n줄 선 적까지 한 번에 뚫을 수 있다\n잠시 속도도 1.5배다' },
+    { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '이번엔 두 줄을\n한 번에 지워라!', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
+      after: '두 줄 이상 지우면\n미사일이 세 갈래로 날아간다!' },
+    { act: 'volley', after: '적은 돌덩이 블록을 쏘아 온다!\n줄을 지워 치워 버려라' },
+    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n적의 돌덩이를 모두 쓸어버릴 수 있다' },
+    { act: 'mark', fac: 'gale', tgt: [2, 8], text: '다음 마크도 손에 넣어라!', after: '게일 낙뢰!\n맨 앞줄 적 탱크를 모두 괴멸시킨다' },
+    { act: 'mark', fac: 'solar', tgt: [6, 8], text: '마지막 마크다!', after: '솔라 플레어!\n판의 블록을 모두 정리할 수 있다\n실전에선 제군의 세력 마크만 나온다' },
+    { act: 'end', after: '훈련 끝!\n제군들, 출격하라!' }
   ];
+  var TUTC = null;
   function startTut() {
     clockResume(); start(); var t = now(); G.banner = null; G.spawnAt = Infinity; G.en = []; G.tray = [null, null, null];
     G.tut = { i: -1, kills: 0, acted: false, paused: false, pauseAt: 0, lure: false, shownAt: 0 };
@@ -621,19 +622,29 @@
     ctx.save(); ctx.fillStyle = 'rgba(10,8,4,.86)'; ctx.strokeStyle = '#d6aa46'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - w / 2, cy - h / 2, w, h, 12) : ctx.rect(W / 2 - w / 2, cy - h / 2, w, h); ctx.fill(); ctx.stroke(); ctx.restore();
     lines.forEach(function (l, i) { text(l, W / 2, cy - h / 2 + fs * 0.45 + lh * (i + 0.5), fs, i === 0 ? '#ffe066' : '#fff'); }); return h; }
   function drawTut(t) {
-    var T = G && G.tut; if (!T || T.i < 0) return; var st = TUT[T.i], rt = performance.now(), holes = [];
+    var T = G && G.tut; if (!T || T.i < 0) return; var st = TUT[T.i], rt = performance.now(), holes = [], lanes = [];
     function cellR(x, y, pad) { pad = pad || 4; return [bx(x) - pad, by(y) - pad, S + pad * 2, S + pad * 2]; }
     if (T.paused) {
       (st.focus || []).forEach(function (f) { if (f[1] === 'col') holes.push([bx(f[0]) - 3, EY, S + 6, by(G.tank.y) + S - EY + 3]); });
       if (st.act === 'end') holes = [];
     } else if (!T.acted && !T.pauseAt) {
-      if (st.act === 'drag') { var sr = slotRect(1); holes.push([sr.x, sr.y - 4, sr.w, sr.h + 8]); st.piece.forEach(function (c) { holes.push(cellR(st.tgt[0] + c[0], st.tgt[1] + c[1])); }); }
-      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); holes.push(cellR(G.tank.x, G.tank.y, 2)); }
+      if (st.act === 'drag') { var sr = slotRect(1); holes.push([sr.x, sr.y - 4, sr.w, sr.h + 8]); st.piece.forEach(function (c) { holes.push(cellR(st.tgt[0] + c[0], st.tgt[1] + c[1])); });
+        var pz = { w: 0, h: 0 }; st.piece.forEach(function (c) { pz.w = Math.max(pz.w, c[0] + 1); pz.h = Math.max(pz.h, c[1] + 1); });
+        lanes.push([sr.x + sr.w / 2, sr.y + sr.h / 2, bx(st.tgt[0]) + pz.w * S / 2, by(st.tgt[1]) + pz.h * S / 2, S * 1.25]); }   // 손가락이 지나가는 길
+      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); holes.push(cellR(G.tank.x, G.tank.y, 2));
+        var pth = pathTo(st.tgt[0], st.tgt[1]) || []; pth.forEach(function (c) { holes.push(cellR(c[0], c[1], 0)); }); }
     }
     var dim = T.paused || (!T.acted && !T.pauseAt && st.act !== 'volley');
-    if (dim) { ctx.save(); ctx.fillStyle = T.paused ? 'rgba(0,0,0,.5)' : 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.rect(-12, -12, W + 24, H + 24); holes.forEach(function (h) { ctx.rect(h[0] + h[2], h[1], -h[2], h[3]); }); ctx.fill('evenodd'); ctx.restore();
+    if (dim) {                                                   // 어둡게 깔고 구멍(할 곳 + 지나가는 길)만 지움 — 겹쳐도 다시 어두워지지 않게 따로 그림
+      var oc = TUTC || (TUTC = document.createElement('canvas')); if (oc.width !== cv.width || oc.height !== cv.height) { oc.width = cv.width; oc.height = cv.height; }
+      var g = oc.getContext('2d'), dpr = cv.width / W; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, oc.width, oc.height); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.fillStyle = T.paused ? 'rgba(0,0,0,.5)' : 'rgba(0,0,0,.58)'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000';
+      holes.forEach(function (h) { g.fillRect(h[0], h[1], h[2], h[3]); });
+      lanes.forEach(function (l) { g.globalAlpha = 0.85; g.lineCap = 'round'; g.lineWidth = l[4]; g.beginPath(); g.moveTo(l[0], l[1]); g.lineTo(l[2], l[3]); g.strokeStyle = '#000'; g.stroke(); g.globalAlpha = 1; });
+      g.globalCompositeOperation = 'source-over'; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(oc, 0, 0); ctx.restore();
+      lanes.forEach(function (l) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.35 + 0.3 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.lineDashOffset = -rt / 25; ctx.beginPath(); ctx.moveTo(l[0], l[1]); ctx.lineTo(l[2], l[3]); ctx.stroke(); ctx.restore(); });
       holes.forEach(function (h) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.5 + 0.5 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -rt / 40; ctx.strokeRect(h[0], h[1], h[2], h[3]); ctx.restore(); }); }
-    if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; caption(st.after, cy, true); text('화면을 눌러 계속 ▶', W / 2, Math.min(TY - S * 0.4, cy + S * 2.6), Math.round(S * 0.48), 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(rt / 200)) + ')'); return; }
+    if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; caption(st.after, cy, true); text('눌러서 계속 ▶', W / 2, Math.min(TY - S * 0.4, cy + S * 2.6), Math.round(S * 0.48), 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(rt / 200)) + ')'); return; }
     if (T.acted || T.pauseAt || !st.text) return;
     caption(st.text, BY + S * 2.2, false);
     if (st.act === 'drag') { var s0 = slotRect(1), q = (rt % 1800) / 1800, e2 = Math.min(1, q / 0.7), ee = e2 * e2 * (3 - 2 * e2), x0 = s0.x + s0.w / 2, y0 = s0.y + s0.h / 2, x1 = bx(st.tgt[0]) + S, y1 = by(st.tgt[1]) + S * 0.5 + S * 1.7;
