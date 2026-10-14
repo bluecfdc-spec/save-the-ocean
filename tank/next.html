@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '18'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '19'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -47,7 +47,7 @@
 <canvas id="c"></canvas>
 
 <div id="title" class="ov">
-  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">NEW RULES · 새 규칙 시험판</div>① <em>탱크</em>는 스스로 적을 사냥 — 나는 <em>블록</em>으로 길을 막아 유도<br>② 적 <em>병력</em>이 있는 곳엔 블록을 못 놓는다<br>③ <em>5초</em> 넘게 놓을 곳이 없으면 위험! · 시작할 때와 줄 <em>3개</em>마다 강화 카드</div>
+  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">NEW RULES · 울타리 점령</div>① <em>블록</em>은 울타리 — 판을 갈라 <em>작은 쪽을 점령</em>, 갇힌 병사는 항복<br>② 놓은 울타리는 <em>1.5초</em> 동안 굳는다 — 그새 병사가 닿으면 무너짐 <em>♥-1</em><br>③ <em>70%</em> 점령하면 다음 전장 · <em>탱크</em>는 밖의 병사를 사냥</div>
   <div class="pick">당신의 세력을 선택하세요</div>
   <div class="facs">
     <button class="fac" data-f="surge" style="--fc:#4fd8ff"><img src="assets/v2/f_surge.png" alt="">서지</button>
@@ -68,6 +68,6 @@
 </div>
 
 <script src="sfx.js?v=41"></script>
-<script src="next.js?v=18"></script>
+<script src="next.js?v=19"></script>
 </body>
 </html>
