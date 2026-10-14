@@ -8,7 +8,7 @@
    ⑦ 무한 점수. 블록 놓을 곳이 없으면 끝 */
 (function () {
   'use strict';
-  var COLS = 9, ROWS = 10, EROWS = 4, RELOAD = 20000, BOOST = 6000, STEP = 110, ROW_MS = 3200;   // 적 탱크: 한 칸 내려오는 데 3.2초, 멈추지 않고 계속
+  var COLS = 9, ROWS = 10, EROWS = 4, RELOAD = 18000, BOOST = 6000, STEP = 110, ROW_MS = 3200;   // 적 탱크: 한 칸 내려오는 데 3.2초, 멈추지 않고 계속
   var FAC = { surge: { col: '#4fd8ff' }, gale: { col: '#c58bff' }, solar: { col: '#ffd451' } };
   var SHAPES = [
     [[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]],
@@ -48,7 +48,7 @@
   var G = null, fac = 'solar', best = 0;
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
   function newPiece() { var sh = SHAPES[rnd(SHAPES.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
-    if (Math.random() < 0.2) pc.item = { i: rnd(sh.length), kind: Math.random() < 0.55 ? 'plane' : 'mark' };   // 아이템 블록: 비행기 / 내 세력 마크
+    if (Math.random() < itemRate()) pc.item = { i: rnd(sh.length), kind: Math.random() < planeRate() ? 'plane' : 'mark' };   // 아이템 블록: 비행기 / 내 세력 마크
     return pc; }
   function start() {
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
@@ -91,7 +91,12 @@
     if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
   }
   // 난이도 = 탱크가 나오는 간격: 처음 7.5초 → 5분 동안 서서히 4초까지 (±20% 랜덤)
-  function spawnGap(t) { var sec = (t - G.t0) / 1000, base = Math.max(4000, 7500 - sec * (3500 / 300)); return base * rr(0.8, 1.2); }
+  function gsec() { return G && G.t0 != null ? (now() - G.t0) / 1000 : 0; }   // 이번 판 경과 초
+  function spawnGap(t) { var sec = (t - G.t0) / 1000, base;          // 0~20초 여유 → 20~60초 빠르게 조임 → 이후 더 정신없게
+    if (sec < 20) base = 7500; else if (sec < 60) base = 7500 - (sec - 20) * (4200 / 40); else base = Math.max(2400, 3300 - (sec - 60) * (900 / 90));
+    return base * rr(0.85, 1.15); }
+  function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : sec < 60 ? 0.30 : 0.34; }       // 아이템 블록 확률 (초반 넉넉, 후반 공습 맞불)
+  function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
   function enemyFire(e, t) {                                // 정차한 적 탱크가 한 칸짜리 블록을 쏨
@@ -410,6 +415,10 @@
       var f = Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / RELOAD)), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
       ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(x0 - 1, y0 - 1, bw + 2, bh + 2);
       ctx.fillStyle = f > 0.85 ? (Math.floor(t / 120) % 2 ? '#ff3b2a' : '#ffd451') : '#ff8a3a'; ctx.fillRect(x0, y0, bw * f, bh);
+      var rdy = f > 0.85, rfs = Math.round(S * 0.38), ra = rdy ? (Math.floor(t / 120) % 2 ? 1 : 0.55) : 0.55 + 0.45 * Math.abs(Math.sin(t / 380 + e.x));
+      ctx.save(); ctx.globalAlpha = ra; ctx.font = rfs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.lineWidth = Math.max(3, rfs * 0.22); ctx.strokeStyle = 'rgba(0,0,0,.85)'; var rt = rdy ? '발사!' : '리로드';
+      ctx.strokeText(rt, cx, y0 - 2); ctx.fillStyle = rdy ? '#ff5a3a' : '#ffd451'; ctx.fillText(rt, cx, y0 - 2); ctx.restore();
     }
   }
   function draw(t) {
