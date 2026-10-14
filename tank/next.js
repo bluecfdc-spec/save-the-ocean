@@ -314,10 +314,15 @@
     ctx.strokeStyle = 'rgba(255,90,70,.7)'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(OX, BY); ctx.lineTo(OX + S * COLS, BY); ctx.stroke(); ctx.setLineDash([]);
     // 한 칸 남은 줄 → 빨갛게 깜빡 (내 탱크 부르기)
     if (!G.over) { var lp = 0.5 + 0.5 * Math.sin(t / 140);
+      var seen = {};
       lureLines().forEach(function (L) { ctx.fillStyle = 'rgba(255,40,40,' + (0.10 + 0.14 * lp) + ')';
         if (L.row) ctx.fillRect(OX, by(L.i), S * COLS, S); else ctx.fillRect(bx(L.i), BY, S, S * ROWS);
-        ctx.fillStyle = 'rgba(255,60,50,' + (0.3 + 0.35 * lp) + ')'; ctx.fillRect(bx(L.c[0]) + 2, by(L.c[1]) + 2, S - 4, S - 4);
-        ctx.strokeStyle = 'rgba(255,220,200,' + (0.5 + 0.5 * lp) + ')'; ctx.lineWidth = 2.5; ctx.strokeRect(bx(L.c[0]) + 3, by(L.c[1]) + 3, S - 6, S - 6); }); }
+        var key = L.c[0] + ',' + L.c[1]; if (seen[key]) return; seen[key] = 1;
+        var cx1 = bx(L.c[0]), cy1 = by(L.c[1]), fp = 0.5 + 0.5 * Math.sin(t / 90);           // 주차 칸: 더 빠르게 깜빡
+        ctx.fillStyle = 'rgba(255,60,50,' + (0.3 + 0.35 * lp) + ')'; ctx.fillRect(cx1 + 2, cy1 + 2, S - 4, S - 4);
+        fit(IM['t_' + G.fac], cx1 + S / 2, cy1 + S / 2, S * 0.95, S * 1.05, 0.2 + 0.5 * fp);     // 탱크 그림자 깜빡
+        ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.55 + 0.45 * fp) + ')'; ctx.lineWidth = 3; ctx.setLineDash([7, 5]); ctx.lineDashOffset = -t / 40;
+        ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 10 * fp; ctx.strokeRect(cx1 + 3, cy1 + 3, S - 6, S - 6); ctx.restore(); }); }
     // 블록
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) {
       var lf = null; for (var q = 0; q < G.fx.length; q++) { var f0 = G.fx[q]; if ((f0.k === 'land' || f0.k === 'thud') && f0.x === x && f0.y === y && t - f0.at < 220) { lf = f0; break; } }
