@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '29'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '30'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,8 +12,9 @@
 <link rel="icon" href="assets/v2/icon_64.png">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Orbitron:wght@800&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; height: 100%; background: #120d08; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-  #c { display: block; width: 100vw; height: 100vh; height: 100dvh; }
+  html, body { margin: 0; height: 100%; background: #120d08; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+  body { position: fixed; inset: 0; width: 100%; }
+  #c { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; }
   .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); box-sizing: border-box; color: #fff; text-align: center; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; }
   .hidden { display: none !important; }
   #title { background: linear-gradient(to bottom, rgba(12,9,5,0) 58%, rgba(12,9,5,.6) 78%, rgba(12,9,5,.95) 100%), url(assets/v2/title2.jpg?v=1) top center / max(100vw, 62vh) auto no-repeat, #1a120a; }
@@ -67,7 +68,8 @@
   <button id="endBtn" class="btn">다음 스테이지 ▶</button>
 </div>
 
+<script>/* 블록을 끌 때 화면이 같이 밀리지 않게 */ document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script src="sfx.js?v=41"></script>
-<script src="next.js?v=29"></script>
+<script src="next.js?v=30"></script>
 </body>
 </html>
