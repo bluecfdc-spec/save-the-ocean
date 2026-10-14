@@ -52,7 +52,7 @@
     G = { score: 0, combo: 0, moves: 0, kills: 0, fac: fac, efac: efs[rnd(2)], board: [], tank: { x: 4, y: 9, fx: 4, fy: 9, path: [], at: 0, trail: [] },
       tray: [newPiece(), newPiece(), newPiece()], en: [], dying: [], items: {}, loot: {}, planes: [], fx: [], parts: [], shots: [], shells: [], drag: null, over: false, banner: null, shake: 0, boostUntil: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
-    G.t0 = now(); spawn(0.5); G.spawnAt = now() + 9000;
+    G.t0 = now(); spawn(0.5); G.spawnAt = now() + 7500;
     banner('줄을 깨면 미사일 발사!', '#ffe066');
   }
   function banner(t, col) { G.banner = { t: t, col: col || '#fff', at: now() }; }
@@ -87,8 +87,8 @@
     G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / ROW_MS); });
     if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
   }
-  // 난이도 = 탱크가 나오는 간격: 처음 12초 → 5분 동안 서서히 4.5초까지 (±20% 랜덤)
-  function spawnGap(t) { var sec = (t - G.t0) / 1000, base = Math.max(4500, 12000 - sec * 25); return base * rr(0.8, 1.2); }
+  // 난이도 = 탱크가 나오는 간격: 처음 7.5초 → 5분 동안 서서히 4초까지 (±20% 랜덤)
+  function spawnGap(t) { var sec = (t - G.t0) / 1000, base = Math.max(4000, 7500 - sec * (3500 / 300)); return base * rr(0.8, 1.2); }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
   function enemyFire(e, t) {                                // 정차한 적 탱크가 한 칸짜리 블록을 쏨
