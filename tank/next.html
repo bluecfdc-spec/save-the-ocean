@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '33'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '34'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,7 +30,7 @@
   .rules em { font-style: normal; color: #ffe066; text-shadow: 0 0 8px rgba(255,200,60,.8); }
   #end { background: radial-gradient(ellipse at 50% 35%, rgba(255,190,60,.3), rgba(8,10,6,.94) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; justify-content: center; gap: 10px; }
   #end.lose { background: radial-gradient(ellipse at 50% 35%, rgba(255,60,40,.25), rgba(8,6,6,.95) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; }
-  #endT { font-size: 72px; letter-spacing: 4px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f, 0 4px 0 #5a3b00; }
+  #endT { font-size: 58px; letter-spacing: 4px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f, 0 4px 0 #5a3b00; }
   #end.lose #endT { color: #ff6a5a; text-shadow: 0 0 24px #a01000, 0 4px 0 #300; }
   #endS { font-size: 28px; } #endB { font-size: 48px; color: #9be37a; text-shadow: 0 0 18px #4caf2a, 0 3px 0 #000; } #end.lose #endB { display: none; }
   #endScore { font-size: 32px; color: #ffe9a8; }
@@ -70,6 +70,6 @@
 
 <script>/* 블록을 끌 때 화면이 같이 밀리지 않게 */ document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <script src="sfx.js?v=41"></script>
-<script src="next.js?v=33"></script>
+<script src="next.js?v=34"></script>
 </body>
 </html>

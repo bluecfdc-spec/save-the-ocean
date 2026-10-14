@@ -371,7 +371,8 @@
       ctx.restore(); return;
     }
     if (IM.b_plain) ctx.drawImage(IM.b_plain, x, y, s, s); else { ctx.fillStyle = '#7a6a4a'; ctx.fillRect(x + 1, y + 1, s - 2, s - 2); }
-    ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = tint; ctx.globalAlpha = (a == null ? 1 : a) * 0.32; ctx.fillRect(x, y, s, s); ctx.restore();
+    if (tint === '#fff' || tint === '#ffd451') { ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = tint; ctx.globalAlpha = (a == null ? 1 : a) * 0.32; ctx.fillRect(x, y, s, s); }   // 블록은 탱크대전 블록 그림 그대로 (깨질 때 번쩍임만 색)
+    ctx.restore();
   }
   function driving(e) { return !e.parked && !e.queued; }
   function enemyY(e, t) { var r = e.r; if (t != null && driving(e)) r = Math.min(EROWS - 1, r + Math.max(0, t - now()) / ROW_MS); return ey(r) + ER / 2; }
@@ -548,6 +549,7 @@
     $('endBtn').textContent = '다시 하기';
     if (nb) sfx('win');
     e.classList.remove('hidden');
+    try { if (window.TR_RANK) TR_RANK.onEnd(G.score, G.fac); } catch (er) { }
   }
   $('endBtn').addEventListener('click', function () { $('end').classList.add('hidden'); sfx('bgmStart'); sfx('go'); start(); });
   window.__next = { cell: function (x, y) { return { x: bx(x) + S / 2, y: by(y) + S / 2 }; }, slot: slotRect, get: function () { return G; }, start: start, place: place, canPlace: canPlace, advance: advance, lineCheck: lineCheck, lure: lureLines, pickup: pickup, useMark: useMark, callPlane: callPlane, over: over };

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<script>/* 새 버전 자동 반영: 폰 브라우저가 옛 화면을 들고 있으면 최신 버전 번호로 다시 연다 */
+(function () { var BUILD = '120'; try { fetch('war_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>탱크대전 · TANK WAR</title>
+<meta name="description" content="블록을 깨고, 정찰하고, 미사일로 적 탱크를 부숴라! CPU·1:1 대전 테스트">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DIVINE GENESIS">
+<meta property="og:title" content="탱크대전 · TANK WAR">
+<meta property="og:description" content="블록을 깨고, 정찰하고, 미사일로 적 탱크를 부숴라! CPU·1:1 대전 테스트">
+<meta property="og:url" content="https://bluecfdc-spec.github.io/save-the-ocean/tank/war.html">
+<meta property="og:image" content="https://bluecfdc-spec.github.io/save-the-ocean/tank/assets/v2/og_tank.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bluecfdc-spec.github.io/save-the-ocean/tank/assets/v2/og_tank.jpg?v=1">
+<link rel="icon" href="assets/v2/icon_64.png">
+<link rel="apple-touch-icon" href="assets/v2/icon_180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="../common/firebase-config.js?v=1"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d0a; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+  body { position: fixed; inset: 0; width: 100%; }
+  #c { touch-action: none; }
+  body { display: flex; align-items: center; justify-content: center; font-family: 'Do Hyeon', system-ui, sans-serif; }
+  #c { display: block; background: #0b0d0a; }
+  #ov { background: linear-gradient(to bottom, rgba(12,9,5,0) 58%, rgba(12,9,5,.55) 78%, rgba(12,9,5,.92) 100%), url(assets/v2/title2.jpg?v=1) top center / max(100vw, 62vh) auto no-repeat, #1a120a; justify-content: flex-end; padding-bottom: 36px; }
+  #ov h1 { display: none; }
+  #ov { padding-bottom: 22px; gap: 10px; }
+  #ov p { background: rgba(0,0,0,.55); border: 1px solid rgba(255,212,81,.35); border-radius: 10px; padding: 10px 14px; font-size: 12px; backdrop-filter: blur(3px); }
+  #lobby, #room, #count, #result { background: linear-gradient(rgba(8,10,6,.82), rgba(8,10,6,.9)), url(assets/v2/keyart.jpg) center/cover no-repeat; background-size: cover; background-position: center; }
+  .ov { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 30%, #2b3321 0%, #0b0d0a 70%); color: #f3efe0; text-align: center; padding: 24px; box-sizing: border-box; }
+  .ov h1 { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 34px; letter-spacing: 3px; margin: 0; color: #ffd451; text-shadow: 0 0 18px #ff9a1f88, 0 2px 0 #5a3b00; }
+  .ov h1 small { display: block; font-size: 12px; color: #b9c7a0; letter-spacing: 6px; margin-top: 6px; }
+  .ov h2 { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 26px; letter-spacing: 1px; margin: 0; color: #ffd451; }
+  .ov p { font: 400 15px/1.6 'Do Hyeon', system-ui, sans-serif; max-width: 340px; margin: 0; color: #d7dcc6; }
+  .ov .score { font-size: 30px; color: #fff; }
+  .btn { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: 1px; padding: 14px 34px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; cursor: pointer; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a5a00; }
+  .btn:disabled { opacity: .45; }
+.tgl { font-family: 'Do Hyeon', sans-serif; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,212,81,.55); background: rgba(0,0,0,.6); color: #ffe9a0; }
+  .tgl.off { color: #888; border-color: #555; }
+  .row.tg { gap: 8px; align-items: center; }
+.rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(92vw, 420px); }
+  .rooms button { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 20px; padding: 14px 8px 10px; border-radius: 12px; border: 2px solid #ffcf4a; color: #2a1a00; background: linear-gradient(#ffe284, #e8a21a); box-shadow: 0 4px 0 #8a5a00, 0 8px 18px #0008; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rooms button small { font-family: 'Do Hyeon', sans-serif; font-size: 13px; color: #5a3b00; }
+  .rooms button.full { background: linear-gradient(#9a9a8a, #5e6152); border-color: #777; color: #ddd; }
+  .rooms button.full small { color: #eee; }
+  .rooms button.wait { box-shadow: 0 0 0 3px #9be37a, 0 4px 0 #8a5a00, 0 8px 18px #0008; }
+  details.priv { width: min(92vw, 420px); color: #cfd6bf; font-family: 'Do Hyeon', sans-serif; }
+  details.priv summary { cursor: pointer; font-size: 14px; padding: 6px 0; text-align: center; }
+.row.two { width: min(92vw, 420px); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row.two .btn { padding: 14px 0; }
+  .btn.wide { width: min(92vw, 420px); }
+  #lobby { justify-content: flex-start; padding-top: max(16px, env(safe-area-inset-top)); gap: 10px; }
+  .chatbox { width: min(92vw, 420px); background: rgba(0,0,0,.45); border: 1px solid rgba(255,212,81,.3); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-height: 120px; max-height: 34vh; }
+  .mpon { font-size: 13px; color: #9be37a; text-align: left; }
+  #chat { flex: 1 1 auto; overflow-y: auto; text-align: left; font-size: 14px; color: #e8ecd8; line-height: 1.45; }
+  #chat b { color: #ffd451; font-weight: 400; }
+  #phr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  #phr button { font-family: 'Do Hyeon', sans-serif; font-size: 13px; padding: 7px 2px; border-radius: 8px; border: 1px solid #6b7a52; background: #1b1d16; color: #f3efe0; }
+  .ranklist { width: min(92vw, 420px); max-height: 60vh; overflow-y: auto; background: rgba(0,0,0,.5); border: 1px solid rgba(255,212,81,.35); border-radius: 12px; padding: 6px 10px; }
+  .rk { display: grid; grid-template-columns: 34px 28px 1fr auto; gap: 6px; align-items: center; padding: 7px 2px; border-bottom: 1px solid #2a2d24; font-size: 16px; text-align: left; }
+  .rk .n { font-family: 'Black Han Sans', sans-serif; color: #ffd451; }
+  .rk img { width: 24px; height: 24px; }
+  .rk .s { font-family: 'Black Han Sans', sans-serif; color: #fff; }
+  .rk.me { background: rgba(255,212,81,.12); }
+#count { gap: 8px; }
+  #count #countNum { font-size: 96px; line-height: 1; transition: transform .2s; }
+  .cards { display: flex; flex-direction: column; gap: 12px; width: min(92vw, 420px); }
+  .ncard { --c: #4fd8ff; --g: 79,216,255; display: grid; grid-template-columns: 64px 34px 1fr; align-items: center; column-gap: 12px; padding: 12px 14px; border-radius: 16px; text-align: left;
+    background: linear-gradient(135deg, rgba(var(--g),.16), rgba(6,8,12,.86) 55%, rgba(var(--g),.10)); border: 2px solid var(--c);
+    box-shadow: 0 0 10px rgba(var(--g),.85), 0 0 26px rgba(var(--g),.45), inset 0 0 16px rgba(var(--g),.28), inset 0 1px 0 rgba(255,255,255,.25);
+    font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 24px; line-height: 1.25; color: #fff; text-shadow: 0 0 8px rgba(var(--g),.6), 0 2px 0 #000; animation: neon 1.8s ease-in-out infinite alternate; }
+  .ncard.c1 { --c: #4fd8ff; --g: 79,216,255; }     /* 서지 */
+  .ncard.c2 { --c: #c58bff; --g: 197,139,255; }    /* 게일 */
+  .ncard.c3 { --c: #ffd451; --g: 255,212,81; }     /* 솔라 */
+  .ncard img { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; filter: drop-shadow(0 0 6px rgba(var(--g),.6)); }
+  .ncard b { display: inline-block; width: 30px; height: 30px; line-height: 28px; text-align: center; border-radius: 50%; font-size: 18px;
+    color: #fff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(var(--g),.55) 45%, rgba(var(--g),.18) 100%); border: 1.5px solid rgba(var(--g),.9);
+    box-shadow: 0 0 8px rgba(var(--g),.6), inset 0 -2px 4px rgba(0,0,0,.35); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  #countHead { font-family: 'Black Han Sans', sans-serif; font-size: 22px; letter-spacing: 8px; color: #ffe9a8; text-shadow: 0 0 14px #ff9a1f, 0 2px 0 #000; }
+  #countDone { display: none; flex-direction: column; gap: 4px; height: 100px; justify-content: flex-end; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 24px; color: #9be37a; text-shadow: 0 0 12px #4caf2a, 0 2px 0 #000; }
+  #countDone div { animation: doneIn .35s ease-out; }
+  @keyframes doneIn { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
+  #countSub { display: none; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 26px; color: #fff; text-shadow: 0 0 12px #ff9a1f, 0 2px 0 #000; animation: chkPulse 1s ease-in-out infinite; }
+  #count.check #countSub { display: block; }
+  #count.check #countHead { font-size: 34px; letter-spacing: 6px; background: linear-gradient(90deg, #4fd8ff, #c58bff 50%, #ffd451); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+    filter: drop-shadow(0 0 6px rgba(79,216,255,.9)) drop-shadow(0 0 14px rgba(197,139,255,.8)) drop-shadow(0 0 24px rgba(255,212,81,.45)); animation: neonHead 1.6s ease-in-out infinite alternate; }
+  @keyframes neonHead { from { filter: drop-shadow(0 0 4px rgba(79,216,255,.8)) drop-shadow(0 0 10px rgba(197,139,255,.6)) drop-shadow(0 0 18px rgba(255,212,81,.3)); } to { filter: drop-shadow(0 0 8px rgba(79,216,255,1)) drop-shadow(0 0 18px rgba(197,139,255,.95)) drop-shadow(0 0 30px rgba(255,212,81,.6)); } }
+  #count.check #countNum { display: none; }
+  #count.check #countDone { display: flex; }
+  #count .chk { display: none; }
+  #count.check .ncard { grid-template-columns: 52px 28px 1fr 50px; column-gap: 8px; font-size: clamp(14px, 4.1vw, 19px); white-space: nowrap; padding: 12px 10px; }
+  #count.check .ncard img { width: 52px; height: 52px; }
+  #count.check .chk { display: block; width: 52px; height: 52px; cursor: pointer; padding: 0; border: 0; background: url(assets/v2/btn_check_off.png?v=1) center/contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,212,81,.55)); animation: chkPulse 1s ease-in-out infinite; }
+  #count.check .chk.on { animation: chkPop .3s ease-out; background-image: url(assets/v2/btn_check_on.png?v=1); filter: drop-shadow(0 0 10px #6dff3a); }
+  #count.check .chk:disabled:not(.on) { opacity: .4; animation: none; }
+  @keyframes chkPop { from { transform: scale(1.35); } to { transform: none; } }
+  @keyframes chkPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  #victory { background: radial-gradient(ellipse at 50% 35%, rgba(255,190,60,.35), rgba(8,10,6,.92) 65%), url(assets/v2/keyart.jpg) center/cover no-repeat; gap: 10px; }
+  #vicTitle { font-family: 'Black Han Sans', sans-serif; font-size: 76px; letter-spacing: 4px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f, 0 4px 0 #5a3b00; animation: vicIn .6s cubic-bezier(.2,1.6,.4,1) both, vicGlow 1.4s ease-in-out .6s infinite alternate; }
+  #vicStage { font-family: 'Black Han Sans', sans-serif; font-size: 30px; color: #fff; text-shadow: 0 2px 0 #000, 0 0 14px #ff9a1f88; animation: vicUp .4s ease-out .35s both; }
+  #vicBonus { font-family: 'Black Han Sans', sans-serif; font-size: 52px; color: #9be37a; text-shadow: 0 0 18px #4caf2a, 0 3px 0 #000; animation: vicUp .4s ease-out .7s both; }
+  #vicScore { font-family: 'Black Han Sans', sans-serif; font-size: 34px; color: #ffe9a8; text-shadow: 0 2px 0 #000; animation: vicUp .4s ease-out 1s both; }
+  #vicNext { font-size: 28px; padding: 16px 34px; margin-top: 14px; animation: vicUp .4s ease-out 1.3s both, chkPulse 1.2s ease-in-out 1.8s infinite; }
+  @keyframes vicIn { from { opacity: 0; transform: scale(2.4); } to { opacity: 1; transform: none; } }
+  @keyframes vicUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  @keyframes vicGlow { from { filter: brightness(1); } to { filter: brightness(1.25); } }
+  .ncard em.hl { font-style: normal; color: #ffe066; text-shadow: 0 0 8px rgba(255,200,60,.85), 0 2px 0 #000; }
+  .ncard em.dd { font-style: normal; font-family: 'Orbitron', 'Black Han Sans', sans-serif; font-weight: 800; font-size: .86em; letter-spacing: .5px; color: #ffe066; text-shadow: 0 0 8px rgba(255,200,60,.85), 0 2px 0 #000; }
+  #count .ncard { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s, transform .35s; }
+  #count .ncard.show { opacity: 1; transform: none; }
+  @keyframes neon { from { filter: brightness(.94); } to { filter: brightness(1.08); } }
+  #room .cards { margin: 4px 0; }
+  .chatflash { color: #ffb3a8; font-size: 13px; text-align: center; }
+  #countTip { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 28px; line-height: 1.35; color: #fff; max-width: 92vw; text-shadow: 0 2px 0 #000, 0 0 18px #ff9a1f88; min-height: 80px; padding: 0 12px; }
+  .pickT { font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 20px; color: #ffd451; text-shadow: 0 2px 0 #000, 0 0 10px #000; }
+  .btn.sub { font-size: 17px; padding: 10px 22px; background: linear-gradient(#cfd8c0, #8d9a7a); border-color: #dfe6d2; box-shadow: 0 4px 0 #3e4a33, 0 8px 18px #0008; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  input { font: 600 18px system-ui; padding: 10px 12px; border-radius: 10px; border: 2px solid #6b7a52; background: #141711; color: #fff; width: 150px; text-align: center; letter-spacing: 2px; }
+  input::placeholder { color: #6b7a52; letter-spacing: 0; }
+  .code { font-size: 44px; letter-spacing: 10px; color: #ffd451; text-shadow: 0 0 14px #ff9a1f66; }
+  .pl { font: 600 15px system-ui; padding: 8px 14px; border-radius: 8px; background: #1b1d16; border: 1px solid #3a3e32; min-width: 240px; margin: 4px 0; }
+  .pl.rd { border-color: #9bbd55; color: #cfe8a0; }
+  .pl.dim { color: #8a9477; font-weight: 500; }
+  #countNum { font-family: 'Black Han Sans', sans-serif; font-size: 140px; color: #ffd451; text-shadow: 0 0 30px #ff9a1f; }
+  #resTitle { font-family: 'Black Han Sans', sans-serif; font-size: 48px; letter-spacing: 2px; }
+  #resTitle.win { color: #ffd451; text-shadow: 0 0 20px #ff9a1f; }
+  #resTitle.lose { color: #ff6a5a; text-shadow: 0 0 20px #a01000; }
+  #resTitle.draw { color: #cfd6bf; }
+  .hint { font: 400 14px/1.6 'Do Hyeon', system-ui; color: #8a9477; max-width: 320px; }
+  .hidden { display: none !important; }
+  .fac { background: rgba(0,0,0,.45); border: 2px solid #3a3e32; border-radius: 14px; padding: 6px 8px 4px; width: 84px; color: #cfd6bf; font: 400 15px 'Do Hyeon', system-ui; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: .7; }
+  .fac img { width: 46px; height: 46px; }
+  .fac small { font: 500 10px system-ui; color: #8a9477; }
+  .fac.on { opacity: 1; border-color: #ffd451; box-shadow: 0 0 16px #ffd45166; color: #fff; }
+  .fac.on[data-f=surge] { border-color: #4fd8ff; box-shadow: 0 0 16px #4fd8ff66; }
+  .fac.on[data-f=gale] { border-color: #c58bff; box-shadow: 0 0 16px #c58bff66; }
+  #ov p#ovText { display: none; }
+  #facDesc { background: rgba(0,0,0,.5); border-radius: 8px; padding: 5px 10px; max-width: 320px; color: #d7dcc6; font-size: 13px; line-height: 1.4; }
+  #tut { background: rgba(6,8,5,.88); z-index: 50; justify-content: center; }
+  .tcard { width: min(92vw, 400px); background: linear-gradient(#1f2318, #121410); border: 2px solid #ffd451; border-radius: 16px; padding: 16px 16px 12px; box-shadow: 0 0 30px #000c; text-align: left; }
+  .tcard .step { font: 800 11px Orbitron, system-ui; letter-spacing: 3px; color: #8a9477; }
+  .tcard h3 { margin: 4px 0 10px; font: 800 20px Orbitron, system-ui; color: #ffd451; letter-spacing: 1px; }
+  .tcard p { font: 500 14px/1.6 system-ui; color: #e9ecdc; margin: 0 0 8px; max-width: none; }
+  .tcard .pic { display: flex; gap: 10px; align-items: center; justify-content: center; background: rgba(0,0,0,.4); border-radius: 10px; padding: 10px; margin: 8px 0 10px; }
+  .tcard .pic img { height: 54px; image-rendering: auto; }
+  .tcard .pic .arrow { color: #ffd451; font-size: 24px; }
+  .tcard ul { margin: 0 0 8px; padding-left: 0; list-style: none; }
+  .tcard li { display: flex; align-items: center; gap: 10px; font: 500 13px/1.5 system-ui; color: #e9ecdc; padding: 5px 0; border-bottom: 1px solid #2a2e24; }
+  .tcard li img { width: 34px; height: 34px; flex: none; }
+  .tcard li b { color: #ffd451; }
+  .tcard .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .tcard .dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3a3e32; margin: 0 3px; }
+  .tcard .dots span.on { background: #ffd451; }
+  .tcard .key { color: #9be37a; font-weight: 700; }
+
+  /* 시작 화면: 세력 고르기를 납작하게 (탱크 그림을 가리지 않게) */
+  #ov { gap: 7px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+  #facRow { width: min(92vw, 420px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #facRow .fac { width: auto; flex-direction: row; justify-content: center; gap: 6px; padding: 4px 6px; border-radius: 10px; font-size: 16px; }
+  #facRow .fac img { width: 30px; height: 30px; }
+  #facRow .fac small { display: none; }
+  #facDesc { max-width: min(92vw, 420px); font-size: 14px; padding: 5px 10px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #ov .row.two .btn { padding: 11px 0; font-size: 20px; }
+  #ov .btn.wide { padding: 7px 0; font-size: 15px; }
+
+  /* ---- 금속 버튼 (기존 정찰 버튼·체크 칸 금속판을 9조각으로 늘려 씀) ---- */
+  .btn { background: none; border-style: solid; border-color: transparent; border-width: 14px 26px; border-radius: 0; border-image: url(assets/v2/plate_gold.png?v=1) 30 50 fill / 14px 26px stretch;
+    box-shadow: none; filter: drop-shadow(0 5px 6px rgba(0,0,0,.65)); color: #3a2200; text-shadow: 0 1px 0 rgba(255,236,170,.9), 0 -1px 0 rgba(90,50,0,.35); padding: 4px 6px; }
+  #ov .row.two .btn { font-size: 26px; letter-spacing: 2px; color: #2c1800; text-shadow: 0 1px 0 rgba(255,240,190,.95), 0 -1px 1px rgba(80,40,0,.5); filter: drop-shadow(0 6px 8px rgba(0,0,0,.7)) drop-shadow(0 0 10px rgba(255,180,60,.35)); }
+  #ov .btn.sub { color: #ffe08a; }
+  .btn:active { transform: translateY(2px); box-shadow: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)) brightness(.92); }
+  .btn.sub { border-image-source: url(assets/v2/plate_iron.png?v=1); background: none; box-shadow: none; color: #ffe9a8; text-shadow: 0 2px 0 #000, 0 0 10px rgba(255,190,60,.45); }
+  .fac { border-style: solid; border-color: transparent; border-width: 10px; border-radius: 0; border-image: url(assets/v2/btn_check_off.png?v=1) 32 fill / 10px stretch; background: none; box-shadow: none; opacity: 1; filter: brightness(.6) saturate(.6); }
+  .fac.on, .fac.on[data-f=surge], .fac.on[data-f=gale] { filter: brightness(1.05) drop-shadow(0 0 8px var(--fc, #ffd451)); box-shadow: none; color: #fff; }
+  .fac[data-f=surge] { --fc: #4fd8ff; } .fac[data-f=gale] { --fc: #c58bff; } .fac[data-f=solar] { --fc: #ffd451; }
+  #facDesc { background: linear-gradient(rgba(12,10,6,.88), rgba(4,4,2,.88)); border: 1px solid rgba(214,170,70,.55); box-shadow: inset 0 0 10px rgba(0,0,0,.8), 0 0 8px rgba(0,0,0,.6); border-radius: 6px; font-family: 'Do Hyeon', sans-serif; }
+
+  /* ---- 1:1 로비 전장 버튼: 금판 / 꽉 찬 방은 철판 ---- */
+  .rooms { gap: 8px; }
+  .rooms button { border-style: solid; border-color: transparent; border-width: 10px 24px; border-radius: 0; border-image: url(assets/v2/plate_gold.png?v=1) 30 50 fill / 10px 24px stretch; background: none; box-shadow: none;
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,.7)); padding: 2px 0; font-size: 22px; line-height: 1.2; color: #2c1800; text-shadow: 0 1px 0 rgba(255,240,190,.95); display: flex; flex-direction: column; align-items: center; }
+  .rooms button small { font-size: 14px; color: #4a2c00; text-shadow: none; }
+  .rooms button.full { border-image-source: url(assets/v2/plate_iron.png?v=1); background: none; color: #ddd; text-shadow: 0 2px 0 #000; }
+  .rooms button.full small { color: #ffb3a8; }
+  .rooms button.wait { box-shadow: none; filter: drop-shadow(0 0 8px #9be37a) drop-shadow(0 4px 5px rgba(0,0,0,.7)); }
+  .rooms button:active { transform: translateY(2px); }
+  /* ---- 방 화면: 한 화면에 다 보이게 작게 ---- */
+  #room { gap: 8px; justify-content: center; padding: 12px; }
+  #room h2 { font-size: 20px; }
+  #room .code { font-size: 30px; letter-spacing: 4px; }
+  #room .cards { gap: 6px; margin: 2px 0; width: min(92vw, 400px); }
+  #room .ncard { grid-template-columns: 40px 24px 1fr; column-gap: 8px; padding: 6px 10px; border-radius: 12px; font-size: 15px; line-height: 1.25; }
+  #room .ncard img { width: 40px; height: 40px; flex: 0 0 40px; }
+  #room .ncard b { width: 22px; height: 22px; line-height: 20px; font-size: 13px; }
+  #room .pl { margin: 2px 0; padding: 6px 12px; }
+  #room .row.three { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; width: min(94vw, 420px); }
+  #room .row.three .btn { padding: 2px 0; border-width: 10px 18px; border-image-width: 10px 18px; }
+  #room .btn { font-size: 20px; }
+  #room .btn.sub { font-size: 17px; }
+  #ov .row.two .btn { padding: 0; font-size: 24px; line-height: 1.15; border-width: 9px 26px; border-image-width: 9px 26px; }
+  #ov .btn.wide { padding: 0; font-size: 19px; line-height: 1.15; border-width: 7px 26px; border-image-width: 7px 26px; }
+  #ov { gap: 5px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  #ov .pickT { font-size: 18px; }
+  #facRow .fac { border-width: 7px; border-image-width: 7px; }
+  #facDesc { padding: 3px 10px; }
+  #facRow .fac { padding: 2px 4px; color: #fff; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif; font-size: 18px; text-shadow: 0 2px 0 #000; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- 시작 / 혼자 하기 결과 -->
+<div id="ov" class="ov">
+  <h1>TANK RUMBLE<small>TEST BUILD</small></h1>
+  <p id="ovText">위는 상대 진영, 아래는 내 보드. 블록을 끌어 줄을 지우면 연료·정찰·미사일·보병을 얻는다.<br>보병은 내 최전방에 서고, 30초마다 전선 교전 — 최전방 보병이 많은 쪽이 민다. 미사일은 같은 세로줄 맨 앞의 적을(3초에 한 발), 정찰기는 상대 탱크를 찾는다.<br>보드가 꽉 차면 붕괴 — 블록이 전부 터지고 전선이 2줄 밀린다. 상대 탱크 체력 3을 깎거나 전선으로 덮치면 승리. CPU도 똑같은 규칙으로 싸운다.</p>
+  <div id="ovScore" class="score hidden"></div>
+  <div class="pickT">당신의 세력을 선택하세요</div>
+  <div id="facRow" class="row">
+    <button class="fac" data-f="surge"><img src="assets/v2/f_surge.png" alt=""><span>서지</span><small>폭풍우</small></button>
+    <button class="fac" data-f="gale"><img src="assets/v2/f_gale.png" alt=""><span>게일</span><small>낙뢰</small></button>
+    <button class="fac" data-f="solar"><img src="assets/v2/f_solar.png" alt=""><span>솔라</span><small>태양 방패</small></button>
+  </div>
+  <p id="facDesc" class="hint"></p>
+  <div class="row two"><button id="startBtn" class="btn">CPU 대전</button><button id="vsBtn" class="btn">1:1 대전</button></div>
+  <button id="rankBtn" class="btn sub wide">🏆 스코어보드</button>
+  <button id="howBtn" class="btn sub" style="display:none">HOW TO PLAY</button>
+</div>
+
+
+<!-- 스코어보드 -->
+<div id="rank" class="ov hidden">
+  <h2>🏆 스코어보드</h2>
+  <p class="hint">CPU 대전 TOP 10</p>
+  <div id="rankList" class="ranklist">불러오는 중…</div>
+  <button id="rankBack" class="btn sub">뒤로</button>
+</div>
+
+<!-- 대전 로비 -->
+<div id="lobby" class="ov hidden">
+  <h2>1:1 대전</h2>
+  <p>전장을 고르세요. 먼저 들어간 사람이 기다리고, 두 번째 사람이 오면 대전!</p>
+  <input id="nm" maxlength="10" placeholder="이름">
+  <div id="rooms" class="rooms"></div>
+  <div style="display:none"><button id="mkBtn"></button><input id="code"><button id="joinBtn"></button></div>
+  <div class="chatbox"><div id="mpOn" class="mpon">접속 중…</div><div id="chat"></div><div id="phr"></div></div>
+  <p id="lbMsg" class="hint"></p>
+  <button id="lbBack" class="btn sub">뒤로</button>
+</div>
+
+<!-- 방 -->
+<div id="room" class="ov hidden">
+  <h2>전장</h2>
+  <div id="roomCode" class="code">----</div>
+  <div id="plist"></div>
+  <div class="cards">
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록은 <em class="dd">Drag &amp; Drop</em>으로!<br><em class="hl">탱크</em>는 눌러서 이동!</div></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div><em class="hl">정찰기</em>로 확인하고<br><em class="hl">미사일</em>로 탱크를 부숴라!</div></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">최전방 벙커</em>로 <em class="hl">전선</em> 확보!<br><em class="hl">벙커</em>·<em class="hl">탱크</em>도 블록 한 칸!</div></div>
+  </div>
+  <div class="row three"><button id="readyBtn" class="btn" disabled>준비!</button><button id="shareBtn" class="btn sub">📨 초대</button><button id="leaveBtn" class="btn sub">나가기</button></div>
+  <p id="roomMsg" class="hint"></p>
+</div>
+
+<!-- 카운트다운 -->
+<link rel="preload" as="image" href="assets/v2/btn_check_on.png?v=1">
+<div id="count" class="ov hidden"><div id="countHead">COUNTDOWN</div><div id="countSub">오른쪽 체크를 누르세요!</div><div id="countDone"></div><div id="countNum">3</div>
+  <div class="cards">
+    <div class="ncard c1"><img src="assets/v2/b_missile.png" alt=""><b>1</b><div>블록은 <em class="dd">Drag &amp; Drop</em>으로!<br><em class="hl">탱크</em>는 눌러서 이동!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c2"><img src="assets/v2/p_solar.png" alt=""><b>2</b><div><em class="hl">정찰기</em>로 확인하고<br><em class="hl">미사일</em>로 탱크를 부숴라!</div><button class="chk" aria-label="확인"></button></div>
+    <div class="ncard c3"><img src="assets/v2/k_solar_m2.png" alt=""><b>3</b><div><em class="hl">최전방 벙커</em>로 <em class="hl">전선</em> 확보!<br><em class="hl">벙커</em>·<em class="hl">탱크</em>도 블록 한 칸!</div><button class="chk" aria-label="확인"></button></div>
+  </div>
+</div>
+
+<!-- CPU 스테이지 승리 -->
+<div id="victory" class="ov hidden">
+  <div id="vicTitle">VICTORY</div>
+  <div id="vicStage">스테이지 1 클리어!</div>
+  <div id="vicBonus">+2,000</div>
+  <div id="vicScore">점수 0</div>
+  <button id="vicNext" class="btn">다음 스테이지 ▶</button>
+</div>
+
+<!-- 대전 결과 -->
+<div id="result" class="ov hidden">
+  <div id="resTitle"></div>
+  <p id="resText"></p>
+  <div id="sub" class="row" style="display:none"><input id="subName" maxlength="12" placeholder="이름"><button id="subBtn" class="btn sub">점수 등록</button></div>
+  <p id="subMsg" class="hint"></p>
+  <div id="resRank" class="ranklist" style="display:none;max-height:38vh"></div>
+  <div class="row"><button id="againBtn" class="btn">다시 대전</button><button id="resLeave" class="btn sub">나가기</button></div>
+</div>
+
+<script>document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
+<script>
+(function () { var DESC = { surge: '서지 · 폭풍우 — 적 정찰기 추락, 적 미사일은 아무 데나 떨어진다', gale: '게일 · 낙뢰 — 적 보병 3명을 벼락으로 쓰러뜨린다', solar: '솔라 · 태양 방패 — 우리 편 전체에 보호막' };
+  var cur = localStorage.getItem('tank_fac') || 'solar'; window.TANK_FAC = cur;
+  function sel(f) { cur = f; window.TANK_FAC = f; localStorage.setItem('tank_fac', f); document.querySelectorAll('.fac').forEach(function (b) { b.classList.toggle('on', b.dataset.f === f); }); document.getElementById('facDesc').textContent = DESC[f]; }
+  document.querySelectorAll('.fac').forEach(function (b) { b.addEventListener('click', function () { sel(b.dataset.f); }); }); sel(cur);
+})();
+</script>
+<script src="sfx.js?v=41"></script>
+<script src="tank.js?v=109"></script>
+<script src="net.js?v=45"></script>
+<script src="bot.js?v=52"></script>
+<script src="demo.js?v=4"></script>
+<script>
+  window.showTut = function () { if (window.DEMO) DEMO.start(); };
+  document.getElementById('howBtn').addEventListener('click', showTut);
+  if (!localStorage.getItem('tank_tut')) setTimeout(function () { var d = document.getElementById('facDesc'); if (d) d.innerHTML += '<br><b style="color:#ffd451"></b>'; }, 300);
+</script>
+<script>
+window.TANK_TIPS = { 3: '정찰기를 띄워\n적 탱크를 찾아 부숴라!', 2: '블록 줄을 지워\n아이템을 모아라!', 1: '최전방에 보병을 모아\n30초마다 전선을 밀어라!' };
+window.tankCards = function () { var f = localStorage.getItem('tank_fac') || 'solar'; document.querySelectorAll('.ncard.c2 img').forEach(function (i) { i.src = 'assets/v2/p_' + f + '.png'; }); document.querySelectorAll('.ncard.c3 img').forEach(function (i) { i.src = 'assets/v2/k_' + f + '_m2.png'; }); };
+window.tankCountStep = function (n) {   /* 1:1 대전용 3-2-1. n: 0=아무것도, 1~3 = 그 번호까지 카드 표시 */
+  var cc = document.getElementById('count'); cc.classList.remove('check'); document.getElementById('countHead').textContent = 'COUNTDOWN';
+  document.getElementById('countNum').textContent = n ? n : '';
+  document.querySelectorAll('#count .ncard').forEach(function (c, k) { c.classList.toggle('show', k < n); });
+};
+window.tankCountdown = function (cb) { window.tankCards();   /* CPU 대전: 카운트다운 대신 카드마다 확인 체크를 눌러 출격 준비 */
+  ['ov', 'lobby', 'room', 'result', 'rank'].forEach(function (k) { var e = document.getElementById(k); if (e) e.classList.add('hidden'); });
+  var c = document.getElementById('count'), cards = c.querySelectorAll('.ncard'), done = document.getElementById('countDone'), n = 0;
+  var LBL = ['기름 채우기 완료', '정찰기 띄우기 완료', '탱크 배치 완료'];
+  c.classList.add('check'); document.getElementById('countHead').textContent = 'READY CHECK'; done.innerHTML = '';
+  cards.forEach(function (cd) { cd.classList.remove('show'); var b = cd.querySelector('.chk'); b.classList.remove('on'); b.disabled = true; b.onclick = null; });
+  c.classList.remove('hidden');
+  function next() { var cd = cards[n], b = cd.querySelector('.chk'); cd.classList.add('show'); b.disabled = false;
+    b.onclick = function () { if (b.classList.contains('on')) return; b.classList.add('on'); b.disabled = true; try { SFX.ding(); } catch (e) { }
+      var d = document.createElement('div'); d.textContent = '✓ ' + LBL[n]; done.appendChild(d); n++;
+      if (n < 3) setTimeout(next, 350); else setTimeout(function () { c.classList.add('hidden'); c.classList.remove('check'); cb(); }, 900); }; }
+  setTimeout(next, 250);
+};
+</script>
+</body>
+</html>
