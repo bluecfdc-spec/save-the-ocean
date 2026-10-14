@@ -326,8 +326,11 @@
     if (G.drag) { var r0p = G.drag.p0, d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
       if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && tutDropOk(p, r0p)) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
       if (!G.over && d.ok) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); return; }
-    if (G.touch && !G.over) { var g = cancel ? null : tankGoal(p); G.touch = null; if (!g) return;
-      if (G.tut) { var st2 = TUT[G.tut.i]; if (!(st2.act === 'tap' || st2.act === 'mark') || g.gx !== st2.tgt[0] || g.gy !== st2.tgt[1] || !g.ok) { sfx('bad'); return; } G.tut.acted = true; }
+    if (G.touch && !G.over) { var g = cancel ? null : tankGoal(p); G.touch = null; if (cancel) return; if (!g && !G.tut) return;
+      if (G.tut) { var st2 = TUT[G.tut.i]; if (!(st2.act === 'tap' || st2.act === 'mark')) return;    // 튜토리얼: 조준경 근처(2칸 안)만 눌러도 그 칸으로
+        var tcx2 = bx(st2.tgt[0]) + S / 2, tcy2 = by(st2.tgt[1]) + S / 2;
+        if (Math.hypot(p.x - tcx2, p.y - tcy2) > S * 2.2) { sfx('bad'); pop('조준경 칸을 눌러라!', tcx2, tcy2 - S, '#ffe066'); return; }
+        g = tankGoal({ x: tcx2, y: tcy2 }); if (!g || !g.ok) return; G.tut.acted = true; }
       if (g.ok && g.path.length) { var tk = G.tank; if (!tk.path.length) tk.at = now(); tk.path = g.path; sfx('step'); G.fx.push({ k: 'goal', x: g.gx, y: g.gy, at: now() }); }
       else if (!g.ok) { sfx('bad'); pop('갈 수 없어요', bx(g.gx) + S / 2, by(g.gy), '#ff8a7a'); } }
   }
@@ -632,7 +635,7 @@
       if (st.act === 'end') { tutFinish(); return false; } tutNext(); return false; }
     if (T.acted || T.pauseAt) return false;
     if (st.act === 'drag') { if (p.y >= TY - S * 0.3) { G.drag = { i: 1, p: p, p0: p }; G.touch = null; sfx('pick'); } return false; }   // 아래 조각 칸 어디를 눌러도 집힘
-    if (st.act === 'tap' || st.act === 'mark') return p.y < TY;
+    if (st.act === 'tap' || st.act === 'mark') return true;
     return false;
   }
   function tutFinish() { try { localStorage.setItem('tank_tut_done', '1'); } catch (e) { } $('tutExit').classList.add('hidden'); clockResume(); sfx('go'); start(); }
@@ -716,9 +719,13 @@
       ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 12; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 1); }); ctx.restore(); return; }
     if (st.act === 'drag') { var s0 = slotRect(1), q = (rt % 1800) / 1800, e2 = Math.min(1, q / 0.7), ee = e2 * e2 * (3 - 2 * e2), x0 = s0.x + s0.w / 2, y0 = s0.y + s0.h / 2, x1 = bx(st.tgt[0]) + S, y1 = by(st.tgt[1]) + S * 0.5 + S * 1.7;
       if (q < 0.85) { ctx.save(); ctx.globalAlpha = 0.55; st.piece.forEach(function (c) { block(x0 + (x1 - x0) * ee - S + c[0] * S, y0 + (y1 - y0) * ee - S * 1.7 - S * 0.5 + c[1] * S, S, '#fff0'); }); ctx.restore(); finger(x0 + (x1 - x0) * ee, y0 + (y1 - y0) * ee, rt, false); } }
-    if (st.act === 'tap' || st.act === 'mark') { var fq = (rt % 1400) / 1400, fb = fq < 0.45 ? (1 - fq / 0.45) : 0; finger(bx(st.tgt[0]) + S * 0.62, by(st.tgt[1]) + S * 0.62 + fb * S * 0.35, rt, false); }   // 조준이 잠기는 순간 손가락이 콕
+    if (st.act === 'tap' || st.act === 'mark') { var fq = (rt % 1400) / 1400, fb = fq < 0.45 ? (1 - fq / 0.45) : 0; finger(bx(st.tgt[0]) + S / 2, by(st.tgt[1]) + S * 0.5 + fb * S * 0.4, rt, false); }   // 조준이 잠기는 순간 손가락이 콕
   }
-  function loop() { var t = now(); update(t); draw(t); drawTut(t); requestAnimationFrame(loop); }
+  var LERR = null;
+  function loop() { requestAnimationFrame(loop); var t = now();           // 한 프레임에서 오류가 나도 게임이 멈추지 않게
+    try { update(t); } catch (er) { LERR = LERR || ('U ' + er.message); }
+    try { draw(t); drawTut(t); } catch (er) { LERR = LERR || ('D ' + er.message); try { ctx.restore(); } catch (e2) { } }
+    if (LERR) { ctx.save(); ctx.setTransform(cv.width / W, 0, 0, cv.width / W, 0, 0); ctx.font = '14px sans-serif'; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0, H - 22, W, 22); ctx.fillStyle = '#ff8a7a'; ctx.fillText('오류: ' + LERR.slice(0, 60), 6, H - 6); ctx.restore(); } }
   loop();
 
   // ---------- 시작/끝 화면 ----------
