@@ -640,11 +640,18 @@
     ctx.save(); ctx.font = font; var lines = [];                  // 상자 폭에 맞게 줄바꿈 (글씨는 줄이지 않음)
     txt.split('\n').forEach(function (para, pi) { var cur = ''; para.split(' ').forEach(function (wd) { var tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > w - S * 1.2 && cur) { lines.push([cur, pi]); cur = wd; } else cur = tr; }); lines.push([cur, pi]); });
     ctx.restore();
-    var bpad = S * 0.34 / 29 * 34 + 4, lh = fs * 1.3, h = lines.length * lh + fs * 0.6 + bpad * 2, top = cy - h / 2, sTop = top - sh * 0.244 - S * 0.4;
+    var bpad = S * 0.34 / 29 * 34 + 4, lh = fs * 1.3, h = lines.length * lh + fs * 0.6 + bpad * 2, top = cy - h / 2, sTop = top - sh * 0.275 - S * 0.4;
     if (sTop < HUD + 4) { top += HUD + 4 - sTop; sTop = HUD + 4; }
     var ap = shownAt ? Math.min(1, (performance.now() - shownAt) / 260) : 1, slide = (1 - ap) * -sw * 0.35;
     if (im) { ctx.save(); ctx.globalAlpha = ap; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 14; ctx.drawImage(im, 2 + slide, sTop, sw, sh); ctx.restore(); }
     dialogBox(x0, top, w, h);
+    var nh = S * 0.78, nfs = Math.round(S * 0.46), sfs = Math.round(S * 0.4);          // 이름표: 세라 · 소속 불명
+    ctx.save(); ctx.font = nfs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; var nw1 = ctx.measureText('세라').width; ctx.font = sfs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; var nw2 = ctx.measureText('소속 불명').width; ctx.restore();
+    var nw = nw1 + nw2 + S * 1.1, nx = x0 + S * 0.35, ny = top - nh * 0.62;
+    ctx.save(); var ng = ctx.createLinearGradient(0, ny, 0, ny + nh); ng.addColorStop(0, '#24365a'); ng.addColorStop(1, '#0f1a30'); ctx.fillStyle = ng; ctx.strokeStyle = '#dfe8f5'; ctx.lineWidth = 2; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(nx, ny, nw, nh, 8) : ctx.rect(nx, ny, nw, nh); ctx.fill(); ctx.shadowBlur = 0; ctx.stroke(); ctx.restore();
+    text('세라', nx + S * 0.4 + nw1 / 2, ny + nh / 2, nfs, '#ffffff', 'center', Math.max(2, nfs * 0.14));
+    text('소속 불명', nx + S * 0.7 + nw1 + nw2 / 2, ny + nh / 2 + 1, sfs, '#9fb3cc', 'center', Math.max(2, sfs * 0.14));
     lines.forEach(function (l, i) { ctx.save(); if (l[1] === 0) { ctx.shadowColor = 'rgba(160,210,255,.85)'; ctx.shadowBlur = 10; } text(l[0], x0 + w / 2, top + bpad + fs * 0.3 + lh * (i + 0.5), fs, l[1] === 0 ? '#eaf4ff' : '#ffffff', 'center', Math.max(3, fs * 0.16)); ctx.restore(); });
     return h; }
   function drawTut(t) {
@@ -657,8 +664,7 @@
       if (st.act === 'drag') { var sr = slotRect(1); holes.push([sr.x, sr.y - 4, sr.w, sr.h + 8]); st.piece.forEach(function (c) { holes.push(cellR(st.tgt[0] + c[0], st.tgt[1] + c[1])); });
         var pz = { w: 0, h: 0 }; st.piece.forEach(function (c) { pz.w = Math.max(pz.w, c[0] + 1); pz.h = Math.max(pz.h, c[1] + 1); });
         lanes.push([sr.x + sr.w / 2, sr.y + sr.h / 2, bx(st.tgt[0]) + pz.w * S / 2, by(st.tgt[1]) + pz.h * S / 2, S * 1.25]); }   // 손가락이 지나가는 길
-      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); holes.push(cellR(G.tank.x, G.tank.y, 2));
-        var pth = pathTo(st.tgt[0], st.tgt[1]) || []; pth.forEach(function (c) { holes.push(cellR(c[0], c[1], 0)); }); }
+      if (st.act === 'tap' || st.act === 'mark') { holes.push(cellR(st.tgt[0], st.tgt[1], 6)); T.tapHole = true; }   // 누를 칸만 밝게
     }
     var dim = T.paused || (!T.acted && !T.pauseAt && st.act !== 'volley');
     if (dim) {                                                   // 어둡게 깔고 구멍(할 곳 + 지나가는 길)만 지움 — 겹쳐도 다시 어두워지지 않게 따로 그림
@@ -669,10 +675,21 @@
       lanes.forEach(function (l) { g.globalAlpha = 0.85; g.lineCap = 'round'; g.lineWidth = l[4]; g.beginPath(); g.moveTo(l[0], l[1]); g.lineTo(l[2], l[3]); g.strokeStyle = '#000'; g.stroke(); g.globalAlpha = 1; });
       g.globalCompositeOperation = 'source-over'; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(oc, 0, 0); ctx.restore();
       lanes.forEach(function (l) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.35 + 0.3 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.lineDashOffset = -rt / 25; ctx.beginPath(); ctx.moveTo(l[0], l[1]); ctx.lineTo(l[2], l[3]); ctx.stroke(); ctx.restore(); });
-      holes.forEach(function (h) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.5 + 0.5 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -rt / 40; ctx.strokeRect(h[0], h[1], h[2], h[3]); ctx.restore(); }); }
-    if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; var chh = caption(st.after, cy, true, T.shownAt); text('눌러서 계속 ▶', W / 2, Math.min(TY - S * 0.4, cy + chh / 2 + S * 0.55), Math.round(S * 0.48), 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(rt / 200)) + ')'); return; }
+      holes.forEach(function (h) { ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.5 + 0.5 * Math.sin(rt / 160)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -rt / 40; ctx.strokeRect(h[0], h[1], h[2], h[3]); ctx.restore(); });
+      if ((st.act === 'tap' || st.act === 'mark') && !T.paused) { var tcx = bx(st.tgt[0]) + S / 2, tcy = by(st.tgt[1]) + S / 2, pz = (rt % 1100) / 1100;   // 누를 칸 강조: 빛나는 링이 퍼지고 노란 테두리가 숨 쉬듯
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; var gg = ctx.createRadialGradient(tcx, tcy, S * 0.2, tcx, tcy, S * 1.1); gg.addColorStop(0, 'rgba(255,230,120,.45)'); gg.addColorStop(1, 'rgba(255,200,60,0)'); ctx.fillStyle = gg; ctx.fillRect(tcx - S * 1.2, tcy - S * 1.2, S * 2.4, S * 2.4); ctx.restore();
+        ctx.save(); ctx.strokeStyle = 'rgba(255,230,120,' + (1 - pz) + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(tcx, tcy, S * (0.5 + 0.9 * pz), 0, 7); ctx.stroke(); ctx.restore();
+        ctx.save(); ctx.strokeStyle = '#ffe066'; ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 16; ctx.lineWidth = 4 + 2 * Math.sin(rt / 120); ctx.strokeRect(tcx - S / 2 - 6, tcy - S / 2 - 6, S + 12, S + 12); ctx.restore(); } }
+    if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; var chh = caption(st.after, cy, true, T.shownAt); var ky = Math.min(TY - S * 0.7, cy + chh / 2 + S * 0.95), kp = 0.5 + 0.5 * Math.sin(rt / 180), kw = Math.min(W - 24, S * 6.4), kh = S * 1.15;   // 크게 강조한 '화면을 눌러 계속'
+      ctx.save(); ctx.translate(W / 2, ky); ctx.scale(1 + 0.04 * kp, 1 + 0.04 * kp); ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 18 + 10 * kp; ctx.fillStyle = 'rgba(20,16,6,.92)'; ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-kw / 2, -kh / 2, kw, kh, kh / 2) : ctx.rect(-kw / 2, -kh / 2, kw, kh); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      text('👆 화면을 눌러 계속 ▶', 0, 0, Math.round(S * 0.62), '#ffe066'); ctx.restore(); return; }
     if (T.acted || T.pauseAt || !st.text) return;
     caption(st.text, BY + S * 2.4, false, T.shownAt);
+    if (st.act === 'drag' && G.drag && G.tray[G.drag.i]) {                 // 잡은 블록은 어둡게 덮이지 않게 맨 위에 또렷하게 (본게임과 같은 모습)
+      var pd = G.tray[G.drag.i], zz = pcSize(pd), gx0 = G.drag.p.x - zz.w * S / 2, gy0 = G.drag.p.y - S * 1.7 - zz.h * S / 2, dc = dropCell(G.drag.p);
+      if (dc.ok) pd.cells.forEach(function (c) { var X = dc.gx + c[0], Y = dc.gy + c[1]; ctx.fillStyle = 'rgba(155,227,122,.45)'; ctx.fillRect(bx(X) + 2, by(Y) + 2, S - 4, S - 4); });
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 12; pd.cells.forEach(function (c) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 1); }); ctx.restore(); return; }
     if (st.act === 'drag') { var s0 = slotRect(1), q = (rt % 1800) / 1800, e2 = Math.min(1, q / 0.7), ee = e2 * e2 * (3 - 2 * e2), x0 = s0.x + s0.w / 2, y0 = s0.y + s0.h / 2, x1 = bx(st.tgt[0]) + S, y1 = by(st.tgt[1]) + S * 0.5 + S * 1.7;
       if (q < 0.85) { ctx.save(); ctx.globalAlpha = 0.55; st.piece.forEach(function (c) { block(x0 + (x1 - x0) * ee - S + c[0] * S, y0 + (y1 - y0) * ee - S * 1.7 - S * 0.5 + c[1] * S, S, '#fff0'); }); ctx.restore(); finger(x0 + (x1 - x0) * ee, y0 + (y1 - y0) * ee, rt, false); } }
     if (st.act === 'tap' || st.act === 'mark') finger(bx(st.tgt[0]) + S / 2, by(st.tgt[1]) + S / 2, rt, true);
