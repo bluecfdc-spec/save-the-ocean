@@ -95,7 +95,7 @@
   function spawnGap(t) { var sec = (t - G.t0) / 1000, base;          // 0~20초 여유 → 20~60초 빠르게 조임 → 이후 더 정신없게
     if (sec < 20) base = 7500; else if (sec < 60) base = 7500 - (sec - 20) * (4200 / 40); else base = Math.max(2400, 3300 - (sec - 60) * (900 / 90));
     return base * rr(0.85, 1.15); }
-  function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : sec < 60 ? 0.42 : 0.48; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
+  function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
