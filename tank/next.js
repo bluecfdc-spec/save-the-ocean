@@ -99,8 +99,14 @@
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
+  function wouldClear(cx, cy, skip) {                      // 이 칸을 채우면 가로줄이나 세로줄이 완성되나 (탱크 칸·날아가는 포탄 자리도 찬 것으로 침)
+    function f(x, y) { return (x === cx && y === cy) || filled(x, y) || G.shells.some(function (s) { return s !== skip && s.tx === x && s.ty === y; }); }
+    var r = true, c = true, i; for (i = 0; i < COLS; i++) if (!f(i, cy)) { r = false; break; } for (i = 0; i < ROWS; i++) if (!f(cx, i)) { c = false; break; } return r || c; }
+  function safeCells(skip) { return emptyCells().filter(function (c) { return !wouldClear(c[0], c[1], skip); }); }   // 적이 쏴도 되는 빈칸
   function enemyFire(e, t) {                                // 정차한 적 탱크가 한 칸짜리 블록을 쏨
-    var cells = emptyCells(); if (!cells.length) { e.reloadAt = t + 2000; return; }
+    var cells = safeCells();
+    if (!cells.length) { e.hold = true; e.reloadAt = t + 500; return; }   // 쏠 곳이 없으면 장전한 채 대기
+    e.hold = false;
     var c = cells[rnd(cells.length)], sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2;
     e.aimAng = Math.atan2(tx - sx, -(ty - sy));
     e.fireAt = t + 260; e.target = c; e.reloadAt = Infinity;
@@ -116,8 +122,8 @@
   }
   function shellLand(s) {
     var x = s.tx, y = s.ty, t = now();
-    if (G.board[y][x] || (G.tank.x === x && G.tank.y === y)) {          // 그새 막혔으면 가까운 빈칸
-      var best2 = null, bd = 1e9; emptyCells().forEach(function (c) { var d = Math.abs(c[0] - x) + Math.abs(c[1] - y); if (d < bd) { bd = d; best2 = c; } }); if (!best2) return; x = best2[0]; y = best2[1];
+    if (G.board[y][x] || (G.tank.x === x && G.tank.y === y) || wouldClear(x, y, s)) {   // 그새 막혔거나 떨어지면 줄이 완성되면 → 가까운 안전한 빈칸 (없으면 불발)
+      var best2 = null, bd = 1e9; safeCells(s).forEach(function (c) { var d = Math.abs(c[0] - x) + Math.abs(c[1] - y); if (d < bd) { bd = d; best2 = c; } }); if (!best2) return; x = best2[0]; y = best2[1];
     }
     G.board[y][x] = ROCK; var px = bx(x) + S / 2, py = by(y) + S / 2;
     G.fx.push({ k: 'thud', x: x, y: y, at: t });
@@ -414,12 +420,12 @@
     if (e.parked && !dark && !mvg) { ctx.save(); ctx.globalAlpha = 0.25 + 0.1 * Math.sin(t / 200); ctx.fillStyle = '#ff3b2a'; ctx.beginPath(); ctx.arc(cx, cy, S * 0.55, 0, 7); ctx.fill(); ctx.restore(); }
     fit(IM['t_' + G.efac], cx + ox, cy + oy + (mvg ? Math.sin(t / 31) * 0.8 : 0), S * 0.95, ER * 1.1, 1, e.ang);
     if (e.parked && !dark && !mvg && isFinite(e.reloadAt)) {           // 리로드 바
-      var f = Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / RELOAD)), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
+      var f = e.hold ? 1 : Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / RELOAD)), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
       ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(x0 - 1, y0 - 1, bw + 2, bh + 2);
-      ctx.fillStyle = f > 0.85 ? (Math.floor(t / 120) % 2 ? '#ff3b2a' : '#ffd451') : '#ff8a3a'; ctx.fillRect(x0, y0, bw * f, bh);
-      var rdy = f > 0.85, rfs = Math.round(S * 0.38), ra = rdy ? (Math.floor(t / 120) % 2 ? 1 : 0.55) : 0.55 + 0.45 * Math.abs(Math.sin(t / 380 + e.x));
+      ctx.fillStyle = e.hold ? '#ff6a3a' : f > 0.85 ? (Math.floor(t / 120) % 2 ? '#ff3b2a' : '#ffd451') : '#ff8a3a'; ctx.fillRect(x0, y0, bw * f, bh);
+      var rdy = f > 0.85 && !e.hold, rfs = Math.round(S * 0.38), ra = rdy ? (Math.floor(t / 120) % 2 ? 1 : 0.55) : 0.55 + 0.45 * Math.abs(Math.sin(t / 380 + e.x));
       ctx.save(); ctx.globalAlpha = ra; ctx.font = rfs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.lineWidth = Math.max(3, rfs * 0.22); ctx.strokeStyle = 'rgba(0,0,0,.85)'; var rt = rdy ? '발사!' : '리로드';
+      ctx.lineWidth = Math.max(3, rfs * 0.22); ctx.strokeStyle = 'rgba(0,0,0,.85)'; var rt = e.hold ? '장전 완료' : rdy ? '발사!' : '리로드';
       ctx.strokeText(rt, cx, y0 - 2); ctx.fillStyle = rdy ? '#ff5a3a' : '#ffd451'; ctx.fillText(rt, cx, y0 - 2); ctx.restore();
     }
   }
