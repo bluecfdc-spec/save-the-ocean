@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '125'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '126'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -72,7 +72,8 @@
   .sub .btn { width: auto; font-size: 20px; letter-spacing: 0; }
   #subMsg { font: 18px 'Do Hyeon', sans-serif; color: #ffe9a8; min-height: 20px; }
   #end { overflow-y: auto; }
-  .btn.go { font-size: 22px; padding: 0; }
+  .btn.go { font-size: 25px; padding: 9px 0; }
+  .row2 .btn.iron { padding: 9px 0; font-size: 21px; }
   .btn.iron { white-space: nowrap; padding: 0; font-size: 19px; display: flex; align-items: center; justify-content: center; }
   .btn.tut { width: min(92vw, 420px); font-size: 20px; }
   #tutMsg { position: fixed; left: 50%; bottom: 40%; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #ffe066; font: 22px 'Black Han Sans', sans-serif; padding: 10px 18px; border-radius: 10px; pointer-events: none; opacity: 0; transition: opacity .3s; }
