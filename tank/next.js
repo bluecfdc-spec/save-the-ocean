@@ -66,7 +66,7 @@
   function colEnemies(x) { return G.en.filter(function (e) { return e.x === x; }); }
   function parkedCol(x) { return G.en.some(function (e) { return e.x === x && e.parked; }); }
   function spawn(r) {
-    var free = []; for (var x = 0; x < COLS; x++) if (!parkedCol(x) && !colEnemies(x).some(function (e) { return e.r < r + 1.1; })) free.push(x);
+    var free = []; for (var x = 0; x < COLS; x++) if (!colEnemies(x).length && !G.dying.some(function (d) { return d.e.x === x; })) free.push(x);   // 한 세로줄에 탱크는 무조건 한 대
     if (!free.length) return;
     var x2 = free[rnd(free.length)];
     G.en.push({ x: x2, r: r, hp: 1, parked: false, queued: false, ang: Math.PI, aimAng: Math.PI, reloadAt: 0, recoil: 0 });
