@@ -668,7 +668,7 @@
     $('endB').textContent = '최고 기록!';
     $('endScore').textContent = '점수 ' + G.score.toLocaleString();
     $('endBtn').textContent = '다시 하기';
-    if (nb) sfx('win');
+    sfx('resultMusic', nb);   // 탱크대전과 같은 결과 음악(최고 기록 = 승리 음악, 아니면 패배 음악)
     e.classList.remove('hidden');
     try { if (window.TR_RANK) TR_RANK.onEnd(G.score, G.fac); } catch (er) { }
   }
