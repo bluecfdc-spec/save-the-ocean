@@ -95,6 +95,7 @@
   function spawnGap(t) { var sec = (t - G.t0) / 1000, base;          // 0~20초 여유 → 20~60초 빠르게 조임 → 이후 더 정신없게
     if (sec < 20) base = 7500; else if (sec < 60) base = 7500 - (sec - 20) * (4200 / 40); else base = Math.max(2400, 3300 - (sec - 60) * (900 / 90));
     return base * rr(0.85, 1.15); }
+  function reloadMs() { var sec = gsec(); return sec < 60 ? RELOAD : Math.max(13000, RELOAD - (sec - 60) * (5000 / 60)); }   // 1분 이후 장전 18초 → 2분에 13초
   function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
@@ -115,7 +116,7 @@
     var c = e.target, sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, mx = sx + Math.sin(e.ang) * S * 0.5, my = sy - Math.cos(e.ang) * S * 0.5;
     var tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2, dist = Math.hypot(tx - mx, ty - my);
     G.shells.push({ tx: c[0], ty: c[1], x0: mx, y0: my, x1: tx, y1: ty, at: t, dur: 420 + dist * 0.9, arc: S * 1.2 + dist * 0.25, last: [] });
-    e.recoil = 1; e.reloadAt = G.tut ? Infinity : t + RELOAD; e.fireAt = 0;
+    e.recoil = 1; e.rl = reloadMs(); e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
     G.fx.push({ k: 'muzzle', x: mx, y: my, ang: e.ang, at: t });
     burst(mx, my, 10, ['#fff3c0', '#ffb13d', '#ff6a2a'], 4, 4, 0.05, 350);
     shake(4); sfx('launch');
@@ -367,7 +368,7 @@
       if (G.over || !e.parked) return;
       if (e.fireAt && t >= e.fireAt) { enemyShoot(e, t); return; }
       if (!e.fireAt && t >= e.reloadAt) enemyFire(e, t);
-      if (!e.fireAt && t > e.reloadAt - RELOAD + 900) e.aimAng = Math.PI;     // 쏘고 나면 다시 정면
+      if (!e.fireAt && t > e.reloadAt - (e.rl || RELOAD) + 900) e.aimAng = Math.PI;     // 쏘고 나면 다시 정면
     });
     G.shells = G.shells.filter(function (s) { if (t - s.at >= s.dur) { if (!G.over) shellLand(s); return false; } return true; });
     G.planes = G.planes.filter(function (pl) {
@@ -423,7 +424,7 @@
     if (e.parked && !dark && !mvg) { ctx.save(); ctx.globalAlpha = 0.25 + 0.1 * Math.sin(t / 200); ctx.fillStyle = '#ff3b2a'; ctx.beginPath(); ctx.arc(cx, cy, S * 0.55, 0, 7); ctx.fill(); ctx.restore(); }
     fit(IM['t_' + G.efac], cx + ox, cy + oy + (mvg ? Math.sin(t / 31) * 0.8 : 0), S * 0.95, ER * 1.1, 1, e.ang);
     if (e.parked && !dark && !mvg && isFinite(e.reloadAt)) {           // 리로드 바
-      var f = e.hold ? 1 : Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / RELOAD)), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
+      var f = e.hold ? 1 : Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / (e.rl || RELOAD))), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
       ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(x0 - 1, y0 - 1, bw + 2, bh + 2);
       ctx.fillStyle = e.hold ? '#ff6a3a' : f > 0.85 ? (Math.floor(t / 120) % 2 ? '#ff3b2a' : '#ffd451') : '#ff8a3a'; ctx.fillRect(x0, y0, bw * f, bh);
       var rdy = f > 0.85 && !e.hold, rfs = Math.round(S * 0.38), ra = rdy ? (Math.floor(t / 120) % 2 ? 1 : 0.55) : 0.55 + 0.45 * Math.abs(Math.sin(t / 380 + e.x));
