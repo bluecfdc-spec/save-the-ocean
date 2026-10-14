@@ -221,8 +221,7 @@
       hit.sort(function (a, b) { return a.x - b.x; }).forEach(function (e, i) { G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 2000 }; G.dying.push(dd); G.kills++;
         setTimeout(function () { if (!G) return; var py = enemyY(e); dd.until = 0; explode(e.x, py, e.ang, 300); G.score += 300; }, 180 + i * 70); });
       if (!G.tut) G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: hit.length ? '맨 앞줄 ' + hit.length + '대 괴멸' : '맨 앞줄에 적이 없다', at: t });
-    } else {                                                 // 솔라: 내가 놓은 블록 전부 사라짐 (블록 속 아이템·바닥에 떨어진 아이템도 함께 사라짐)
-      for (var lk3 in G.loot) { var lq3 = lk3.split(','); burst(bx(+lq3[0]) + S / 2, by(+lq3[1]) + S / 2, 8, ['#fff3c0', '#ffd451'], 2.5, 3, 0, 400); } G.loot = {};
+    } else {                                                 // 솔라: 내가 놓은 블록 전부 사라짐 (블록 속 아이템도 함께 사라짐, 이미 바닥에 나온 아이템은 그대로)
       var m = 0; for (var y2 = 0; y2 < ROWS; y2++) for (var x2 = 0; x2 < COLS; x2++) { var v = G.board[y2][x2]; if (v && v !== ROCK) { G.board[y2][x2] = 0; delete G.items[x2 + ',' + y2]; m++; var d2 = Math.abs(x2 - G.tank.x) + Math.abs(y2 - G.tank.y); G.fx.push({ k: 'cell', x: x2, y: y2, at: t + d2 * 30, tint: v, gold: true }); } }
       G.fx.push({ k: 'flashAll', at: t, col: '255,220,120', a: 0.45 }); G.fx.push({ k: 'sun', at: t }); if (!G.tut) G.fx.push({ k: 'bigtext', t: '솔라 플레어!', sub: '블록 ' + m + '개 정리', at: t }); G.score += m * 10;
     }
