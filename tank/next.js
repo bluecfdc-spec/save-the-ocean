@@ -320,6 +320,9 @@
     var dt = Math.min(50, t - (lastT || t)); lastT = t;
     var tk = G.tank, sm = stepMs(t);
     if (!G.over && tk.path.length && t - tk.at >= sm) { var c = tk.path.shift(); tk.x = c[0]; tk.y = c[1]; tk.at = t; pickup(tk.x, tk.y, t); if (!tk.path.length) { lineCheck(); checkFit(); } }
+    // 탱크 머리 방향: 탱크대전처럼 가는 쪽으로 돌면서 이동, 멈추면 다시 정면(위)
+    var angT = 0; if (tk.path.length) { var nx = tk.path[0][0] - tk.x, ny = tk.path[0][1] - tk.y; if (nx || ny) angT = Math.atan2(nx, -ny); }
+    if (tk.ang == null) tk.ang = 0; var dA = angT - tk.ang; while (dA > Math.PI) dA -= Math.PI * 2; while (dA < -Math.PI) dA += Math.PI * 2; var stepA = 0.22 * dt / 16.7; tk.ang += Math.max(-stepA, Math.min(stepA, dA)); if (Math.abs(dA) < 0.01) tk.ang = angT;
     if (tk.path.length) { var q = Math.min(1, (t - tk.at) / sm); tk.fx = tk.x + (tk.path[0][0] - tk.x) * q; tk.fy = tk.y + (tk.path[0][1] - tk.y) * q; } else { tk.fx = tk.x; tk.fy = tk.y; }
     if (t < G.boostUntil && tk.path.length) { tk.trail.push({ x: tk.fx, y: tk.fy, at: t }); }
     tk.trail = tk.trail.filter(function (p) { return t - p.at < 260; });
@@ -451,7 +454,7 @@
     G.dying.forEach(function (dd) { drawEnemy(dd.e, t, enemyY(dd.e), true); });
     // 내 탱크 잔상 (빨라졌을 때)
     var timg = IM['t_' + G.fac];
-    if (boosted) { tk.trail.forEach(function (p, i) { var a = 1 - (t - p.at) / 260; fit(timg, bx(p.x) + S / 2, by(p.y) + S / 2, S * 0.95, S * 1.05, a * 0.35);
+    if (boosted) { tk.trail.forEach(function (p, i) { var a = 1 - (t - p.at) / 260; fit(timg, bx(p.x) + S / 2, by(p.y) + S / 2, S * 0.95, S * 1.05, a * 0.35, tk.ang || 0);
         ctx.save(); ctx.globalAlpha = a * 0.5; ctx.fillStyle = FAC[G.fac].col; ctx.fillRect(bx(p.x) + S * 0.15, by(p.y) + S / 2 - 1, S * 0.7, 2); ctx.restore(); });
       if (tk.path.length) { var dx = tk.path[0][0] - tk.x, dy = tk.path[0][1] - tk.y; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2;
         for (var wl = 0; wl < 4; wl++) { var off = (wl - 1.5) * S * 0.2, px0 = bx(tk.fx) + S / 2 - dy * off, py0 = by(tk.fy) + S / 2 + dx * off, len = S * rr(0.6, 1.2);
@@ -460,7 +463,7 @@
     var mv = tk.path.length ? 1 : 0; ctx.save(); ctx.translate(bx(tk.fx) + S / 2, by(tk.fy) + S / 2);
     ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0, S * 0.36, S * 0.4, S * 0.12, 0, 0, 7); ctx.fill();
     if (boosted) { ctx.fillStyle = 'rgba(255,214,80,' + (0.25 + 0.15 * Math.sin(t / 70)) + ')'; ctx.beginPath(); ctx.arc(0, 0, S * 0.62, 0, 7); ctx.fill(); }
-    if (tk.dead) { fit(IM['t_' + G.fac + '_dead'] || timg, 0, 0, S * 0.95, S * 1.05, 1, 0.25); } else { var hitShake = G.fin && t > G.fin.aimAt + 380 ? Math.sin(t / 17) * 2 : 0; ctx.shadowColor = G.fin ? '#ff3b2a' : boosted ? '#ffd451' : FAC[G.fac].col; ctx.shadowBlur = G.fin ? 20 : boosted ? 22 : 10; fit(timg, hitShake, mv ? Math.sin(t / 40) * 1.5 : 0, S * 0.95, S * 1.05); } ctx.restore();
+    if (tk.dead) { fit(IM['t_' + G.fac + '_dead'] || timg, 0, 0, S * 0.95, S * 1.05, 1, 0.25); } else { var hitShake = G.fin && t > G.fin.aimAt + 380 ? Math.sin(t / 17) * 2 : 0; ctx.shadowColor = G.fin ? '#ff3b2a' : boosted ? '#ffd451' : FAC[G.fac].col; ctx.shadowBlur = G.fin ? 20 : boosted ? 22 : 10; fit(timg, hitShake, mv ? Math.sin(t / 40) * 1.5 : 0, S * 0.95, S * 1.05, null, tk.ang || 0); } ctx.restore();
     // 내 미사일
     G.shots.forEach(function (s) { if (t < s.at) return;
       if (s.pierce) { var pp = Math.min(1, (t - s.at) / s.dur), py2 = s.y0 + (s.ty - s.y0) * pp * pp * (0.6 + 0.4 * pp), xx2 = bx(s.x) + S / 2;
