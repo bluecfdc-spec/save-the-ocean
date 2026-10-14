@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '22'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '23'; try { fetch('next_version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TANK RUMBLE · 새 버전 시험판</title>
+<title>탱크럼블 · 시험판</title>
 <link rel="icon" href="assets/v2/icon_64.png">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Orbitron:wght@800&display=swap" rel="stylesheet">
 <style>
@@ -47,7 +47,7 @@
 <canvas id="c"></canvas>
 
 <div id="title" class="ov">
-  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">NEW · 쉬운 탱크 (무한)</div>① 줄을 깨면 내 탱크가 <em>미사일 발사!</em><br>② 끝에 선 적 탱크는 <em>20초</em>마다 블록을 쏜다<br>③ <em>내 탱크</em>로 줄을 채우면 <em>1.5배</em> 빨라짐</div>
+  <div class="rules"><div class="tag" style="text-align:center;margin-bottom:2px">탱크럼블 · 무한 모드</div>① 줄을 깨면 내 탱크가 <em>미사일 발사!</em><br>② 끝에 선 적 탱크는 <em>20초</em>마다 블록을 쏜다<br>③ <em>내 탱크</em>로 줄을 채우면 <em>1.5배</em> 빨라짐</div>
   <div class="pick">당신의 세력을 선택하세요</div>
   <div class="facs">
     <button class="fac" data-f="surge" style="--fc:#4fd8ff"><img src="assets/v2/f_surge.png" alt="">서지</button>
@@ -68,6 +68,6 @@
 </div>
 
 <script src="sfx.js?v=41"></script>
-<script src="next.js?v=22"></script>
+<script src="next.js?v=23"></script>
 </body>
 </html>
