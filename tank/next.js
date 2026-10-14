@@ -26,7 +26,7 @@
   function sfx(k, a) { try { if (window.SFX && SFX[k]) SFX[k](a); } catch (e) { } }
 
   // ---------- 그림 ----------
-  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_down.png', 'm_drill.png', 'sera_cmd.png'];
+  var IM = {}, LIST = ['bg_mine.jpg', 'bg_enemy.jpg', 'b_plain.png', 'b_scout.png', 'm_up.png', 'm_down.png', 'm_drill.png', 'sera_full.png'];
   ['surge', 'gale', 'solar'].forEach(function (f) { LIST.push('t_' + f + '.png', 't_' + f + '_dead.png', 'f_' + f + '.png', 'p_' + f + '.png'); });
   for (var i = 1; i <= 8; i++) LIST.push('x_b' + i + '.png');
   LIST.forEach(function (n) { var im = new Image(); im.onload = function () { IM[n.replace(/\.(png|jpg)$/, '')] = im; }; im.src = 'assets/v2/' + n + '?v=6'; });
@@ -615,17 +615,18 @@
   function finger(x, y, t, press) { ctx.save(); ctx.translate(x, y); var sc = press ? 1 - 0.12 * Math.max(0, Math.sin(t / 160)) : 1; ctx.scale(sc, sc);
     ctx.font = Math.round(S * 1.15) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 10; ctx.fillText('👆', 0, -S * 0.05); ctx.restore();
     if (press) { var rp = (t % 900) / 900; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - rp) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, S * (0.2 + 0.5 * rp), 0, 7); ctx.stroke(); ctx.restore(); } }
-  function caption(txt, cy, big, shownAt) {                     // 설명 상자 + 왼쪽에 지휘관 세라(오른쪽 상자를 가리킴)
-    var im = IM.sera_cmd, fs = Math.round(S * (big ? 0.52 : 0.5)), font = fs + 'px "Black Han Sans", "Do Hyeon", sans-serif';
-    var sh0 = Math.min(S * 5.4, H * 0.36), sw = im ? sh0 * im.width / im.height : 0, x0 = im ? 4 + sw * 0.9 : 8, w = W - x0 - 8;
+  function caption(txt, cy, big, shownAt) {                     // 설명 상자 + 왼쪽에 전신 지휘관 세라(뻗은 손이 상자 위에서 상자를 가리킴)
+    var im = IM.sera_full, fs = Math.round(S * (big ? 0.52 : 0.5)), font = fs + 'px "Black Han Sans", "Do Hyeon", sans-serif';
+    var sh = Math.min(H * 0.33, S * 6.8), sw = im ? sh * im.width / im.height : 0, x0 = im ? 4 + sw * 0.6 : 8, w = W - x0 - 8;
     ctx.save(); ctx.font = font; var lines = [];                  // 상자 폭에 맞게 줄바꿈 (글씨는 줄이지 않음)
     txt.split('\n').forEach(function (para, pi) { var cur = ''; para.split(' ').forEach(function (wd) { var tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > w - 24 && cur) { lines.push([cur, pi]); cur = wd; } else cur = tr; }); lines.push([cur, pi]); });
     ctx.restore();
-    var lh = fs * 1.3, h = lines.length * lh + fs * 0.9, top = cy - h / 2;
-    var sh = sh0, swd = sw, ap = shownAt ? Math.min(1, (performance.now() - shownAt) / 260) : 1, slide = (1 - ap) * -swd * 0.35;
+    var lh = fs * 1.3, h = lines.length * lh + fs * 0.9, top = cy - h / 2, sTop = top - sh * 0.244 - S * 0.4;
+    if (sTop < HUD + 4) { top += HUD + 4 - sTop; sTop = HUD + 4; }
+    var ap = shownAt ? Math.min(1, (performance.now() - shownAt) / 260) : 1, slide = (1 - ap) * -sw * 0.35;
+    if (im) { ctx.save(); ctx.globalAlpha = ap; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 14; ctx.drawImage(im, 2 + slide, sTop, sw, sh); ctx.restore(); }
     ctx.save(); ctx.fillStyle = 'rgba(10,8,4,.88)'; ctx.strokeStyle = '#d6aa46'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, top, w, h, 12) : ctx.rect(x0, top, w, h); ctx.fill(); ctx.stroke(); ctx.restore();
     lines.forEach(function (l, i) { text(l[0], x0 + w / 2, top + fs * 0.45 + lh * (i + 0.5), fs, l[1] === 0 ? '#ffe066' : '#fff'); });
-    if (im) { ctx.save(); ctx.globalAlpha = ap; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 14; ctx.drawImage(im, 2 + slide, top + h + S * 0.15 - sh, swd, sh); ctx.restore(); }
     return h; }
   function drawTut(t) {
     var T = G && G.tut; if (!T || T.i < 0) return; var st = TUT[T.i], rt = performance.now(), holes = [], lanes = [];
