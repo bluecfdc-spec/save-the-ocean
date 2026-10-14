@@ -281,6 +281,7 @@
   function pcSize(pc) { var w = 0, h = 0; pc.cells.forEach(function (c) { w = Math.max(w, c[0] + 1); h = Math.max(h, c[1] + 1); }); return { w: w, h: h }; }
   function dropRaw(p) { var z = pcSize(G.tray[G.drag.i]); var cx = p.x - z.w * S / 2, cy = p.y - S * 1.7 - z.h * S / 2; return { fx: (cx - OX) / S, fy: (cy - BY) / S }; }
   function dropCell(p) {                                    // 손가락 위치에서 가장 가까운 '놓을 수 있는' 자리로 살짝 맞춰 줌
+    if (G.tut) { var tst = TUT[G.tut.i]; if (tst && tst.act === 'drag') return { gx: tst.tgt[0], gy: tst.tgt[1], ok: p.y < TY }; }   // 튜토리얼: 판 위 어디에 놓아도 정답 자리로
     var r = dropRaw(p), gx = Math.round(r.fx), gy = Math.round(r.fy), pc = G.tray[G.drag.i];
     if (canPlace(pc, gx, gy)) return { gx: gx, gy: gy, ok: true };
     var c = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(function (d) { return { gx: gx + d[0], gy: gy + d[1], dd: Math.hypot(gx + d[0] - r.fx, gy + d[1] - r.fy) }; })
@@ -310,7 +311,7 @@
   function release(e, cancel) {
     if (!G) return; var p = { x: e.clientX, y: e.clientY };
     if (G.drag) { var d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
-      if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && Math.abs(r0.fx - st.tgt[0]) < 1.6 && Math.abs(r0.fy - st.tgt[1]) < 1.6) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
+      if (G.tut) { var st = TUT[G.tut.i]; if (st.act === 'drag' && p.y < TY) { place(i, st.tgt[0], st.tgt[1]); G.tut.acted = true; } else sfx('bad'); return; }
       if (!G.over && d.ok) place(i, d.gx, d.gy); else if (p.y < TY) sfx('bad'); return; }
     if (G.touch && !G.over) { var g = cancel ? null : tankGoal(p); G.touch = null; if (!g) return;
       if (G.tut) { var st2 = TUT[G.tut.i]; if (!(st2.act === 'tap' || st2.act === 'mark') || g.gx !== st2.tgt[0] || g.gy !== st2.tgt[1] || !g.ok) { sfx('bad'); return; } G.tut.acted = true; }
@@ -613,7 +614,7 @@
     if (T.paused) { if (performance.now() - T.shownAt < 450) return false; T.paused = false; clockResume();
       if (st.act === 'end') { tutFinish(); return false; } tutNext(); return false; }
     if (T.acted || T.pauseAt) return false;
-    if (st.act === 'drag') return trayHit(p) === 1;
+    if (st.act === 'drag') { if (p.y >= TY - S * 0.3) { G.drag = { i: 1, p: p }; G.touch = null; sfx('pick'); } return false; }   // 아래 조각 칸 어디를 눌러도 집힘
     if (st.act === 'tap' || st.act === 'mark') return p.y < TY;
     return false;
   }
