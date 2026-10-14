@@ -1,0 +1,40 @@
+name: 일정표 공개 사본
+
+on:
+  schedule:
+    - cron: "40 20 * * *"   # 매일 한국 시간 새벽 5:40
+  workflow_run:
+    workflows: ["일정표 반영"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plan-export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: firebase-admin 설치
+        run: npm install --no-save firebase-admin@12.7.0
+      - name: 일정표 읽어서 공개 사본 만들기
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+        run: node tools/plan-export.mjs
+      - name: 바뀐 게 있으면 올리기
+        run: |
+          if git diff --quiet -- ops/plan-status.json && git ls-files --error-unmatch ops/plan-status.json >/dev/null 2>&1; then echo "변경 없음"; exit 0; fi
+          git config user.name "plan-bot"
+          git config user.email "plan-bot@users.noreply.github.com"
+          git add ops/plan-status.json
+          git commit -m "일정표 공개 사본 갱신"
+          git pull --rebase -q
+          git push
