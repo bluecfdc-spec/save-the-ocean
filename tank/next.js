@@ -18,6 +18,7 @@
     [[0, 0], [1, 0], [0, 1], [1, 1]], [[0, 0], [0, 1], [1, 1]], [[1, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 0], [0, 1]],
     [[0, 0], [1, 0], [2, 0], [1, 1]], [[0, 0], [0, 1], [0, 2], [1, 2]], [[1, 0], [1, 1], [1, 2], [0, 2]], [[0, 0], [1, 0], [2, 0], [3, 0]], [[0, 0], [0, 1], [0, 2], [0, 3]]
   ];
+  var SHAPES_1MIN = [[[0, 0], [1, 0], [0, 1], [0, 2], [1, 2]], [[0, 0], [1, 0], [1, 1], [1, 2], [2, 2]]];   // 1분부터 추가: ㄷ 모양(5칸), ㄹ 비슷한 모양(5칸)
   var TINT = ['#ffcf4a', '#4fd8ff', '#9be37a', '#ff8a5a', '#c58bff'];
   var ROCK = 'rock';
   var CLK = { off: 0, paused: false, pAt: 0 };                       // 튜토리얼에서 '잠깐 멈춤'을 위한 게임 시계
@@ -54,7 +55,7 @@
   // ---------- 상태 ----------
   var G = null, fac = 'solar', best = 0;
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
-  function newPiece() { var sh = SHAPES[rnd(SHAPES.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
+  function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
     if (Math.random() < itemRate()) pc.item = { i: rnd(sh.length), kind: Math.random() < planeRate() ? 'plane' : 'mark' };   // 아이템 블록: 비행기 / 내 세력 마크
     return pc; }
   function rotCells(cells) {                                  // 왼쪽(반시계)으로 90° 회전: (x, y) → (y, -x) 후 0부터 다시 맞춤. 칸 순서는 그대로라 아이템 칸도 따라감
