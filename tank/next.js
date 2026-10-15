@@ -278,6 +278,7 @@
     pop('아이템!', bx(x) + S / 2, by(y) - S * 0.2, '#9be37a'); }
   function pickup(x, y, t) { var k = x + ',' + y, L = G.loot[k]; if (!L) return; delete G.loot[k];
     var px = bx(x) + S / 2, py = by(y) + S / 2; ring(px, py, S * 0.3, S * 1.8, 'rgba(160,255,140,', 420, 5); burst(px, py, 14, ['#fff', '#9be37a', '#ffe066'], 4, 4, 0.1, 500); sfx('gain');
+    G.score += 200; var sR = G.tank.x < COLS / 2; fnum('+200', px + (sR ? 1 : -1) * S * 1.4, py - S * 0.7, Math.round(S * 0.75), 'gold', '아이템 보너스', 1300, null, (sR ? -1 : 1) * Math.PI / 9);   // 아이템을 먹으면 기본 200점 (먹으러 가게 유도)
     if (L.kind === 'plane') callPlane(t); else useMark(t, L.fac); if (G.tut) tutPicked(L); }
   function callPlane(t) {                                   // 비행기: 적진을 돌며 랜덤으로 최대 3대 폭격
     var pl = { at: t, dur: 3800, left: 3, nextDrop: t + 850 };   // 상공을 도는 동안 그때 있는 적 탱크를 골라 투하 (나중에 나온 탱크도 맞음)
@@ -289,23 +290,16 @@
     var c = (q - 0.85) / 0.15, endA = Math.PI / 2 - Math.PI * 2.2, ex = cx + Math.cos(endA) * rx, ey0 = cy + Math.sin(endA) * ry; return { x: ex + c * W * 0.6, y: ey0 - c * S * 6, h: -0.6 }; }
   function useMark(t, ff) {                                  // 세력 마크: 기술 바로 발동
     var f = ff || G.fac;
-    if (f === 'surge') {                                     // 서지: 적 진영 네 줄 모두에 벼락 → 적 탱크 전멸
+    if (f === 'surge') {                                     // 서지: 적이 쏜 블록 전부 사라짐
+      var n = 0; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x] === ROCK) { G.board[y][x] = 0; n++; var d = y; G.fx.push({ k: 'cell', x: x, y: y, at: t + d * 45, tint: ROCK }); (function (x, y, d) { setTimeout(function () { if (G) burst(bx(x) + S / 2, by(y) + S / 2, 8, ['#bff4ff', '#4fd8ff', '#ffffff'], 4, 4, 0.15, 600); }, d * 45); })(x, y, d); }
+      G.fx.push({ k: 'wave', at: t }); if (!G.tut) G.fx.push({ k: 'bigtext', t: '서지 해일!', sub: '적 블록 ' + n + '개 쓸어버림', at: t }); G.score += n * 30;
+    } else if (f === 'gale') {                               // 게일: 적 진영 네 줄 모두에 보라 벼락 → 적 탱크 전멸 (v179, 홍균님)
       var allE = G.en.slice().sort(function (a, b) { return b.r - a.r || a.x - b.x; });
-      for (var lr = 0; lr < EROWS; lr++) { G.fx.push({ k: 'hbolt', y: ey(lr) + ER / 2, at: t + 40 + lr * 80, cy: true }); G.fx.push({ k: 'hbolt', y: ey(lr) + ER / 2, at: t + 330 + lr * 60, cy: true }); }
-      G.fx.push({ k: 'flashAll', at: t + 80, col: '120,220,255', a: 0.4 });
+      for (var lr = 0; lr < EROWS; lr++) { G.fx.push({ k: 'hbolt', y: ey(lr) + ER / 2, at: t + 40 + lr * 80 }); G.fx.push({ k: 'hbolt', y: ey(lr) + ER / 2, at: t + 330 + lr * 60 }); }
+      G.fx.push({ k: 'flashAll', at: t + 80, col: '210,170,255', a: 0.4 });
       allE.forEach(function (e, i) { G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 3000 }; G.dying.push(dd); G.kills++;
         setTimeout(function () { if (!G) return; var py = enemyY(e); dd.until = 0; explode(e.x, py, e.ang, 300, null, false, i > 0); G.score += 300; }, 200 + i * 45); });
-      if (!G.tut) G.fx.push({ k: 'bigtext', t: '서지 해일!', sub: allE.length ? '적 탱크 ' + allE.length + '대 전멸' : '적이 없다', at: t });
-    } else if (f === 'gale') {                               // 게일: 십자 낙뢰 — 맨 앞 가로줄 전체 + 마크를 먹은 탱크의 세로줄 전체 (벼락이 가로·세로로 번쩍)
-      var lineR2 = EROWS - 1, cx0 = G.tank.x, hit2 = G.en.filter(function (e) { return e.r >= lineR2 - 0.5 || e.x === cx0; });
-      var hy0 = ey(lineR2) + ER / 2, vx0 = bx(cx0) + S / 2;
-      G.fx.push({ k: 'vbolt', x: vx0, y0: by(G.tank.y), at: t + 40 }); G.fx.push({ k: 'hbolt', y: hy0, at: t + 120 });
-      G.fx.push({ k: 'vbolt', x: vx0, y0: by(G.tank.y), at: t + 280 }); G.fx.push({ k: 'hbolt', y: hy0, at: t + 330 });
-      G.fx.push({ k: 'flashAll', at: t + 120, col: '210,170,255', a: 0.35 });
-      hit2.sort(function (a, b) { return (Math.abs(a.x - cx0) + Math.abs(a.r - lineR2)) - (Math.abs(b.x - cx0) + Math.abs(b.r - lineR2)); }).forEach(function (e, i) {   // 십자 가운데부터 바깥으로 차례로 터짐
-        G.en.splice(G.en.indexOf(e), 1); var dd = { e: e, until: t + 2500 }; G.dying.push(dd); G.kills++;
-        setTimeout(function () { if (!G) return; var py = enemyY(e); dd.until = 0; explode(e.x, py, e.ang, 300); G.score += 300; }, 200 + i * 60); });
-      if (!G.tut) G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: hit2.length ? '십자 낙뢰 ' + hit2.length + '대 괴멸' : '적이 없다', at: t });
+      if (!G.tut) G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: allE.length ? '적 탱크 ' + allE.length + '대 전멸' : '적이 없다', at: t });
     } else {                                                 // 솔라: 적 전장에 빛이 내려 적 탱크 5초 무력화 (움직임·발사 멈춤, 날아오던 돌덩이도 사라짐)
       G.frozenUntil = t + SOLAR_MS; G.frozenAt = t;
       G.en.forEach(function (e) { if (isFinite(e.reloadAt)) e.reloadAt += SOLAR_MS; e.fireAt = 0; e.target = null; e.aimAng = Math.PI; });
@@ -768,8 +762,8 @@
     { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, holdFire: true, text: '테트리스 줄을 제거할 때마다\n탱크 게이지가 오른다\n게이지가 가득 찼다\n3연발을 발사하자', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
       after: '줄을 지울 때마다 기가 1칸 모인다\n4칸이 차면 다음 발사는\n미사일 3발이 나간다!' },
     { act: 'volley', after: '적 탱크가 블록을 쏘아 올린다\n테트리스 줄과 같이\n파괴할 수 있다' },
-    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n네 줄 모두 벼락이 내리쳐\n적 진영의 탱크를\n모두 쓸어버린다' },
-    { act: 'mark', fac: 'gale', tgt: [2, 8], text: '다음 마크도 손에 넣어라!', after: '게일 낙뢰!\n십자 모양 벼락이 내리친다\n맨 앞줄 적 탱크와\n내 탱크 세로줄 적 탱크를\n모두 괴멸시킨다' },
+    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n적의 블록을 모두\n쓸어버릴 수 있다' },
+    { act: 'mark', fac: 'gale', tgt: [2, 8], text: '다음 마크도 손에 넣어라!', after: '게일 낙뢰!\n네 줄 모두 벼락이 내리쳐\n적 진영의 탱크를\n모두 쓸어버린다' },
     { act: 'mark', fac: 'solar', tgt: [6, 8], text: '마지막 마크다!', after: '솔라 플레어!\n하늘에서 빛이 쏟아진다\n적 탱크를 5초 동안\n움직이지도 쏘지도\n못하게 만든다' },
     { act: 'note', after: '실전에서는\n선택한 세력의 마크만\n획득 가능하다' },
     { act: 'end', after: '훈련 끝!\n협력자의 실력을 기대한다' }
@@ -796,7 +790,7 @@
     if (st.fill != null) { var ft = now(); for (var fx = 0; fx < COLS; fx++) if (!(fx >= st.tgt[0] && fx < st.tgt[0] + 2) && !G.board[st.fill][fx] && !tankAt(fx, st.fill)) { G.board[st.fill][fx] = '#fff0'; G.fx.push({ k: 'land', x: fx, y: st.fill, at: ft + fx * 40 }); } }
     if (st.charge != null) { G.charge = st.charge; G.chargeAt = now(); }
     if (st.act === 'mark') G.loot[st.tgt[0] + ',' + st.tgt[1]] = { kind: 'mark', fac: st.fac, at: now() };
-    if (st.fac === 'gale') { for (var gc = 0; gc < COLS; gc++) if (!G.en.some(function (e) { return e.x === gc && e.r >= EROWS - 1.5; })) G.en.push({ x: gc, r: EROWS - 1, hp: 1, parked: true, queued: false, ang: Math.PI, aimAng: Math.PI, reloadAt: Infinity, recoil: 0 }); G.en.push({ x: 2, r: EROWS - 2, hp: 1, parked: false, queued: true, ang: Math.PI, aimAng: Math.PI, reloadAt: Infinity, recoil: 0 }); }   // 게일: 서지가 다 쓸어버렸으니 맨 앞줄 + 2번 세로줄에 다시 세움
+    if (st.fac === 'gale') { for (var gc = 0; gc < COLS; gc++) if (!G.en.some(function (e) { return e.x === gc && e.r >= EROWS - 1.5; })) G.en.push({ x: gc, r: EROWS - 1, hp: 1, parked: true, queued: false, ang: Math.PI, aimAng: Math.PI, reloadAt: Infinity, recoil: 0 }); for (var gr = 0; gr < EROWS - 1; gr++) [1, 4, 7].forEach(function (gc2) { if (!G.en.some(function (e) { return e.x === gc2 && Math.abs(e.r - gr) < 0.5; })) G.en.push({ x: gc2, r: gr, hp: 1, parked: false, queued: true, ang: Math.PI, aimAng: Math.PI, reloadAt: Infinity, recoil: 0 }); }); }   // 게일: 네 줄 벼락이 보이게 맨 앞줄 + 뒷줄에도 적을 세움
     if (st.fac === 'solar') [1, 3, 5, 7].forEach(function (c) { if (!G.en.some(function (e) { return e.x === c && e.r >= EROWS - 1.5; })) G.en.push({ x: c, r: EROWS - 1, hp: 1, parked: true, queued: false, ang: Math.PI, aimAng: Math.PI, reloadAt: Infinity, recoil: 0 }); });   // 솔라: 멈춰 세울 적 탱크를 다시 세움
     if (st.act === 'volley') {                                                                      // 남은 적 탱크 일제 사격 → 돌덩이
       var cells = []; for (var y = 1; y <= 4; y++) for (var x = 0; x < COLS; x++) cells.push([x, y]); cells.sort(function () { return Math.random() - 0.5; });
