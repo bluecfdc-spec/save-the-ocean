@@ -303,7 +303,7 @@
   }
   function canTankMove() { var t = G.tank; return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { var x = t.x + d[0], y = t.y + d[1]; return x >= 0 && x < COLS && y >= 0 && y < ROWS && !G.board[y][x]; }); }
   function over() {
-    G.over = true; sfx('bad');
+    G.over = true; G.endSec = gsec(); sfx('bad');
     var nb = G.score > best; if (nb) { best = G.score; try { localStorage.setItem('tank_easy_best', best); } catch (e) { } }
     banner('놓을 곳이 없다!', '#ff6a5a');
     // 마지막 연출: 전장의 적 탱크가 일제히 나를 조준·발사 → 내 탱크 폭파 (적이 없으면 서너 대가 한꺼번에 몰려옴)
@@ -708,9 +708,15 @@
       ctx.save(); ctx.translate(pp.x, pp.y); ctx.rotate(pp.h + Math.PI / 2); var bank = Math.cos(q * Math.PI * 4) * 0.25; ctx.scale(1 - Math.abs(bank), 1); var pw = S * 1.9 * sc, ph = pw * im.height / im.width; ctx.drawImage(im, -pw / 2, -ph / 2, pw, ph); ctx.restore(); });
     // HUD
     ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(-12, -12, W + 24, HUD + 12);
-    text('최고 ' + Math.max(best, G.score).toLocaleString(), 12, HUD / 2, 20, '#ffd451', 'left');
-    text(G.score.toLocaleString(), W / 2, HUD / 2, 30, '#fff');
-    text('격파 ' + G.kills, W - 12, HUD / 2, 20, '#ff9a8a', 'right');
+    var hfs = Math.max(12, Math.min(20, Math.floor(W / 20))), sfs = Math.max(20, Math.min(30, Math.floor(W / 13)));   // 작은 폰에서도 글씨가 겹치거나 삐져나가지 않게
+    function tw(str, fs) { ctx.font = fs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; return ctx.measureText(str).width; }
+    function fitFs(str, fs, mw) { var w0 = tw(str, fs); return w0 > mw ? Math.max(9, Math.floor(fs * mw / w0)) : fs; }
+    var scS = G.score.toLocaleString(), bsS = '최고 ' + Math.max(best, G.score).toLocaleString(), kS = '격파 ' + G.kills;
+    sfs = fitFs(scS, sfs, W * 0.42); var side = W / 2 - tw(scS, sfs) / 2 - 18;            // 가운데 점수와 양옆 글씨가 안 겹치게 줄임
+    text(bsS, 10, HUD / 2, fitFs(bsS, hfs, side), '#ffd451', 'left');
+    text(scS, W / 2, HUD / 2, sfs, '#fff');
+    text(kS, W - 10, HUD * 0.3, fitFs(kS, hfs, side), '#ff9a8a', 'right');               // 격파: 조금 위로
+    text(String(Math.floor(G.over && G.endSec != null ? G.endSec : gsec())), W - 10, HUD * 0.72, Math.round(hfs * 0.85), '#cfe3ff', 'right');   // 그 아래 플레이 시간(초, 숫자만)
     if (boosted) { var bl = (G.boostUntil - t) / BOOST; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(OX, HUD + 2, S * COLS, 6); ctx.fillStyle = '#ffd451'; ctx.fillRect(OX, HUD + 2, S * COLS * bl, 6); }
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.45)'; ctx.lineWidth = 1.5; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
