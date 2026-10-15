@@ -637,21 +637,22 @@
   }
   // =================== 튜토리얼 ===================
   // 실제 게임판에서 상황을 만들어 두고, 해야 할 곳만 밝게 + 손가락이 움직이며 안내 → 플레이어가 직접 함 → 결과 순간에 잠깐 멈추고 설명
-  var TUT = [
-    { act: 'drag', piece: [[0, 0], [0, 1]], rot: true, tgt: [6, 8], text: '제군들, 들어라!\n블록을 톡 눌러 돌려라!', text2: '좋다! 이제 끌어다\n가로줄을 채워라!', kills: 1, focus: [[4, 'col']],
-      after: '줄을 지우면 탱크가\n앞으로 곧장 미사일을 쏜다!\n블록은 미사일을 막지 않는다' },
-    { act: 'tap', tgt: [2, 8], text: '칸을 누르면 탱크가 그곳으로 간다\n아이템을 손에 넣어라!', kills: 3, after: '공습이다!\n비행기가 적 탱크 3대를 폭격한다' },
-    { act: 'tap', tgt: [7, 7], lure: true, text: '한 칸 남은 줄이다!\n탱크로 직접 메워라!', kills: 3, focus: [[7, 'col']],
-      after: '탱크로 줄을 메우면 관통 드릴탄!\n줄 선 적까지 한 번에 뚫을 수 있다\n잠시 속도도 1.5배다' },
-    { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '이번엔 두 줄을\n한 번에 지워라!', clear: true,
-      after: '두 줄을 한 번에 지우면 보너스 +500!\n세 줄은 +1000, 네 줄은 +1500이다' },
-    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, text: '탱크 아래 기 게이지가 가득 찼다!\n줄을 지워 3연발을 쏴라!', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
+  var TUT = [                                                   // 대사: 홍균님 대본(2026-10-15) 1~20번
+    { act: 'drag', piece: [[0, 0], [0, 1]], rot: true, tgt: [6, 8], text: '협력자여, 들어라!\n블록을 누르면\n회전시킬 수 있다', text2: '좋다!\nDrag & Drop으로\n한 줄을 지워 보자', kills: 1, focus: [[4, 'col']],
+      after: '줄을 지우면 탱크가\n적 진영으로 미사일을 쏜다\n미사일은 블록을 넘어서\n발사된다' },
+    { act: 'tap', tgt: [2, 8], text: '탱크는 이동이 가능하다\n원하는 곳을 터치하면 이동한다\n폭격 아이템을 손에 넣자', kills: 3, after: '공습 폭격 지원이다!\n전투기가 적 탱크 3대를 격파한다' },
+    { act: 'tap', tgt: [7, 7], lure: true, text: '테트리스 빈 공간을\n탱크가 채울 수 있다\n이동해서 탱크로 직접 메우자!', kills: 3, focus: [[7, 'col']],
+      after: '탱크로 테트리스 줄을 지우면\n드릴탄이 발사된다\n적진의 탱크 한 줄을\n모두 격파한다\n추가로 이동 속도가\n잠시 빨라진다' },
+    { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '블록을 이동해\n두 줄을 한 번에 지워 보자', clear: true,
+      after: '두 줄을 한 번에 지우면\n보너스 점수를 획득한다' },
+    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, text: '테트리스 줄을 제거할 때마다\n탱크 게이지가 오른다\n게이지가 가득 찼다\n3연발을 발사하자', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
       after: '줄을 지울 때마다 기가 1칸 모인다\n4칸이 차면 다음 발사는\n미사일 3발이 나간다!' },
-    { act: 'volley', after: '적은 돌덩이 블록을 쏘아 온다!\n줄을 지워 치워 버려라' },
-    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n적의 돌덩이를 모두 쓸어버릴 수 있다' },
+    { act: 'volley', after: '적 탱크가 블록을 쏘아 올린다\n테트리스 줄과 같이\n파괴할 수 있다' },
+    { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n적의 블록을 모두\n쓸어버릴 수 있다' },
     { act: 'mark', fac: 'gale', tgt: [2, 8], text: '다음 마크도 손에 넣어라!', after: '게일 낙뢰!\n맨 앞줄 적 탱크를 모두 괴멸시킨다' },
-    { act: 'mark', fac: 'solar', tgt: [6, 8], text: '마지막 마크다!', after: '솔라 플레어!\n판의 블록을 모두 정리할 수 있다\n실전에선 제군의 세력 마크만 나온다' },
-    { act: 'end', after: '훈련 끝!\n제군들, 출격하라!' }
+    { act: 'mark', fac: 'solar', tgt: [6, 8], text: '마지막 마크다!', after: '솔라 플레어!\n적이 쏘아 올린 블록을 제외한\n판의 모든 블록을\n정리할 수 있다' },
+    { act: 'note', after: '실전에서는\n선택한 세력의 마크만\n획득 가능하다' },
+    { act: 'end', after: '훈련 끝!\n협력자의 실력을 기대한다' }
   ];
   var TUTC = null;
   function startTut() { freshScreen();
@@ -680,7 +681,7 @@
       var t = now(); G.en.filter(function (e) { return e.parked; }).forEach(function (e, i) { var c = cells[i], sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2;
         e.aimAng = Math.atan2(bx(c[0]) + S / 2 - sx, -(by(c[1]) + S / 2 - sy)); e.target = c; e.fireAt = t + 500 + i * 160; });
       T.volley = true; }
-    if (st.act === 'end') { tutPause(); }
+    if (st.act === 'end' || st.act === 'note') { tutPause(); }   // 설명만 하는 단계: 바로 멈추고 대사
   }
   function tutKill() { var T = G.tut, st = TUT[T.i]; T.kills++; if (st.kills && T.kills >= st.kills && !T.pauseAt) T.pauseAt = now() + 170; }
   function tutClear() { var T = G.tut, st = TUT[T.i]; if (st && st.clear && !T.pauseAt) T.pauseAt = now() + 1500; }   // 보너스 연출을 다 본 뒤 멈춤
@@ -750,7 +751,7 @@
     function cellR(x, y, pad) { pad = pad || 4; return [bx(x) - pad, by(y) - pad, S + pad * 2, S + pad * 2]; }
     var tp = (G.tray[1] && G.tray[1].cells) || st.piece, needRot = st.act === 'drag' && st.rot && !T.rotated;
     if (T.paused) {
-      if (st.act === 'end') holes = [];
+      if (st.act === 'end' || st.act === 'note') holes = [];
     } else if (!T.acted && !T.pauseAt) {
       if (st.act === 'drag') { var sr = slotRect(1); holes.push([sr.x, sr.y - 4, sr.w, sr.h + 8]);
         if (!needRot) { tp.forEach(function (c) { holes.push(cellR(st.tgt[0] + c[0], st.tgt[1] + c[1])); });
@@ -775,7 +776,7 @@
       ctx.save(); ctx.strokeStyle = '#ffe066'; ctx.lineWidth = Math.max(3, S * 0.09); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.shadowColor = '#ff9a1f'; ctx.shadowBlur = 10;
       for (var yy = ay0 - off; yy > ay1 + S * 0.3; yy -= sp) { ctx.globalAlpha = Math.min(1, (ay0 - yy) / S) * Math.min(1, (yy - ay1) / S); ctx.beginPath(); ctx.moveTo(ax - S * 0.28, yy + S * 0.2); ctx.lineTo(ax, yy - S * 0.08); ctx.lineTo(ax + S * 0.28, yy + S * 0.2); ctx.stroke(); }
       ctx.globalAlpha = 1; ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.moveTo(ax, ay1 - S * 0.1); ctx.lineTo(ax - S * 0.36, ay1 + S * 0.45); ctx.lineTo(ax + S * 0.36, ay1 + S * 0.45); ctx.closePath(); ctx.fill(); ctx.restore(); });
-    if (T.paused) { var cy = st.act === 'end' ? H * 0.42 : BY + S * 2.6; var chh = caption(st.after, cy, true, T.shownAt); var ky = Math.min(TY - S * 0.7, cy + chh / 2 + S * 0.95), kp = 0.5 + 0.5 * Math.sin(rt / 180), kw = Math.min(W - 24, S * 6.4), kh = S * 1.15;   // 크게 강조한 '화면을 눌러 계속'
+    if (T.paused) { var cy = (st.act === 'end' || st.act === 'note') ? H * 0.42 : BY + S * 2.6; var chh = caption(st.after, cy, true, T.shownAt); var ky = Math.min(TY - S * 0.7, cy + chh / 2 + S * 0.95), kp = 0.5 + 0.5 * Math.sin(rt / 180), kw = Math.min(W - 24, S * 6.4), kh = S * 1.15;   // 크게 강조한 '화면을 눌러 계속'
       ctx.save(); ctx.translate(W / 2, ky); ctx.scale(1 + 0.04 * kp, 1 + 0.04 * kp); ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 18 + 10 * kp; ctx.fillStyle = 'rgba(20,16,6,.92)'; ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-kw / 2, -kh / 2, kw, kh, kh / 2) : ctx.rect(-kw / 2, -kh / 2, kw, kh); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
       text('👆 화면을 눌러 계속 ▶', 0, 0, Math.round(S * 0.62), '#ffe066'); ctx.restore(); return; }
