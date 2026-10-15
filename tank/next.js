@@ -115,12 +115,18 @@
     G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / ROW_MS); });
     if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
   }
-  // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초 고정·발사 13초 / 1분~ 발사 8초 고정 / 2분~ 두 번째 줄도 발사(18초 고정)
-  var ROW2_AT = 120, ROW2_RELOAD = 18000;
+  // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초·발사 13초 / 1분~ 발사 8초
+  //   2분~ 두 번째 줄, 3분~ 세 번째 줄, 4분~ 마지막(네 번째) 줄도 발사 (뒷줄 리로드 18초, 내 탱크 쪽으로)
+  //   4분부터 끝없이 강해짐: 간격 = 기준값 ÷ (1 + 0.1 × (분 − 4)), 하한 없음 (6분 ÷1.2, 10분 ÷1.6, 14분 ÷2)
+  var ROW2_RELOAD = 18000, BACK_AT = [120, 180, 240];
   function gsec() { return G && G.t0 != null ? (now() - G.t0) / 1000 : 0; }   // 이번 판 경과 초
-  function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400) * rr(0.85, 1.15); }   // ±15% 무작위
-  function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : 8000; }
-  function row2(e) { return !G.tut && !e.parked && e.queued && e.r >= EROWS - 2 - 0.001 && gsec() >= ROW2_AT; }   // 2분부터: 맨 앞 탱크 바로 뒤에 선 두 번째 줄 탱크도 쏨
+  function hard(sec) { return sec > 240 ? 1 / (1 + 0.1 * (sec - 240) / 60) : 1; }   // 4분 이후 간격 배율
+  function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400 * hard(sec)) * rr(0.85, 1.15); }   // ±15% 무작위
+  function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : 8000 * hard(sec); }
+  function backReload() { return ROW2_RELOAD * hard(gsec()); }
+  function backRows() { var sec = gsec(), n = 0; BACK_AT.forEach(function (a) { if (sec >= a) n++; }); return n; }   // 지금 쏘는 뒷줄 수 (0~3)
+  function row2(e) { if (G.tut || e.parked || !e.queued || e.r < -0.001 || Math.abs(e.r - Math.round(e.r)) > 0.001) return false;   // 앞 탱크 뒤에 줄 서서 멈춘 뒷줄 탱크
+    var k = Math.round(EROWS - 1 - e.r); return k >= 1 && k <= backRows(); }
   function gunner(e) { return e.parked || row2(e); }
   function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
@@ -132,7 +138,7 @@
   function safeCells(skip) { return emptyCells().filter(function (c) { return !wouldClear(c[0], c[1], skip); }); }   // 적이 쏴도 되는 빈칸
   function enemyFire(e, t) {                                // 정차한 적 탱크가 한 칸짜리 블록을 쏨
     var cells = safeCells();
-    if (!e.parked) { var tk = G.tank, near = cells.filter(function (c) { return Math.abs(c[0] - tk.x) + Math.abs(c[1] - tk.y) === 1; }); if (near.length) cells = near; }   // 두 번째 줄: 내 탱크 바로 옆 빈칸을 노려 가둠 (옆이 다 막혔으면 아무 데나)
+    if (!e.parked && cells.length) { var tk = G.tank, dmin = 1e9; cells.forEach(function (c) { dmin = Math.min(dmin, Math.abs(c[0] - tk.x) + Math.abs(c[1] - tk.y)); }); cells = cells.filter(function (c) { return Math.abs(c[0] - tk.x) + Math.abs(c[1] - tk.y) === dmin; }); }   // 뒷줄(2~4번째): 내 탱크에 가장 가까운 빈칸을 노림 (옆이 막혀도 그다음 가까운 칸)
     if (!cells.length) { e.hold = true; e.reloadAt = t + 500; return; }   // 쏠 곳이 없으면 장전한 채 대기
     e.hold = false;
     var c = cells[rnd(cells.length)], sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2;
@@ -143,7 +149,7 @@
     var c = e.target, sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, mx = sx + Math.sin(e.ang) * S * 0.5, my = sy - Math.cos(e.ang) * S * 0.5;
     var tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2, dist = Math.hypot(tx - mx, ty - my);
     G.shells.push({ tx: c[0], ty: c[1], x0: mx, y0: my, x1: tx, y1: ty, at: t, dur: 420 + dist * 0.9, arc: S * 1.2 + dist * 0.25, last: [] });
-    e.recoil = 1; e.rl = e.parked ? reloadMs() : ROW2_RELOAD; e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
+    e.recoil = 1; e.rl = e.parked ? reloadMs() : backReload(); e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
     G.fx.push({ k: 'muzzle', x: mx, y: my, ang: e.ang, at: t });
     burst(mx, my, 10, ['#fff3c0', '#ffb13d', '#ff6a2a'], 4, 4, 0.05, 350);
     shake(4); sfx('launch');
@@ -433,7 +439,7 @@
       if (driving(e) && e.r > -0.5 && Math.random() < dt / 70) { var dy0 = enemyY(e, t) - ER * 0.45, side = Math.random() < 0.5 ? -1 : 1;
         G.parts.push({ x: bx(e.x) + S / 2 + side * S * 0.3 + rr(-2, 2), y: dy0, vx: side * rr(0.1, 0.5), vy: rr(-0.6, -0.1), g: 0, s: rr(3, 6), c: 'rgba(170,150,120,.55)', at: t, life: 600, smoke: true }); }
       if (t < (G.frozenUntil || 0)) return;                   // 솔라 무력화 중: 발사도 멈춤
-      var r2 = row2(e); if (r2 && !e.g2) { e.g2 = true; e.fireAt = 0; e.rl = ROW2_RELOAD; e.reloadAt = t + 1200 + Math.random() * 3000; } else if (!r2 && e.g2) { e.g2 = false; if (!e.parked) { e.fireAt = 0; e.reloadAt = Infinity; } }
+      var r2 = row2(e); if (r2 && !e.g2) { e.g2 = true; e.fireAt = 0; e.rl = backReload(); e.reloadAt = t + 1200 + Math.random() * 3000; } else if (!r2 && e.g2) { e.g2 = false; if (!e.parked) { e.fireAt = 0; e.reloadAt = Infinity; } }
       if (G.over || !gunner(e)) return;
       if (e.fireAt && t >= e.fireAt) { enemyShoot(e, t); return; }
       if (!e.fireAt && t >= e.reloadAt) enemyFire(e, t);
