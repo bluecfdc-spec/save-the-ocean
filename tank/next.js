@@ -117,7 +117,7 @@
       if (e.r >= EROWS - 1) { e.r = EROWS - 1; e.parked = true; e.reloadAt = t + 450; }   // 끝줄 도착 → 정차, 곧 첫 발사
     });
     G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / rowMs()); });
-    if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
+    if (t >= G.spawnAt) { var sc0 = gsec(), cnt = sc0 < 20 ? 1 : sc0 < 120 ? 2 : 2 + rnd(2); for (var si = 0; si < cnt; si++) spawn(-1); G.spawnAt = t + spawnGap(t); }     // 새 탱크: 0~20초 1대, 20초~ 2대, 2분~ 2~3대를 서로 다른 빈 세로줄에서 한꺼번에 (빈 줄이 모자라면 되는 만큼)
   }
   // 적 이동 (2026-10-15): 0~20초 한 칸 3.2초 / 20초~4분 점점 빨라져 4분에 입구→맨 앞줄 1초(한 칸 0.25초)
   // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초·발사 13초 / 1분~ 발사 8초
