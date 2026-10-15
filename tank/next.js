@@ -194,7 +194,7 @@
       G.banner = null; if (!G.tut) G.fx.push({ k: 'bigtext', t: 'TANK STRIKE!', sub: '관통 드릴탄 + 속도 ×1.5', at: t });
       sfx('ultReady');
     }
-    fire(n, gold); shake(5 + n * 3); return true;
+    if (!(G.tut && tutHoldFire(n, gold))) fire(n, gold); shake(5 + n * 3); return true;
   }
   function fire(n, pierce) {                                // 내 탱크 세로줄로 미사일 (내 탱크로 채워 깨면 가운데 줄은 관통 드릴탄)
     var t = now(), triple = G.charge >= CHARGE_MAX;           // 기 게이지: 줄 1개 = 1칸. 4칸이 찬 뒤 다음 발사는 3발(양옆 세로줄까지)
@@ -640,14 +640,14 @@
   // =================== 튜토리얼 ===================
   // 실제 게임판에서 상황을 만들어 두고, 해야 할 곳만 밝게 + 손가락이 움직이며 안내 → 플레이어가 직접 함 → 결과 순간에 잠깐 멈추고 설명
   var TUT = [                                                   // 대사: 홍균님 대본(2026-10-15) 1~20번
-    { act: 'drag', piece: [[0, 0], [0, 1]], rot: true, tgt: [6, 8], text: '협력자여, 들어라!\n블록을 누르면\n회전시킬 수 있다', text2: '좋다!\nDrag & Drop으로\n한 줄을 지워 보자', kills: 1, focus: [[4, 'col']],
+    { act: 'drag', piece: [[0, 0], [0, 1]], rot: true, holdFire: true, tgt: [6, 8], text: '협력자여, 들어라!\n블록을 누르면\n회전시킬 수 있다', text2: '좋다!\nDrag & Drop으로\n한 줄을 지워 보자', kills: 1, focus: [[4, 'col']],
       after: '줄을 지우면 탱크가\n적 진영으로 미사일을 쏜다\n미사일은 블록을 넘어서\n발사된다' },
     { act: 'tap', tgt: [2, 8], text: '탱크는 이동이 가능하다\n원하는 곳을 터치하면 이동한다\n폭격 아이템을 손에 넣자', kills: 3, after: '공습 폭격 지원이다!\n전투기가 적 탱크 3대를 격파한다' },
     { act: 'tap', tgt: [7, 7], lure: true, text: '테트리스 빈 공간을\n탱크가 채울 수 있다\n이동해서 탱크로 직접 메우자!', kills: 3, focus: [[7, 'col']],
       after: '탱크로 테트리스 줄을 지우면\n드릴탄이 발사된다\n적진의 탱크 한 줄을\n모두 격파한다\n추가로 이동 속도가\n잠시 빨라진다' },
     { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '블록을 이동해\n두 줄을 한 번에 지워 보자', clear: true,
       after: '두 줄을 한 번에 지우면\n보너스 점수를 획득한다' },
-    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, text: '테트리스 줄을 제거할 때마다\n탱크 게이지가 오른다\n게이지가 가득 찼다\n3연발을 발사하자', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
+    { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, holdFire: true, text: '테트리스 줄을 제거할 때마다\n탱크 게이지가 오른다\n게이지가 가득 찼다\n3연발을 발사하자', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
       after: '줄을 지울 때마다 기가 1칸 모인다\n4칸이 차면 다음 발사는\n미사일 3발이 나간다!' },
     { act: 'volley', after: '적 탱크가 블록을 쏘아 올린다\n테트리스 줄과 같이\n파괴할 수 있다' },
     { act: 'mark', fac: 'surge', tgt: [4, 8], text: '세력 마크를 손에 넣어라!\n얻는 즉시 기술이 발동한다', after: '서지 해일!\n적의 블록을 모두\n쓸어버릴 수 있다' },
@@ -673,7 +673,7 @@
     tutNext();
   }
   function tutNext() {
-    var T = G.tut; T.i++; T.kills = 0; T.acted = false; T.pauseAt = 0; var st = TUT[T.i]; T.lure = !!st.lure; T.shownAt = performance.now();
+    var T = G.tut; T.i++; T.kills = 0; T.acted = false; T.pauseAt = 0; T.held = null; T.firedHeld = false; T.nextAt = 0; var st = TUT[T.i]; T.lure = !!st.lure; T.shownAt = performance.now();
     T.rotated = false; if (st.piece) G.tray = [null, { cells: st.piece, tint: '#fff0' }, null];
     if (st.fill != null) { var ft = now(); for (var fx = 0; fx < COLS; fx++) if (!(fx >= st.tgt[0] && fx < st.tgt[0] + 2) && !G.board[st.fill][fx] && !tankAt(fx, st.fill)) { G.board[st.fill][fx] = '#fff0'; G.fx.push({ k: 'land', x: fx, y: st.fill, at: ft + fx * 40 }); } }
     if (st.charge != null) { G.charge = st.charge; G.chargeAt = now(); }
@@ -685,17 +685,20 @@
       T.volley = true; }
     if (st.act === 'end' || st.act === 'note') { tutPause(); }   // 설명만 하는 단계: 바로 멈추고 대사
   }
-  function tutKill() { var T = G.tut, st = TUT[T.i]; T.kills++; if (st.kills && T.kills >= st.kills && !T.pauseAt) T.pauseAt = now() + 170; }
+  function tutKill() { var T = G.tut, st = TUT[T.i]; T.kills++; if (st.kills && T.kills >= st.kills && !T.pauseAt && !T.nextAt) { if (st.holdFire) T.nextAt = now() + 1000; else T.pauseAt = now() + 170; } }   // 먼저 설명한 발사 단계: 격파 뒤엔 멈추지 않고 다음으로
+  function tutHoldFire(n, gold) { var T = G.tut, st = TUT[T.i]; if (!st.holdFire || T.held) return false; T.held = { n: n, gold: gold }; T.pauseAt = now() + 450; return true; }   // 줄을 지우면 발사 전에 멈추고 설명 → 누르면 발사
   function tutClear() { var T = G.tut, st = TUT[T.i]; if (st && st.clear && !T.pauseAt) T.pauseAt = now() + 1500; }   // 보너스 연출을 다 본 뒤 멈춤
   function tutTapPiece(i) { var T = G.tut, st = TUT[T.i]; if (st.act === 'drag' && st.rot && !T.rotated && !T.acted && !T.pauseAt) { rotatePiece(i); T.rotated = true; T.shownAt = performance.now(); } }
   function tutPicked(L) { var T = G.tut, st = TUT[T.i]; if (st.act === 'mark') T.pauseAt = now() + 1300; }
   function tutPause() { G.tut.paused = true; G.tut.shownAt = performance.now(); clockPause(); sfx('ding'); }
   function tutUpdate(t) { var T = G.tut, st = TUT[T.i]; if (T.paused) return;
     if (T.pauseAt && t >= T.pauseAt) { T.pauseAt = 0; tutPause(); return; }
+    if (T.nextAt && t >= T.nextAt) { T.nextAt = 0; tutNext(); return; }
     if (st.act === 'volley' && T.volley && !T.pauseAt && !G.shells.length && !G.en.some(function (e) { return e.fireAt; }) && t > 0) { T.volley = false; T.pauseAt = t + 500; } }
   function tutDown(p) {                                         // true = 이 터치를 게임에 넘김
     var T = G.tut, st = TUT[T.i];
     if (T.paused) { if (performance.now() - T.shownAt < 450) return false; T.paused = false; clockResume();
+      if (T.held && !T.firedHeld) { T.firedHeld = true; fire(T.held.n, T.held.gold); return false; }
       if (st.act === 'end') { tutFinish(); return false; } tutNext(); return false; }
     if (T.acted || T.pauseAt) return false;
     if (st.act === 'drag') { if (p.y >= TY - S * 0.3) { G.drag = { i: 1, p: p, p0: p, at: performance.now(), moved: false }; G.touch = null; } return false; }   // 아래 조각 칸 어디를 눌러도 집힘 (톡 = 회전, 끌기 = 놓기)
