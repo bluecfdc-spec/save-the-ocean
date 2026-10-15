@@ -369,17 +369,23 @@
   function trayHit(p) {                                     // 아래 조각 칸: 칸 사이·가장자리까지 넓게 잡힘
     if (p.y < TY) return -1; var i = Math.max(0, Math.min(2, Math.floor((p.x - OX) / (S * COLS / 3)))); return G.tray[i] ? i : -1;
   }
+  // 터치 먹통 방지: 손가락 하나만 따라감. 손가락을 뗀 신호를 놓쳐 '잡고 있는 중' 상태가 남으면, 다음 터치 때 지우고 새로 시작
+  var PID = null;
+  function dropHold() { if (G) { G.drag = null; G.touch = null; } PID = null; }
   cv.addEventListener('pointerdown', function (e) {
-    if (!G || G.over) return; var p = pt(e);
+    if (!G || G.over) return;
+    var rc0 = cv.getBoundingClientRect(); if (Math.abs(rc0.width - W) > 1 || Math.abs(rc0.height - H) > 1) layout();   // 화면 크기가 몰래 바뀌었으면 터치 전에 바로 맞춤
+    if (G.drag || G.touch) dropHold();                         // 남아 있던 잡기 상태(뗀 신호 놓침·두 번째 손가락)는 버림
+    PID = e.pointerId; var p = pt(e);
     try { cv.setPointerCapture(e.pointerId); } catch (er) { }
     if (G.tut) { if (!tutDown(p)) return; }
     var i = trayHit(p); if (i >= 0) { G.drag = { i: i, p: p, p0: p, at: performance.now(), moved: false }; G.touch = null; return; }   // 아직 '톡'인지 '끌기'인지 모름 → 움직이면 끌기
     G.touch = { p: p, g: tankGoal(p) };
   });
-  cv.addEventListener('pointermove', function (e) { if (!G) return; var p = pt(e);
+  cv.addEventListener('pointermove', function (e) { if (!G || (PID != null && e.pointerId !== PID)) return; var p = pt(e);
     if (G.drag) { G.drag.p = p; if (!G.drag.moved && Math.hypot(p.x - G.drag.p0.x, p.y - G.drag.p0.y) > TAP_MOVE) { G.drag.moved = true; sfx('pick'); } } else if (G.touch) { G.touch.p = p; G.touch.g = tankGoal(p); } });
   function release(e, cancel) {
-    if (!G) return; var p = pt(e);
+    if (!G || (PID != null && e.pointerId !== PID)) return; PID = null; var p = pt(e);
     if (G.drag && !G.drag.moved) { var dg = G.drag; G.drag = null; if (cancel) return;   // 거의 안 움직이고 금방 뗐으면 = 톡 → 회전 (꾹 누르고만 있다 떼면 아무 일 없음)
       if (performance.now() - dg.at < TAP_MS && !G.over) { if (!G.tut) rotatePiece(dg.i); else tutTapPiece(dg.i); } return; }
     if (G.drag) { var r0p = G.drag.p0, d = dropCell(p), r0 = dropRaw(p), i = G.drag.i; G.drag = null; if (cancel) return;
@@ -395,6 +401,9 @@
   }
   cv.addEventListener('pointerup', function (e) { release(e, false); });
   cv.addEventListener('pointercancel', function (e) { release(e, true); });
+  cv.addEventListener('lostpointercapture', function (e) { if (PID != null && e.pointerId === PID) release(e, true); });   // 손가락을 놓쳤으면 잡기 상태 정리
+  document.addEventListener('visibilitychange', function () { if (document.hidden) dropHold(); else setTimeout(layout, 60); });
+  window.addEventListener('blur', dropHold);
 
   // ---------- 진행 ----------
   var lastT = 0;
