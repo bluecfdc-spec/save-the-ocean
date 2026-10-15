@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <script>/* 시험판도 새 버전이 올라오면 저절로 새로 열기 */
-(function () { var BUILD = '174'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
+(function () { var BUILD = '175'; try { fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== BUILD) { var u = new URL(location.href); if (u.searchParams.get('b') === v) return; u.searchParams.set('b', v); location.replace(u.toString()); } }).catch(function () { }); } catch (e) { } })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -118,7 +118,7 @@
 <script>/* 블록을 끌 때 화면이 같이 밀리지 않게 */ document.addEventListener('touchmove', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('touchstart', function (e) { if (e.target && e.target.id === 'c') e.preventDefault(); }, { passive: false }); document.addEventListener('gesturestart', function (e) { e.preventDefault(); });</script>
 <button id="tutExit" class="hidden">✕ 나가기</button>
 <script src="sfx.js?v=42"></script>
-<script src="next.js?v=82"></script>
+<script src="next.js?v=83"></script>
 <script src="rank.js?v=1"></script>
 </body>
 </html>

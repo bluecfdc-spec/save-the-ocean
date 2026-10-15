@@ -57,11 +57,11 @@
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
   function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)]; if (Array.isArray(sh[0][0])) sh = sh[rnd(sh.length)];   // ㄹ 묶음이면 둘 중 하나
     var pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
-    var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (세력마다 마크 빈도 다름)
+    var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (마크 빈도는 세 세력 같음)
     if (rv < pPlane + pMark) pc.item = { i: rnd(sh.length), kind: rv < pPlane ? 'plane' : 'mark' };
     pc.sym = sameShape(sh, rotCells(sh));   // 돌려도 같은 모양(한 칸·네모)은 회전 표시 안 함
     return pc; }
-  var MARK_BOOST = { surge: 1, gale: 1.10, solar: 1.15 };   // 특수기술(세력 마크) 빈도: 서지 기준, 게일 +10%, 솔라 +15%
+  var MARK_BOOST = { surge: 1.15, gale: 1.15, solar: 1.15 };   // 특수기술(세력 마크) 빈도: 세 세력 모두 같게 (가장 높던 솔라 기준 +15%)
   var rotN = 0; try { rotN = +localStorage.getItem('tank_rot_n') || 0; } catch (e) { }   // 블록을 돌려 본 횟수: 3번 넘으면 '돌릴 수 있어요' 흔들기 안 함
   function sameShape(a, b) { var k = function (c) { return c.map(function (q) { return q[0] + ',' + q[1]; }).sort().join(' '); }; return k(a) === k(b); }
   function rotCells(cells) {                                  // 왼쪽(반시계)으로 90° 회전: (x, y) → (y, -x) 후 0부터 다시 맞춤. 칸 순서는 그대로라 아이템 칸도 따라감
