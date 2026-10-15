@@ -118,25 +118,38 @@
       if (e.r >= EROWS - 1) { e.r = EROWS - 1; e.parked = true; e.reloadAt = t + 450; }   // 끝줄 도착 → 정차, 곧 첫 발사
     });
     G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / rowMs()); });
-    if (t >= G.spawnAt) { var sc0 = gsec(), cnt = sc0 < 20 ? 1 : sc0 < 60 ? 2 : Math.min(9, 3 + Math.floor((sc0 - 60) / 60)); for (var si = 0; si < cnt; si++) spawn(-1); G.spawnAt = t + spawnGap(t); }     // 새 탱크 (홍균님 표): 0~20초 1대, 20초~ 2대, 1분 3대, 2분 4대 … 1분마다 +1, 최대 9대. 서로 다른 빈 세로줄에서 한꺼번에 (빈 줄이 모자라면 되는 만큼)
+    var sc0 = gsec();
+    if (breather(sc0)) G.waveNext = true;                                         // 숨 고르기: 이 동안은 새 탱크 없음
+    else if (t >= G.spawnAt) { var room = fieldCap(sc0) - G.en.length, cnt = Math.min(room, waveCount(sc0) + (G.waveNext ? 2 : 0));   // 정원이 차 있으면 안 나옴
+      if (cnt > 0) { for (var si = 0; si < cnt; si++) spawn(-1); if (G.waveNext && sc0 >= 20) banner('적 증원!', '#ff9a8a'); G.waveNext = false; G.spawnAt = t + spawnGap(t); } else G.spawnAt = t + 400; }
   }
-  // 적 이동 (2026-10-15): 0~20초 한 칸 3.2초 / 20초~4분 점점 빨라져 4분에 입구→맨 앞줄 1초(한 칸 0.25초)
-  // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초·발사 13초 / 1분~ 발사 8초
-  //   2분~ 두 번째 줄, 3분~ 세 번째 줄, 4분~ 마지막(네 번째) 줄도 발사 (뒷줄 리로드 18초, 내 탱크 쪽으로)
-  //   4분부터 끝없이 강해짐: 간격 = 기준값 ÷ (1 + 0.1 × (분 − 4)), 하한 없음 (6분 ÷1.2, 10분 ÷1.6, 14분 ÷2)
-  var ROW2_RELOAD = 18000, BACK_AT = [120, 180, 240];
+  // 난이도 v174 (2026-10-15 홍균님 A안): "전장 정원"(살아 있는 적 수 한도)으로 언제 꽉 찰지 정함 → 2분30초에 꽉 차고, 3분 벽
+  //   시간      정원(36칸 중)  한 번에  입구→앞줄  앞줄 발사  뒷줄 발사
+  //   0~20초    2대            1대      12.8초     18초       -
+  //   20초~1분  9대 (25%)      2대      →8초       13초       -
+  //   1~2분     18대 (50%)     2~3대    →5초       9초        1분30초부터 둘째 줄 16초
+  //   2~2분30초 27대 (75%)     3대      →4초       6.5초      둘째 줄 12초 (포탄도 20% 빨라짐)
+  //   2분30초~  36대 (꽉 참)   4대      →3초       6초        네 줄 모두 10초
+  //   3분~      36대           5대      3초        발사 간격만 1분마다 15%씩 계속 짧아짐
+  //   숨 고르기: 30초마다 3초(27~30초, 57~60초 …) 등장 멈춤 → 다음 등장은 +2대 웨이브("적 증원!")
+  //   간발의 차: 전장이 90% 넘게 차면 아이템 블록 확률 +15%
+  var FIELD = COLS * EROWS;
   function gsec() { return G && G.t0 != null ? (now() - G.t0) / 1000 : 0; }   // 이번 판 경과 초
-  function hard(sec) { return sec > 240 ? 1 / (1 + 0.1 * (sec - 240) / 60) : 1; }   // 4분 이후 간격 배율
-  function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400 * hard(sec)) * rr(0.85, 1.15); }   // ±15% 무작위
-  function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : 8000 * hard(sec); }
-  var ROW_FAST = 250;   // 4분: 입구(-1줄)에서 맨 앞줄까지 4칸을 1초에 = 한 칸 0.25초
-  function rowMs() { var sec = gsec(); return sec < 20 ? ROW_MS : sec >= 240 ? ROW_FAST : ROW_MS * Math.pow(ROW_FAST / ROW_MS, (sec - 20) / 220); }   // 적 이동: 20초~4분 매초 같은 비율로 점점 빨라짐 (3.2초 → 0.25초/칸), 4분부터 그대로
-  function backReload() { return ROW2_RELOAD * hard(gsec()); }
-  function backRows() { var sec = gsec(), n = 0; BACK_AT.forEach(function (a) { if (sec >= a) n++; }); return n; }   // 지금 쏘는 뒷줄 수 (0~3)
+  function lerpT(sec, pts) { if (sec <= pts[0][0]) return pts[0][1]; for (var i = 1; i < pts.length; i++) if (sec < pts[i][0]) { var a = pts[i - 1], b = pts[i]; return a[1] + (b[1] - a[1]) * (sec - a[0]) / (b[0] - a[0]); } return pts[pts.length - 1][1]; }
+  function late(sec) { return sec > 180 ? 1 / (1 + 0.15 * (sec - 180) / 60) : 1; }   // 3분 이후 간격 배율
+  function fieldCap(sec) { return sec < 20 ? 2 : sec < 60 ? 9 : sec < 120 ? 18 : sec < 150 ? 27 : FIELD; }
+  function waveCount(sec) { return sec < 20 ? 1 : sec < 60 ? 2 : sec < 120 ? 2 + rnd(2) : sec < 150 ? 3 : sec < 180 ? 4 : 5; }
+  function breather(sec) { return !G.tut && sec >= 27 && sec % 30 >= 27; }
+  function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400 * late(sec)) * rr(0.85, 1.15); }   // ±15% 무작위
+  function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : sec < 120 ? 9000 : sec < 150 ? 6500 : 6000 * late(sec); }
+  function rowMs() { var sec = gsec(); return sec < 20 ? ROW_MS : lerpT(sec, [[20, ROW_MS], [60, 2000], [120, 1250], [150, 1000], [180, 750]]); }   // 한 칸 내려오는 시간 (×4 = 입구→맨 앞줄)
+  function backReload() { var sec = gsec(); return sec < 120 ? 16000 : sec < 150 ? 12000 : 10000 * late(sec); }
+  function backRows() { var sec = gsec(); return sec >= 150 ? 3 : sec >= 90 ? 1 : 0; }   // 지금 쏘는 뒷줄 수 (0~3)
+  function shellK() { return gsec() >= 120 ? 0.8 : 1; }                                  // 2분부터 포탄이 20% 빨리 날아옴
   function row2(e) { if (G.tut || e.parked || !e.queued || e.r < -0.001 || Math.abs(e.r - Math.round(e.r)) > 0.001) return false;   // 앞 탱크 뒤에 줄 서서 멈춘 뒷줄 탱크
     var k = Math.round(EROWS - 1 - e.r); return k >= 1 && k <= backRows(); }
   function gunner(e) { return e.parked || row2(e); }
-  function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
+  function itemRate() { var sec = gsec(); return (sec < 20 ? 0.36 : 0.40) + (G && !G.tut && G.en.length >= FIELD * 0.9 ? 0.15 : 0); }   // 간발의 차: 꽉 차면 아이템 더 잘 나옴       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, rowMs()); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
@@ -156,7 +169,7 @@
   function enemyShoot(e, t) {
     var c = e.target, sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, mx = sx + Math.sin(e.ang) * S * 0.5, my = sy - Math.cos(e.ang) * S * 0.5;
     var tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2, dist = Math.hypot(tx - mx, ty - my);
-    G.shells.push({ tx: c[0], ty: c[1], x0: mx, y0: my, x1: tx, y1: ty, at: t, dur: 420 + dist * 0.9, arc: S * 1.2 + dist * 0.25, last: [] });
+    G.shells.push({ tx: c[0], ty: c[1], x0: mx, y0: my, x1: tx, y1: ty, at: t, dur: (420 + dist * 0.9) * shellK(), arc: S * 1.2 + dist * 0.25, last: [] });
     e.recoil = 1; e.rl = e.parked ? reloadMs() : backReload(); e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
     G.fx.push({ k: 'muzzle', x: mx, y: my, ang: e.ang, at: t });
     burst(mx, my, 10, ['#fff3c0', '#ffb13d', '#ff6a2a'], 4, 4, 0.05, 350);
@@ -920,6 +933,9 @@
     var e = $('end'); e.classList.toggle('lose', !nb);
     $('endT').textContent = nb ? 'NEW BEST!' : 'GAME OVER';
     $('endS').textContent = '적 탱크 ' + G.kills + '대 격파';
+    var es = Math.floor(G.endSec || 0), bs = 0; try { bs = +localStorage.getItem('tank_best_sec') || 0; if (es > bs) { bs = es; localStorage.setItem('tank_best_sec', es); } } catch (er) { bs = Math.max(bs, es); }
+    function mmss(v) { return v < 60 ? v + '초' : Math.floor(v / 60) + '분 ' + (v % 60) + '초'; }
+    if ($('endTime')) $('endTime').innerHTML = '생존 ' + mmss(es) + ' · ' + (es >= 180 ? '<b>3분 벽 돌파!</b>' : '<b>3분까지 ' + (180 - es) + '초!</b>') + '<br><small>최고 생존 ' + mmss(bs) + '</small>';   // 3분 벽까지 남은 시간
     $('endB').textContent = '최고 기록!';
     $('endScore').textContent = '점수 ' + G.score.toLocaleString();
     $('endBtn').textContent = '다시 하기';
