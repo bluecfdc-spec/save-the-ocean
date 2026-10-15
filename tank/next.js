@@ -57,7 +57,7 @@
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
   function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)]; if (Array.isArray(sh[0][0])) sh = sh[rnd(sh.length)];   // ㄹ 묶음이면 둘 중 하나
     var pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
-    var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (마크 빈도는 세 세력 같음)
+    var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1) * (G && !G.tut && G.en.length >= FIELD * 0.75 ? 1.5 : 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (마크 빈도는 세 세력 같음, 적이 75% 넘게 차면 마크 1.5배)
     if (rv < pPlane + pMark) pc.item = { i: rnd(sh.length), kind: rv < pPlane ? 'plane' : 'mark' };
     pc.sym = sameShape(sh, rotCells(sh));   // 돌려도 같은 모양(한 칸·네모)은 회전 표시 안 함
     return pc; }
