@@ -106,12 +106,13 @@
     G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / ROW_MS); });
     if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
   }
-  // 난이도 = 탱크가 나오는 간격: 처음 7.5초 → 5분 동안 서서히 4초까지 (±20% 랜덤)
+  // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초 고정·발사 13초 / 1분~ 발사 8초 고정 / 2분~ 두 번째 줄도 발사(18초 고정)
+  var ROW2_AT = 120, ROW2_RELOAD = 18000;
   function gsec() { return G && G.t0 != null ? (now() - G.t0) / 1000 : 0; }   // 이번 판 경과 초
-  function spawnGap(t) { var sec = (t - G.t0) / 1000, base;          // 0~20초 여유 → 20~60초 빠르게 조임 → 이후 더 정신없게
-    if (sec < 20) base = 7500; else if (sec < 60) base = 7500 - (sec - 20) * (4200 / 40); else base = Math.max(2400, 3300 - (sec - 60) * (900 / 90));
-    return base * rr(0.85, 1.15); }
-  function reloadMs() { var sec = gsec(); return sec < 60 ? RELOAD : Math.max(8000, RELOAD - (sec - 60) * (5000 / 60)); }   // 1분 이후 장전 18초 → 2분 13초 → 3분 8초(최소)
+  function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400) * rr(0.85, 1.15); }   // ±15% 무작위
+  function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : 8000; }
+  function row2(e) { return !G.tut && !e.parked && e.queued && e.r >= EROWS - 2 - 0.001 && gsec() >= ROW2_AT; }   // 2분부터: 맨 앞 탱크 바로 뒤에 선 두 번째 줄 탱크도 쏨
+  function gunner(e) { return e.parked || row2(e); }
   function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
   function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
@@ -132,7 +133,7 @@
     var c = e.target, sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, mx = sx + Math.sin(e.ang) * S * 0.5, my = sy - Math.cos(e.ang) * S * 0.5;
     var tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2, dist = Math.hypot(tx - mx, ty - my);
     G.shells.push({ tx: c[0], ty: c[1], x0: mx, y0: my, x1: tx, y1: ty, at: t, dur: 420 + dist * 0.9, arc: S * 1.2 + dist * 0.25, last: [] });
-    e.recoil = 1; e.rl = reloadMs(); e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
+    e.recoil = 1; e.rl = e.parked ? reloadMs() : ROW2_RELOAD; e.reloadAt = G.tut ? Infinity : t + e.rl; e.fireAt = 0;
     G.fx.push({ k: 'muzzle', x: mx, y: my, ang: e.ang, at: t });
     burst(mx, my, 10, ['#fff3c0', '#ffb13d', '#ff6a2a'], 4, 4, 0.05, 350);
     shake(4); sfx('launch');
@@ -396,7 +397,8 @@
       e.recoil = Math.max(0, e.recoil - dt / 260);
       if (driving(e) && e.r > -0.5 && Math.random() < dt / 70) { var dy0 = enemyY(e, t) - ER * 0.45, side = Math.random() < 0.5 ? -1 : 1;
         G.parts.push({ x: bx(e.x) + S / 2 + side * S * 0.3 + rr(-2, 2), y: dy0, vx: side * rr(0.1, 0.5), vy: rr(-0.6, -0.1), g: 0, s: rr(3, 6), c: 'rgba(170,150,120,.55)', at: t, life: 600, smoke: true }); }
-      if (G.over || !e.parked) return;
+      var r2 = row2(e); if (r2 && !e.g2) { e.g2 = true; e.fireAt = 0; e.rl = ROW2_RELOAD; e.reloadAt = t + 1200 + Math.random() * 3000; } else if (!r2 && e.g2) { e.g2 = false; if (!e.parked) { e.fireAt = 0; e.reloadAt = Infinity; } }
+      if (G.over || !gunner(e)) return;
       if (e.fireAt && t >= e.fireAt) { enemyShoot(e, t); return; }
       if (!e.fireAt && t >= e.reloadAt) enemyFire(e, t);
       if (!e.fireAt && t > e.reloadAt - (e.rl || RELOAD) + 900) e.aimAng = Math.PI;     // 쏘고 나면 다시 정면
@@ -457,7 +459,7 @@
   }
   function drawBar(e, t, cy) {                               // 리로드 바 + 글씨: 뒤 탱크에 가리지 않게 탱크를 다 그린 뒤 따로 그림
     var mvg = driving(e), cx = bx(e.x) + S / 2;
-    if (e.parked && !mvg && isFinite(e.reloadAt)) {           // 리로드 바
+    if (gunner(e) && !mvg && isFinite(e.reloadAt)) {           // 리로드 바 (2분부터 두 번째 줄도)
       var f = e.hold ? 1 : Math.max(0, Math.min(1, 1 - (e.reloadAt - t) / (e.rl || RELOAD))), bw = S * 0.8, bh = Math.max(5, S * 0.12), x0 = cx - bw / 2, y0 = cy - ER * 0.62;
       ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.fillRect(x0 - 1, y0 - 1, bw + 2, bh + 2);
       ctx.fillStyle = e.hold ? '#ff6a3a' : f > 0.85 ? (Math.floor(t / 120) % 2 ? '#ff3b2a' : '#ffd451') : '#ff8a3a'; ctx.fillRect(x0, y0, bw * f, bh);
