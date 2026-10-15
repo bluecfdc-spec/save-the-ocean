@@ -109,16 +109,17 @@
     G.en.sort(function (a, b) { return b.r - a.r; });
     G.en.forEach(function (e) {
       if (e.parked) return;
-      var nr = e.r + dt / ROW_MS, ahead = null;
+      var rm = rowMs(), nr = e.r + dt / rm, ahead = null;
       G.en.forEach(function (o) { if (o !== e && o.x === e.x && o.r > e.r && (!ahead || o.r < ahead.r)) ahead = o; });
       e.queued = false;
       if (ahead && nr > ahead.r - 1) { nr = Math.max(e.r, ahead.r - 1); e.queued = true; }   // 앞 탱크 뒤에 붙으면 대기
       e.r = nr;
       if (e.r >= EROWS - 1) { e.r = EROWS - 1; e.parked = true; e.reloadAt = t + 450; }   // 끝줄 도착 → 정차, 곧 첫 발사
     });
-    G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / ROW_MS); });
+    G.dying.forEach(function (d) { if (!d.e.parked) d.e.r = Math.min(EROWS - 1, d.e.r + dt / rowMs()); });
     if (t >= G.spawnAt) { spawn(-1); G.spawnAt = t + spawnGap(t); }     // 랜덤 열에 새 탱크
   }
+  // 적 이동 (2026-10-15): 0~20초 한 칸 3.2초 / 20초~4분 점점 빨라져 4분에 입구→맨 앞줄 1초(한 칸 0.25초)
   // 난이도 (홍균님 표, 2026-10-15): 0~20초 등장 7.5초·발사 18초 / 20초~ 등장 2.4초·발사 13초 / 1분~ 발사 8초
   //   2분~ 두 번째 줄, 3분~ 세 번째 줄, 4분~ 마지막(네 번째) 줄도 발사 (뒷줄 리로드 18초, 내 탱크 쪽으로)
   //   4분부터 끝없이 강해짐: 간격 = 기준값 ÷ (1 + 0.1 × (분 − 4)), 하한 없음 (6분 ÷1.2, 10분 ÷1.6, 14분 ÷2)
@@ -127,6 +128,8 @@
   function hard(sec) { return sec > 240 ? 1 / (1 + 0.1 * (sec - 240) / 60) : 1; }   // 4분 이후 간격 배율
   function spawnGap(t) { var sec = (t - G.t0) / 1000; return (sec < 20 ? 7500 : 2400 * hard(sec)) * rr(0.85, 1.15); }   // ±15% 무작위
   function reloadMs() { var sec = gsec(); return sec < 20 ? RELOAD : sec < 60 ? 13000 : 8000 * hard(sec); }
+  var ROW_FAST = 250;   // 4분: 입구(-1줄)에서 맨 앞줄까지 4칸을 1초에 = 한 칸 0.25초
+  function rowMs() { var sec = gsec(); return sec < 20 ? ROW_MS : sec >= 240 ? ROW_FAST : ROW_MS * Math.pow(ROW_FAST / ROW_MS, (sec - 20) / 220); }   // 적 이동: 20초~4분 매초 같은 비율로 점점 빨라짐 (3.2초 → 0.25초/칸), 4분부터 그대로
   function backReload() { return ROW2_RELOAD * hard(gsec()); }
   function backRows() { var sec = gsec(), n = 0; BACK_AT.forEach(function (a) { if (sec >= a) n++; }); return n; }   // 지금 쏘는 뒷줄 수 (0~3)
   function row2(e) { if (G.tut || e.parked || !e.queued || e.r < -0.001 || Math.abs(e.r - Math.round(e.r)) > 0.001) return false;   // 앞 탱크 뒤에 줄 서서 멈춘 뒷줄 탱크
@@ -134,7 +137,7 @@
   function gunner(e) { return e.parked || row2(e); }
   function itemRate() { var sec = gsec(); return sec < 20 ? 0.36 : 0.40; }       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
-  function advance() { var t = now(); moveEnemies(t, ROW_MS); }   // 시험용: 한 칸 빨리 감기
+  function advance() { var t = now(); moveEnemies(t, rowMs()); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
   function wouldClear(cx, cy, skip) {                      // 이 칸을 채우면 가로줄이나 세로줄이 완성되나 (탱크 칸·날아가는 포탄 자리도 찬 것으로 침)
     function f(x, y) { return (x === cx && y === cy) || filled(x, y) || G.shells.some(function (s) { return s !== skip && s.tx === x && s.ty === y; }); }
@@ -501,7 +504,7 @@
     ctx.restore();
   }
   function driving(e) { return !e.parked && !e.queued; }
-  function enemyY(e, t) { var r = e.r; if (t != null && driving(e)) r = Math.min(EROWS - 1, r + Math.max(0, t - now()) / ROW_MS); return ey(r) + ER / 2; }
+  function enemyY(e, t) { var r = e.r; if (t != null && driving(e)) r = Math.min(EROWS - 1, r + Math.max(0, t - now()) / rowMs()); return ey(r) + ER / 2; }
   function itemIcon(x, y, s, kind, t, a) {                   // 블록 안 아이템: 비행기 상자 / 세력 마크
     ctx.save(); if (a != null) ctx.globalAlpha = a;
     if (kind === 'plane') { if (IM.b_scout) ctx.drawImage(IM.b_scout, x, y, s, s); }
