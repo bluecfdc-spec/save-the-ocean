@@ -18,7 +18,7 @@
     [[0, 0], [1, 0], [0, 1], [1, 1]], [[0, 0], [0, 1], [1, 1]], [[1, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 0], [0, 1]],
     [[0, 0], [1, 0], [2, 0], [1, 1]], [[0, 0], [0, 1], [0, 2], [1, 2]], [[1, 0], [1, 1], [1, 2], [0, 2]], [[0, 0], [1, 0], [2, 0], [3, 0]], [[0, 0], [0, 1], [0, 2], [0, 3]]
   ];
-  var SHAPES_1MIN = [[[0, 0], [1, 0], [0, 1], [0, 2], [1, 2]], [[0, 0], [1, 0], [1, 1], [1, 2], [2, 2]], [[1, 0], [2, 0], [1, 1], [1, 2], [0, 2]]];   // 1분부터 추가: ㄷ 모양(5칸), ㄹ 비슷한 모양(5칸)과 그 좌우 뒤집은 모양
+  var SHAPES_1MIN = [[[0, 0], [1, 0], [0, 1], [0, 2], [1, 2]], [[[0, 0], [1, 0], [1, 1], [1, 2], [2, 2]], [[1, 0], [2, 0], [1, 1], [1, 2], [0, 2]]]];   // 1분부터 추가: ㄷ 모양(5칸), ㄹ 모양(5칸, 그대로/뒤집은 것 반반) — ㄷ과 ㄹ은 같은 빈도
   var TINT = ['#ffcf4a', '#4fd8ff', '#9be37a', '#ff8a5a', '#c58bff'];
   var ROCK = 'rock';
   var CLK = { off: 0, paused: false, pAt: 0 };                       // 튜토리얼에서 '잠깐 멈춤'을 위한 게임 시계
@@ -55,7 +55,8 @@
   // ---------- 상태 ----------
   var G = null, fac = 'solar', best = 0;
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
-  function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
+  function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)]; if (Array.isArray(sh[0][0])) sh = sh[rnd(sh.length)];   // ㄹ 묶음이면 둘 중 하나
+    var pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
     var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (세력마다 마크 빈도 다름)
     if (rv < pPlane + pMark) pc.item = { i: rnd(sh.length), kind: rv < pPlane ? 'plane' : 'mark' };
     pc.sym = sameShape(sh, rotCells(sh));   // 돌려도 같은 모양(한 칸·네모)은 회전 표시 안 함
