@@ -56,13 +56,18 @@
   var G = null, fac = 'solar', best = 0;
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
   function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)], pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
-    if (Math.random() < itemRate()) pc.item = { i: rnd(sh.length), kind: Math.random() < planeRate() ? 'plane' : 'mark' };   // 아이템 블록: 비행기 / 내 세력 마크
+    var ir = itemRate(), pPlane = ir * planeRate(), pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (세력마다 마크 빈도 다름)
+    if (rv < pPlane + pMark) pc.item = { i: rnd(sh.length), kind: rv < pPlane ? 'plane' : 'mark' };
+    pc.sym = sameShape(sh, rotCells(sh));   // 돌려도 같은 모양(한 칸·네모)은 회전 표시 안 함
     return pc; }
+  var MARK_BOOST = { surge: 1, gale: 1.10, solar: 1.15 };   // 특수기술(세력 마크) 빈도: 서지 기준, 게일 +10%, 솔라 +15%
+  var rotN = 0; try { rotN = +localStorage.getItem('tank_rot_n') || 0; } catch (e) { }   // 블록을 돌려 본 횟수: 3번 넘으면 '돌릴 수 있어요' 흔들기 안 함
+  function sameShape(a, b) { var k = function (c) { return c.map(function (q) { return q[0] + ',' + q[1]; }).sort().join(' '); }; return k(a) === k(b); }
   function rotCells(cells) {                                  // 왼쪽(반시계)으로 90° 회전: (x, y) → (y, -x) 후 0부터 다시 맞춤. 칸 순서는 그대로라 아이템 칸도 따라감
     var r = cells.map(function (c) { return [c[1], -c[0]]; }), mx = Math.min.apply(null, r.map(function (c) { return c[0]; })), my = Math.min.apply(null, r.map(function (c) { return c[1]; }));
     return r.map(function (c) { return [c[0] - mx, c[1] - my]; }); }
   function rotatePiece(i) { var pc = G.tray[i]; if (!pc) return; var t = now();
-    pc.cells = rotCells(pc.cells); pc.rotAt = performance.now();
+    pc.cells = rotCells(pc.cells); pc.rotAt = performance.now(); if (!G.tut && rotN < 99) { rotN++; try { localStorage.setItem('tank_rot_n', rotN); } catch (e) { } }
     var rc = slotRect(i), cx = rc.x + rc.w / 2, cy = rc.y + rc.h / 2;
     ring(cx, cy, S * 0.4, S * 1.5, 'rgba(160,230,255,', 320, 4);
     burst(cx, cy, 10, ['#ffffff', '#bff4ff', '#ffe066'], 3.5, 3, 0, 380);
@@ -74,6 +79,7 @@
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     G.t0 = now(); spawn(0.5); G.spawnAt = now() + 7500;
     banner('줄을 깨면 미사일 발사!', '#ffe066');
+    if (rotN < 3) { var g0 = G; setTimeout(function () { if (G === g0 && !G.over) banner('블록을 톡 누르면 돌아가요', '#bfe9ff'); }, 2200); }   // 아직 안 돌려 본 사람에게만 한 번
   }
   function banner(t, col) { G.banner = { t: t, col: col || '#fff', at: now() }; }
   function pop(t, x, y, col, big) { G.fx.push({ k: 'pop', t: t, x: x, y: y, col: col || '#fff', big: big, at: now() }); }
@@ -629,9 +635,14 @@
       var pc2 = G.tray[i]; if (!pc2 || (G.drag && G.drag.moved && G.drag.i === i)) continue; var z = pcSize(pc2);
       var cs = Math.min(S * 0.62, (rc.w - 20) / z.w, (rc.h - 14) / z.h), ox = rc.x + (rc.w - z.w * cs) / 2, oy = rc.y + (rc.h - z.h * cs) / 2, fitAny = G.tut || anyFit(pc2);
       var ra = pc2.rotAt ? (performance.now() - pc2.rotAt) / 200 : 1, held = G.drag && !G.drag.moved && G.drag.i === i;   // 회전 애니메이션: 원래 방향(시계 90°)에서 0°로 휙 + 살짝 커졌다 돌아옴
-      ctx.save(); if (ra < 1 || held) { var re = ra < 1 ? 1 - Math.pow(1 - ra, 3) : 1, rcx = rc.x + rc.w / 2, rcy = rc.y + rc.h / 2, sc = (ra < 1 ? 1 + 0.18 * Math.sin(Math.PI * ra) : 1) * (held ? 1.06 : 1); ctx.translate(rcx, rcy); ctx.rotate(Math.PI / 2 * (1 - re)); ctx.scale(sc, sc); ctx.translate(-rcx, -rcy); }
+      var hint = !G.tut && !pc2.sym && fitAny && ra >= 1 && !held, wq = ((performance.now() + i * 650) % 4200) / 520, wig = hint && rotN < 3 && wq < 1 ? Math.sin(Math.PI * wq) : 0;   // 돌릴 수 있다는 표시: 가끔 왼쪽으로 살짝 까딱 (몇 번 돌려 보면 그만)
+      if (hint) { var hx = rc.x + rc.w - S * 0.42, hy = rc.y + S * 0.38, hr = S * 0.2; ctx.save(); ctx.globalAlpha = 0.38 + 0.4 * wig; ctx.strokeStyle = '#ffe9a8'; ctx.fillStyle = '#ffe9a8'; ctx.lineWidth = Math.max(1.5, S * 0.05); ctx.lineCap = 'round';   // 칸 오른쪽 위 작은 ↺
+        ctx.beginPath(); ctx.arc(hx, hy, hr, -0.4, Math.PI * 1.25, true); ctx.stroke(); var ax0 = hx + Math.cos(Math.PI * 1.25) * hr, ay0 = hy + Math.sin(Math.PI * 1.25) * hr;
+        ctx.beginPath(); ctx.moveTo(ax0 + hr * 0.55, ay0 - hr * 0.05); ctx.lineTo(ax0 - hr * 0.1, ay0 - hr * 0.55); ctx.lineTo(ax0 - hr * 0.2, ay0 + hr * 0.35); ctx.closePath(); ctx.fill(); ctx.restore(); }
+      ctx.save(); if (wig) { var wcx = rc.x + rc.w / 2, wcy = rc.y + rc.h / 2; ctx.translate(wcx, wcy); ctx.rotate(-0.16 * wig); ctx.translate(-wcx, -wcy); }
+      if (ra < 1 || held) { var re = ra < 1 ? 1 - Math.pow(1 - ra, 3) : 1, rcx = rc.x + rc.w / 2, rcy = rc.y + rc.h / 2, sc = (ra < 1 ? 1 + 0.18 * Math.sin(Math.PI * ra) : 1) * (held ? 1.06 : 1); ctx.translate(rcx, rcy); ctx.rotate(Math.PI / 2 * (1 - re)); ctx.scale(sc, sc); ctx.translate(-rcx, -rcy); }
       pc2.cells.forEach(function (c, ci) { block(ox + c[0] * cs, oy + c[1] * cs, cs, pc2.tint, fitAny ? 1 : 0.35); if (pc2.item && pc2.item.i === ci) itemIcon(ox + c[0] * cs, oy + c[1] * cs, cs, pc2.item.kind, t, fitAny ? 1 : 0.35); });
-      ctx.restore(); }
+      ctx.restore(); ctx.restore(); }
     if (G.drag && G.drag.moved && G.tray[G.drag.i]) { var pd = G.tray[G.drag.i], z2 = pcSize(pd);
       var gx0 = G.drag.p.x - z2.w * S / 2, gy0 = G.drag.p.y - S * 1.7 - z2.h * S / 2; pd.cells.forEach(function (c, ci) { block(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.tint, 0.9); if (pd.item && pd.item.i === ci) itemIcon(gx0 + c[0] * S, gy0 + c[1] * S, S, pd.item.kind, t, 0.9); }); }
     // 배너
