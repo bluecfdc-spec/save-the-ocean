@@ -86,7 +86,8 @@
   function pop(t, x, y, col, big) { G.fx.push({ k: 'pop', t: t, x: x, y: y, col: col || '#fff', big: big, at: now() }); }
   function fnum(t, x, y, size, pal, sub, life, subPal, rot, delay) {             // 보너스 점수: 금빛 그라데이션 + 빛 번짐 + 반짝이 큰 숫자
     var hw = size * (0.38 * t.length + 0.5); G.fx.push({ k: 'fnum', t: t, x: Math.max(hw, Math.min(W - hw, x)), y: Math.max(HUD + size * 0.9, y), size: size, pal: pal || 'gold', sub: sub, life: life || 1500, at: now() + (delay || 0), seed: Math.random() * 6, subPal: subPal, rot: rot || 0 });
-    var c = FPAL[pal || 'gold'], bxx = x, byy = y; setTimeout(function () { if (G) burst(bxx, byy, 8, [c[0], c[1], '#ffffff'], 3.5, 3, 0.1, 500); }, delay || 0); }
+    var bxx = x, byy = y; setTimeout(function () { if (G) burst(bxx, byy, 8, [facCol(), '#ffffff'], 3.5, 3, 0.1, 500); }, delay || 0); }
+  try { document.fonts && document.fonts.load('800 30px Orbitron'); } catch (e) { }   // 캔버스에 쓰기 전에 각진 숫자 글꼴 미리 받기
   var FPAL = { gold: ['#ffffff', '#ffe066', '#ff9a1f', '#ffb13d'], tank: ['#ffffff', '#7fe8ff', '#ffd451', '#4fd8ff'], drill: ['#fff6c0', '#ffb13d', '#ff4a2a', '#ff7a1f'], gale: ['#ffffff', '#c58bff', '#9b5bff', '#c58bff'] };
   function shake(n) { G.shake = Math.max(G.shake, n); }
   function burst(x, y, n, cols, sp, sz, grav, life) {   // 파편·불꽃 입자
@@ -482,10 +483,11 @@
   function cover(im, x, y, w, h) { if (!im) return; var r = Math.max(w / im.width, h / im.height), dw = im.width * r, dh = im.height * r; ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.drawImage(im, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh); ctx.restore(); }
   function fit(im, cx, cy, w, h, a, rot) { if (!im) return; var r = Math.min(w / im.width, h / im.height); ctx.save(); if (a != null) ctx.globalAlpha = a; ctx.translate(cx, cy); if (rot) ctx.rotate(rot); ctx.drawImage(im, -im.width * r / 2, -im.height * r / 2, im.width * r, im.height * r); ctx.restore(); }
   function text(t, x, y, size, col, align, stroke) { ctx.save(); ctx.font = size + 'px "Black Han Sans", "Do Hyeon", sans-serif'; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = stroke == null ? Math.max(3, size * 0.22) : stroke; ctx.strokeStyle = '#000'; if (ctx.lineWidth) ctx.strokeText(t, x, y); ctx.fillStyle = col || '#fff'; ctx.fillText(t, x, y); ctx.restore(); }
+  function facCol() { return (FAC[G && G.fac] || FAC.solar).col; }   // 보너스 숫자 색: 내가 고른 세력 색
   function fancy(str, x, y, size, pal, alpha, age, sc, rot) {   // 보너스 숫자: 또렷하게 (검은 테두리 + 위아래 그라데이션 + 살짝 빛)
-    var c = FPAL[pal] || FPAL.gold; ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); if (rot) ctx.rotate(rot); if (sc && sc !== 1) ctx.scale(sc, sc);
-    ctx.font = size + 'px "Black Han Sans", "Do Hyeon", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-    ctx.lineWidth = Math.max(3, size * 0.22); ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0); ctx.fillStyle = c[1]; ctx.fillText(str, 0, 0);   // 게임 글씨와 같은 톤: 검은 테두리 + 단색
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); if (rot) ctx.rotate(rot); if (sc && sc !== 1) ctx.scale(sc, sc);
+    ctx.font = '800 ' + size + 'px Orbitron, "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'miter'; ctx.miterLimit = 3;   // 각진 숫자 (Orbitron + 뾰족한 테두리)
+    ctx.lineWidth = Math.max(3, size * 0.2); ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0); ctx.fillStyle = facCol(); ctx.fillText(str, 0, 0);
     ctx.restore(); }
   function block(x, y, s, tint, a) {
     ctx.save(); if (a != null) ctx.globalAlpha = a;
@@ -688,7 +690,7 @@
       if (f.k === 'fnum') { if (a > f.life) return false;        // 보너스 큰 숫자: 크게 튀어나왔다가 통통 → 천천히 떠오르며 사라짐
         if (a < 0) return true; var fsc = a < 140 ? 0.3 + 0.95 * (a / 140) : a < 260 ? 1.25 - 0.25 * ((a - 140) / 120) : 1, fal = Math.min(1, (f.life - a) / 380), fy = f.y - Math.max(0, a - 400) * 0.012;   // 짜잔: 작게 → 크게 툭 → 제자리
         fancy(f.t, f.x, fy, f.size, f.pal, fal, a, fsc, f.rot);
-        if (f.sub) { ctx.save(); ctx.globalAlpha = fal * Math.min(1, a / 200); ctx.translate(f.x, fy); ctx.rotate(f.rot); text(f.sub, 0, f.size * 0.8, Math.max(11, Math.round(f.size * 0.5)), FPAL[f.subPal || f.pal][1]); ctx.restore(); }
+        if (f.sub) { ctx.save(); ctx.globalAlpha = fal * Math.min(1, a / 200); ctx.translate(f.x, fy); ctx.rotate(f.rot); var sfs2 = Math.max(11, Math.round(f.size * 0.5)); ctx.font = sfs2 + 'px "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'miter'; ctx.miterLimit = 3; ctx.lineWidth = Math.max(3, sfs2 * 0.22); ctx.strokeStyle = '#000'; ctx.strokeText(f.sub, 0, f.size * 0.8); ctx.fillStyle = facCol(); ctx.fillText(f.sub, 0, f.size * 0.8); ctx.restore(); }
         return true; }
       if (f.k === 'pop') { if (a > 1100) return false; ctx.save(); ctx.globalAlpha = Math.min(1, (1100 - a) / 300); text(f.t, f.x, f.y - a * 0.03, Math.round(S * (f.big ? 0.62 : 0.46)), f.col); ctx.restore(); return true; }
       return false; });
