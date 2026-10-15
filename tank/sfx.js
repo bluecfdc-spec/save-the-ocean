@@ -90,6 +90,20 @@ window.SFX = (function () {
   document.addEventListener('visibilitychange', function () { if (!bgmEl) return; if (document.hidden) { bgmEl.pause(); if (resEl) resEl.pause(); } else if (sting && resEl) { var ps = resEl.play(); if (ps && ps.catch) ps.catch(function () { }); } else if (bgmOn && !bgmHold) { var p = bgmEl.play(); if (p && p.catch) p.catch(function () { }); } });
   S.mute = function (on) { muted = on; if (master) master.gain.value = on ? 0 : 0.9; if (bgmEl) bgmEl.muted = on; if (resEl) resEl.muted = on; };
   S.click = function () { if (!ensure()) return; tone('square', 900, 700, 0.06, 0.08); };
+  S.rotate = function () {                                         // 블록 회전: 짧은 '휙' + 딸깍 두 번
+    if (!ensure()) return; var t = ctx.currentTime;
+    var b = burst(0.12, 0.16, 3000, 900, t); b.f.frequency.setValueAtTime(1500, t); b.f.frequency.exponentialRampToValueAtTime(6000, t + 0.1);
+    tone('triangle', 620, 980, 0.08, 0.12, t); tone('square', 1800, 1800, 0.02, 0.05, t + 0.03); tone('square', 2400, 2400, 0.02, 0.05, t + 0.09);
+  };
+  S.bonus = function (n) {                                         // 여러 줄 보너스: 동전 쏟아지는 '띠리리링' + 팡파르, 줄 수만큼 길게
+    if (!ensure()) return; var t = ctx.currentTime, k = 4 + (n || 2) * 2, notes = [1047, 1319, 1568, 2093, 1568, 2093, 2637, 3136, 2637, 3136, 4186];
+    for (var i = 0; i < k && i < notes.length; i++) { tone('square', notes[i], notes[i], 0.09, 0.05, t + i * 0.045); tone('sine', notes[i], notes[i], 0.2, 0.12, t + i * 0.045); }
+    [523, 659, 784].forEach(function (f) { tone('sawtooth', f, f, 0.5, 0.05, t + 0.02, null, 0.03); tone('triangle', f * 2, f * 2, 0.6, 0.08, t + 0.02); });
+  };
+  S.charged = function () {                                        // 기 충전 완료: 위로 차오르는 '우웅-띵'
+    if (!ensure()) return; var t = ctx.currentTime;
+    tone('sine', 220, 880, 0.35, 0.18, t, null, 0.05); tone('triangle', 330, 1320, 0.35, 0.08, t, null, 0.05); tone('sine', 1760, 1760, 0.4, 0.14, t + 0.33); tone('sine', 2637, 2637, 0.3, 0.06, t + 0.36);
+  };
   S.pick = function () { if (!ensure()) return; tone('triangle', 500, 760, 0.07, 0.12); };
   S.place = function () {                                          // 묵직한 "쿵"
     if (!ensure()) return; var t = ctx.currentTime;
