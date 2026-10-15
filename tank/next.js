@@ -130,6 +130,7 @@
   function safeCells(skip) { return emptyCells().filter(function (c) { return !wouldClear(c[0], c[1], skip); }); }   // 적이 쏴도 되는 빈칸
   function enemyFire(e, t) {                                // 정차한 적 탱크가 한 칸짜리 블록을 쏨
     var cells = safeCells();
+    if (!e.parked) { var tk = G.tank, near = cells.filter(function (c) { return Math.abs(c[0] - tk.x) + Math.abs(c[1] - tk.y) === 1; }); if (near.length) cells = near; }   // 두 번째 줄: 내 탱크 바로 옆 빈칸을 노려 가둠 (옆이 다 막혔으면 아무 데나)
     if (!cells.length) { e.hold = true; e.reloadAt = t + 500; return; }   // 쏠 곳이 없으면 장전한 채 대기
     e.hold = false;
     var c = cells[rnd(cells.length)], sx = bx(e.x) + S / 2, sy = ey(e.r) + ER / 2, tx = bx(c[0]) + S / 2, ty = by(c[1]) + S / 2;
@@ -151,6 +152,7 @@
       var best2 = null, bd = 1e9; safeCells(s).forEach(function (c) { var d = Math.abs(c[0] - x) + Math.abs(c[1] - y); if (d < bd) { bd = d; best2 = c; } }); if (!best2) return; x = best2[0]; y = best2[1];
     }
     G.board[y][x] = ROCK; var px = bx(x) + S / 2, py = by(y) + S / 2;
+    if (G.loot[x + ',' + y]) { delete G.loot[x + ',' + y]; pop('아이템 파괴!', px, py - S * 0.4, '#ff8a7a'); burst(px, py, 10, ['#ffffff', '#cccccc', '#9be37a'], 3.5, 3, 0.1, 450); }   // 바닥 아이템 위에 돌덩이가 떨어지면 아이템은 부서짐
     G.fx.push({ k: 'thud', x: x, y: y, at: t });
     ring(px, py, S * 0.3, S * 1.6, 'rgba(255,170,90,', 420, 5);
     burst(px, py, 16, ['#8a7a66', '#b7a07a', '#5b4d3d', '#ffcf8a'], 4.5, 5, 0.3, 700);
@@ -303,8 +305,8 @@
   }
   // 한 칸만 비어 있는 줄 (내 탱크가 가서 채우면 깨짐)
   function lureLines() {
-    var out = [], tk = G.tank; if (tk.path.length) return out;
-    function chk(cells, isRow, idx) { var emp = [], hasT = false; cells.forEach(function (c) { if (c[0] === tk.x && c[1] === tk.y) hasT = true; else if (!G.board[c[1]][c[0]]) emp.push(c); });
+    var out = [], tk = G.tank, dst = tk.path.length ? tk.path[tk.path.length - 1] : [tk.x, tk.y];   // 움직이는 중에도 계속 표시 (도착할 칸 기준)
+    function chk(cells, isRow, idx) { var emp = [], hasT = false; cells.forEach(function (c) { if (c[0] === dst[0] && c[1] === dst[1]) hasT = true; else if (!G.board[c[1]][c[0]]) emp.push(c); });
       if (emp.length === 1 && !hasT && pathTo(emp[0][0], emp[0][1])) out.push({ row: isRow, i: idx, c: emp[0] }); }
     for (var y = 0; y < ROWS; y++) { var a = []; for (var x = 0; x < COLS; x++) a.push([x, y]); chk(a, true, y); }
     for (var x2 = 0; x2 < COLS; x2++) { var b = []; for (var y2 = 0; y2 < ROWS; y2++) b.push([x2, y2]); chk(b, false, x2); }
@@ -493,12 +495,12 @@
     // 한 칸 남은 줄 → 빨갛게 깜빡 (내 탱크 부르기)
     if (!G.over && (!G.tut || (G.tut.lure && !G.tut.paused && !G.tut.acted))) { var lp = 0.5 + 0.5 * Math.sin(t / 140);
       var seen = {};
-      lureLines().forEach(function (L) { ctx.fillStyle = 'rgba(255,40,40,' + (0.10 + 0.14 * lp) + ')';
+      lureLines().forEach(function (L) { ctx.fillStyle = 'rgba(255,40,40,' + (0.16 + 0.14 * lp) + ')';   // 꺼지지 않고 계속 깜빡 (가장 어두울 때도 보임)
         if (L.row) ctx.fillRect(OX, by(L.i), S * COLS, S); else ctx.fillRect(bx(L.i), BY, S, S * ROWS);
         var key = L.c[0] + ',' + L.c[1]; if (seen[key]) return; seen[key] = 1;
         var cx1 = bx(L.c[0]), cy1 = by(L.c[1]), fp = 0.5 + 0.5 * Math.sin(t / 90);           // 주차 칸: 더 빠르게 깜빡
-        ctx.fillStyle = 'rgba(255,60,50,' + (0.3 + 0.35 * lp) + ')'; ctx.fillRect(cx1 + 2, cy1 + 2, S - 4, S - 4);
-        fit(IM['t_' + G.fac], cx1 + S / 2, cy1 + S / 2, S * 0.95, S * 1.05, 0.2 + 0.5 * fp);     // 탱크 그림자 깜빡
+        ctx.fillStyle = 'rgba(255,60,50,' + (0.4 + 0.3 * lp) + ')'; ctx.fillRect(cx1 + 2, cy1 + 2, S - 4, S - 4);
+        fit(IM['t_' + G.fac], cx1 + S / 2, cy1 + S / 2, S * 0.95, S * 1.05, 0.3 + 0.45 * fp);     // 탱크 그림자 깜빡
         ctx.save(); ctx.strokeStyle = 'rgba(255,224,80,' + (0.55 + 0.45 * fp) + ')'; ctx.lineWidth = 3; ctx.setLineDash([7, 5]); ctx.lineDashOffset = -t / 40;
         ctx.shadowColor = '#ffd451'; ctx.shadowBlur = 10 * fp; ctx.strokeRect(cx1 + 3, cy1 + 3, S - 6, S - 6); ctx.restore(); }); }
     // 블록
