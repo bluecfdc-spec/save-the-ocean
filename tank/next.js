@@ -643,7 +643,7 @@
     { act: 'drag', piece: [[0, 0], [0, 1]], rot: true, holdFire: true, tgt: [6, 8], text: '협력자여, 들어라!\n블록을 누르면\n회전시킬 수 있다', text2: '좋다!\nDrag & Drop으로\n한 줄을 지워 보자', kills: 1, focus: [[4, 'col']],
       after: '줄을 지우면 탱크가\n적 진영으로 미사일을 쏜다\n미사일은 블록을 넘어서\n발사된다' },
     { act: 'tap', tgt: [2, 8], text: '탱크는 이동이 가능하다\n원하는 곳을 터치하면 이동한다\n폭격 아이템을 손에 넣자', kills: 3, after: '공습 폭격 지원이다!\n전투기가 적 탱크 3대를 격파한다' },
-    { act: 'tap', tgt: [7, 7], lure: true, text: '테트리스 빈 공간을\n탱크가 채울 수 있다\n이동해서 탱크로 직접 메우자!', kills: 3, focus: [[7, 'col']],
+    { act: 'tap', tgt: [7, 7], lure: true, holdFire: true, text: '테트리스 빈 공간을\n탱크가 채울 수 있다\n이동해서 탱크로 직접 메우자!', kills: 3, focus: [[7, 'col']],
       after: '탱크로 테트리스 줄을 지우면\n드릴탄이 발사된다\n적진의 탱크 한 줄을\n모두 격파한다\n추가로 이동 속도가\n잠시 빨라진다' },
     { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '블록을 이동해\n두 줄을 한 번에 지워 보자', clear: true,
       after: '두 줄을 한 번에 지우면\n보너스 점수를 획득한다' },
