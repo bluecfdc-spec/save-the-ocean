@@ -1,7 +1,7 @@
 {
  "note": "제네시스 일정표 공개 사본(메모 제외). 매일 자동 갱신.",
  "count": 70,
- "done": 8,
+ "done": 9,
  "tasks": [
   {
    "id": "t01",
@@ -120,8 +120,8 @@
    "title": "시뇽과 역할 정하기",
    "time": "30분",
    "cost": "",
-   "done": false,
-   "doneAt": ""
+   "done": true,
+   "doneAt": "10/16"
   },
   {
    "id": "t04",
@@ -146,18 +146,6 @@
    "cost": "",
    "done": true,
    "doneAt": "10/15"
-  },
-  {
-   "id": "kbPYKPSkCczclFmgX8Js",
-   "date": "2026-10-16",
-   "order": 900,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "게임제작업, 게임배급업 신청/ 등록절차 확인",
-   "time": "",
-   "cost": "",
-   "done": false,
-   "doneAt": ""
   },
   {
    "id": "t05",
@@ -299,6 +287,18 @@
    "cat": "test",
    "title": "테스터 15명 명단 모으기 시작",
    "time": "30분",
+   "cost": "",
+   "done": false,
+   "doneAt": ""
+  },
+  {
+   "id": "kbPYKPSkCczclFmgX8Js",
+   "date": "2026-10-21",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "게임제작업, 게임배급업 신청/ 등록절차 확인",
+   "time": "",
    "cost": "",
    "done": false,
    "doneAt": ""
