@@ -93,7 +93,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   box-shadow:0 0 16px var(--cyan);pointer-events:none}
 
 #field{flex:1 1 0;touch-action:none}
-#pad{flex:0 0 calc(50% - 80px);min-height:0;position:relative;overflow:hidden;touch-action:none;cursor:crosshair;
+#pad{flex:0 0 calc(55% - 88px);min-height:0;position:relative;overflow:hidden;touch-action:none;cursor:crosshair;
   background:url(assets/pad.jpg?v=44) center/100% 100% no-repeat,#04121a}
 #pad .stats{top:18px!important;left:24px!important;right:24px!important}
 #pad .hint{bottom:22px!important;left:110px!important;right:20px!important;font-size:13px!important;text-align:right!important}
@@ -344,7 +344,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='53';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='54';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
