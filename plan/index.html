@@ -89,6 +89,32 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 .gate{max-width:420px;margin:12vh auto 0;text-align:center;padding-inline:16px}
 .gate .btn{font-size:16px;padding:10px 20px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 위쪽 큰 탭: 일정 · 가계부 · 개발경비 */
+.main-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:16px 0 4px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px}
+.main-tabs button{font:inherit;font-size:15px;font-weight:700;border:0;background:none;color:var(--muted);border-radius:9px;padding:9px 4px;cursor:pointer;min-width:0}
+.main-tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.mon{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 4px}
+.mon b{font-family:var(--f-display);font-weight:400;font-size:22px;min-width:150px;text-align:center}
+.mon .btn{width:40px;height:40px;padding:0;font-size:18px}
+.count.lc .cd b{font-family:var(--f-body);font-weight:700;font-size:clamp(14px,4vw,22px);white-space:nowrap}
+.count.lc .cd{padding:10px 8px}
+.cd b.in{color:var(--c-game)} .cd b.out{color:var(--late)}
+.cats{display:grid;gap:6px;margin:10px 0 4px}
+.catr{display:grid;grid-template-columns:96px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.catr .g{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.catr .g i{display:block;height:100%;background:var(--accent)}
+.catr span:last-child{font-variant-numeric:tabular-nums}
+.ent{display:grid;grid-template-columns:44px 1fr auto;gap:2px 10px;padding:10px 8px;border-bottom:1px solid var(--line);align-items:start}
+.ent .amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.ent .amt.in{color:var(--c-game)}
+.ent .sm{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:2px}
+.ent .full{grid-column:2/4}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{font:inherit;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:8px;padding:8px}
+.seg button[aria-pressed="true"].o{background:var(--late);border-color:var(--late);color:#fff}
+.seg button[aria-pressed="true"].i{background:var(--c-game);border-color:var(--c-game);color:#fff}
+.ed .ck2{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink)}
+.ed .ck2 input{width:20px;height:20px;accent-color:var(--accent)}
 @media (max-width:480px){.task{grid-template-columns:48px 24px 1fr}.cd b{font-size:22px}}
 @media (prefers-reduced-motion:reduce){.prog i{transition:none}}
 </style>
@@ -110,6 +136,13 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     <div class="me"><span id="me"></span><button class="btn" id="logout">로그아웃</button></div>
   </div>
 
+  <nav class="main-tabs" role="tablist" aria-label="일정표 탭">
+    <button role="tab" id="tab-plan" aria-selected="true">📅 일정</button>
+    <button role="tab" id="tab-money" aria-selected="false">💰 가계부</button>
+    <button role="tab" id="tab-dev" aria-selected="false">🛠 개발경비</button>
+  </nav>
+
+  <div id="pane-plan">
   <div class="count">
     <div class="cd"><b id="cd1">–</b><span>합본 테스트 · 11/7</span></div>
     <div class="cd"><b id="cd2">–</b><span>심사 제출 · 11/28</span></div>
@@ -170,6 +203,10 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
   </details>
 
   <p class="note">홍균·시뇽 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
+  </div>
+
+  <div id="pane-money" hidden></div>
+  <div id="pane-dev" hidden></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -182,7 +219,7 @@ const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(
 const WHO={"홍균":"var(--c-acct)","시뇽":"var(--c-video)","둘다":"var(--c-test)"};
 const whoOf=t=>t.who==="아내"?"시뇽":(t.who||"홍균");
 const WD=["일","월","화","수","목","금","토"];
-let tasks=[],filter="open",whoF="all",me=null,unsub=null,openEdit=new Set();
+let tasks=[],money=[],dev=[],filter="open",whoF="all",me=null,unsub=null,openEdit=new Set();
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,"0");
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
@@ -215,7 +252,10 @@ auth.onAuthStateChanged(u=>{
   $("me").textContent=u.email||"";
   unsub=db.collection(COL).onSnapshot(s=>{
     $("gate").hidden=true;$("app").hidden=false;
-    tasks=s.docs.map(d=>({id:d.id,...d.data()}));render();
+    const all=s.docs.map(d=>({id:d.id,...d.data()}));
+    // 같은 컬렉션에 kind 로 구분: 없음 = 일정, money = 가계부, dev = 개발경비
+    tasks=all.filter(t=>!t.kind);money=all.filter(t=>t.kind==="money");dev=all.filter(t=>t.kind==="dev");
+    render();renderLedger("money");renderLedger("dev");
   },()=>{
     $("app").hidden=true;$("gate").hidden=false;
     $("gate-msg").textContent=u.email+" 계정은 이 일정표를 볼 수 없습니다. 홍균에게 등록을 요청하세요.";
@@ -319,6 +359,128 @@ $("imp-go").onclick=async()=>{
     $("imp-msg").textContent=n+"개 가져옴";$("imp-text").value="";
   }catch{$("imp-msg").textContent="가져오지 못했습니다. 다시 시도해 주세요"}
 };
+
+// ───────── 가계부 · 개발경비 ─────────
+const LEDGER={
+  money:{title:"가계부",io:true,
+    out:["식비","장보기","생활·집","교통·차","의료","육아·교육","쇼핑","경조사·선물","여가·여행","보험·통신","기타"],
+    in:["월급","부수입","기타수입"]},
+  dev:{title:"개발경비",io:false,
+    out:["AI·구독","그림·음악 에셋","개발자 계정·등록비","사업·세무","장비","광고·홍보","기타"],
+    games:["공통","오션","탱크","스페이스"]}
+};
+const ymOf=s=>String(s||"").slice(0,7);
+const won=n=>(Number(n)||0).toLocaleString("ko-KR")+"원";
+const nowYm=()=>todayStr().slice(0,7);
+const lstate={money:{ym:nowYm(),io:"out",open:new Set()},dev:{ym:nowYm(),io:"out",open:new Set()}};
+const listOf=k=>k==="money"?money:dev;
+function shiftYm(ym,n){const [y,m]=ym.split("-").map(Number),d=new Date(y,m-1+n,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+const ymLabel=ym=>{const [y,m]=ym.split("-");return `${y}년 ${Number(m)}월`};
+const amtOf=v=>Math.round(Number(String(v).replace(/[^0-9]/g,""))||0);
+const opts=(arr,sel)=>arr.map(x=>`<option${x===sel?" selected":""}>${esc(x)}</option>`).join("");
+
+function renderLedger(k){
+  const C=LEDGER[k],st=lstate[k],pane=$("pane-"+k);
+  const keepForm=pane.querySelector("form.add");
+  const draft=keepForm?{date:keepForm.querySelector("[name=date]").value,amt:keepForm.querySelector("[name=amt]").value,title:keepForm.querySelector("[name=title]").value}:null;
+  const rows=listOf(k).filter(e=>ymOf(e.date)===st.ym).sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.at||0)-(a.at||0));
+  const outs=rows.filter(e=>e.io!=="in"),ins=rows.filter(e=>e.io==="in");
+  const sum=a=>a.reduce((n,e)=>n+(Number(e.amount)||0),0);
+  const outSum=sum(outs),inSum=sum(ins);
+  let cards;
+  if(C.io)cards=`<div class="cd"><b class="in">${won(inSum)}</b><span>수입</span></div><div class="cd"><b class="out">${won(outSum)}</b><span>지출</span></div><div class="cd main"><b>${won(inSum-outSum)}</b><span>남은 돈</span></div>`;
+  else{const y=st.ym.slice(0,4),ySum=sum(dev.filter(e=>String(e.date).startsWith(y)));
+    cards=`<div class="cd"><b>${won(outSum)}</b><span>이번 달</span></div><div class="cd"><b>${rows.length}건</b><span>이번 달 건수</span></div><div class="cd main"><b>${won(ySum)}</b><span>${y}년 합계</span></div>`}
+  const byCat=new Map();for(const e of outs)byCat.set(e.cat||"기타",(byCat.get(e.cat||"기타")||0)+(Number(e.amount)||0));
+  const catList=[...byCat].sort((a,b)=>b[1]-a[1]),max=catList.length?catList[0][1]:1;
+  const catsHtml=catList.length?`<div class="cats">${catList.map(([c,v])=>`<div class="catr"><span>${esc(c)}</span><span class="g"><i style="width:${v/max*100}%"></i></span><span>${won(v)}</span></div>`).join("")}</div>`:"";
+  const ioNow=C.io?st.io:"out",catsFor=io=>io==="in"?C.in:C.out;
+  const listHtml=rows.length?rows.map(e=>{const d=parse(e.date),inn=e.io==="in",eid=esc(e.id);
+    return `<article class="ent" data-id="${eid}">
+      <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}</div>
+      <div class="body"><div class="t"><span class="who" style="--wc:${WHO[e.who]||WHO["홍균"]}">${esc(e.who||"홍균")}</span><span>${esc(e.title||e.cat)}</span></div>
+        <div class="sm"><span>${esc(e.cat||"")}</span>${e.game?`<span>${esc(e.game)}</span>`:""}${k==="dev"?`<span>${e.receipt?"🧾 영수증 있음":"영수증 없음"}</span>`:""}${e.byName?`<span>적은 사람 ${esc(e.byName)}</span>`:""}</div>
+        ${e.memo?`<div class="memo">${esc(e.memo)}</div>`:""}</div>
+      <div class="amt${inn?" in":""}">${inn?"+":"−"}${won(e.amount)}</div>
+      <details class="edit full"${st.open.has(e.id)?" open":""}><summary>✏️ 고치기</summary><div class="ed">
+        <div class="row"><label style="flex:1 1 130px">날짜<input type="date" name="e-date" value="${esc(e.date)}"></label>
+        <label style="flex:1 1 120px">금액<input type="text" inputmode="numeric" name="e-amt" value="${esc(e.amount)}"></label></div>
+        <div class="row"><label style="flex:1 1 130px">분류<select name="e-cat">${opts(catsFor(e.io==="in"?"in":"out"),e.cat)}</select></label>
+        <label style="flex:1 1 90px">누가<select name="e-who">${opts(["홍균","시뇽"],e.who)}</select></label>
+        ${k==="dev"?`<label style="flex:1 1 90px">게임<select name="e-game">${opts(C.games,e.game)}</select></label>`:""}</div>
+        <label>내용<input type="text" name="e-title" maxlength="80" value="${esc(e.title)}"></label>
+        <label>메모<textarea name="e-memo">${esc(e.memo)}</textarea></label>
+        ${k==="dev"?`<label class="ck2"><input type="checkbox" name="e-rcpt"${e.receipt?" checked":""}>영수증 있음</label>`:""}
+        <div class="row"><button class="btn pri" data-act="lsave">저장</button><button class="btn del" data-act="ldel">삭제</button><span class="msg" style="font-size:12px;color:var(--muted)"></span></div>
+      </div></details></article>`}).join(""):`<p class="empty">${ymLabel(st.ym)}에 적은 ${C.title}가 없습니다.</p>`;
+  pane.innerHTML=`
+    <div class="mon"><button class="btn" data-act="prev" aria-label="이전 달">‹</button><b>${ymLabel(st.ym)}</b><button class="btn" data-act="next" aria-label="다음 달">›</button></div>
+    <div class="count lc">${cards}</div>
+    ${catsHtml}
+    <form class="box add" style="margin-top:14px"><h3>${C.title} 적기</h3><div class="ed">
+      ${C.io?`<div class="seg"><button type="button" class="o" data-act="io-out" aria-pressed="${ioNow==="out"}">지출</button><button type="button" class="i" data-act="io-in" aria-pressed="${ioNow==="in"}">수입</button></div>`:""}
+      <div class="row"><label style="flex:1 1 130px">날짜<input type="date" name="date" required></label>
+      <label style="flex:1 1 120px">금액(원)<input type="text" inputmode="numeric" name="amt" required placeholder="예: 12000"></label></div>
+      <div class="row"><label style="flex:1 1 130px">분류<select name="cat">${opts(catsFor(ioNow))}</select></label>
+      <label style="flex:1 1 90px">누가<select name="who">${opts(["홍균","시뇽"],myWho())}</select></label>
+      ${k==="dev"?`<label style="flex:1 1 90px">게임<select name="game">${opts(C.games)}</select></label>`:""}</div>
+      <label>내용<input type="text" name="title" maxlength="80" placeholder="${k==="dev"?"예: Claude 구독":"예: 마트 장보기"}"></label>
+      ${k==="dev"?`<label class="ck2"><input type="checkbox" name="rcpt">영수증 있음</label>`:""}
+      <div class="row"><button class="btn pri" type="submit">적기</button><span class="amsg" style="font-size:13px;color:var(--muted)"></span></div>
+    </div></form>
+    <section class="week"><div class="wk-h"><h2>${ymLabel(st.ym)} 내역</h2><small>${rows.length}건</small></div>${listHtml}</section>
+    ${k==="dev"?`<p class="row" style="margin-top:14px"><button class="btn" data-act="csv">📥 ${st.ym.slice(0,4)}년 개발경비 엑셀(CSV) 받기</button></p>`:""}
+    <p class="note">홍균·시뇽 둘만 보고 고칠 수 있습니다. 공개 사본(목요일 브리핑용)에는 ${C.title}가 들어가지 않습니다.</p>`;
+  const f=pane.querySelector("form.add");
+  f.querySelector("[name=date]").value=draft?draft.date:(st.ym===nowYm()?todayStr():st.ym+"-01");
+  if(draft){f.querySelector("[name=amt]").value=draft.amt;f.querySelector("[name=title]").value=draft.title}
+}
+function myWho(){const e=(me&&me.email)||"";return e==="bluecfdc@gmail.com"?"홍균":"시뇽"}
+
+for(const k of ["money","dev"]){
+  const pane=$("pane-"+k),st=lstate[k];
+  pane.addEventListener("toggle",e=>{const a=e.target.closest&&e.target.closest(".ent");if(!a)return;e.target.open?st.open.add(a.dataset.id):st.open.delete(a.dataset.id)},true);
+  pane.addEventListener("submit",async e=>{
+    e.preventDefault();const f=e.target,g=n=>f.querySelector(`[name=${n}]`),amount=amtOf(g("amt").value),msg=f.querySelector(".amsg");
+    if(!amount){msg.textContent="금액을 숫자로 적어 주세요";return}
+    const d={kind:k,date:g("date").value,amount,cat:g("cat").value,who:g("who").value,title:g("title").value.trim(),memo:"",byName:myName(),at:Date.now()};
+    if(LEDGER[k].io)d.io=st.io;
+    if(k==="dev"){d.io="out";d.game=g("game").value;d.receipt=g("rcpt").checked}
+    try{await db.collection(COL).add(d);st.ym=ymOf(d.date);g("amt").value="";g("title").value="";renderLedger(k);
+      pane.querySelector(".amsg").textContent=`적었습니다 (${won(amount)})`}
+    catch{msg.textContent="적지 못했습니다. 다시 시도해 주세요"}
+  });
+  pane.addEventListener("click",async e=>{
+    const b=e.target.closest("button[data-act]");if(!b)return;const act=b.dataset.act;
+    if(act==="prev"||act==="next"){st.ym=shiftYm(st.ym,act==="prev"?-1:1);renderLedger(k);return}
+    if(act==="io-out"||act==="io-in"){st.io=act==="io-in"?"in":"out";renderLedger(k);return}
+    if(act==="csv"){exportCsv(st.ym.slice(0,4));return}
+    if(act!=="lsave"&&act!=="ldel")return;
+    e.preventDefault();const a=b.closest(".ent"),id=a.dataset.id,msg=a.querySelector(".msg"),g=n=>a.querySelector(`[name=${n}]`);
+    if(act==="lsave"){
+      const amount=amtOf(g("e-amt").value);if(!amount){msg.textContent="금액을 숫자로 적어 주세요";return}
+      const d={date:g("e-date").value,amount,cat:g("e-cat").value,who:g("e-who").value,title:g("e-title").value.trim(),memo:g("e-memo").value.trim()};
+      if(k==="dev"){d.game=g("e-game").value;d.receipt=g("e-rcpt").checked}
+      try{await ref(id).update(d);st.open.delete(id)}catch{msg.textContent="저장 못 함: 다시 시도해 주세요"}
+    }else{
+      if(b.dataset.confirm!=="1"){b.dataset.confirm="1";b.textContent="한 번 더 누르면 삭제";return}
+      try{await ref(id).delete();st.open.delete(id)}catch{msg.textContent="삭제 못 함"}
+    }
+  });
+}
+function exportCsv(y){
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const rows=dev.filter(e=>String(e.date).startsWith(y)).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const lines=[["날짜","분류","게임","내용","금액","누가","영수증","메모"].join(",")]
+    .concat(rows.map(e=>[e.date,e.cat,e.game,e.title,Number(e.amount)||0,e.who,e.receipt?"있음":"없음",e.memo].map(q).join(",")));
+  const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`제네시스_개발경비_${y}.csv`;document.body.appendChild(a);a.click();a.remove();
+}
+
+const PANES=["plan","money","dev"];
+function showTab(k){for(const p of PANES){$("pane-"+p).hidden=p!==k;$("tab-"+p).setAttribute("aria-selected",p===k)}try{localStorage.setItem("genesis-tab",k)}catch{}}
+for(const p of PANES)$("tab-"+p).onclick=()=>showTab(p);
+try{const t=localStorage.getItem("genesis-tab");if(PANES.includes(t))showTab(t)}catch{}
 </script>
 </body>
 </html>
