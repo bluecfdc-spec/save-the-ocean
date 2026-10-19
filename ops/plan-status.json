@@ -1,7 +1,7 @@
 {
  "note": "제네시스 일정표 공개 사본(메모 제외). 매일 자동 갱신.",
  "count": 70,
- "done": 9,
+ "done": 10,
  "tasks": [
   {
    "id": "t01",
@@ -148,6 +148,18 @@
    "doneAt": "10/15"
   },
   {
+   "id": "xr3Af0aW8VJhvukI6dgv",
+   "date": "2026-10-16",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "사업계획서 작성",
+   "time": "",
+   "cost": "",
+   "done": true,
+   "doneAt": "10/19"
+  },
+  {
    "id": "t05",
    "date": "2026-10-17",
    "order": 1,
@@ -178,18 +190,6 @@
    "who": "홍균",
    "cat": "acct",
    "title": "제작시설, 장비 명세서 작성",
-   "time": "",
-   "cost": "",
-   "done": false,
-   "doneAt": ""
-  },
-  {
-   "id": "xr3Af0aW8VJhvukI6dgv",
-   "date": "2026-10-17",
-   "order": 900,
-   "who": "홍균",
-   "cat": "acct",
-   "title": "사업계획서 작성",
    "time": "",
    "cost": "",
    "done": false,
