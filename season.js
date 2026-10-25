@@ -5,8 +5,8 @@
 //  SEASON_SUFFIX : 지금 점수가 쌓이는 게시판 접미사 (scores_s1, plays_s1 ...)
 //  SEASON_START  : 현재 시즌 시작일 (YYYY-MM-DD)
 //  SEASONS_DATA  : 끝난 시즌 1위 목록 (오래된 순). 시작 화면 "👑 시즌 1위"에 표시
-window.SEASON_SUFFIX = "_s4";
-window.SEASON_START = "2026-10-19";
+window.SEASON_SUFFIX = "_s5";
+window.SEASON_START = "2026-10-26";
 window.SEASONS_DATA = [
   {
     "n": 1,
@@ -23,6 +23,12 @@ window.SEASONS_DATA = [
   {
     "n": 3,
     "range": "10.12 ~ 10.18",
+    "name": "",
+    "score": 0
+  },
+  {
+    "n": 4,
+    "range": "10.19 ~ 10.25",
     "name": "",
     "score": 0
   }
