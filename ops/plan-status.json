@@ -1,7 +1,7 @@
 {
  "note": "제네시스 일정표 공개 사본(메모 제외). 매일 자동 갱신.",
- "count": 70,
- "done": 10,
+ "count": 73,
+ "done": 13,
  "tasks": [
   {
    "id": "t01",
@@ -244,18 +244,6 @@
    "doneAt": ""
   },
   {
-   "id": "t09",
-   "date": "2026-10-19",
-   "order": 1,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "세무사 문의 (시뇽)",
-   "time": "30분",
-   "cost": "상담료 확인",
-   "done": false,
-   "doneAt": ""
-  },
-  {
    "id": "t10",
    "date": "2026-10-20",
    "order": 1,
@@ -292,18 +280,6 @@
    "doneAt": ""
   },
   {
-   "id": "kbPYKPSkCczclFmgX8Js",
-   "date": "2026-10-21",
-   "order": 900,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "게임제작업, 게임배급업 신청/ 등록절차 확인",
-   "time": "",
-   "cost": "",
-   "done": false,
-   "doneAt": ""
-  },
-  {
    "id": "g08",
    "date": "2026-10-22",
    "order": 1,
@@ -328,30 +304,6 @@
    "doneAt": ""
   },
   {
-   "id": "t12",
-   "date": "2026-10-24",
-   "order": 1,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "시뇽 명의 Google Play 개발자 계정 만들기",
-   "time": "1시간",
-   "cost": "$25 (1회)",
-   "done": false,
-   "doneAt": ""
-  },
-  {
-   "id": "t13",
-   "date": "2026-10-24",
-   "order": 2,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "시뇽 명의 Apple Developer 등록",
-   "time": "30분",
-   "cost": "$99/년 (약 14만원)",
-   "done": false,
-   "doneAt": ""
-  },
-  {
    "id": "g10",
    "date": "2026-10-25",
    "order": 0,
@@ -359,30 +311,6 @@
    "cat": "game",
    "title": "[탱크] 그림 GPT로 뽑기",
    "time": "반나절",
-   "cost": "",
-   "done": false,
-   "doneAt": ""
-  },
-  {
-   "id": "t14",
-   "date": "2026-10-25",
-   "order": 1,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "상표 출원 DIVINE GENESIS (시뇽)",
-   "time": "1~2시간",
-   "cost": "류당 약 5만원대 (출원료, 확인 필요)",
-   "done": false,
-   "doneAt": ""
-  },
-  {
-   "id": "t16",
-   "date": "2026-10-27",
-   "order": 1,
-   "who": "시뇽",
-   "cat": "acct",
-   "title": "사업자 업종 추가 신청 (홈택스, 시뇽)",
-   "time": "30분",
    "cost": "",
    "done": false,
    "doneAt": ""
@@ -424,6 +352,18 @@
    "doneAt": ""
   },
   {
+   "id": "t09",
+   "date": "2026-10-29",
+   "order": 1,
+   "who": "홍균",
+   "cat": "acct",
+   "title": "세무사 문의 (시뇽)",
+   "time": "30분",
+   "cost": "상담료 확인",
+   "done": true,
+   "doneAt": "10/30"
+  },
+  {
    "id": "g13",
    "date": "2026-10-30",
    "order": 1,
@@ -434,6 +374,18 @@
    "cost": "",
    "done": false,
    "doneAt": ""
+  },
+  {
+   "id": "t16",
+   "date": "2026-10-30",
+   "order": 1,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "사업자 업종 추가 신청 (홈택스, 시뇽)",
+   "time": "30분",
+   "cost": "",
+   "done": true,
+   "doneAt": "10/30"
   },
   {
    "id": "t18",
@@ -448,6 +400,30 @@
    "doneAt": ""
   },
   {
+   "id": "t12",
+   "date": "2026-10-31",
+   "order": 1,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "시뇽 명의 Google Play 개발자 계정 만들기",
+   "time": "1시간",
+   "cost": "$25 (1회)",
+   "done": false,
+   "doneAt": ""
+  },
+  {
+   "id": "t14",
+   "date": "2026-10-31",
+   "order": 1,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "상표 출원 DIVINE GENESIS (시뇽)",
+   "time": "1~2시간",
+   "cost": "류당 약 5만원대 (출원료, 확인 필요)",
+   "done": false,
+   "doneAt": ""
+  },
+  {
    "id": "t19",
    "date": "2026-10-31",
    "order": 1,
@@ -456,6 +432,18 @@
    "title": "영상 도구 조합 결정",
    "time": "1시간",
    "cost": "",
+   "done": false,
+   "doneAt": ""
+  },
+  {
+   "id": "t13",
+   "date": "2026-10-31",
+   "order": 2,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "시뇽 명의 Apple Developer 등록",
+   "time": "30분",
+   "cost": "$99/년 (약 14만원)",
    "done": false,
    "doneAt": ""
   },
@@ -484,6 +472,18 @@
    "doneAt": ""
   },
   {
+   "id": "CiGC4lUP2Og0gzMYFhiN",
+   "date": "2026-10-31",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "게임제작업 등록 (정부24)",
+   "time": "",
+   "cost": "",
+   "done": false,
+   "doneAt": ""
+  },
+  {
    "id": "g14",
    "date": "2026-11-01",
    "order": 0,
@@ -506,6 +506,42 @@
    "cost": "",
    "done": false,
    "doneAt": ""
+  },
+  {
+   "id": "7zaJa3LEtcrHFVDfTZgc",
+   "date": "2026-11-02",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "사업자 업종추가 결과 확인",
+   "time": "",
+   "cost": "",
+   "done": false,
+   "doneAt": ""
+  },
+  {
+   "id": "Ch9eITRe0EYoehmqcJM8",
+   "date": "2026-11-02",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "게임배급업 등록 결과 확인",
+   "time": "",
+   "cost": "",
+   "done": false,
+   "doneAt": ""
+  },
+  {
+   "id": "kbPYKPSkCczclFmgX8Js",
+   "date": "2026-11-02",
+   "order": 900,
+   "who": "시뇽",
+   "cat": "acct",
+   "title": "게임제작업, 게임배급업 신청/ 등록절차 확인",
+   "time": "",
+   "cost": "",
+   "done": true,
+   "doneAt": "10/30"
   },
   {
    "id": "t22",
