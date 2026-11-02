@@ -51,7 +51,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     const net=price-now.total,simNet=simPrice-sim.total,same=st.simYm===a.baseMonth&&simPrice===price;
     const nM=groupPayoff(a,"mortgage"),nA=groupPayoff(a,"amort"),mort=a.loans.find(l=>l.group==="mortgage")||{},ioN=a.loans.filter(l=>l.group==="io").length,amN=a.loans.filter(l=>l.group==="amort").length;
     const delta=(v,good,f=big)=>{if(same||Math.abs(v)<1)return"";const g=good?v>0:v<0;return`<small class="${g?"good":"bad"}">${v>0?"+":"−"}${f(Math.abs(v))}</small>`};
-    const pct=(x,t)=>t?Math.round(x/t*100):0;
+    const pct=(x,t)=>t?Math.round(x/t*100):0;const hc=Math.min(now.interest,a.housingCost||0);const mEnd=isFinite(nM)?ymLabel(addYm(a.baseMonth,nM)):"—";
     const el=$(root,"#bd-assets");
     el.innerHTML=`
       <div class="bd-h"><h2>자산현황</h2><small>${ymLabel(a.baseMonth)} 기준 · ${esc(DATA.updated)} 갱신</small></div>
@@ -64,20 +64,19 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
 
       <div class="bd-pay">
         <div class="bd-pay-h"><span>매달 대출로 나가는 돈</span><b>${won(now.pay)}</b></div>
-        <div class="bd-pay-bar" aria-hidden="true"><i class="i" style="width:${pct(now.interest,now.pay)}%"></i><i class="p" style="width:${pct(now.principal,now.pay)}%"></i></div>
-        <div class="bd-pay-l"><span><em class="i"></em>이자 ${won(now.interest)} <small>(${pct(now.interest,now.pay)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${pct(now.principal,now.pay)}%)</small></span></div>
+        <div class="bd-pay-bar" aria-hidden="true"><i class="h" style="width:${pct(hc,now.pay)}%"></i><i class="i" style="width:${pct(now.interest-hc,now.pay)}%"></i><i class="p" style="width:${pct(now.principal,now.pay)}%"></i></div>
+        <div class="bd-pay-l"><span><em class="h"></em>주거비 ${won(hc)} <small>(${pct(hc,now.pay)}%)</small></span><span><em class="i"></em>이자 ${won(now.interest-hc)} <small>(${pct(now.interest-hc,now.pay)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${pct(now.principal,now.pay)}%)</small></span></div>
+        <p class="bd-foot">※ 이자 ${won(now.interest)} 중 약 ${big(hc)}원은 월세 대신 내는 <b>주거비</b>로 봤어요. 순수 이자 부담은 ${won(now.interest-hc)}.</p>
       </div>
 
       <div class="bd-loans">
         <div class="bd-loan">
-          <div class="bd-loan-h"><span>🏠 주택담보대출 <small>${esc(mort.bank||"")} · ${mort.rate||0}%</small></span><b>${big(now.mortgage.bal)}</b></div>
+          <div class="bd-loan-h"><span>🏠 주택담보대출 <small>${esc(mort.bank||"")} · ${mort.rate||0}%</small></span><b>${big(now.mortgage.bal)}<small>(만기 ${mEnd} · ${yrs(nM)} 남음)</small></b></div>
           <div class="bd-loan-r"><span>매달</span><b>${won(now.mortgage.pay)}</b><small>이자 ${won(now.mortgage.interest)} + 원금 ${won(now.mortgage.principal)}</small></div>
-          <div class="bd-loan-r"><span>완납</span><b>${isFinite(nM)?ymLabel(addYm(a.baseMonth,nM)):"—"}</b><small>${yrs(nM)} 남음</small></div>
         </div>
         <div class="bd-loan">
-          <div class="bd-loan-h"><span>📉 분할상환 대출 <small>캐피탈·신용 ${amN}건</small></span><b>${big(now.amort.bal)}</b></div>
+          <div class="bd-loan-h"><span>📉 분할상환 대출 <small>캐피탈·신용 ${amN}건</small></span><b>${big(now.amort.bal)}<small>(만기 ${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"} · ${yrs(nA)} 남음)</small></b></div>
           <div class="bd-loan-r"><span>매달</span><b>${won(now.amort.pay)}</b><small>이자 ${won(now.amort.interest)} + 원금 ${won(now.amort.principal)}</small></div>
-          <div class="bd-loan-r"><span>완납</span><b>${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"}</b><small>${yrs(nA)} 남음</small></div>
         </div>
         <div class="bd-loan">
           <div class="bd-loan-h"><span>💳 이자만 내는 대출 <small>마이너스통장·신용 ${ioN}건 · 연장 가정</small></span><b>${big(now.io.bal)}</b></div>
@@ -94,11 +93,11 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
         <div class="bd-sim-ctl"><label>시점 <input type="month" data-act="sim" value="${st.simYm}"></label><label>아파트 시세 <input type="number" step="1000" min="0" inputmode="numeric" data-act="sim-price" value="${Math.round(simPrice/1e4)}"> 만원</label><button type="button" class="btn" data-act="sim-reset">지금으로</button></div>
         <table class="bd-cmp"><thead><tr><th></th><th>지금</th><th>${ymLabel(st.simYm)}</th></tr></thead><tbody>
           <tr><td>시세</td><td>${big(price)}</td><td>${big(simPrice)}${delta(simPrice-price,true)}</td></tr>
-          <tr><td>🏠 주담대 잔액</td><td>${big(now.mortgage.bal)}</td><td>${big(sim.mortgage.bal)}${delta(sim.mortgage.bal-now.mortgage.bal,false)}</td></tr>
+          <tr><td>🏠 주담대 잔액<small>만기 ${mEnd}</small></td><td>${big(now.mortgage.bal)}</td><td>${big(sim.mortgage.bal)}${delta(sim.mortgage.bal-now.mortgage.bal,false)}</td></tr>
           <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.mortgage.pay)}</td><td>${won(sim.mortgage.pay)}</td></tr>
-          <tr><td>📉 분할상환 잔액</td><td>${big(now.amort.bal)}</td><td>${big(sim.amort.bal)}${delta(sim.amort.bal-now.amort.bal,false)}</td></tr>
+          <tr><td>📉 분할상환 잔액<small>만기 ${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"}</small></td><td>${big(now.amort.bal)}</td><td>${big(sim.amort.bal)}${delta(sim.amort.bal-now.amort.bal,false)}</td></tr>
           <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.amort.pay)}</td><td>${won(sim.amort.pay)}</td></tr>
-          <tr><td>💳 이자만 대출</td><td>${big(now.io.bal)}</td><td>${big(sim.io.bal)}</td></tr>
+          <tr><td>💳 이자만 대출<small>연장 유지</small></td><td>${big(now.io.bal)}</td><td>${big(sim.io.bal)}</td></tr>
           <tr class="bd-sub"><td>└ 매달 이자</td><td>${won(now.io.interest)}</td><td>${won(sim.io.interest)}</td></tr>
           <tr><td>👤 기타 채무</td><td>${big(now.other)}</td><td>${big(sim.other)}</td></tr>
           <tr class="bd-sum"><td>부채 총액</td><td>${big(now.total)}</td><td>${big(sim.total)}${delta(sim.total-now.total,false)}</td></tr>
