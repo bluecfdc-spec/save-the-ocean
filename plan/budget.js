@@ -22,16 +22,23 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
   const st={price:null,simYm:null,simPrice:null,mi:0};
 
   // ───── 자산현황 ─────
-  function debtAt(a,ym){
-    const m=monthsBetween(a.baseMonth,ym);
-    let bal=0,interest=0,principal=0;
-    for(const l of a.loans){
-      const b=Math.max(0,(l.balance||0)-(l.monthlyPrincipal||0)*m);
-      bal+=b;interest+=b*(l.rate||0)/100/12;if(b>0)principal+=(l.monthlyPrincipal||0);
-    }
-    const other=(a.otherDebts||[]).reduce((n,d)=>n+(d.amount||0),0);
-    return {loans:bal,other,total:bal+other,interest,principal};
+  // 원리금균등: 기준월 잔액과 만기까지 남은 개월수로 월 납입액(원리금)을 구해 시점별 잔액을 계산. 이자만 내는 대출은 연장 가정(잔액 고정).
+  function loanAt(l,baseYm,ym){
+    const r=(l.rate||0)/100/12,B=l.balance||0;
+    if(!l.maturity){return {bal:B,interest:B*r,principal:0,pay:B*r,amort:false}}
+    const n=Math.max(1,monthsBetween(baseYm,l.maturity)),m=monthsBetween(baseYm,ym);
+    const pay=r?B*r/(1-Math.pow(1+r,-n)):B/n;
+    if(m>=n)return {bal:0,interest:0,principal:0,pay:0,amort:true};
+    const g=Math.pow(1+r,m),bal=Math.max(0,r?B*g-pay*(g-1)/r:B-pay*m);
+    const interest=bal*r;return {bal,interest,principal:Math.min(bal,pay-interest),pay:Math.min(pay,bal+interest),amort:true};
   }
+  function debtAt(a,ym){
+    let amort=0,io=0,interest=0,principal=0;
+    for(const l of a.loans){const x=loanAt(l,a.baseMonth,ym);if(x.amort)amort+=x.bal;else io+=x.bal;interest+=x.interest;principal+=x.principal}
+    const other=(a.otherDebts||[]).reduce((n,d)=>n+(d.amount||0),0);
+    return {amort,io,other,loans:amort+io,total:amort+io+other,interest,principal,pay:interest+principal};
+  }
+  function payoffYm(a){let last=a.baseMonth;for(const l of a.loans)if(l.maturity&&l.maturity>last)last=l.maturity;return last}
   function renderAssets(){
     const a=DATA.assets,price=st.price??a.apt.price,simPrice=st.simPrice??price,now=debtAt(a,a.baseMonth),sim=debtAt(a,st.simYm);
     const net=price-now.total,simNet=simPrice-sim.total,same=st.simYm===a.baseMonth&&simPrice===price;
@@ -42,26 +49,33 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
       <div class="bd-apt">
         <div class="bd-apt-row"><span>${esc(a.apt.name)} 매입가</span><b>${big(a.apt.purchase)}</b></div>
         <div class="bd-apt-row main"><span>시세</span><b>${big(price)}</b></div>
-        <label class="bd-price">시세 바꿔보기 <span><input type="number" step="1000" min="0" inputmode="numeric" data-act="price" value="${Math.round(price/1e4)}"> 만원</span><button type="button" class="btn" data-act="price-reset">${big(a.apt.price)}으로</button></label>
+        <label class="bd-price">✎ 시세 바꿔보기 <span><input type="number" step="1000" min="0" inputmode="numeric" data-act="price" value="${Math.round(price/1e4)}"> 만원</span><button type="button" class="btn" data-act="price-reset">${big(a.apt.price)}으로</button></label>
       </div>
       <div class="count lc bd-cards3">
         <div class="cd"><b class="out">${big(now.total)}</b><span>부채 총액</span></div>
-        <div class="cd"><b>${big(now.interest)}</b><span>월 이자</span></div>
-        <div class="cd"><b>${big(now.principal)}</b><span>월 원금상환</span></div>
+        <div class="cd"><b>${big(now.amort)}</b><span>갚아 가는 대출</span></div>
+        <div class="cd"><b>${big(now.io+now.other)}</b><span>이자만·기타 채무</span></div>
+      </div>
+      <div class="bd-pay">
+        <div class="bd-pay-h"><span>이번 달 대출로 나가는 돈</span><b>${won(now.pay)}</b></div>
+        <div class="bd-pay-bar" aria-hidden="true"><i class="i" style="width:${(now.interest/now.pay*100).toFixed(1)}%"></i><i class="p" style="width:${(now.principal/now.pay*100).toFixed(1)}%"></i></div>
+        <div class="bd-pay-l"><span><em class="i"></em>이자 ${won(now.interest)} <small>(${Math.round(now.interest/now.pay*100)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${Math.round(now.principal/now.pay*100)}%)</small></span></div>
       </div>
       <div class="bd-net ${net<0?"neg":""}"><span>최종 순자산 <small>= 시세 − 부채</small></span><b>${big(net)}</b></div>
       <details class="bd-sim" ${same?"":"open"}>
-        <summary>🔭 시점 시뮬레이션</summary>
+        <summary>🔭 시점 시뮬레이션 <small>시점·시세를 바꿔 보세요</small></summary>
         <div class="bd-sim-ctl"><label>시점 <input type="month" data-act="sim" value="${st.simYm}"></label><label>아파트 시세 <input type="number" step="1000" min="0" inputmode="numeric" data-act="sim-price" value="${Math.round(simPrice/1e4)}"> 만원</label><button type="button" class="btn" data-act="sim-reset">지금으로</button></div>
-        <table class="bd-cmp"><thead><tr><th></th><th>지금 (${ymLabel(a.baseMonth)})</th><th>${ymLabel(st.simYm)}</th></tr></thead><tbody>
+        <table class="bd-cmp"><thead><tr><th></th><th>지금</th><th>${ymLabel(st.simYm)}</th></tr></thead><tbody>
           <tr><td>시세</td><td>${big(price)}</td><td>${big(simPrice)}${delta(simPrice-price,true)}</td></tr>
           <tr><td>부채 총액</td><td>${big(now.total)}</td><td>${big(sim.total)}${delta(sim.total-now.total,false)}</td></tr>
+          <tr class="bd-sub"><td>└ 갚아 가는 대출</td><td>${big(now.amort)}</td><td>${big(sim.amort)}</td></tr>
+          <tr class="bd-sub"><td>└ 이자만 내는 대출·기타</td><td>${big(now.io+now.other)}</td><td>${big(sim.io+sim.other)}</td></tr>
           <tr><td>월 이자</td><td>${won(now.interest)}</td><td>${won(sim.interest)}${delta(sim.interest-now.interest,false,won)}</td></tr>
           <tr><td>월 원금상환</td><td>${won(now.principal)}</td><td>${won(sim.principal)}${delta(sim.principal-now.principal,false,won)}</td></tr>
           <tr><td>월 총 상환</td><td>${won(now.interest+now.principal)}</td><td>${won(sim.interest+sim.principal)}${delta((sim.interest+sim.principal)-(now.interest+now.principal),false,won)}</td></tr>
           <tr class="bd-sum"><td>순자산</td><td>${big(net)}</td><td>${big(simNet)}${delta(simNet-net,true)}</td></tr>
         </tbody></table>
-        <p class="bd-foot">매달 원금을 지금처럼 갚는다고 가정한 값이에요. 이자만 내는 대출(마이너스통장·신용대출)은 연장한다고 보고 잔액을 그대로 뒀어요. 대출 내역은 금융관리 시트 기준.</p>
+        <p class="bd-foot">주담대·캐피탈·전북은행은 원리금균등(매달 내는 총액이 같고 원금 비중이 점점 커짐)으로 각 만기에 0이 되도록 계산했어요. 갚아 가는 대출은 <b>${ymLabel(payoffYm(a))}</b>에 모두 끝나요. 이자만 내는 대출(마이너스통장·신용대출)과 기타 채무는 연장한다고 보고 잔액을 그대로 뒀어요. 대출 내역은 금융관리 시트 기준.</p>
       </details>`;
   }
 
