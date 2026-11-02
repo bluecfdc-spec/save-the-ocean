@@ -153,45 +153,43 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
   // ───── 생활비 · 용돈 표 ─────
   function wallet(w,m,wid){
     const spent=w.rows.reduce((n,r)=>n+(r.spent||0),0),rec=w.rows.reduce((n,r)=>n+(r.rec||0),0);
-    const adds=ADDS.filter(x=>x.month===m.key&&x.wallet===wid),addSum=adds.reduce((n,x)=>n+(Number(x.amount)||0),0),bud=(w.budget||0)+addSum;
+    // 채운 돈: 아래 '채운 금액' 칸(budget_fill) + 예전 위쪽 '추가 금액'(budget_add)도 같은 돈으로 합쳐서 봄
+    const fills=FILLS.concat(ADDS.map(x=>({...x,code:x.code||"추가 금액"}))).filter(f=>f.month===m.key&&f.wallet===wid).sort((a,b)=>(a.at||0)-(b.at||0));
+    const filled=fills.reduce((n,f)=>n+(Number(f.amount)||0),0),bud=(w.budget||0)+filled;
     const asOf=m.asOf||todayStr(),total=dayDiff(m.start,m.end)+1,elapsed=Math.min(total,Math.max(1,dayDiff(m.start,asOf)+1)),left=Math.max(0,total-elapsed);
-    const pct=bud?spent/bud:0,remain=w.balance!=null?w.balance:bud-spent,perDay=left?Math.floor(remain/left/100)*100:0;
+    // 가용 금액 = 예산 + 채운 돈 − 쓴 돈. 초과분은 채운 돈에서 먼저 빠지고(퉁치고) 남은 만큼만 가용으로 남음
+    const remain=bud-spent,pct=bud?spent/bud:0,perDay=left&&remain>0?Math.floor(remain/left/100)*100:0;
     const level=pct>=1?"over":pct>=.9?"warn90":pct>=.7?"warn70":"ok";
     const LV={ok:["여유 있음","var(--c-game)"],warn70:["주의 · 70% 넘음","var(--accent)"],warn90:["위험 · 90% 넘음","var(--late)"],over:["예산 초과","var(--late)"]}[level];
     const past=m.end<todayStr();
-    // 총액 기준 = 권장 합계 − 지출 합계. 초과 항목은 항상 −초과.
-    // 총액이 1원이라도 남으면 초과 안 한 항목에 필수(아래쪽)부터 배분, 총액이 마이너스면 나머지는 전부 0.
-    const tot=rec+addSum-spent,minus=tot<0;
+    // 총액 기준 = 권장 합계 + 채운 돈 − 지출 합계. 초과 항목은 항상 −초과.
+    // 총액이 남으면 초과 안 한 항목에 필수(아래쪽)부터 배분하고, 그래도 남는 돈은 '채운 금액' 줄에 여유로 표시
+    const base=rec-spent,tot=base+filled,minus=tot<0;
     const alloc=new Map();let pool=Math.max(0,tot);
     for(let i=w.rows.length-1;i>=0;i--){const r=w.rows[i],room=(r.rec||0)-(r.spent||0);if(room<=0)continue;const give=Math.min(room,pool);alloc.set(i,give);pool-=give}
     const rows=w.rows.map((r,i)=>{const diff=(r.rec||0)-(r.spent||0),over=diff<0;
       const last=over?`<td class="over">−${num(-diff)}</td>`:past?`<td class="left">${num(diff)}</td>`:`<td class="${alloc.get(i)?"left":"zero"}">${num(alloc.get(i)||0)}</td>`;
       return`<tr><td>${r.icon?esc(r.icon)+" ":""}${esc(r.name)}</td><td>${num(r.rec)}</td><td class="${over?"over":""}">${num(r.spent)}</td>${last}</tr>`}).join("");
     const sumLast=minus?`<td class="over">−${num(-tot)}</td>`:`<td class="left">${num(tot)}</td>`;
-    const fills=FILLS.filter(f=>f.month===m.key&&f.wallet===wid),filled=fills.reduce((n,f)=>n+(Number(f.amount)||0),0),gap=minus?-tot-filled:0;
-    const fillBox=!minus?"":`<div class="bd-fill-box" data-wallet="${wid}">
-        <div class="bd-fill-h"><b>총 −${won(-tot)}</b><span class="${gap<=0?"ok":""}">${gap<=0?"✓ 0원으로 맞춤":won(gap)+" 부족"}</span></div>
-        ${fills.length?`<ul class="bd-fill-list">${fills.map(f=>`<li><span>${esc(f.code)}</span><b>+${won(f.amount)}</b>${f.byName?`<small>${esc(f.byName)}</small>`:""}<button type="button" class="btn del" data-act="fill-del" data-id="${esc(f.id)}" aria-label="삭제">×</button></li>`).join("")}</ul>`:""}
-        ${fdb?`<div class="bd-fill-add"><select data-f="code">${FILL_CODES.map(c=>`<option>${c}</option>`).join("")}</select><input type="text" inputmode="numeric" data-f="amt" placeholder="${gap>0?Math.max(0,gap):""}"><button type="button" class="btn pri" data-act="fill-add">확인</button></div>
-        <p class="bd-foot">어떻게 메웠는지 적어 두는 칸이에요(선택). 금액을 비우고 확인을 누르면 남은 부족분이 그대로 들어가요.</p>`:`<p class="bd-foot">어떻게 메웠는지는 일정표 웹에 로그인하면 적을 수 있어요.</p>`}
+    const gap=minus?-tot:0;
+    const fillBox=`<div class="bd-fill-box${minus?"":" ok"}" data-wallet="${wid}">
+        <div class="bd-fill-h"><b class="${base<0?"":"nz"}">${base<0?"초과 −"+won(-base):"총액 초과 없음"}</b><span class="${minus?"":"ok"}">${minus?won(gap)+" 부족":filled?"✓ 메우고 "+won(tot)+" 남음":"✓ 예산 안"}</span></div>
+        ${fills.length?`<ul class="bd-fill-list">${fills.map(f=>`<li><span>${esc(f.code)}</span><b>+${won(f.amount)}</b>${f.byName?`<small>${esc(f.byName)}</small>`:""}${fdb?`<button type="button" class="btn del" data-act="fill-del" data-id="${esc(f.id)}" aria-label="삭제">×</button>`:""}</li>`).join("")}</ul>`:""}
+        ${fdb?`<div class="bd-fill-add"><select data-f="code">${FILL_CODES.map(c=>`<option>${c}</option>`).join("")}</select><input type="text" inputmode="numeric" data-f="amt" placeholder="${gap>0?gap:"금액"}"><button type="button" class="btn pri" data-act="fill-add">확인</button></div>
+        <p class="bd-foot">초과가 없어도 언제든 돈을 채워 넣을 수 있어요. 넣은 돈은 초과분부터 메우고, 남는 만큼 위의 가용 금액이 늘어요.${gap>0?" 금액을 비우고 확인을 누르면 부족분이 그대로 들어가요.":""}</p>`:`<p class="bd-foot">돈을 채워 넣으려면 일정표 웹에 로그인하세요.</p>`}
       </div>`;
     return`
       <div class="bd-h"><h2>${esc(w.title)}</h2><small>${md(m.start)} ~ ${md(m.end)}${past?" · 마감":" · "+esc(asOf)+" 기준"}</small></div>
       <div class="count lc bd-cards3">
-        <div class="cd"><b class="${spent>0?"out":""}">${big(spent)}</b><span>쓴 돈 / ${big(w.budget)}${addSum?` <em class="bd-plus">+${big(addSum)}</em>`:""}</span></div>
-        <div class="cd"><b>${big(remain)}</b><span>${past?"남긴 돈":"통장 잔액"}</span></div>
+        <div class="cd"><b class="${spent>0?"out":""}">${big(spent)}</b><span>쓴 돈 / ${big(w.budget)}${filled?` <em class="bd-plus">+${big(filled)}</em>`:""}</span></div>
+        <div class="cd"><b class="${remain<0?"out":""}">${remain<0?"−"+big(-remain):big(remain)}</b><span>${past?"남긴 돈":"가용 금액"}</span></div>
         <div class="cd main"><b>${past?Math.round(pct*100)+"%":big(perDay)}</b><span>${past?"예산 대비 사용":"하루 한도 · "+left+"일 남음"}</span></div>
-      </div>
-      <div class="bd-add" data-wallet="${wid}">
-        <span class="bd-add-t">➕ 추가 금액</span>
-        ${adds.map(x=>`<span class="bd-chip">+${won(x.amount)}${fdb?`<button type="button" data-act="add-del" data-id="${esc(x.id)}" aria-label="삭제">×</button>`:""}</span>`).join("")}
-        ${fdb?`<span class="bd-add-in"><input type="text" inputmode="numeric" data-f="add-amt" placeholder="금액"><button type="button" class="btn pri" data-act="add-add">추가</button></span>`:`<small>로그인하면 추가할 수 있어요</small>`}
       </div>
       <div class="bd-badge" style="--lv:${LV[1]}">${LV[0]}</div>
       <div class="bd-prog" aria-hidden="true"><i class="bd-fill" style="width:${Math.min(100,pct*100).toFixed(1)}%;background:${LV[1]}"></i>${past?"":`<b class="bd-pace" style="left:${(elapsed/total*100).toFixed(1)}%"></b>`}<em style="left:70%"></em><em style="left:90%"></em></div>
-      <div class="bd-prog-t"><span>예산 ${Math.round(pct*100)}% 사용</span><span>${past?total+"일 마감":"기간 "+Math.round(elapsed/total*100)+"% 경과 · "+elapsed+"일째"}</span></div>
+      <div class="bd-prog-t"><span>${filled?"채운 돈 포함 ":"예산 "}${Math.round(pct*100)}% 사용</span><span>${past?total+"일 마감":"기간 "+Math.round(elapsed/total*100)+"% 경과 · "+elapsed+"일째"}</span></div>
       <table class="bd-table"><thead><tr><th>항목 <small>↓ 아래로 갈수록 필수</small></th><th>월 권장<small>원</small></th><th>${past?"지출":"현재 지출"}<small>원</small></th><th>${past?"결과":"남은 한도"}<small>${past?"원":"총액 기준 · 원"}</small></th></tr></thead>
-      <tbody>${rows}${addSum?`<tr class="bd-addrow"><td>➕ 추가 금액</td><td>+${num(addSum)}</td><td></td><td></td></tr>`:""}<tr class="bd-sum"><td>합계</td><td>${num(rec+addSum)}</td><td class="${spent>rec+addSum?"over":""}">${num(spent)}</td>${sumLast}</tr></tbody></table>${fillBox}`;
+      <tbody>${rows}${filled?`<tr class="bd-addrow"><td>💰 채운 금액</td><td>+${num(filled)}</td><td></td><td class="${pool>0?"left":"zero"}">${past?"":num(pool)}</td></tr>`:""}<tr class="bd-sum"><td>합계</td><td>${num(rec+filled)}</td><td class="${spent>rec+filled?"over":""}">${num(spent)}</td>${sumLast}</tr></tbody></table>${fillBox}`;
   }
   function renderMonths(){
     const ms=DATA.months,m=ms[st.mi];
