@@ -20,18 +20,9 @@
         "bank": "현대캐피탈",
         "type": "캐피탈",
         "group": "amort",
-        "balance": 30000000,
+        "balance": 59000000,
         "rate": 8.5,
-        "monthlyPayment": 432500,
-        "owner": "홍균"
-      },
-      {
-        "bank": "현대캐피탈",
-        "type": "캐피탈",
-        "group": "amort",
-        "balance": 29000000,
-        "rate": 8.5,
-        "monthlyPayment": 415417,
+        "monthlyPayment": 847917,
         "owner": "홍균"
       },
       {
