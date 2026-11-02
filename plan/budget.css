@@ -144,3 +144,14 @@
 .bd-loan-h b small{text-align:right}
 .bd-loan-r small{justify-self:end}
 .bd-cmp tr.bd-legend td{text-align:left!important;font-weight:400!important;white-space:normal;font-size:11.5px;color:var(--muted);background:var(--bg);padding:6px 8px;line-height:1.6}
+/* 추가 금액 */
+.bd-add{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:6px 0 10px;font-size:12.5px}
+.bd-add-t{font-weight:700;color:var(--accent)}
+.bd-add small{color:var(--muted)}
+.bd-chip{display:inline-flex;align-items:center;gap:4px;background:color-mix(in srgb,var(--c-game) 14%,var(--paper));color:var(--c-game);font-weight:700;border-radius:99px;padding:2px 4px 2px 10px;font-variant-numeric:tabular-nums}
+.bd-chip button{font:inherit;border:0;background:none;color:var(--muted);cursor:pointer;width:22px;height:22px;border-radius:50%}
+.bd-add-in{display:inline-flex;gap:6px;align-items:center}
+.bd-add-in input{font:inherit;font-size:16px;width:7.5em;padding:4px 8px;border-radius:6px;color:var(--ink);text-align:right}
+.bd-add-in .btn{padding:4px 12px;font-size:13px}
+em.bd-plus{font-style:normal;color:var(--c-game);font-weight:700}
+.bd-table tr.bd-addrow td{color:var(--c-game);font-weight:600}
