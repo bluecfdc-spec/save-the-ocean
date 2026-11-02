@@ -13,7 +13,8 @@
         "type": "마이너스통장",
         "group": "io",
         "balance": 100000000,
-        "rate": 5.92
+        "rate": 5.92,
+        "owner": "홍균"
       },
       {
         "bank": "현대캐피탈",
@@ -21,7 +22,8 @@
         "group": "amort",
         "balance": 30000000,
         "rate": 8.5,
-        "monthlyPayment": 432500
+        "monthlyPayment": 432500,
+        "owner": "홍균"
       },
       {
         "bank": "현대캐피탈",
@@ -29,7 +31,8 @@
         "group": "amort",
         "balance": 29000000,
         "rate": 8.5,
-        "monthlyPayment": 415417
+        "monthlyPayment": 415417,
+        "owner": "홍균"
       },
       {
         "bank": "새마을금고",
@@ -37,21 +40,24 @@
         "group": "mortgage",
         "balance": 660000000,
         "rate": 4.4,
-        "monthlyPayment": 2970000
+        "monthlyPayment": 2970000,
+        "owner": "홍균"
       },
       {
         "bank": "우리은행",
         "type": "신용대출",
         "group": "io",
         "balance": 36600000,
-        "rate": 4.82
+        "rate": 4.82,
+        "owner": "시뇽"
       },
       {
         "bank": "우리은행",
         "type": "신용대출",
         "group": "io",
         "balance": 30000000,
-        "rate": 4.69
+        "rate": 4.69,
+        "owner": "시뇽"
       },
       {
         "bank": "전북은행",
@@ -59,14 +65,16 @@
         "group": "amort",
         "balance": 18000000,
         "rate": 6.33,
-        "monthlyPayment": 350000
+        "monthlyPayment": 350000,
+        "owner": "홍균"
       },
       {
         "bank": "광주은행",
         "type": "신용대출",
         "group": "io",
         "balance": 9000000,
-        "rate": 5.46
+        "rate": 5.46,
+        "owner": "시뇽"
       }
     ],
     "otherDebts": [

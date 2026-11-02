@@ -19,39 +19,78 @@
 
   let DATA=null,root=null,FILLS=[],fdb=null,fme=()=>"";
 const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","기타"];
-  const st={price:null,simYm:null,simPrice:null,mi:0};
+  const st={price:null,simYm:null,simPrice:null,housing:null,mi:0};
 
   // ───── 자산현황 ─────
-  // 대출 계산. 분할상환(주담대·캐피탈·전북): 실제 월 납입액(시트) 고정, 이자=잔액×월이율, 원금=납입액−이자 → 잔액이 0이 되는 달이 완납.
-  // 이자만 내는 대출(마통·신용): 연장 가정, 잔액 고정·이자만. 기타 채무: 이자 없음.
+  // ───── 대출 시뮬레이션 (눈덩이) ─────
+  // 매달 대출에 쓰는 돈(기준월 납입 총액)은 그대로 유지. 분할상환 대출은 정해진 납입액대로 갚고(이자↓ 원금↑),
+  // 대출 하나가 끝나면 거기 들어가던 돈이 '추가 상환'으로 넘어감. 추가 상환 우선순위: 시뇽 명의 이자만 대출(잔액 작은 순)
+  // → 홍균 명의 이자만 대출(잔액 작은 순) → 기타 채무(이자 없음) → 주담대. 이자만 대출을 갚으면 그 이자도 풀려서 더 빨라짐.
   const mr=l=>(l.rate||0)/100/12;
-  function payoffMonths(l){const r=mr(l),B=l.balance||0,P=l.monthlyPayment||0;if(!P)return Infinity;if(!r)return Math.ceil(B/P);if(r*B>=P)return Infinity;return Math.ceil(-Math.log(1-r*B/P)/Math.log(1+r))}
-  function loanAt(l,m){
-    const r=mr(l),B=l.balance||0;
-    if(l.group==="io"){return {bal:B,interest:B*r,principal:0,pay:B*r}}
-    const P=l.monthlyPayment||0,n=payoffMonths(l);
-    if(m>=n)return {bal:0,interest:0,principal:0,pay:0};
-    const g=Math.pow(1+r,m),bal=Math.max(0,r?B*g-P*(g-1)/r:B-P*m),interest=bal*r;
-    return {bal,interest,principal:Math.min(bal,P-interest),pay:Math.min(P,bal+interest)};
+  let SIM=null;
+  function simulate(a){
+    const loans=a.loans.map((l,i)=>({id:"L"+i,name:l.bank+" "+l.type+" "+big(l.balance||0),bank:l.bank,type:l.type,group:l.group,owner:l.owner||"홍균",rate:l.rate||0,r:mr(l),bal:l.balance||0,P:l.monthlyPayment||0,closed:null}));
+    const otherBal=(a.otherDebts||[]).reduce((n,d)=>n+(d.amount||0),0);
+    const other={id:"OTHER",name:(a.otherDebts||[]).map(d=>d.name).join(", ")||"기타 채무",group:"other",r:0,bal:otherBal,closed:otherBal>0?null:0};
+    const budget=loans.reduce((n,l)=>n+(l.group==="io"?l.bal*l.r:l.P),0);
+    const ioOrder=g=>loans.filter(l=>l.group==="io"&&l.owner===g).sort((x,y)=>x.bal-y.bal);
+    const priority=[...ioOrder("시뇽"),...ioOrder("홍균"),other,...loans.filter(l=>l.group==="mortgage")];
+    const months=[],events=[];const ym=t=>addYm(a.baseMonth,t);
+    for(let t=0;t<=1200;t++){
+      const snap={t,ym:ym(t),loans:{},other:{start:other.bal,extra:0},spent:0,extra:0,interest:0,principal:0,events:[]};
+      for(const l of loans){
+        const start=l.bal;let interest=0,sched=0,principal=0;
+        if(l.bal>0){interest=l.bal*l.r;
+          if(l.group!=="io"){sched=Math.min(l.P,l.bal+interest);principal=sched-interest;l.bal=Math.max(0,l.bal-principal)}
+          else sched=interest;}
+        snap.loans[l.id]={start,interest,sched,principal,extra:0,end:l.bal};snap.spent+=sched;snap.interest+=interest;snap.principal+=principal;
+      }
+      let free=Math.max(0,budget-snap.spent);
+      for(const tg of priority){if(free<=0)break;if(tg.bal<=0)continue;const pay=Math.min(free,tg.bal);tg.bal-=pay;free-=pay;snap.extra+=pay;
+        if(tg===other){snap.other.extra=pay}else{snap.loans[tg.id].extra=pay;snap.loans[tg.id].end=tg.bal;snap.principal+=pay}}
+      snap.other.end=other.bal;snap.spent+=snap.extra;
+      for(const l of [...loans,other]){if(l.bal<=0.5&&l.closed===null){l.closed=t;l.bal=0;snap.events.push(l.id);events.push({t,ym:ym(t),id:l.id,name:l.name,group:l.group})}}
+      snap.totalStart=Object.values(snap.loans).reduce((n,x)=>n+x.start,0)+snap.other.start;
+      snap.totalEnd=Object.values(snap.loans).reduce((n,x)=>n+x.end,0)+snap.other.end;
+      months.push(snap);
+      if(snap.totalEnd<=0.5)break;
+    }
+    const closedAt=id=>{const l=[...loans,other].find(x=>x.id===id);return l&&l.closed!==null?l.closed:Infinity};
+    return {loans,other,budget,months,events,closedAt,ym};
   }
+  // 눈덩이 없이 정해진 납입액만으로 갚을 때의 만기
+  function plainPayoff(l){const r=mr(l),B=l.balance||0,P=l.monthlyPayment||0;if(!P)return Infinity;if(!r)return Math.ceil(B/P);if(r*B>=P)return Infinity;return Math.ceil(-Math.log(1-r*B/P)/Math.log(1+r))}
   function addYm(ym,m){const [y,mo]=ym.split("-").map(Number);const d=new Date(y,mo-1+m,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
-  function debtAt(a,ym){
-    const m=monthsBetween(a.baseMonth,ym),g={mortgage:z(),amort:z(),io:z()};
-    function z(){return {bal:0,interest:0,principal:0,pay:0}}
-    for(const l of a.loans){const x=loanAt(l,m),t=g[l.group]||g.amort;t.bal+=x.bal;t.interest+=x.interest;t.principal+=x.principal;t.pay+=x.pay}
-    const other=(a.otherDebts||[]).reduce((n,d)=>n+(d.amount||0),0);
-    const interest=g.mortgage.interest+g.amort.interest+g.io.interest,principal=g.mortgage.principal+g.amort.principal;
-    return {...g,other,total:g.mortgage.bal+g.amort.bal+g.io.bal+other,interest,principal,pay:interest+principal};
-  }
   const yrs=n=>{if(!isFinite(n))return"—";const y=Math.floor(n/12),mo=n%12;return (y?y+"년 ":"")+(mo?mo+"개월":"")||"0개월"};
-  function groupPayoff(a,group){let n=0;for(const l of a.loans)if(l.group===group)n=Math.max(n,payoffMonths(l));return n}
+  function groupAt(sim,m,group){
+    const snap=sim.months[Math.min(m,sim.months.length-1)],done=m>=sim.months.length;
+    const z={start:0,end:0,interest:0,sched:0,extra:0,principal:0,n:0};
+    if(group==="other"){if(done)return z;return {start:snap.other.start,end:snap.other.end,interest:0,sched:0,extra:snap.other.extra,principal:snap.other.extra,n:1}}
+    for(const l of sim.loans)if(l.group===group){if(done)continue;const x=snap.loans[l.id];z.start+=x.start;z.end+=x.end;z.interest+=x.interest;z.sched+=x.sched;z.extra+=x.extra;z.principal+=x.principal+x.extra;if(x.start>0)z.n++}
+    return z;
+  }
+  function totalsAt(sim,m){
+    if(m>=sim.months.length)return {start:0,end:0,interest:0,sched:0,extra:0,principal:0,pay:0};
+    const s=sim.months[m];return {start:s.totalStart,end:s.totalEnd,interest:s.interest,sched:s.spent-s.extra,extra:s.extra,principal:s.principal,pay:s.spent};
+  }
 
   function renderAssets(){
-    const a=DATA.assets,price=st.price??a.apt.price,simPrice=st.simPrice??price,now=debtAt(a,a.baseMonth),sim=debtAt(a,st.simYm);
-    const net=price-now.total,simNet=simPrice-sim.total,same=st.simYm===a.baseMonth&&simPrice===price;
-    const nM=groupPayoff(a,"mortgage"),nA=groupPayoff(a,"amort"),mort=a.loans.find(l=>l.group==="mortgage")||{},ioN=a.loans.filter(l=>l.group==="io").length,amN=a.loans.filter(l=>l.group==="amort").length;
+    const a=DATA.assets;if(!SIM)SIM=simulate(a);const sim=SIM;
+    const price=st.price??a.apt.price,simPrice=st.simPrice??price,m=Math.max(0,monthsBetween(a.baseMonth,st.simYm));
+    const now=totalsAt(sim,0),at=totalsAt(sim,m),same=m===0&&simPrice===price;
+    const G=g=>groupAt(sim,0,g),S=g=>groupAt(sim,m,g);
+    const nowM=G("mortgage"),nowA=G("amort"),nowIo=G("io"),nowO=G("other"),simM=S("mortgage"),simA=S("amort"),simIo=S("io"),simO=S("other");
+    const net=price-now.start,simNet=simPrice-at.start;
+    const mort=a.loans.find(l=>l.group==="mortgage")||{},mortId="L"+a.loans.indexOf(mort);
+    const mortMat=plainPayoff(mort),mortSnow=sim.closedAt(mortId);
+    const amortMat=Math.max(...a.loans.filter(l=>l.group==="amort").map(plainPayoff));
+    const hcMax=Math.floor(now.interest/10000)*10000,hc=Math.min(hcMax,st.housing??(a.housingCost||0));
     const delta=(v,good,f=big)=>{if(same||Math.abs(v)<1)return"";const g=good?v>0:v<0;return`<small class="${g?"good":"bad"}">${v>0?"+":"−"}${f(Math.abs(v))}</small>`};
-    const pct=(x,t)=>t?Math.round(x/t*100):0;const hc=Math.min(now.interest,a.housingCost||0);const mEnd=isFinite(nM)?ymLabel(addYm(a.baseMonth,nM)):"—";
+    const pct=(x,t)=>t?Math.round(x/t*100):0;
+    const ymL=t=>isFinite(t)?ymLabel(addYm(a.baseMonth,t)):"—";
+    const loanRow=(name,sub,bal,pay,payNote,extra)=>`<div class="bd-loan"><div class="bd-loan-h"><span>${name} <small>${sub}</small></span><b>${big(bal)}${extra?`<small>${extra}</small>`:""}</b></div><div class="bd-loan-r"><span>매달</span><b>${won(pay)}</b><small>${payNote}</small></div></div>`;
+    const ev=sim.events.map(e=>{const s=sim.months[e.t],after=s.extra;const nextName=(()=>{const nx=sim.months[Math.min(e.t+1,sim.months.length-1)];const tg=[...sim.loans].find(l=>nx.loans[l.id]&&nx.loans[l.id].extra>0);return tg?tg.name:(nx.other.extra>0?sim.other.name:"")})();
+      return`<li class="${e.t<=m?"past":""}"><b>${ymLabel(e.ym)}</b><span>${esc(e.name)} 완납</span>${nextName?`<small>→ 이후 추가 상환은 ${esc(nextName)}</small>`:`<small>🎉 모든 빚 상환 끝</small>`}</li>`}).join("");
     const el=$(root,"#bd-assets");
     el.innerHTML=`
       <div class="bd-h"><h2>자산현황</h2><small>${ymLabel(a.baseMonth)} 기준 · ${esc(DATA.updated)} 갱신</small></div>
@@ -62,50 +101,52 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
       </div>
       <div class="bd-net ${net<0?"neg":""}"><span>최종 순자산 <small>= 시세 − 부채</small></span><b>${big(net)}</b></div>
 
-      <div class="bd-pay">
+      <div class="bd-pay" id="bd-pay">
         <div class="bd-pay-h"><span>매달 대출로 나가는 돈</span><b>${won(now.pay)}</b></div>
-        <div class="bd-pay-bar" aria-hidden="true"><i class="h" style="width:${pct(hc,now.pay)}%"></i><i class="i" style="width:${pct(now.interest-hc,now.pay)}%"></i><i class="p" style="width:${pct(now.principal,now.pay)}%"></i></div>
-        <div class="bd-pay-l"><span><em class="h"></em>주거비 ${won(hc)} <small>(${pct(hc,now.pay)}%)</small></span><span><em class="i"></em>이자 ${won(now.interest-hc)} <small>(${pct(now.interest-hc,now.pay)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${pct(now.principal,now.pay)}%)</small></span></div>
-        <p class="bd-foot">※ 이자 ${won(now.interest)} 중 약 ${big(hc)}원은 월세 대신 내는 <b>주거비</b>로 봤어요. 순수 이자 부담은 ${won(now.interest-hc)}.</p>
+        <div class="bd-pay-bar" aria-hidden="true"><i class="h"></i><i class="i"></i><i class="p" style="width:${pct(now.principal,now.pay)}%"></i></div>
+        <div class="bd-pay-l"><span><em class="h"></em>주거비 <b data-k="hc"></b> <small data-k="hcp"></small></span><span><em class="i"></em>이자 <b data-k="int"></b> <small data-k="intp"></small></span><span><em class="p"></em>원금 <b>${won(now.principal)}</b> <small>(${pct(now.principal,now.pay)}%)</small></span></div>
+        <label class="bd-range">✎ 주거비로 볼 금액 <b data-k="hc2"></b><input type="range" min="0" max="${hcMax}" step="50000" value="${hc}" data-act="housing"><small>0원 ~ 월 이자 ${won(now.interest)} 사이에서 조절 · 기본 ${big(a.housingCost||0)}원</small></label>
+        <p class="bd-foot">※ 이자 ${won(now.interest)} 중 <b data-k="hc3"></b>은 월세 대신 내는 <b>주거비</b>로 봤어요. 순수 이자 부담은 <b data-k="int2"></b>.</p>
       </div>
 
       <div class="bd-loans">
-        <div class="bd-loan">
-          <div class="bd-loan-h"><span>🏠 주택담보대출 <small>${esc(mort.bank||"")} · ${mort.rate||0}%</small></span><b>${big(now.mortgage.bal)}<small>(만기 ${mEnd} · ${yrs(nM)} 남음)</small></b></div>
-          <div class="bd-loan-r"><span>매달</span><b>${won(now.mortgage.pay)}</b><small>이자 ${won(now.mortgage.interest)} + 원금 ${won(now.mortgage.principal)}</small></div>
-        </div>
-        <div class="bd-loan">
-          <div class="bd-loan-h"><span>📉 분할상환 대출 <small>캐피탈·신용 ${amN}건</small></span><b>${big(now.amort.bal)}<small>(만기 ${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"} · ${yrs(nA)} 남음)</small></b></div>
-          <div class="bd-loan-r"><span>매달</span><b>${won(now.amort.pay)}</b><small>이자 ${won(now.amort.interest)} + 원금 ${won(now.amort.principal)}</small></div>
-        </div>
-        <div class="bd-loan">
-          <div class="bd-loan-h"><span>💳 이자만 내는 대출 <small>마이너스통장·신용 ${ioN}건 · 연장 가정</small></span><b>${big(now.io.bal)}</b></div>
-          <div class="bd-loan-r"><span>매달</span><b>${won(now.io.interest)}</b><small>이자만 · 원금 상환 없음</small></div>
-        </div>
-        <div class="bd-loan">
-          <div class="bd-loan-h"><span>👤 기타 채무 <small>${(a.otherDebts||[]).map(d=>esc(d.name)).join(", ")}</small></span><b>${big(now.other)}</b></div>
-          <div class="bd-loan-r"><span>매달</span><b>0원</b><small>이자 없음</small></div>
-        </div>
+        ${loanRow("🏠 주택담보대출",`${esc(mort.bank||"")} · ${mort.rate||0}%`,nowM.start,nowM.sched,`이자 ${won(nowM.interest)} + 원금 ${won(nowM.principal)}`,`(만기 ${ymL(mortMat)} · ${yrs(mortMat)} 남음)`)}
+        ${loanRow("📉 분할상환 대출",`캐피탈·신용 ${nowA.n}건`,nowA.start,nowA.sched,`이자 ${won(nowA.interest)} + 원금 ${won(nowA.principal)}`,`(만기 ${ymL(amortMat)} · ${yrs(amortMat)} 남음)`)}
+        ${loanRow("💳 이자만 내는 대출",`마이너스통장·신용 ${nowIo.n}건 · 연장 유지`,nowIo.start,nowIo.interest,"이자만 · 원금 상환 없음","")}
+        ${loanRow("👤 기타 채무",esc(sim.other.name),nowO.start,0,"이자 없음","")}
       </div>
 
       <details class="bd-sim" ${same?"":"open"}>
         <summary>🔭 시점 시뮬레이션 <small>시점·시세를 바꿔 보세요</small></summary>
         <div class="bd-sim-ctl"><label>시점 <input type="month" data-act="sim" value="${st.simYm}"></label><label>아파트 시세 <input type="number" step="1000" min="0" inputmode="numeric" data-act="sim-price" value="${Math.round(simPrice/1e4)}"> 만원</label><button type="button" class="btn" data-act="sim-reset">지금으로</button></div>
+        <p class="bd-foot bd-rule">매달 대출에 쓰는 돈 <b>${won(sim.budget)}</b>은 그대로 두고, 대출이 하나 끝나면 거기 들어가던 돈을 다음 빚의 <b>추가 상환</b>에 얹는다고 가정했어요. 순서: 시뇽 명의 이자만 대출(잔액 작은 순) → 홍균 명의 이자만 대출 → 기타 채무 → 주담대. 이자만 대출을 갚으면 그 이자도 풀려서 점점 빨라져요.</p>
         <table class="bd-cmp"><thead><tr><th></th><th>지금</th><th>${ymLabel(st.simYm)}</th></tr></thead><tbody>
           <tr><td>시세</td><td>${big(price)}</td><td>${big(simPrice)}${delta(simPrice-price,true)}</td></tr>
-          <tr><td>🏠 주담대 잔액<small>만기 ${mEnd}</small></td><td>${big(now.mortgage.bal)}</td><td>${big(sim.mortgage.bal)}${delta(sim.mortgage.bal-now.mortgage.bal,false)}</td></tr>
-          <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.mortgage.pay)}</td><td>${won(sim.mortgage.pay)}</td></tr>
-          <tr><td>📉 분할상환 잔액<small>만기 ${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"}</small></td><td>${big(now.amort.bal)}</td><td>${big(sim.amort.bal)}${delta(sim.amort.bal-now.amort.bal,false)}</td></tr>
-          <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.amort.pay)}</td><td>${won(sim.amort.pay)}</td></tr>
-          <tr><td>💳 이자만 대출<small>연장 유지</small></td><td>${big(now.io.bal)}</td><td>${big(sim.io.bal)}</td></tr>
-          <tr class="bd-sub"><td>└ 매달 이자</td><td>${won(now.io.interest)}</td><td>${won(sim.io.interest)}</td></tr>
-          <tr><td>👤 기타 채무</td><td>${big(now.other)}</td><td>${big(sim.other)}</td></tr>
-          <tr class="bd-sum"><td>부채 총액</td><td>${big(now.total)}</td><td>${big(sim.total)}${delta(sim.total-now.total,false)}</td></tr>
-          <tr class="bd-sum"><td>매달 대출 지출</td><td>${won(now.pay)}</td><td>${won(sim.pay)}${delta(sim.pay-now.pay,false,won)}</td></tr>
+          <tr><td>🏠 주담대 잔액<small>만기 ${ymL(mortMat)}${isFinite(mortSnow)&&mortSnow<mortMat?` → 추가 상환 시 ${ymL(mortSnow)}`:""}</small></td><td>${big(nowM.start)}</td><td>${big(simM.start)}${delta(simM.start-nowM.start,false)}</td></tr>
+          <tr class="bd-sub"><td>└ 매달 (이자+원금${simM.extra?"+추가":""})</td><td>${won(nowM.sched)}</td><td>${won(simM.sched+simM.extra)}</td></tr>
+          ${a.loans.filter(l=>l.group==="amort").map((l,i)=>{const id="L"+a.loans.indexOf(l),x0=sim.months[0].loans[id],x=m<sim.months.length?sim.months[m].loans[id]:{start:0,sched:0,extra:0};
+            return`<tr><td>📉 ${esc(l.bank)} ${esc(l.type)}<small>만기 ${ymL(plainPayoff(l))}</small></td><td>${big(x0.start)}</td><td>${big(x.start)}${delta(x.start-x0.start,false)}</td></tr>
+            <tr class="bd-sub"><td>└ 매달</td><td>${won(x0.sched)}</td><td>${won(x.sched+x.extra)}</td></tr>`}).join("")}
+          ${sim.loans.filter(l=>l.group==="io").map(l=>{const x0=sim.months[0].loans[l.id],x=m<sim.months.length?sim.months[m].loans[l.id]:{start:0,interest:0,extra:0};const c=sim.closedAt(l.id);
+            return`<tr><td>💳 ${esc(l.bank)} ${esc(l.type)}<small>${esc(l.owner)} · ${l.rate}%${isFinite(c)?` · 추가 상환 시 ${ymL(c)} 완납`:""}</small></td><td>${big(x0.start)}</td><td>${big(x.start)}${delta(x.start-x0.start,false)}</td></tr>
+            <tr class="bd-sub"><td>└ 매달 이자${x.extra?"<small>+ 추가 상환</small>":""}</td><td>${won(x0.interest)}</td><td>${won(x.interest)}${x.extra?`<small class="good">+ ${won(x.extra)}</small>`:""}</td></tr>`}).join("")}
+          <tr><td>👤 기타 채무<small>${isFinite(sim.closedAt("OTHER"))?`추가 상환 시 ${ymL(sim.closedAt("OTHER"))} 완납`:"이자 없음"}</small></td><td>${big(nowO.start)}</td><td>${big(simO.start)}${delta(simO.start-nowO.start,false)}</td></tr>
+          <tr class="bd-sum"><td>부채 총액</td><td>${big(now.start)}</td><td>${big(at.start)}${delta(at.start-now.start,false)}</td></tr>
+          <tr class="bd-sum"><td>매달 대출 지출</td><td>${won(now.pay)}</td><td>${won(at.pay)}<small>이자 ${won(at.interest)}<br>원금 ${won(at.principal)}</small>${at.extra?`<small class="good">추가 상환 ${won(at.extra)} 포함</small>`:""}</td></tr>
           <tr class="bd-sum"><td>순자산</td><td>${big(net)}</td><td>${big(simNet)}${delta(simNet-net,true)}</td></tr>
         </tbody></table>
-        <p class="bd-foot">분할상환 대출은 지금 내는 월 납입액이 그대로 이어진다고 보고(이자는 줄고 원금은 늘어남), 잔액이 0이 되는 달을 완납으로 잡았어요. 이자만 내는 대출은 연장한다고 보고 잔액과 이자를 그대로 뒀어요. 그래서 분할상환이 다 끝나도 이자만 내는 대출의 이자(매달 ${won(now.io.interest)})는 계속 나가요. 대출 내역은 금융관리 시트 기준.</p>
+        <h3 class="bd-ev-h">📅 이대로 가면 빚이 사라지는 순서</h3>
+        <ol class="bd-ev">${ev}</ol>
+        <p class="bd-foot">대출 내역은 금융관리 시트 기준. 금리·납입액이 바뀌면 시트를 고쳐 주세요.</p>
       </details>`;
+    paintHousing(el,now,hc);
+  }
+  function paintHousing(el,now,hc){
+    const pct=(x,t)=>t?Math.round(x/t*100):0,q=k=>el.querySelector(`[data-k=${k}]`);
+    const int=now.interest-hc;
+    el.querySelector(".bd-pay-bar .h").style.width=pct(hc,now.pay)+"%";el.querySelector(".bd-pay-bar .i").style.width=pct(int,now.pay)+"%";
+    q("hc").textContent=won(hc);q("hcp").textContent=`(${pct(hc,now.pay)}%)`;q("int").textContent=won(int);q("intp").textContent=`(${pct(int,now.pay)}%)`;
+    q("hc2").textContent=won(hc);q("hc3").textContent=won(hc);q("int2").textContent=won(int);
   }
 
   // ───── 생활비 · 용돈 표 ─────
@@ -174,6 +215,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
       b.disabled=true;try{await fdb.collection("genesis_tasks").add({kind:"budget_fill",month:m.key,wallet:box.dataset.wallet,code,amount:amt,byName:fme(),at:Date.now()})}catch{}b.disabled=false});
     el.addEventListener("input",e=>{const t=e.target;if(t.dataset.act==="price"){const v=Number(t.value)*1e4;if(v>0){st.price=v;st.simPrice=null;renderAssets();$(root,"[data-act=price]").focus()}}
       if(t.dataset.act==="sim"&&/^\d{4}-\d{2}$/.test(t.value)){st.simYm=t.value;renderAssets()}
+      if(t.dataset.act==="housing"){st.housing=Number(t.value)||0;const a=DATA.assets,now=totalsAt(SIM,0);paintHousing($(root,"#bd-assets"),now,Math.min(now.interest,st.housing))}
       if(t.dataset.act==="sim-price"){const v=Number(t.value)*1e4;if(v>0){st.simPrice=v;renderAssets();$(root,"[data-act=sim-price]").focus()}}});
     el.addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const a=b.dataset.act;
       if(a==="price-reset"){st.price=null;renderAssets()}
