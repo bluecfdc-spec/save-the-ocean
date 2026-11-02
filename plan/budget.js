@@ -101,6 +101,8 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
         <div class="bd-apt-row main"><span>시세</span><b>${big(price)}</b></div>
         <label class="bd-price">✎ 시세 바꿔보기 <span><input type="number" step="1000" min="0" inputmode="numeric" data-act="price" value="${Math.round(price/1e4)}"> 만원</span><button type="button" class="btn" data-act="price-reset">${big(a.apt.price)}으로</button></label>
       </div>
+      <div class="bd-debt"><div class="bd-debt-h"><span>총 부채</span><b>${big(now.start)}</b></div>
+        <div class="bd-debt-l"><span>🏠 주담대 ${big(nowM.start)}</span><span>📉 분할상환 ${big(nowA.start)}</span><span>💳 이자만 ${big(nowIo.start)}</span><span>👤 기타 ${big(nowO.start)}</span></div></div>
       <div class="bd-net ${net<0?"neg":""}"><span>최종 순자산 <small>= 시세 − 부채</small></span><b>${big(net)}</b></div>
 
       <div class="bd-pay" id="bd-pay">
