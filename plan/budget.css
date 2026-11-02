@@ -5,7 +5,9 @@
 .bd-h h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
 .bd-h small{color:var(--muted);font-size:12px}
 .bd-cards3{margin:10px 0 8px}
-.bd-cards3 .cd span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.bd-cards3 .cd span{display:block;line-height:1.35;margin-top:3px}
+.bd-cards3 .cd b{font-size:clamp(15px,4.6vw,21px);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bd-cards3 .bd-plus{font-style:normal;color:var(--c-game);font-weight:700}
 /* 자산 */
 .bd-apt{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
 .bd-apt-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -163,3 +165,5 @@ em.bd-plus{font-style:normal;color:var(--c-game);font-weight:700}
 .bd-debt-l{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px 12px;margin-top:4px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .bd-fill-box.ok{border-color:var(--line)}
 .bd-fill-h b.nz{color:var(--muted);font-weight:600}
+.bd-table tr.bd-free td{color:var(--c-game);font-weight:600}
+.bd-table tr.bd-free td small{display:block;font-weight:400;color:var(--muted);font-size:11px}
