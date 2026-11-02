@@ -168,9 +168,6 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     const alloc=new Map();let pool=Math.max(0,tot);
     for(let i=w.rows.length-1;i>=0;i--){const r=w.rows[i],room=(r.rec||0)-(r.spent||0);if(room<=0)continue;const give=Math.min(room,pool);alloc.set(i,give);pool-=give}
     // 항목 권장 한도를 다 채우고도 남는 돈(pool)
-    const V=window.__bdVariant||"A";
-    if(V==="B"&&pool>0){const ok=w.rows.map((r,i)=>i).filter(i=>(w.rows[i].rec||0)-(w.rows[i].spent||0)>0),sr=ok.reduce((n,i)=>n+(w.rows[i].rec||0),0);let rest=pool;
-      ok.forEach((i,k)=>{const g=k===ok.length-1?rest:Math.round(pool*(w.rows[i].rec||0)/sr);alloc.set(i,(alloc.get(i)||0)+g);rest-=g});pool=0}
     const rows=w.rows.map((r,i)=>{const diff=(r.rec||0)-(r.spent||0),over=diff<0;
       const last=over?`<td class="over">−${num(-diff)}</td>`:past?`<td class="left">${num(diff)}</td>`:`<td class="${alloc.get(i)?"left":"zero"}">${num(alloc.get(i)||0)}</td>`;
       return`<tr><td>${r.icon?esc(r.icon)+" ":""}${esc(r.name)}</td><td>${num(r.rec)}</td><td class="${over?"over":""}">${num(r.spent)}</td>${last}</tr>`}).join("");
