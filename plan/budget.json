@@ -74,7 +74,8 @@
         "name": "작은아빠 채무",
         "amount": 14000000
       }
-    ]
+    ],
+    "housingCost": 1500000
   },
   "months": [
     {
