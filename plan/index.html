@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>제네시스 출시 일정표</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="budget.css">
 <style>
 :root{
   --bg:#f3f4f7; --paper:#ffffff; --ink:#151a2b; --muted:#5c6378; --line:#dfe2ea;
@@ -205,7 +206,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
   <p class="note">홍균·시뇽 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
   </div>
 
-  <div id="pane-money" hidden></div>
+  <div id="pane-money" hidden><p class="empty">가계부를 불러오는 중입니다.</p></div>
   <div id="pane-dev" hidden></div>
 </div>
 
@@ -213,6 +214,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="../firebase-config.js"></script>
+<script src="budget.js"></script>
 <script>
 const COL="genesis_tasks";
 const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
@@ -255,7 +257,7 @@ auth.onAuthStateChanged(u=>{
     const all=s.docs.map(d=>({id:d.id,...d.data()}));
     // 같은 컬렉션에 kind 로 구분: 없음 = 일정, money = 가계부, dev = 개발경비
     tasks=all.filter(t=>!t.kind);money=all.filter(t=>t.kind==="money");dev=all.filter(t=>t.kind==="dev");
-    render();renderLedger("money");renderLedger("dev");
+    render();renderLedger("dev");
   },()=>{
     $("app").hidden=true;$("gate").hidden=false;
     $("gate-msg").textContent=u.email+" 계정은 이 일정표를 볼 수 없습니다. 홍균에게 등록을 요청하세요.";
@@ -360,7 +362,7 @@ $("imp-go").onclick=async()=>{
   }catch{$("imp-msg").textContent="가져오지 못했습니다. 다시 시도해 주세요"}
 };
 
-// ───────── 가계부 · 개발경비 ─────────
+// ───────── 개발경비 (가계부 탭은 budget.js 가 budget.json 으로 그림) ─────────
 const LEDGER={
   money:{title:"가계부",io:true,
     out:["식비","장보기","생활·집","교통·차","의료","육아·교육","쇼핑","경조사·선물","여가·여행","보험·통신","기타"],
@@ -437,7 +439,7 @@ function renderLedger(k){
 }
 function myWho(){const e=(me&&me.email)||"";return e==="bluecfdc@gmail.com"?"홍균":"시뇽"}
 
-for(const k of ["money","dev"]){
+for(const k of ["dev"]){
   const pane=$("pane-"+k),st=lstate[k];
   pane.addEventListener("toggle",e=>{const a=e.target.closest&&e.target.closest(".ent");if(!a)return;e.target.open?st.open.add(a.dataset.id):st.open.delete(a.dataset.id)},true);
   pane.addEventListener("submit",async e=>{
@@ -478,7 +480,8 @@ function exportCsv(y){
 }
 
 const PANES=["plan","money","dev"];
-function showTab(k){for(const p of PANES){$("pane-"+p).hidden=p!==k;$("tab-"+p).setAttribute("aria-selected",p===k)}try{localStorage.setItem("genesis-tab",k)}catch{}}
+let budgetStarted=false;
+function showTab(k){for(const p of PANES){$("pane-"+p).hidden=p!==k;$("tab-"+p).setAttribute("aria-selected",p===k)}if(k==="money"&&!budgetStarted){budgetStarted=true;initBudget($("pane-money"))}try{localStorage.setItem("genesis-tab",k)}catch{}}
 for(const p of PANES)$("tab-"+p).onclick=()=>showTab(p);
 try{const t=localStorage.getItem("genesis-tab");if(PANES.includes(t))showTab(t)}catch{}
 </script>
