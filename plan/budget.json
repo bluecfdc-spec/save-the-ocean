@@ -1,0 +1,51 @@
+{
+  "updated": "2026-11-02",
+  "assets": {
+    "apt": { "name": "아파트", "purchase": 785810000, "price": 1300000000 },
+    "baseMonth": "2026-11",
+    "loans": [
+      { "bank": "카카오뱅크", "type": "마이너스통장", "balance": 100000000, "rate": 5.92, "monthlyPrincipal": 0 },
+      { "bank": "현대캐피탈", "type": "캐피탈", "balance": 30000000, "rate": 8.5, "monthlyPrincipal": 220000 },
+      { "bank": "현대캐피탈", "type": "캐피탈", "balance": 29000000, "rate": 8.5, "monthlyPrincipal": 210000 },
+      { "bank": "새마을금고", "type": "주택담보대출", "balance": 660000000, "rate": 4.4, "monthlyPrincipal": 550000 },
+      { "bank": "우리은행", "type": "신용대출", "balance": 36600000, "rate": 4.82, "monthlyPrincipal": 0 },
+      { "bank": "우리은행", "type": "신용대출", "balance": 30000000, "rate": 4.69, "monthlyPrincipal": 0 },
+      { "bank": "전북은행", "type": "신용대출", "balance": 18000000, "rate": 6.33, "monthlyPrincipal": 255050 },
+      { "bank": "광주은행", "type": "신용대출", "balance": 9000000, "rate": 5.46, "monthlyPrincipal": 0 }
+    ],
+    "otherDebts": [ { "name": "작은아빠 채무", "amount": 14000000 } ]
+  },
+  "months": [
+    {
+      "key": "2026-10",
+      "start": "2026-10-21",
+      "end": "2026-11-20",
+      "asOf": "2026-11-02",
+      "living": {
+        "title": "생활비",
+        "budget": 1000000,
+        "balance": 300163,
+        "rows": [
+          { "name": "배달·외식", "icon": "🛵", "rec": 150000, "spent": 234300 },
+          { "name": "카페·간식", "icon": "☕", "rec": 80000, "spent": 148935 },
+          { "name": "생활용품", "icon": "🧺", "rec": 70000, "spent": 36890 },
+          { "name": "장보기", "icon": "🛒", "rec": 450000, "spent": 169860 },
+          { "name": "주유비", "icon": "⛽", "rec": 250000, "spent": 124000 }
+        ]
+      },
+      "allowance": {
+        "title": "홍균 용돈",
+        "budget": 400000,
+        "balance": 77534,
+        "rows": [
+          { "name": "취미 (게임·온라인 잡화)", "icon": "🎮", "rec": 100000, "spent": 205493 },
+          { "name": "술자리 (술·귀가 택시)", "icon": "🍺", "rec": 100000, "spent": 219700 },
+          { "name": "배달 (배민)", "icon": "🛵", "rec": 0, "spent": 121300 },
+          { "name": "식사·외식·편의점", "icon": "🍜", "rec": 100000, "spent": 91390 },
+          { "name": "구독·주차·예비비", "icon": "🧾", "rec": 40000, "spent": 19580 },
+          { "name": "교통 (티머니)", "icon": "🚇", "rec": 60000, "spent": 25000 }
+        ]
+      }
+    }
+  ]
+}
