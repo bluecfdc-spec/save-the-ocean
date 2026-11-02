@@ -105,3 +105,14 @@
 .bd-cmp tr.bd-sub td{font-size:12px;color:var(--muted);padding-top:4px;padding-bottom:4px;font-weight:400}
 .bd-cmp tr.bd-sub td:first-child{padding-left:14px}
 .bd-foot b{color:var(--ink)}
+/* 대출 묶음 */
+.bd-loans{display:grid;gap:8px;margin:8px 0}
+.bd-loan{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.bd-loan-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:700;font-size:14px}
+.bd-loan-h small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+.bd-loan-h b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bd-loan-r{display:grid;grid-template-columns:40px auto 1fr;gap:4px 10px;align-items:baseline;font-size:13px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.bd-loan-r span{color:var(--muted);font-size:12px}
+.bd-loan-r b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bd-loan-r small{color:var(--muted);font-size:11.5px;text-align:right;white-space:normal}
+@media (max-width:420px){.bd-loan-r{grid-template-columns:40px 1fr}.bd-loan-r small{grid-column:2;text-align:left}}

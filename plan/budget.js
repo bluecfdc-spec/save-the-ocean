@@ -22,27 +22,36 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
   const st={price:null,simYm:null,simPrice:null,mi:0};
 
   // ───── 자산현황 ─────
-  // 원리금균등: 기준월 잔액과 만기까지 남은 개월수로 월 납입액(원리금)을 구해 시점별 잔액을 계산. 이자만 내는 대출은 연장 가정(잔액 고정).
-  function loanAt(l,baseYm,ym){
-    const r=(l.rate||0)/100/12,B=l.balance||0;
-    if(!l.maturity){return {bal:B,interest:B*r,principal:0,pay:B*r,amort:false}}
-    const n=Math.max(1,monthsBetween(baseYm,l.maturity)),m=monthsBetween(baseYm,ym);
-    const pay=r?B*r/(1-Math.pow(1+r,-n)):B/n;
-    if(m>=n)return {bal:0,interest:0,principal:0,pay:0,amort:true};
-    const g=Math.pow(1+r,m),bal=Math.max(0,r?B*g-pay*(g-1)/r:B-pay*m);
-    const interest=bal*r;return {bal,interest,principal:Math.min(bal,pay-interest),pay:Math.min(pay,bal+interest),amort:true};
+  // 대출 계산. 분할상환(주담대·캐피탈·전북): 실제 월 납입액(시트) 고정, 이자=잔액×월이율, 원금=납입액−이자 → 잔액이 0이 되는 달이 완납.
+  // 이자만 내는 대출(마통·신용): 연장 가정, 잔액 고정·이자만. 기타 채무: 이자 없음.
+  const mr=l=>(l.rate||0)/100/12;
+  function payoffMonths(l){const r=mr(l),B=l.balance||0,P=l.monthlyPayment||0;if(!P)return Infinity;if(!r)return Math.ceil(B/P);if(r*B>=P)return Infinity;return Math.ceil(-Math.log(1-r*B/P)/Math.log(1+r))}
+  function loanAt(l,m){
+    const r=mr(l),B=l.balance||0;
+    if(l.group==="io"){return {bal:B,interest:B*r,principal:0,pay:B*r}}
+    const P=l.monthlyPayment||0,n=payoffMonths(l);
+    if(m>=n)return {bal:0,interest:0,principal:0,pay:0};
+    const g=Math.pow(1+r,m),bal=Math.max(0,r?B*g-P*(g-1)/r:B-P*m),interest=bal*r;
+    return {bal,interest,principal:Math.min(bal,P-interest),pay:Math.min(P,bal+interest)};
   }
+  function addYm(ym,m){const [y,mo]=ym.split("-").map(Number);const d=new Date(y,mo-1+m,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)}
   function debtAt(a,ym){
-    let amort=0,io=0,interest=0,principal=0;
-    for(const l of a.loans){const x=loanAt(l,a.baseMonth,ym);if(x.amort)amort+=x.bal;else io+=x.bal;interest+=x.interest;principal+=x.principal}
+    const m=monthsBetween(a.baseMonth,ym),g={mortgage:z(),amort:z(),io:z()};
+    function z(){return {bal:0,interest:0,principal:0,pay:0}}
+    for(const l of a.loans){const x=loanAt(l,m),t=g[l.group]||g.amort;t.bal+=x.bal;t.interest+=x.interest;t.principal+=x.principal;t.pay+=x.pay}
     const other=(a.otherDebts||[]).reduce((n,d)=>n+(d.amount||0),0);
-    return {amort,io,other,loans:amort+io,total:amort+io+other,interest,principal,pay:interest+principal};
+    const interest=g.mortgage.interest+g.amort.interest+g.io.interest,principal=g.mortgage.principal+g.amort.principal;
+    return {...g,other,total:g.mortgage.bal+g.amort.bal+g.io.bal+other,interest,principal,pay:interest+principal};
   }
-  function payoffYm(a){let last=a.baseMonth;for(const l of a.loans)if(l.maturity&&l.maturity>last)last=l.maturity;return last}
+  const yrs=n=>{if(!isFinite(n))return"—";const y=Math.floor(n/12),mo=n%12;return (y?y+"년 ":"")+(mo?mo+"개월":"")||"0개월"};
+  function groupPayoff(a,group){let n=0;for(const l of a.loans)if(l.group===group)n=Math.max(n,payoffMonths(l));return n}
+
   function renderAssets(){
     const a=DATA.assets,price=st.price??a.apt.price,simPrice=st.simPrice??price,now=debtAt(a,a.baseMonth),sim=debtAt(a,st.simYm);
     const net=price-now.total,simNet=simPrice-sim.total,same=st.simYm===a.baseMonth&&simPrice===price;
+    const nM=groupPayoff(a,"mortgage"),nA=groupPayoff(a,"amort"),mort=a.loans.find(l=>l.group==="mortgage")||{},ioN=a.loans.filter(l=>l.group==="io").length,amN=a.loans.filter(l=>l.group==="amort").length;
     const delta=(v,good,f=big)=>{if(same||Math.abs(v)<1)return"";const g=good?v>0:v<0;return`<small class="${g?"good":"bad"}">${v>0?"+":"−"}${f(Math.abs(v))}</small>`};
+    const pct=(x,t)=>t?Math.round(x/t*100):0;
     const el=$(root,"#bd-assets");
     el.innerHTML=`
       <div class="bd-h"><h2>자산현황</h2><small>${ymLabel(a.baseMonth)} 기준 · ${esc(DATA.updated)} 갱신</small></div>
@@ -51,31 +60,52 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
         <div class="bd-apt-row main"><span>시세</span><b>${big(price)}</b></div>
         <label class="bd-price">✎ 시세 바꿔보기 <span><input type="number" step="1000" min="0" inputmode="numeric" data-act="price" value="${Math.round(price/1e4)}"> 만원</span><button type="button" class="btn" data-act="price-reset">${big(a.apt.price)}으로</button></label>
       </div>
-      <div class="count lc bd-cards3">
-        <div class="cd"><b class="out">${big(now.total)}</b><span>부채 총액</span></div>
-        <div class="cd"><b>${big(now.amort)}</b><span>갚아 가는 대출</span></div>
-        <div class="cd"><b>${big(now.io+now.other)}</b><span>이자만·기타 채무</span></div>
-      </div>
-      <div class="bd-pay">
-        <div class="bd-pay-h"><span>이번 달 대출로 나가는 돈</span><b>${won(now.pay)}</b></div>
-        <div class="bd-pay-bar" aria-hidden="true"><i class="i" style="width:${(now.interest/now.pay*100).toFixed(1)}%"></i><i class="p" style="width:${(now.principal/now.pay*100).toFixed(1)}%"></i></div>
-        <div class="bd-pay-l"><span><em class="i"></em>이자 ${won(now.interest)} <small>(${Math.round(now.interest/now.pay*100)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${Math.round(now.principal/now.pay*100)}%)</small></span></div>
-      </div>
       <div class="bd-net ${net<0?"neg":""}"><span>최종 순자산 <small>= 시세 − 부채</small></span><b>${big(net)}</b></div>
+
+      <div class="bd-pay">
+        <div class="bd-pay-h"><span>매달 대출로 나가는 돈</span><b>${won(now.pay)}</b></div>
+        <div class="bd-pay-bar" aria-hidden="true"><i class="i" style="width:${pct(now.interest,now.pay)}%"></i><i class="p" style="width:${pct(now.principal,now.pay)}%"></i></div>
+        <div class="bd-pay-l"><span><em class="i"></em>이자 ${won(now.interest)} <small>(${pct(now.interest,now.pay)}%)</small></span><span><em class="p"></em>원금 ${won(now.principal)} <small>(${pct(now.principal,now.pay)}%)</small></span></div>
+      </div>
+
+      <div class="bd-loans">
+        <div class="bd-loan">
+          <div class="bd-loan-h"><span>🏠 주택담보대출 <small>${esc(mort.bank||"")} · ${mort.rate||0}%</small></span><b>${big(now.mortgage.bal)}</b></div>
+          <div class="bd-loan-r"><span>매달</span><b>${won(now.mortgage.pay)}</b><small>이자 ${won(now.mortgage.interest)} + 원금 ${won(now.mortgage.principal)}</small></div>
+          <div class="bd-loan-r"><span>완납</span><b>${isFinite(nM)?ymLabel(addYm(a.baseMonth,nM)):"—"}</b><small>${yrs(nM)} 남음</small></div>
+        </div>
+        <div class="bd-loan">
+          <div class="bd-loan-h"><span>📉 분할상환 대출 <small>캐피탈·신용 ${amN}건</small></span><b>${big(now.amort.bal)}</b></div>
+          <div class="bd-loan-r"><span>매달</span><b>${won(now.amort.pay)}</b><small>이자 ${won(now.amort.interest)} + 원금 ${won(now.amort.principal)}</small></div>
+          <div class="bd-loan-r"><span>완납</span><b>${isFinite(nA)?ymLabel(addYm(a.baseMonth,nA)):"—"}</b><small>${yrs(nA)} 남음</small></div>
+        </div>
+        <div class="bd-loan">
+          <div class="bd-loan-h"><span>💳 이자만 내는 대출 <small>마이너스통장·신용 ${ioN}건 · 연장 가정</small></span><b>${big(now.io.bal)}</b></div>
+          <div class="bd-loan-r"><span>매달</span><b>${won(now.io.interest)}</b><small>이자만 · 원금 상환 없음</small></div>
+        </div>
+        <div class="bd-loan">
+          <div class="bd-loan-h"><span>👤 기타 채무 <small>${(a.otherDebts||[]).map(d=>esc(d.name)).join(", ")}</small></span><b>${big(now.other)}</b></div>
+          <div class="bd-loan-r"><span>매달</span><b>0원</b><small>이자 없음</small></div>
+        </div>
+      </div>
+
       <details class="bd-sim" ${same?"":"open"}>
         <summary>🔭 시점 시뮬레이션 <small>시점·시세를 바꿔 보세요</small></summary>
         <div class="bd-sim-ctl"><label>시점 <input type="month" data-act="sim" value="${st.simYm}"></label><label>아파트 시세 <input type="number" step="1000" min="0" inputmode="numeric" data-act="sim-price" value="${Math.round(simPrice/1e4)}"> 만원</label><button type="button" class="btn" data-act="sim-reset">지금으로</button></div>
         <table class="bd-cmp"><thead><tr><th></th><th>지금</th><th>${ymLabel(st.simYm)}</th></tr></thead><tbody>
           <tr><td>시세</td><td>${big(price)}</td><td>${big(simPrice)}${delta(simPrice-price,true)}</td></tr>
-          <tr><td>부채 총액</td><td>${big(now.total)}</td><td>${big(sim.total)}${delta(sim.total-now.total,false)}</td></tr>
-          <tr class="bd-sub"><td>└ 갚아 가는 대출</td><td>${big(now.amort)}</td><td>${big(sim.amort)}</td></tr>
-          <tr class="bd-sub"><td>└ 이자만 내는 대출·기타</td><td>${big(now.io+now.other)}</td><td>${big(sim.io+sim.other)}</td></tr>
-          <tr><td>월 이자</td><td>${won(now.interest)}</td><td>${won(sim.interest)}${delta(sim.interest-now.interest,false,won)}</td></tr>
-          <tr><td>월 원금상환</td><td>${won(now.principal)}</td><td>${won(sim.principal)}${delta(sim.principal-now.principal,false,won)}</td></tr>
-          <tr><td>월 총 상환</td><td>${won(now.interest+now.principal)}</td><td>${won(sim.interest+sim.principal)}${delta((sim.interest+sim.principal)-(now.interest+now.principal),false,won)}</td></tr>
+          <tr><td>🏠 주담대 잔액</td><td>${big(now.mortgage.bal)}</td><td>${big(sim.mortgage.bal)}${delta(sim.mortgage.bal-now.mortgage.bal,false)}</td></tr>
+          <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.mortgage.pay)}</td><td>${won(sim.mortgage.pay)}</td></tr>
+          <tr><td>📉 분할상환 잔액</td><td>${big(now.amort.bal)}</td><td>${big(sim.amort.bal)}${delta(sim.amort.bal-now.amort.bal,false)}</td></tr>
+          <tr class="bd-sub"><td>└ 매달 (이자+원금)</td><td>${won(now.amort.pay)}</td><td>${won(sim.amort.pay)}</td></tr>
+          <tr><td>💳 이자만 대출</td><td>${big(now.io.bal)}</td><td>${big(sim.io.bal)}</td></tr>
+          <tr class="bd-sub"><td>└ 매달 이자</td><td>${won(now.io.interest)}</td><td>${won(sim.io.interest)}</td></tr>
+          <tr><td>👤 기타 채무</td><td>${big(now.other)}</td><td>${big(sim.other)}</td></tr>
+          <tr class="bd-sum"><td>부채 총액</td><td>${big(now.total)}</td><td>${big(sim.total)}${delta(sim.total-now.total,false)}</td></tr>
+          <tr class="bd-sum"><td>매달 대출 지출</td><td>${won(now.pay)}</td><td>${won(sim.pay)}${delta(sim.pay-now.pay,false,won)}</td></tr>
           <tr class="bd-sum"><td>순자산</td><td>${big(net)}</td><td>${big(simNet)}${delta(simNet-net,true)}</td></tr>
         </tbody></table>
-        <p class="bd-foot">주담대·캐피탈·전북은행은 원리금균등(매달 내는 총액이 같고 원금 비중이 점점 커짐)으로 각 만기에 0이 되도록 계산했어요. 갚아 가는 대출은 <b>${ymLabel(payoffYm(a))}</b>에 모두 끝나요. 이자만 내는 대출(마이너스통장·신용대출)과 기타 채무는 연장한다고 보고 잔액을 그대로 뒀어요. 대출 내역은 금융관리 시트 기준.</p>
+        <p class="bd-foot">분할상환 대출은 지금 내는 월 납입액이 그대로 이어진다고 보고(이자는 줄고 원금은 늘어남), 잔액이 0이 되는 달을 완납으로 잡았어요. 이자만 내는 대출은 연장한다고 보고 잔액과 이자를 그대로 뒀어요. 그래서 분할상환이 다 끝나도 이자만 내는 대출의 이자(매달 ${won(now.io.interest)})는 계속 나가요. 대출 내역은 금융관리 시트 기준.</p>
       </details>`;
   }
 
