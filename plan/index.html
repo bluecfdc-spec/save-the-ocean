@@ -6,7 +6,6 @@
 <meta name="robots" content="noindex,nofollow">
 <title>제네시스 출시 일정표</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="budget.css">
 <style>
 :root{
   --bg:#f3f4f7; --paper:#ffffff; --ink:#151a2b; --muted:#5c6378; --line:#dfe2ea;
@@ -214,7 +213,11 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="../firebase-config.js"></script>
-<script src="budget.js"></script>
+<script>
+// 가계부 파일은 열 때마다 항상 최신을 받음 (브라우저에 예전 버전이 남아 숫자와 화면이 어긋나지 않게)
+window.__budgetReady=new Promise(res=>{const v=Date.now(),l=document.createElement("link");l.rel="stylesheet";l.href="budget.css?v="+v;document.head.appendChild(l);
+  const sc=document.createElement("script");sc.src="budget.js?v="+v;sc.onload=res;document.head.appendChild(sc)});
+</script>
 <script>
 const COL="genesis_tasks";
 const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
@@ -481,7 +484,7 @@ function exportCsv(y){
 
 const PANES=["plan","money","dev"];
 let budgetStarted=false;
-function showTab(k){for(const p of PANES){$("pane-"+p).hidden=p!==k;$("tab-"+p).setAttribute("aria-selected",p===k)}if(k==="money"&&!budgetStarted){budgetStarted=true;initBudget($("pane-money"))}try{localStorage.setItem("genesis-tab",k)}catch{}}
+function showTab(k){for(const p of PANES){$("pane-"+p).hidden=p!==k;$("tab-"+p).setAttribute("aria-selected",p===k)}if(k==="money"&&!budgetStarted){budgetStarted=true;window.__budgetReady.then(()=>initBudget($("pane-money")))}try{localStorage.setItem("genesis-tab",k)}catch{}}
 for(const p of PANES)$("tab-"+p).onclick=()=>showTab(p);
 try{const t=localStorage.getItem("genesis-tab");if(PANES.includes(t))showTab(t)}catch{}
 </script>
