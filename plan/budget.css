@@ -77,3 +77,31 @@
 .bd-fill-add select,.bd-fill-add input{font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);min-width:0;width:100%}
 .bd-fill-add input{text-align:right;font-variant-numeric:tabular-nums}
 .bd-fill-box .bd-foot{margin:8px 0 0}
+/* 조작 가능한 요소는 주황색으로 */
+.bd input,.bd select{border:2px solid var(--accent)!important;background:color-mix(in srgb,var(--accent) 8%,var(--paper))!important}
+.bd input:focus,.bd select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.bd .btn{border:2px solid var(--accent);color:var(--accent);font-weight:700;background:var(--paper)}
+.bd .btn.pri{background:var(--accent);color:var(--accent-ink)}
+.bd .btn:disabled{opacity:.35}
+.bd-mon .btn{color:var(--accent)}
+.bd-sim{border:2px solid var(--accent)}
+.bd-sim summary{color:var(--accent)}
+.bd-sim summary small{font-weight:500;font-size:11.5px;color:var(--muted);margin-left:6px}
+.bd-sim summary::after{content:"▾ 펼치기";color:var(--accent);font-weight:700}
+.bd-sim[open] summary::after{content:"▴ 접기"}
+.bd-price{color:var(--accent);font-weight:700}
+.bd-sim-ctl{color:var(--ink)}
+/* 대출 월 상환 */
+.bd-pay{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.bd-pay-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bd-pay-h span{font-weight:700;font-size:13.5px}
+.bd-pay-h b{font-family:var(--f-display);font-weight:400;font-size:24px;font-variant-numeric:tabular-nums;color:var(--late)}
+.bd-pay-bar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--line);margin:8px 0 6px}
+.bd-pay-bar i{display:block;height:100%}
+.bd-pay-bar .i,.bd-pay-l em.i{background:var(--late)} .bd-pay-bar .p,.bd-pay-l em.p{background:var(--c-game)}
+.bd-pay-l{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.bd-pay-l em{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.bd-pay-l small{color:var(--muted)}
+.bd-cmp tr.bd-sub td{font-size:12px;color:var(--muted);padding-top:4px;padding-bottom:4px;font-weight:400}
+.bd-cmp tr.bd-sub td:first-child{padding-left:14px}
+.bd-foot b{color:var(--ink)}
