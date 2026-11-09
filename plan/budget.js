@@ -154,7 +154,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
   function wallet(w,m,wid){
     const spent=w.rows.reduce((n,r)=>n+(r.spent||0),0),rec=w.rows.reduce((n,r)=>n+(r.rec||0),0);
     // 채운 돈: 아래 '채운 금액' 칸(budget_fill) + 예전 위쪽 '추가 금액'(budget_add)도 같은 돈으로 합쳐서 봄
-    const fills=FILLS.concat(ADDS.map(x=>({...x,code:x.code||"추가 금액"}))).filter(f=>f.month===m.key&&f.wallet===wid).sort((a,b)=>(a.at||0)-(b.at||0));
+    const fills=(w.fills||[]).map(f=>({...f,fixed:true})).concat(FILLS.concat(ADDS.map(x=>({...x,code:x.code||"추가 금액"}))).filter(f=>f.month===m.key&&f.wallet===wid).sort((a,b)=>(a.at||0)-(b.at||0)));
     const filled=fills.reduce((n,f)=>n+(Number(f.amount)||0),0),bud=(w.budget||0)+filled;
     const asOf=m.asOf||todayStr(),total=dayDiff(m.start,m.end)+1,elapsed=Math.min(total,Math.max(1,dayDiff(m.start,asOf)+1)),left=Math.max(0,total-elapsed);
     // 가용 금액 = 예산 + 채운 돈 − 쓴 돈. 초과분은 채운 돈에서 먼저 빠지고(퉁치고) 남은 만큼만 가용으로 남음
@@ -175,7 +175,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     const gap=minus?-tot:0;
     const fillBox=`<div class="bd-fill-box${minus?"":" ok"}" data-wallet="${wid}">
         <div class="bd-fill-h"><b class="${base<0?"":"nz"}">${base<0?"초과 −"+won(-base):"총액 초과 없음"}</b><span class="${minus?"":"ok"}">${minus?won(gap)+" 부족":filled?"✓ 메우고 "+won(tot)+" 남음":"✓ 예산 안"}</span></div>
-        ${fills.length?`<ul class="bd-fill-list">${fills.map(f=>`<li><span>${esc(f.code)}</span><b>+${won(f.amount)}</b>${f.byName?`<small>${esc(f.byName)}</small>`:""}${fdb?`<button type="button" class="btn del" data-act="fill-del" data-id="${esc(f.id)}" aria-label="삭제">×</button>`:""}</li>`).join("")}</ul>`:""}
+        ${fills.length?`<ul class="bd-fill-list">${fills.map(f=>`<li><span>${esc(f.code)}</span><b>+${won(f.amount)}</b>${f.byName?`<small>${esc(f.byName)}</small>`:""}${fdb&&!f.fixed?`<button type="button" class="btn del" data-act="fill-del" data-id="${esc(f.id)}" aria-label="삭제">×</button>`:""}</li>`).join("")}</ul>`:""}
         ${fdb?`<div class="bd-fill-add"><select data-f="code">${FILL_CODES.map(c=>`<option>${c}</option>`).join("")}</select><input type="text" inputmode="numeric" data-f="amt" placeholder="${gap>0?gap:"금액"}"><button type="button" class="btn pri" data-act="fill-add">확인</button></div>
         <p class="bd-foot">초과가 없어도 언제든 돈을 채워 넣을 수 있어요. 넣은 돈은 초과분부터 메우고, 남는 만큼 위의 가용 금액이 늘어요.${gap>0?" 금액을 비우고 확인을 누르면 부족분이 그대로 들어가요.":""}</p>`:`<p class="bd-foot">돈을 채워 넣으려면 일정표 웹에 로그인하세요.</p>`}
       </div>`;
