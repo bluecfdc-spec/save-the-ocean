@@ -155,7 +155,8 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     const spent=w.rows.reduce((n,r)=>n+(r.spent||0),0),rec=w.rows.reduce((n,r)=>n+(r.rec||0),0);
     // 채운 돈: 아래 '채운 금액' 칸(budget_fill) + 예전 위쪽 '추가 금액'(budget_add)도 같은 돈으로 합쳐서 봄
     const fills=(w.fills||[]).map(f=>({...f,fixed:true})).concat(FILLS.concat(ADDS.map(x=>({...x,code:x.code||"추가 금액"}))).filter(f=>f.month===m.key&&f.wallet===wid).sort((a,b)=>(a.at||0)-(b.at||0)));
-    const filled=fills.reduce((n,f)=>n+(Number(f.amount)||0),0),bud=(w.budget||0)+filled;
+    const carry=(w.carry||[]),carrySum=carry.reduce((n,c)=>n+(Number(c.amount)||0),0);
+    const filled=fills.reduce((n,f)=>n+(Number(f.amount)||0),0),bud=(w.budget||0)+filled+carrySum;
     const asOf=m.asOf||todayStr(),total=dayDiff(m.start,m.end)+1,elapsed=Math.min(total,Math.max(1,dayDiff(m.start,asOf)+1)),left=Math.max(0,total-elapsed);
     // 가용 금액 = 예산 + 채운 돈 − 쓴 돈. 초과분은 채운 돈에서 먼저 빠지고(퉁치고) 남은 만큼만 가용으로 남음
     const remain=bud-spent,pct=bud?spent/bud:0,perDay=left&&remain>0?Math.floor(remain/left/100)*100:0;
@@ -164,7 +165,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     const past=m.end<todayStr();
     // 총액 기준 = 권장 합계 + 채운 돈 − 지출 합계. 초과 항목은 항상 −초과.
     // 총액이 남으면 초과 안 한 항목에 필수(아래쪽)부터 배분하고, 그래도 남는 돈은 '채운 금액' 줄에 여유로 표시
-    const base=rec-spent,tot=base+filled,minus=tot<0;
+    const base=rec+carrySum-spent,tot=base+filled,minus=tot<0;
     const alloc=new Map();let pool=Math.max(0,tot);
     for(let i=w.rows.length-1;i>=0;i--){const r=w.rows[i],room=(r.rec||0)-(r.spent||0);if(room<=0)continue;const give=Math.min(room,pool);alloc.set(i,give);pool-=give}
     // 항목 권장 한도를 다 채우고도 남는 돈(pool)
@@ -182,15 +183,15 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     return`
       <div class="bd-h"><h2>${esc(w.title)}</h2><small>${md(m.start)} ~ ${md(m.end)}${past?" · 마감":" · "+esc(asOf)+" 기준"}</small></div>
       <div class="count lc bd-cards3">
-        <div class="cd"><b class="${spent>0?"out":""}">${num(spent)}</b><span>쓴 돈<br>예산 ${num(w.budget)}${filled?`<br><em class="bd-plus">+채움 ${num(filled)}</em>`:""}</span></div>
-        <div class="cd"><b class="${remain<0?"out":""}">${remain<0?"−"+num(-remain):num(remain)}</b><span>${past?"남긴 돈":"가용 금액"}</span></div>
+        <div class="cd"><b class="${spent>0?"out":""}">${num(spent)}</b><span>쓴 돈<br>예산 ${num(w.budget)}${carrySum?`<br><em class="bd-plus">${carrySum<0?"−":"+"}이월 ${num(Math.abs(carrySum))}</em>`:""}${filled?`<br><em class="bd-plus">+채움 ${num(filled)}</em>`:""}</span></div>
+        <div class="cd"><b class="${remain<0?"out":""}">${remain<0?"−"+num(-remain):num(remain)}</b><span>${past?"남긴 돈":"가용 금액<br>= 통장 잔액"}</span></div>
         <div class="cd main"><b>${past?Math.round(pct*100)+"%":num(perDay)}</b><span>${past?"예산 대비 사용":"하루 한도<br>"+left+"일 남음"}</span></div>
       </div>
       <div class="bd-badge" style="--lv:${LV[1]}">${LV[0]}</div>
       <div class="bd-prog" aria-hidden="true"><i class="bd-fill" style="width:${Math.min(100,pct*100).toFixed(1)}%;background:${LV[1]}"></i>${past?"":`<b class="bd-pace" style="left:${(elapsed/total*100).toFixed(1)}%"></b>`}<em style="left:70%"></em><em style="left:90%"></em></div>
       <div class="bd-prog-t"><span>${filled?"채운 돈 포함 ":"예산 "}${Math.round(pct*100)}% 사용</span><span>${past?total+"일 마감":"기간 "+Math.round(elapsed/total*100)+"% 경과 · "+elapsed+"일째"}</span></div>
       <table class="bd-table"><thead><tr><th>항목 <small>↓ 아래로 갈수록 필수</small></th><th>월 권장<small>원</small></th><th>${past?"지출":"현재 지출"}<small>원</small></th><th>${past?"결과":"남은 한도"}<small>${past?"원":"총액 기준 · 원"}</small></th></tr></thead>
-      <tbody>${rows}${filled?`<tr class="bd-addrow"><td>💰 채운 금액</td><td>+${num(filled)}</td><td></td><td></td></tr>`:""}${pool>0&&!past?`<tr class="bd-free"><td>🆓 항목 밖 여유<small>어느 항목에 써도 되는 돈</small></td><td></td><td></td><td class="left">${num(pool)}</td></tr>`:""}<tr class="bd-sum"><td>합계</td><td>${num(rec+filled)}</td><td class="${spent>rec+filled?"over":""}">${num(spent)}</td>${sumLast}</tr></tbody></table>${fillBox}`;
+      <tbody>${rows}${carrySum?`<tr class="bd-addrow"><td>↪ 이월·조정<small class="bd-carry">${carry.map(c=>esc(c.name)+" "+(c.amount<0?"−":"+")+num(Math.abs(c.amount))).join(" · ")}</small></td><td>${carrySum<0?"−":"+"}${num(Math.abs(carrySum))}</td><td></td><td></td></tr>`:""}${filled?`<tr class="bd-addrow"><td>💰 채운 금액</td><td>+${num(filled)}</td><td></td><td></td></tr>`:""}${pool>0&&!past?`<tr class="bd-free"><td>🆓 항목 밖 여유<small>어느 항목에 써도 되는 돈</small></td><td></td><td></td><td class="left">${num(pool)}</td></tr>`:""}<tr class="bd-sum"><td>합계</td><td>${num(rec+filled+carrySum)}</td><td class="${spent>rec+filled+carrySum?"over":""}">${num(spent)}</td>${sumLast}</tr></tbody></table>${fillBox}`;
   }
   function renderMonths(){
     const ms=DATA.months,m=ms[st.mi];

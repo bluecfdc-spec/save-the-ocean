@@ -167,3 +167,4 @@ em.bd-plus{font-style:normal;color:var(--c-game);font-weight:700}
 .bd-fill-h b.nz{color:var(--muted);font-weight:600}
 .bd-table tr.bd-free td{color:var(--c-game);font-weight:600}
 .bd-table tr.bd-free td small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.bd-table td small.bd-carry{display:block;font-weight:400;color:var(--muted);font-size:11px;line-height:1.35}
