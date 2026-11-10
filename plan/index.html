@@ -247,7 +247,13 @@ const myName=()=>me?(me.displayName||me.email||"").split(" ")[0]:"";
 $("login").onclick=async()=>{
   const p=new firebase.auth.GoogleAuthProvider();
   try{await auth.signInWithPopup(p)}
-  catch(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"))auth.signInWithRedirect(p);else $("gate-msg").textContent="로그인하지 못했습니다. 다시 눌러 주세요."}
+  catch(e){
+    if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"||e.code==="auth/web-storage-unsupported")){
+      // 앱 안 브라우저(카톡·Claude 등)에서는 구글 로그인이 막혀 오류 페이지로 넘어가므로, 리디렉트 대신 사파리 안내
+      $("gate-msg").innerHTML='이 화면(앱 안 브라우저)에서는 구글 로그인이 안 돼요.<br><b>사파리</b>에서 열어 주세요. 오른쪽 아래 메뉴 → "Safari에서 열기"<br><button type="button" class="btn" id="copy-url" style="margin-top:8px">주소 복사</button>';
+      const c=document.getElementById("copy-url");if(c)c.onclick=()=>{try{navigator.clipboard.writeText(location.href);c.textContent="복사됨 · 사파리 주소창에 붙여넣기"}catch(_){}};
+    } else $("gate-msg").textContent="로그인하지 못했습니다. 다시 눌러 주세요.";
+  }
 };
 $("logout").onclick=()=>auth.signOut();
 
