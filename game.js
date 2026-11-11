@@ -834,8 +834,25 @@
     if (sk.f === 1) { ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#0aa7c9'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, top, W, bot - top); }
     if (sk.f === 2) { ctx.globalAlpha = 0.55 * a; ctx.fillStyle = '#3a1080'; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, -offY, W, viewH); }
     if (sk.f === 3) { ctx.globalAlpha = 0.32 * a; ctx.fillStyle = '#ffb000'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, -offY, W, viewH); }
+    if (sk.f === 3 && ship) drawSolarRays(k, a, top, bot);   // 빛줄기는 도트 없이 매끈하게
     ctx.restore();
     pixLayer(drawSkillBackFx, 'source-over');
+  }
+  // 솔라 빛줄기: 가늘고 길이가 제각각인 여러 갈래, 끝이 뾰족하게 사라짐. 하나하나 천천히 흔들리고 깜빡임
+  const SOLAR_RAYS = Array.from({ length: 24 }, (_, i) => ({ off: (i / 23 - 0.5) * 1.5 + (Math.random() - 0.5) * 0.05, len: 0.55 + Math.random() * 0.5, w: 4 + Math.random() * 16, ph: Math.random() * 6.283, sp: 0.6 + Math.random() * 1.2 }));
+  function drawSolarRays(k, a, top, bot) {
+    const sp = sunPos(), full = bot - sp.y + 80;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.rect(0, top + 1, W, bot - top + 200); ctx.clip();
+    for (const r of SOLAR_RAYS) {
+      const ang = Math.PI / 2 + r.off * 0.7 + Math.sin(k * 0.5 * r.sp + r.ph) * 0.035, L = full * r.len * (0.85 + 0.15 * Math.sin(k * r.sp + r.ph));
+      const ex = sp.x + Math.cos(ang) * L, ey = sp.y + Math.sin(ang) * L, nx = -Math.sin(ang), ny = Math.cos(ang);
+      const wd = r.w * (0.8 + 0.2 * Math.sin(k * 1.7 * r.sp + r.ph)), mx = sp.x + Math.cos(ang) * L * 0.35, my = sp.y + Math.sin(ang) * L * 0.35;
+      const g = ctx.createLinearGradient(sp.x, sp.y, ex, ey); g.addColorStop(0, 'rgba(255,240,190,.75)'); g.addColorStop(0.35, 'rgba(255,220,130,.35)'); g.addColorStop(1, 'rgba(255,200,90,0)');
+      ctx.globalAlpha = a * (0.4 + 0.3 * (0.5 + 0.5 * Math.sin(k * 2.3 * r.sp + r.ph * 2)));
+      ctx.fillStyle = g; ctx.beginPath();
+      ctx.moveTo(sp.x + nx * 1.5, sp.y + ny * 1.5); ctx.lineTo(mx + nx * wd, my + ny * wd); ctx.lineTo(ex, ey); ctx.lineTo(mx - nx * wd, my - ny * wd); ctx.lineTo(sp.x - nx * 1.5, sp.y - ny * 1.5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
   }
   function drawSkillBackFx() {
     if (!sk || sk.t < 0) return;
@@ -883,16 +900,8 @@
       for (const r of G.rain) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + r.l * 0.25, r.y - r.l); } ctx.stroke();
     }
     if (sk.f === 3 && sk.solar && ship) {
-      // 물속 빛기둥: 태양에서 부채꼴로 내려가며 천천히 흔들림
       const sp = sunPos();
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.rect(0, top + 1, W, bot - top + 200); ctx.clip();
-      for (let i = 0; i < 9; i++) {
-        const ang = Math.PI / 2 + (i - 4) * 0.17 + Math.sin(k * 0.6 + i * 1.7) * 0.05, len = bot - sp.y + 60, wB = 30 + 40 * (0.5 + 0.5 * Math.sin(k * 1.3 + i * 2.3));
-        const ex = sp.x + Math.cos(ang) * len, ey = sp.y + Math.sin(ang) * len, nx = -Math.sin(ang), ny = Math.cos(ang);
-        const g = ctx.createLinearGradient(sp.x, sp.y, ex, ey); g.addColorStop(0, 'rgba(255,236,170,.55)'); g.addColorStop(0.5, 'rgba(255,214,110,.22)'); g.addColorStop(1, 'rgba(255,200,80,0)');
-        ctx.globalAlpha = a * (0.45 + 0.35 * Math.sin(k * 2.1 + i * 1.3)); ctx.fillStyle = g;
-        ctx.beginPath(); ctx.moveTo(sp.x + nx * 4, sp.y + ny * 4); ctx.lineTo(ex + nx * wB, ey + ny * wB); ctx.lineTo(ex - nx * wB, ey - ny * wB); ctx.lineTo(sp.x - nx * 4, sp.y - ny * 4); ctx.closePath(); ctx.fill();
-      }
       // 물결무늬 빛 (수면 아래에서 일렁이는 금빛 그물)
       ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 1.2;
       for (let j = 0; j < 4; j++) { const yy = top + 18 + j * 22; ctx.globalAlpha = a * (0.28 - j * 0.05); ctx.beginPath(); for (let x = 0; x <= W; x += 10) { const y = yy + Math.sin(x * 0.06 + k * 3 + j) * 4 + Math.sin(x * 0.13 - k * 2) * 2; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
@@ -902,6 +911,11 @@
   }
   // 전장 앞쪽(폭발 위) 연출: 효과는 도트로, 화면 번쩍임·테두리는 그대로
   function drawSkillFront() {
+    if (sk && sk.f === 3 && sk.solar && ship && sk.t >= 0) {   // 태양 둘레 빛 번짐은 매끈하게
+      const k = sk.t, a = Math.max(0, Math.min(1, k / 0.4, (sk.dur - k) / 0.8)), sp = sunPos(), sa = a * (k < 2.5 ? 1 : 0.55 + 0.1 * Math.sin(k * 3));
+      const g = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sp.R * 5); g.addColorStop(0, 'rgba(255,240,190,.75)'); g.addColorStop(0.3, 'rgba(255,200,90,.3)'); g.addColorStop(1, 'rgba(255,170,40,0)');
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sa; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.R * 5, 0, 6.283); ctx.fill(); ctx.restore();
+    }
     if (sk || bolts.length || glows.length || rings.length) pixLayer(drawSkillFrontFx, 'lighter');
     const wv = sk ? (sk.gale ? sk.gale.white : sk.surge ? sk.surge.white : sk.solar ? sk.solar.white : 0) : 0;
     if (wv > 0) { ctx.save(); ctx.globalAlpha = wv; ctx.fillStyle = sk.solar ? '#fff0c0' : sk.surge ? '#d8f8ff' : '#efe6ff'; ctx.fillRect(0, -offY, W, viewH); ctx.restore(); }
@@ -930,8 +944,7 @@
     // 솔라: 떠오르는 태양 (코로나가 일렁임)
     if (sk && sk.f === 3 && sk.solar && ship && k >= 0) {
       const sp = sunPos(), sa = a * (k < 2.5 ? 1 : 0.55 + 0.1 * Math.sin(k * 3));
-      let g = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sp.R * 5); g.addColorStop(0, 'rgba(255,240,190,.75)'); g.addColorStop(0.3, 'rgba(255,200,90,.3)'); g.addColorStop(1, 'rgba(255,170,40,0)');
-      ctx.globalAlpha = sa; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.R * 5, 0, 6.283); ctx.fill();
+      let g;
       ctx.save(); ctx.translate(sp.x, sp.y);
       for (let i = 0; i < 32; i++) {
         const ang = i / 32 * 6.283 + k * 0.25, L = sp.R * (1.5 + 0.9 * (0.5 + 0.5 * wob(i * 3.1 + k * 2.2))), wd = sp.R * (i % 2 ? 0.08 : 0.14);
@@ -989,17 +1002,50 @@
     ctx.fillText('SOLAR ' + Math.ceil(ship.shield), ship.x, cy - ry - 4);
   }
   // 발동 배너: 커지며 등장 → 잠깐 머묾 → 사라짐 (실제 시간 기준)
+  // 배너 그림 가장자리(사각형으로 잘린 빛)를 부드럽게 지운 사본을 한 번만 만들어 둔다
+  const bannerCache = {};
+  function softBanner(f) {
+    if (bannerCache[f]) return bannerCache[f];
+    const im = IMG['fx_banner_' + f]; if (!okImg(im)) return null;
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+    g.globalCompositeOperation = 'destination-in';
+    let m = g.createLinearGradient(0, 0, 0, c.height); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.2, '#000'); m.addColorStop(0.8, '#000'); m.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = m; g.fillRect(0, 0, c.width, c.height);
+    m = g.createLinearGradient(0, 0, c.width, 0); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.06, '#000'); m.addColorStop(0.94, '#000'); m.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = m; g.fillRect(0, 0, c.width, c.height);
+    return (bannerCache[f] = c);
+  }
+  const bnCv = document.createElement('canvas'), bnCtx = bnCv.getContext('2d');
+  // 발동 배너: 커지며 등장 → 잠깐 머묾 → 사라짐 (실제 시간 기준). 뒤의 빛은 화면에 직접 그려 자연스럽게 번짐
   function drawBanner() {
     if (!banner) return;
-    const im = IMG['fx_banner_' + banner.f]; if (!okImg(im)) return;
+    const im = softBanner(banner.f); if (!im) return;
     const t = banner.t, ein = Math.min(1, t / 0.22), out = t > 1.5 ? Math.max(0, 1 - (t - 1.5) / 0.4) : 1;
-    const ease = 1 - Math.pow(1 - ein, 3), sc = 1.5 - 0.5 * ease, w = W * 0.92 * sc, h = w * im.naturalHeight / im.naturalWidth;
-    const cy = surfaceY + 64;
+    const ease = 1 - Math.pow(1 - ein, 3), sc = 1.5 - 0.5 * ease, w = W * 0.92 * sc, h = w * im.height / im.width;
+    const cy = surfaceY + 64, col = banner.f === 1 ? '90,210,255' : banner.f === 2 ? '170,110,255' : '255,200,80';
     ctx.save();
-    ctx.globalAlpha = ein * out; ctx.drawImage(im, W / 2 - w / 2, cy - h / 2, w, h);
-    // 빛이 스치는 효과
-    const sx = -W * 0.3 + (t / 0.9) * W * 1.6;
-    if (t < 0.9) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createLinearGradient(sx - 40, 0, sx + 40, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = gr; ctx.globalAlpha = out; ctx.fillRect(W / 2 - w / 2, cy - h / 2, w, h); }
+    // 뒤쪽 빛: 타원으로 번지는 세력 색 빛 + 화면을 가로지르는 가는 빛줄기
+    ctx.globalCompositeOperation = 'lighter';
+    const gl = ctx.createRadialGradient(W / 2, cy, 0, W / 2, cy, w * 0.55);
+    gl.addColorStop(0, 'rgba(' + col + ',.55)'); gl.addColorStop(0.5, 'rgba(' + col + ',.18)'); gl.addColorStop(1, 'rgba(' + col + ',0)');
+    ctx.globalAlpha = ein * out * (0.85 + 0.15 * Math.sin(t * 20));
+    ctx.save(); ctx.translate(W / 2, cy); ctx.scale(1, 0.38); ctx.translate(-W / 2, -cy); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(W / 2, cy, w * 0.55, 0, 6.283); ctx.fill(); ctx.restore();
+    const fl = ctx.createLinearGradient(0, 0, W, 0); fl.addColorStop(0, 'rgba(' + col + ',0)'); fl.addColorStop(0.5, 'rgba(255,255,255,.9)'); fl.addColorStop(1, 'rgba(' + col + ',0)');
+    const fw = W * (0.4 + 0.8 * ease); ctx.fillStyle = fl; ctx.globalAlpha = ein * out * 0.8;
+    ctx.save(); ctx.translate(W / 2, cy); ctx.scale(fw / W, 1); ctx.fillRect(-W / 2, -1.5, W, 3); ctx.restore();
+    ctx.globalCompositeOperation = 'source-over';
+    // 배너 + 그림 모양 안에서만 스치는 빛
+    const sx = (-0.3 + (t / 0.9) * 1.6) * w;
+    if (t < 0.9) {
+      const cw = Math.ceil(w), ch = Math.ceil(h);
+      if (bnCv.width !== cw || bnCv.height !== ch) { bnCv.width = cw; bnCv.height = ch; }
+      bnCtx.globalCompositeOperation = 'source-over'; bnCtx.clearRect(0, 0, cw, ch); bnCtx.drawImage(im, 0, 0, cw, ch);
+      bnCtx.globalCompositeOperation = 'source-atop';
+      const gr = bnCtx.createLinearGradient(sx - 40, 0, sx + 40, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      bnCtx.fillStyle = gr; bnCtx.fillRect(0, 0, cw, ch);
+      ctx.globalAlpha = ein * out; ctx.drawImage(bnCv, W / 2 - w / 2, cy - h / 2, w, h);
+    } else { ctx.globalAlpha = ein * out; ctx.drawImage(im, W / 2 - w / 2, cy - h / 2, w, h); }
     ctx.restore();
   }
   document.getElementById('skillBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); useSkill(); });
