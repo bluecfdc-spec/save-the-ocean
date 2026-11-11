@@ -344,7 +344,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='57';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='58';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -710,9 +710,7 @@ function drawSkillTint(){
 }
 // ③ 뒤쪽 도트 효과 + 탄 + 꼬리 + 별
 function drawBackFx(){
-  for(const s of stars){const tw=.45+.55*Math.abs(Math.sin(performance.now()/700+s.p));ctx.globalAlpha=s.z*tw;ctx.fillStyle=s.z>.8?'#ffffff':'#9fc8ff';
-    const z=s.z>.8?4:2;ctx.fillRect(s.x*W,s.y*H,z,z*(1+(state==='play'?level*.4:0)))}
-  ctx.globalAlpha=1;
+  // 흐르는 별(눈 내리는 느낌)은 홍균님 요청으로 뺌
   const s=sk;
   if(s&&s.fired&&s.f==='gale'){const env=skEnv();
     for(const c of s.cl){const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,c.r);g.addColorStop(0,c.lit>0?'rgba(190,140,255,'+(.5+.4*c.lit)+')':'rgba(40,16,72,.85)');g.addColorStop(.6,'rgba(30,10,60,.5)');g.addColorStop(1,'rgba(20,6,40,0)');
