@@ -56,6 +56,7 @@
   var G = null, fac = 'solar', best = 0;
   try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
   function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)]; if (Array.isArray(sh[0][0])) sh = sh[rnd(sh.length)];   // ㄹ 묶음이면 둘 중 하나
+    if (G && !G.over && !G.tut && G.board && Math.random() < helpRate()) sh = goodShape(pool, sh);   // 몰래 돕기: 들어가고 줄을 깰 수 있는 모양을 골라 줌
     var pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
     var ir = itemRate(), pPlane = ir * planeRate() * 1.1, pMark = ir * (1 - planeRate()) * (MARK_BOOST[fac] || 1) * (G && !G.tut && G.en.length >= FIELD * 0.75 ? 1.5 : 1), rv = Math.random();   // 아이템 블록: 비행기 / 내 세력 마크 (마크 빈도는 세 세력 같음, 적이 75% 넘게 차면 마크 1.5배)
     if (rv < pPlane + pMark) pc.item = { i: rnd(sh.length), kind: rv < pPlane ? 'plane' : 'mark' };
@@ -78,7 +79,7 @@
     G = { score: 0, combo: 0, moves: 0, kills: 0, fac: fac, efac: efs[rnd(2)], board: [], tank: { x: 4, y: 9, fx: 4, fy: 9, path: [], at: 0, trail: [] },
       tray: [newPiece(), newPiece(), newPiece()], en: [], dying: [], items: {}, loot: {}, planes: [], fx: [], parts: [], shots: [], shells: [], drag: null, over: false, banner: null, shake: 0, boostUntil: 0, charge: 0, chargeAt: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
-    G.t0 = now(); spawn(0.5); G.spawnAt = now() + 7500;
+    G.t0 = now(); spawn(0.5); G.spawnAt = now() + 7500; G.prevBest = LUCK.best;   // 이번 판이 넘어야 할 최고 생존 기록
     banner('줄을 깨면 미사일 발사!', '#ffe066');
     if (rotN < 3) { var g0 = G; setTimeout(function () { if (G === g0 && !G.over) banner('블록을 톡 누르면 돌아가요', '#bfe9ff'); }, 2200); }   // 아직 안 돌려 본 사람에게만 한 번
   }
@@ -105,7 +106,13 @@
     var x2 = free[rnd(free.length)];
     G.en.push({ x: x2, r: r, hp: 1, parked: false, queued: false, ang: Math.PI, aimAng: Math.PI, reloadAt: 0, recoil: 0 });
   }
+  function bestCall() {                                      // 최고 기록 다가옴/넘음 알림 (긴장 → 터짐)
+    var b = G.prevBest || 0, s = gsec(); if (G.tut || G.over || b < 30) return;
+    if (!G.nbWarn && s >= b - 10 && s < b) { G.nbWarn = true; banner('최고 기록까지 10초!', '#ffd451'); }
+    if (!G.nbPass && s >= b) { G.nbPass = true; banner('최고 기록 돌파!', '#9be37a'); shake(6); sfx('ultReady'); fnum('신기록!', W / 2, BY + ROWS * S * 0.35, Math.round(S * 1.1), 'gold', null, 1600); }
+  }
   function moveEnemies(t, dt) {                             // 멈추지 않고 천천히 계속 내려옴
+    bestCall();
     if (t < (G.frozenUntil || 0)) return;                     // 솔라 무력화 중: 적 전장 정지
     G.en.sort(function (a, b) { return b.r - a.r; });
     G.en.forEach(function (e) {
@@ -151,8 +158,38 @@
   function row2(e) { if (G.tut || e.parked || !e.queued || e.r < -0.001 || Math.abs(e.r - Math.round(e.r)) > 0.001) return false;   // 앞 탱크 뒤에 줄 서서 멈춘 뒷줄 탱크
     var k = Math.round(EROWS - 1 - e.r); return k >= 1 && k <= backRows(); }
   function gunner(e) { return e.parked || row2(e); }
-  function itemRate() { var sec = gsec(); return (sec < 20 ? 0.36 : 0.40) + (G && !G.tut && G.en.length >= FIELD * 0.9 ? 0.15 : 0); }   // 간발의 차: 꽉 차면 아이템 더 잘 나옴       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
+  function itemRate() { var sec = gsec(); return (sec < 20 ? 0.36 : 0.40) + (G && !G.tut && G.en.length >= FIELD * 0.9 ? 0.15 : 0) + 0.06 * luck(); }   // 몰래 돕기: 운이 좋을 때 아이템 조금 더   // 간발의 차: 꽉 차면 아이템 더 잘 나옴       // 아이템 블록 확률: 후반엔 돌덩이가 섞여 아이템이 덜 터지므로 확률을 올려 초반만큼 나오게
   function planeRate() { var sec = gsec(); return sec < 60 ? 0.55 : 0.65; }
+  // ---------- 몰래 돕기 v181 (캔디크러시식 '한 판 더') ----------
+  //   ① 연패(최고 생존 기록을 못 넘긴 판)가 쌓일수록 블록 운이 좋아짐: 줄을 깰 수 있는 모양이 더 잘 나오고 아이템도 조금 더
+  //   ② 처음 3판은 조금 도와줌 (첫인상)
+  //   ③ 최고 기록 20초 전 ~ 3초 뒤: 크게 도와서 기록을 넘기게 → 넘기고 15초 뒤부터는 도움을 줄여 아슬아슬하게 끝남
+  //   ④ 판이 60% 넘게 차면 누구나 조금 도움 (역전 맛). 적 수·속도는 모두 같음(순위 공정)
+  //   판 끝: 기록을 넘기면 연패 0, 못 넘기면 연패 +1 (localStorage tank_lose_streak)
+  var LUCK = { streak: 0, plays: 0, best: 0 };
+  try { LUCK.streak = +localStorage.getItem('tank_lose_streak') || 0; LUCK.plays = +localStorage.getItem('tank_plays') || 0; LUCK.best = +localStorage.getItem('tank_best_sec') || 0; } catch (e) { }
+  function luck() {                                           // 0~1: 이번 순간 얼마나 몰래 도울지
+    if (!G || G.tut || G.over) return 0;
+    var L = Math.min(0.8, LUCK.streak * 0.2) + (LUCK.plays < 3 ? 0.3 : 0), s = gsec(), b = G.prevBest || 0;
+    if (b >= 30) { if (s >= b - 20 && s < b + 3) L += 0.5; else if (s >= b + 15) L -= 0.4; }
+    return Math.max(0, Math.min(1, L));
+  }
+  function fillRate() { var n = 0; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x]) n++; return n / (COLS * ROWS); }
+  function helpRate() { return 0.6 * luck() + (fillRate() > 0.6 ? 0.2 : 0); }   // 좋은 모양을 골라 줄 확률
+  function shapeValue(cells) {                               // 0 = 안 들어감, 1 = 들어감, 2 = 넣으면 줄이 깨짐 (네 방향 돌려 봄)
+    var v = 0, c = cells;
+    for (var r = 0; r < 4; r++) { var q = { cells: c };
+      for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (canPlace(q, x, y)) { v = Math.max(v, 1);
+        var rows = {}, cols = {}; c.forEach(function (k) { rows[y + k[1]] = 1; cols[x + k[0]] = 1; });
+        var on = function (xx, yy) { return filled(xx, yy) || c.some(function (k) { return x + k[0] === xx && y + k[1] === yy; }); }, i, ok;
+        for (var ry in rows) { ok = true; for (i = 0; i < COLS; i++) if (!on(i, +ry)) { ok = false; break; } if (ok) return 2; }
+        for (var cx in cols) { ok = true; for (i = 0; i < ROWS; i++) if (!on(+cx, i)) { ok = false; break; } if (ok) return 2; } }
+      c = rotCells(c); }
+    return v; }
+  function goodShape(pool, sh) {                             // 후보 6개 중 가장 좋은 모양 (같으면 처음 것 = 원래 뽑힌 모양)
+    var best = sh, bv = shapeValue(sh); if (bv === 2) return sh;
+    for (var i = 0; i < 6; i++) { var c = pool[rnd(pool.length)]; if (Array.isArray(c[0][0])) c = c[rnd(c.length)]; var v = shapeValue(c); if (v > bv) { best = c; bv = v; if (v === 2) break; } }
+    return best; }
   function advance() { var t = now(); moveEnemies(t, rowMs()); }   // 시험용: 한 칸 빨리 감기
   function emptyCells() { var a = []; for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (!G.board[y][x] && !G.loot[x + ',' + y] && !(G.tank.x === x && G.tank.y === y) && !G.shells.some(function (s) { return s.tx === x && s.ty === y; })) a.push([x, y]); return a; }
   function wouldClear(cx, cy, skip) {                      // 이 칸을 채우면 가로줄이나 세로줄이 완성되나 (탱크 칸·날아가는 포탄 자리도 찬 것으로 침)
@@ -333,6 +370,8 @@
   function canTankMove() { var t = G.tank; return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { var x = t.x + d[0], y = t.y + d[1]; return x >= 0 && x < COLS && y >= 0 && y < ROWS && !G.board[y][x]; }); }
   function over() {
     G.over = true; G.endSec = gsec(); sfx('bad');
+    if (!G.tut && G.endSec >= 5) { if (G.endSec > (G.prevBest || 0)) { LUCK.streak = 0; LUCK.best = Math.floor(G.endSec); } else LUCK.streak++; LUCK.plays++;   // 몰래 돕기: 연패 세기
+      try { localStorage.setItem('tank_lose_streak', LUCK.streak); localStorage.setItem('tank_plays', LUCK.plays); } catch (e) { } }
     var nb = G.score > best; if (nb) { best = G.score; try { localStorage.setItem('tank_easy_best', best); } catch (e) { } }
     banner('놓을 곳이 없다!', '#ff6a5a');
     // 마지막 연출: 전장의 적 탱크가 일제히 나를 조준·발사 → 내 탱크 폭파 (적이 없으면 서너 대가 한꺼번에 몰려옴)
@@ -1122,14 +1161,17 @@
     $('endS').textContent = '적 탱크 ' + G.kills + '대 격파';
     var es = Math.floor(G.endSec || 0), bs = 0; try { bs = +localStorage.getItem('tank_best_sec') || 0; if (es > bs) { bs = es; localStorage.setItem('tank_best_sec', es); } } catch (er) { bs = Math.max(bs, es); }
     function mmss(v) { return v < 60 ? v + '초' : Math.floor(v / 60) + '분 ' + (v % 60) + '초'; }
-    if ($('endTime')) $('endTime').innerHTML = '생존 ' + mmss(es) + ' · ' + (es >= 300 ? '<b>5분 벽 돌파!</b>' : '<b>5분까지 ' + mmss(300 - es) + '!</b>') + '<br><small>최고 생존 ' + mmss(bs) + '</small>';   // 3분 벽까지 남은 시간
+    var pb = Math.floor(G.prevBest || 0), gap = pb - es, close = pb >= 30 && gap >= 0 && gap <= 15, beat = pb >= 30 && es > pb;   // 아깝다 / 신기록
+    var msg = beat ? '<b>최고 기록 +' + mmss(es - pb) + '!</b>' : close ? '<b>최고까지 단 ' + mmss(Math.max(1, gap)) + '!</b>' : es >= 300 ? '<b>5분 벽 돌파!</b>' : '<b>5분까지 ' + mmss(300 - es) + '!</b>';
+    if ($('endTime')) $('endTime').innerHTML = '생존 ' + mmss(es) + ' · ' + msg + '<br><small>최고 생존 ' + mmss(bs) + '</small>';
     $('endB').textContent = '최고 기록!';
     $('endScore').textContent = '점수 ' + G.score.toLocaleString();
-    $('endBtn').textContent = '다시 하기';
+    $('endBtn').textContent = close || beat ? '한 판 더!' : '다시 하기';
+    if (beat && !nb) $('endT').textContent = '생존 신기록!';
     sfx('resultMusic', nb);   // 탱크대전과 같은 결과 음악(최고 기록 = 승리 음악, 아니면 패배 음악)
     e.classList.remove('hidden');
     try { if (window.TR_RANK) TR_RANK.onEnd(G.score, G.fac); } catch (er) { }
   }
   $('endBtn').addEventListener('click', function () { $('end').classList.add('hidden'); sfx('bgmStart'); sfx('go'); start(); });
-  window.__next = { cell: function (x, y) { return { x: bx(x) + S / 2, y: by(y) + S / 2 }; }, slot: slotRect, get: function () { return G; }, start: start, place: place, canPlace: canPlace, advance: advance, lineCheck: lineCheck, lure: lureLines, pickup: pickup, useMark: useMark, fire: function (n, p) { fire(n || 1, p); }, skill: function (f) { useMark(now(), f); }, err: function () { return LERR; }, callPlane: callPlane, over: over };
+  window.__next = { cell: function (x, y) { return { x: bx(x) + S / 2, y: by(y) + S / 2 }; }, slot: slotRect, get: function () { return G; }, start: start, place: place, canPlace: canPlace, piece: newPiece, luck: function () { return LUCK; }, advance: advance, lineCheck: lineCheck, lure: lureLines, pickup: pickup, useMark: useMark, fire: function (n, p) { fire(n || 1, p); }, skill: function (f) { useMark(now(), f); }, err: function () { return LERR; }, callPlane: callPlane, over: over };
 })();
