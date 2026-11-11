@@ -684,7 +684,7 @@
       const rain = [];
       for (let i = 0; i < 80; i++) rain.push({ x: Math.random() * W, y: Math.random() * (seabedY + offY) - offY, v: 700 + Math.random() * 400, l: 10 + Math.random() * 14 });
       sk.gale = { clouds, rain, last: 0, prev: null, cloud: 1, flashX: W / 2, white: 0.3 };
-      for (let i = 0; i < 3; i++) galeStrike(W * (0.18 + 0.32 * i), subMinY() + Math.random() * (seabedY - subMinY() - 20), true);
+      for (let i = 0; i < 6; i++) galeStrike(W * (0.1 + 0.16 * i) + (Math.random() - 0.5) * 20, subMinY() + Math.random() * (seabedY - subMinY() - 20), i % 2 === 0);
     }
     if (sk.f === 3) {
       SFX.solar(); ship.shield = SKILL[3].dur; updateHud();
@@ -767,7 +767,7 @@
       for (const s of subs.slice()) {
         const on = s.x > -s.w * 0.5 && s.x < W + s.w * 0.5;
         if (!on) { if (s.zap === undefined) s.zap = 0.2 + Math.random() * 0.3; s.zap -= dt; if (s.zap <= 0) killSub(s, true); continue; }
-        if (s.zapAt === undefined) { s.zapAt = Math.max(k, G.last) + 0.1 + Math.random() * 0.07; G.last = s.zapAt; }
+        if (s.zapAt === undefined) { s.zapAt = Math.max(k, G.last) + 0.06 + Math.random() * 0.04; G.last = s.zapAt; }
         if (k >= s.zapAt) { galeStrike(s.x, s.y + Math.sin(s.wobble) * 2, s.red); if (Math.random() < 0.6) SFX.zap(false); killSub(s, true); }
       }
       for (let i = torps.length - 1; i >= 0; i--) {
@@ -777,8 +777,9 @@
       // 빈 바다에도 계속 내리치는 벼락
       galeT -= dt;
       if (galeT <= 0) {
-        galeT = 0.22 + Math.random() * 0.25;
+        galeT = 0.11 + Math.random() * 0.12;   // 빈 바다 벼락: 예전의 두 배
         galeStrike(20 + Math.random() * (W - 40), subMinY() + Math.random() * (seabedY - subMinY()), false);
+        if (Math.random() < 0.5) galeStrike(20 + Math.random() * (W - 40), subMinY() + Math.random() * (seabedY - subMinY()), false);
         if (Math.random() < 0.5) SFX.zap(false);
       }
     }
@@ -802,7 +803,7 @@
     return { x: ship.x, y: ship.y + 10 - rise * 95, R: 30 + 10 * Math.max(0, 1 - k / 1.2) };
   }
   // ── 도트(픽셀) 효과: 작은 화면에 그린 뒤 색·투명도를 몇 단계로 줄이고(바둑판 점) 크게 키워 붙인다 ──
-  const PXS = 3;   // 도트 한 칸 = 화면 3칸
+  const PXS = 2;   // 도트 한 칸 = 화면 2칸 (3이면 더 거칠고, 1이면 매끈)
   const pixCv = document.createElement('canvas'), pixCtx = pixCv.getContext('2d', { willReadFrequently: true });
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   function pixLayer(fn, comp) {
@@ -816,10 +817,10 @@
     for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
       const i = (y * pw + x) * 4, a = d[i + 3]; if (!a) continue;
       const b = (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
-      const av = a / 255; if (av < 0.28) { d[i + 3] = 0; continue; }   // 아주 옅은 번짐은 버려서 화면이 지저분해지지 않게
-      const al = Math.max(0.5, Math.floor(av * 2 + b) / 2);   // 투명도 반 · 꽉 두 단계 (바둑판 점으로 섞임)
+      const av = a / 255; if (av < 0.16) { d[i + 3] = 0; continue; }   // 아주 옅은 번짐은 버려서 화면이 지저분해지지 않게
+      const al = Math.max(0.25, Math.floor(av * 4 + b) / 4);   // 투명도 4단계 (바둑판 점으로 섞임)
       d[i + 3] = al * 255;
-      for (let c = 0; c < 3; c++) d[i + c] = Math.min(255, Math.floor(d[i + c] / 255 * 5 + b * 0.9) * 51 + 12);   // 색 6단계
+      for (let c = 0; c < 3; c++) d[i + c] = Math.min(255, Math.round(Math.floor(d[i + c] / 255 * 9 + b * 0.8) * 28.3 + 6));   // 색 10단계
     }
     pixCtx.putImageData(im, 0, 0);
     ctx.save(); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = comp;
