@@ -52,7 +52,7 @@ function render(){
   h+='<div class="redo"><textarea id="cm" placeholder="다 별로면: 어떻게 바꿀지 적어 주세요 (예: 더 짧게, 저음 빼고, 더 급박하게)">'+(saved['#'+it.id]||'')+'</textarea><button id="redo">'+(pick==='다시'?'✓ 다시 뽑기로 표시됨':'다 별로 — 다시 뽑기')+'</button></div>';
   h+='<div class="nav"><button id="prev"'+(idx===0?' disabled':'')+'>← 이전</button><button id="next">'+(pick?'다음 →':'건너뛰기 →')+'</button></div></div>';
   app.innerHTML=h;
-  app.querySelectorAll('.pl').forEach(b=>{b.onclick=()=>{if(playingBtn===b){stop();return}stop();audio=new Audio('../'+b.dataset.f+'?v='+((it.ver||{})[b.dataset.f]||'0'));audio.onended=stop;audio.play();playingBtn=b;b.classList.add('on');b.textContent='■ 재생 중'}});
+  app.querySelectorAll('.pl').forEach(b=>{b.onclick=()=>{if(playingBtn===b){stop();return}stop();audio=new Audio('../'+b.dataset.f+'?v='+((it.ver||{})[b.dataset.f]||'0'));audio.onended=stop;audio.onerror=()=>{stop();b.textContent='⚠ 파일을 못 불러옴'};const pr=audio.play();if(pr&&pr.catch)pr.catch(e=>{stop();b.textContent='⚠ 재생 막힘 (다시 눌러 주세요)'});playingBtn=b;b.classList.add('on');b.textContent='■ 재생 중'}});
   app.querySelectorAll('.ok').forEach(b=>{b.onclick=()=>{saved[it.id]=b.dataset.f;save();setTimeout(()=>{idx++;render()},150)}});
   document.getElementById('cm').oninput=e=>{saved['#'+it.id]=e.target.value;save()};
   document.getElementById('redo').onclick=()=>{saved[it.id]='다시';save();idx++;render()};
