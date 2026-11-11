@@ -361,8 +361,7 @@
     requestAnimationFrame(() => { flash.style.transition = 'opacity ' + dur + 's'; flash.style.opacity = 0; });
   }
   function addRing(x, y, r0, r1, dur, color, lw, flat) { rings.push({ x, y, r0, r1, t: 0, dur, color, lw, flat: flat || 1 }); }
-  let chunkMode = false;   // true 동안 만든 입자는 '거친 물 덩어리' (테두리 있는 각진 조각)
-  function addGlow(o) { if (glows.length < 600) glows.push(Object.assign({ vx: 0, vy: 0, r: 2, drag: 0.92, grav: 0, streak: false, max: o.life, chunk: chunkMode, rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 16, sh: Math.random() }, o)); }
+  function addGlow(o) { if (glows.length < 500) glows.push(Object.assign({ vx: 0, vy: 0, r: 2, drag: 0.92, grav: 0, streak: false, max: o.life }, o)); }
   function sparkBurst(x, y, n, color, speed, life, streak) {
     for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = speed * (0.4 + Math.random() * 0.8); addGlow({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: life * (0.6 + Math.random() * 0.6), r: 1.5 + Math.random() * 2, color, streak }); }
   }
@@ -637,13 +636,13 @@
   }
   function boltShape(b) {
     const main = [[b.x0, b.y0]], len = Math.hypot(b.x1 - b.x0, b.y1 - b.y0);
-    zigzag(b.x0, b.y0, b.x1, b.y1, Math.min(120, len * 0.35), b.small ? 3 : 5, main);
+    zigzag(b.x0, b.y0, b.x1, b.y1, Math.min(90, len * 0.28), b.small ? 4 : 6, main);
     const br = [];
     const nb = b.small ? 0 : 2 + Math.floor(Math.random() * 3);
     for (let i = 0; i < nb; i++) {
       const p = main[Math.floor(main.length * (0.2 + Math.random() * 0.6))], a = Math.atan2(b.y1 - b.y0, b.x1 - b.x0) + (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.6);
       const l = len * (0.12 + Math.random() * 0.18), seg = [[p[0], p[1]]];
-      zigzag(p[0], p[1], p[0] + Math.cos(a) * l, p[1] + Math.sin(a) * l, l * 0.6, 2, seg); br.push(seg);
+      zigzag(p[0], p[1], p[0] + Math.cos(a) * l, p[1] + Math.sin(a) * l, l * 0.5, 3, seg); br.push(seg);
     }
     b.main = main; b.br = br;
   }
@@ -654,18 +653,16 @@
     const sx = x + (Math.random() - 0.5) * 90, sy = Math.max(-offY + 8, surfaceY - 150);
     addBolt(sx, sy, x, y, big ? 0.42 : 0.32, big ? 1.4 : 1, false);
     if (g) {
-      g.flashX = sx; g.cloud = 1; g.white = Math.max(g.white, big ? 0.32 : 0.16);
+      g.flashX = sx; g.cloud = 1; g.white = Math.max(g.white, big ? 0.22 : 0.12);
       if (g.prev && sk.t - g.prev.t < 0.35 && Math.hypot(g.prev.x - x, g.prev.y - y) < W * 0.8) addBolt(g.prev.x, g.prev.y, x, y, 0.26, 0.8, false);   // 사슬 번개
       g.prev = { x, y, t: sk.t };
     }
     for (let i = 0; i < 3; i++) { const a = Math.random() * 6.283, l = 16 + Math.random() * 22; addBolt(x, y, x + Math.cos(a) * l, y + Math.sin(a) * l, 0.22, 0.6, true); }   // 맞은 자리 전기 스파크
-    addRing(x, y, 4, big ? 80 : 54, 0.35, '#e7d4ff', big ? 6 : 4);
-    if (g) g.stars.push({ x, y, t: 0, dur: big ? 0.32 : 0.24, r: big ? 46 : 30, n: big ? 10 : 8, rot: Math.random() * 6.283 });
-    sparkBurst(x, y, big ? 18 : 10, '#efe2ff', big ? 340 : 250, 0.35, true);
-    hitStop = Math.max(hitStop, big ? 0.06 : 0.03);
+    addRing(x, y, 4, big ? 70 : 46, 0.35, '#d9b8ff', big ? 4 : 3);
+    sparkBurst(x, y, big ? 16 : 9, '#efe2ff', big ? 300 : 220, 0.35, true);
     addGlow({ x, y, r: big ? 60 : 38, life: 0.25, drag: 1, color: '#b98aff', soft: true });
     addGlow({ x: sx + (x - sx) * ((surfaceY - sy) / Math.max(1, y - sy)), y: surfaceY, r: 50, life: 0.25, drag: 1, color: '#c9a8ff', soft: true });   // 수면이 번쩍
-    shake = Math.max(shake, big ? 15 : 8);
+    shake = Math.max(shake, big ? 9 : 5);
   }
 
   // 배너가 끝나고 실제 효과가 시작되는 순간
@@ -675,8 +672,8 @@
     if (sk.f === 1) {
       SFX.surge(sk.dur); subs.forEach(s => { s.cx = undefined; });
       // 양쪽에서 몰아치는 해일 + 3층 소용돌이 물살 입자
-      const vortex = [];   // 굵은 물살 띠 (줄마다 9개)
-      for (let i = 0; i < 36; i++) { const row = i % 3, R = W * 0.5 * (1 - row * 0.06); vortex.push({ row, R, ang: Math.random() * 6.283, rad: R * (0.2 + Math.random() * 0.8), len: 1.0 + Math.random() * 1.3, th: 12 + Math.random() * 16, sp: 0.8 + Math.random() * 0.5 }); }
+      const vortex = [];
+      for (let i = 0; i < 210; i++) { const row = i % 3, R = W * 0.5 * (1 - row * 0.06); vortex.push({ row, R, ang: Math.random() * 6.283, rad: R * (0.25 + Math.random() * 0.75), len: 0.3 + Math.random() * 0.7, w: 1.5 + Math.random() * 3.5, sp: 0.8 + Math.random() * 0.6 }); }
       sk.surge = { vortex, hit: false };
       shake = Math.max(shake, 8);
     }
@@ -686,7 +683,7 @@
       for (let i = 0; i < 20; i++) clouds.push({ x: Math.random() * (W + 160) - 80, y: (Math.random() * 0.8) * 70, r: 50 + Math.random() * 70, sp: 6 + Math.random() * 14, s: Math.random() * 10 });
       const rain = [];
       for (let i = 0; i < 80; i++) rain.push({ x: Math.random() * W, y: Math.random() * (seabedY + offY) - offY, v: 700 + Math.random() * 400, l: 10 + Math.random() * 14 });
-      sk.gale = { clouds, rain, stars: [], last: 0, prev: null, cloud: 1, flashX: W / 2, white: 0.35 };
+      sk.gale = { clouds, rain, last: 0, prev: null, cloud: 1, flashX: W / 2, white: 0.3 };
       for (let i = 0; i < 3; i++) galeStrike(W * (0.18 + 0.32 * i), subMinY() + Math.random() * (seabedY - subMinY() - 20), true);
     }
     if (sk.f === 3) {
@@ -720,7 +717,7 @@
     for (let i = rings.length - 1; i >= 0; i--) { rings[i].t += dt; if (rings[i].t > rings[i].dur) rings.splice(i, 1); }
     for (let i = glows.length - 1; i >= 0; i--) {
       const g = glows[i]; g.life -= dt;
-      g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= g.drag; g.vy = g.vy * g.drag + g.grav * dt; g.rot += g.vr * dt;
+      g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= g.drag; g.vy = g.vy * g.drag + g.grav * dt;
       if (g.life <= 0) glows.splice(i, 1);
     }
     if (punch > 0) punch = Math.max(0, punch - dt * 4);
@@ -729,7 +726,6 @@
     const k = sk.t;
 
     if (sk.f === 1 && sk.surge) {
-      chunkMode = true;
       const S = sk.surge, pull = k < SKILL[1].pull;
       // 0~0.75초: 해일 벽이 양쪽에서 밀려옴 → 가운데서 부딪혀 물보라 폭발
       if (k < 0.75) {
@@ -753,20 +749,18 @@
         const spin = (pull ? 3.2 : 1.6) * p.sp * (0.6 + p.R / (p.rad + 40));
         p.ang += (p.row % 2 ? -1 : 1) * spin * dt;
         p.rad -= (pull ? 55 : 22) * dt * p.sp;
-        if (p.rad < 24) p.rad = p.R * (0.85 + Math.random() * 0.15);
+        if (p.rad < 14) p.rad = p.R * (0.85 + Math.random() * 0.15);
       }
       // 소용돌이 바깥으로 튕겨 나가는 물방울
       if (k > 0.6) for (let n = 0; n < 2; n++) { const r = Math.floor(Math.random() * 3), a = Math.random() * 6.283, R = W * 0.45, dir = r % 2 ? -1 : 1; addGlow({ x: W / 2 + Math.cos(a) * R, y: rowY(r) + Math.sin(a) * R * 0.3, vx: -Math.sin(a) * dir * 260, vy: Math.cos(a) * dir * 80 - 40, grav: 200, life: 0.6, r: 1.2 + Math.random() * 1.5, color: '#dffaff' }); }
       // 해저에서 솟구치는 물기둥 (입자)
-      if (k > 0.5 && k < SKILL[1].pull + 0.8) for (const fx0 of [0.2, 0.5, 0.8]) for (let n = 0; n < 2; n++) addGlow({ x: W * fx0 + (Math.random() - 0.5) * 22, y: seabedY + 10, vx: (Math.random() - 0.5) * 50, vy: -(520 + Math.random() * 300), grav: 420, drag: 0.995, life: 1.1 + Math.random() * 0.3, r: 1.6 + Math.random() * 2.6, color: Math.random() < 0.3 ? '#ffffff' : '#a8f0ff', streak: Math.random() < 0.4 });
+      if (k > 0.5 && k < SKILL[1].pull + 0.8) for (const fx0 of [0.2, 0.5, 0.8]) for (let n = 0; n < 3; n++) addGlow({ x: W * fx0 + (Math.random() - 0.5) * 22, y: seabedY + 10, vx: (Math.random() - 0.5) * 50, vy: -(520 + Math.random() * 300), grav: 420, drag: 0.995, life: 1.1 + Math.random() * 0.3, r: 1.6 + Math.random() * 2.6, color: Math.random() < 0.3 ? '#ffffff' : '#a8f0ff', streak: Math.random() < 0.4 });
       if (S.white) S.white = Math.max(0, S.white - dt * 2);
-      chunkMode = false;
     }
 
     if (sk.f === 2 && sk.gale) {
       const G = sk.gale;
       G.cloud = Math.max(0, G.cloud - dt * 4); G.white = Math.max(0, G.white - dt * 3);
-      for (let i = G.stars.length - 1; i >= 0; i--) { G.stars[i].t += dt; if (G.stars[i].t > G.stars[i].dur) G.stars.splice(i, 1); }
       for (const c of G.clouds) { c.x += c.sp * dt; if (c.x - c.r > W + 40) c.x = -c.r - 40; }
       for (const r of G.rain) { r.y += r.v * dt; r.x -= r.v * 0.25 * dt; if (r.y > seabedY) { r.y = -offY - Math.random() * 40; r.x = Math.random() * (W + 60); } }
       // 화면 밖 적은 조용히, 화면 안 적은 하나씩 차례로 벼락을 맞음
@@ -807,33 +801,6 @@
     const k = sk.t, rise = ease3(k / 0.9);
     return { x: ship.x, y: ship.y + 10 - rise * 95, R: 30 + 10 * Math.max(0, 1 - k / 1.2) };
   }
-  // ── 만화풍(셀 셰이딩) 그리기 도구: 진한 테두리 + 2~3단 명암 + 거친 가장자리 ──
-  function polyFill(pts) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); }
-  // 타원 궤도를 따라 휘어진 물살 띠 (가운데가 두껍고 양끝이 뾰족, 바깥 가장자리는 톱니 거품)
-  function ribbon(cx, cy, rad, a0, a1, th, off, jag, seed) {
-    const n = 16, out = [], inn = [];
-    for (let i = 0; i <= n; i++) {
-      const u = i / n, a = a0 + (a1 - a0) * u, pr = Math.pow(Math.sin(Math.PI * u), 0.8) * th;
-      const tooth = jag ? (i % 2 ? jag : -jag * 0.3) * pr / th : 0, ro = rad + off + pr / 2 + tooth, ri = rad + off - pr / 2;
-      const ex = cx + Math.cos(a) * rad, ey = cy + Math.sin(a) * rad * 0.3, dO = ro - rad, dI = ri - rad;
-      out.push([ex + Math.cos(a) * dO, ey + Math.sin(a) * dO]); inn.push([ex + Math.cos(a) * dI, ey + Math.sin(a) * dI]);
-    }
-    return out.concat(inn.reverse());
-  }
-  const SURGE_FRONT = ['#043a5e', '#1f9fdc', '#8fe9ff', '#ffffff'], SURGE_BACK = ['#032a46', '#126a9c', '#3fa6d4', '#a9e9ff'];
-  function drawRibbon(p, front) {
-    const C = front ? SURGE_FRONT : SURGE_BACK, cy = rowY(p.row), dir = p.row % 2 ? -1 : 1;
-    const a0 = dir > 0 ? p.ang - p.len : p.ang, a1 = dir > 0 ? p.ang : p.ang + p.len;
-    const body = ribbon(W / 2, cy, p.rad, a0, a1, p.th, 0, 4, 0);
-    ctx.strokeStyle = C[0]; ctx.lineWidth = 4; ctx.lineJoin = 'miter'; polyFill(body); ctx.stroke();
-    ctx.fillStyle = C[1]; ctx.fill();
-    ctx.fillStyle = C[2]; polyFill(ribbon(W / 2, cy, p.rad, a0 + (a1 - a0) * 0.1, a1 - (a1 - a0) * 0.05, p.th * 0.45, p.th * 0.18, 3, 0)); ctx.fill();
-    ctx.fillStyle = C[3]; polyFill(ribbon(W / 2, cy, p.rad, a0 + (a1 - a0) * (dir > 0 ? 0.45 : 0.1), a1 - (a1 - a0) * (dir > 0 ? 0.08 : 0.45), p.th * 0.16, p.th * 0.32, 0, 0)); ctx.fill();
-  }
-  // 별 모양 번쩍 (벼락 맞은 자리)
-  function starPts(x, y, r, n, rot, inner) { const pts = []; for (let i = 0; i < n * 2; i++) { const a = rot + i * Math.PI / n, rr = i % 2 ? r * inner : r * (0.8 + 0.2 * Math.sin(i * 7.3)); pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]); } return pts; }
-  // 거친 물 덩어리 조각 (그림자 + 흰 조각)
-  function chunkPts(g, r) { const pts = []; for (let i = 0; i < 5; i++) { const a = g.rot + i * 1.2566, rr = r * (0.7 + 0.45 * Math.abs(Math.sin(g.sh * 9 + i * 2.1))); pts.push([g.x + Math.cos(a) * rr, g.y + Math.sin(a) * rr]); } return pts; }
   // 전장 뒤쪽(배경 위, 잠수함 아래) 연출
   function drawSkillBack() {
     if (!sk || sk.t < 0) return;
@@ -843,36 +810,31 @@
     if (sk.f === 1 && sk.surge) {
       ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#0aa7c9'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, top, W, bot - top);
       ctx.globalCompositeOperation = 'source-over';
-      // 해일 벽 (양쪽에서 밀려오는 물 덩어리) — 셀 셰이딩 3단 + 톱니 거품 볏
+      // 해일 벽 (양쪽에서 밀려오는 물 덩어리)
       if (k < 1.0) {
         const e = ease3(Math.min(1, k / 0.75)), fade = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
         for (const side of [-1, 1]) {
-          const ex = side < 0 ? -W * 0.15 + W * 0.65 * e : W * 1.15 - W * 0.65 * e, back = side < 0 ? -30 : W + 30;
+          const ex = side < 0 ? -W * 0.15 + W * 0.65 * e : W * 1.15 - W * 0.65 * e, back = side < 0 ? -20 : W + 20;
           const dirX = side < 0 ? 1 : -1, edge = [];
-          for (let y = surfaceY - 80; y <= seabedY + 30; y += 9) { const lift = y < surfaceY + 60 ? Math.pow((surfaceY + 60 - y) / 140, 2) * 80 : 0; edge.push([ex + dirX * lift + wob(y * 0.035 + k * 9) * 16, y]); }
-          const shifted = d => edge.map(q => [q[0] - dirX * d, q[1]]);
-          const wall = (pts) => { ctx.beginPath(); ctx.moveTo(back, pts[0][1]); pts.forEach(q => ctx.lineTo(q[0], q[1])); ctx.lineTo(back, pts[pts.length - 1][1]); ctx.closePath(); };
-          ctx.globalAlpha = 0.85 * fade; ctx.lineJoin = 'miter';
-          wall(edge); ctx.strokeStyle = '#043a5e'; ctx.lineWidth = 5; ctx.stroke(); ctx.fillStyle = '#8fe9ff'; ctx.fill();
-          wall(shifted(16)); ctx.fillStyle = '#1f9fdc'; ctx.fill();
-          wall(shifted(60)); ctx.fillStyle = '#0e66a0'; ctx.fill();
-          // 속 물결 무늬 (진한 선)
-          ctx.strokeStyle = '#0a4f80'; ctx.lineWidth = 3;
-          for (let j = 1; j <= 2; j++) strokePath(shifted(28 + j * 26).map((q, n) => [q[0] + wob(n * 0.7 + k * 6 + j) * 8, q[1]]));
-          // 톱니 거품 볏
-          const foam = []; edge.forEach((q, n) => { foam.push([q[0] + dirX * (n % 2 ? 10 + 8 * Math.abs(Math.sin(n * 1.9 + k * 25)) : 0), q[1]]); });
-          const foamPoly = foam.concat(shifted(7).reverse());
-          ctx.globalAlpha = fade; polyFill(foamPoly); ctx.strokeStyle = '#043a5e'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#ffffff'; ctx.fill();
+          for (let y = surfaceY - 70; y <= seabedY + 30; y += 6) { const lift = y < surfaceY + 60 ? Math.pow((surfaceY + 60 - y) / 130, 2) * 70 : 0; edge.push([ex + dirX * lift + wob(y * 0.035 + k * 9) * 16 + Math.sin(y * 0.11 - k * 20) * 4, y]); }
+          const gr = ctx.createLinearGradient(back, 0, ex, 0); gr.addColorStop(0, 'rgba(10,70,130,.25)'); gr.addColorStop(0.55, 'rgba(25,140,205,.7)'); gr.addColorStop(0.9, 'rgba(120,225,255,.85)'); gr.addColorStop(1, 'rgba(230,252,255,.95)');
+          ctx.globalAlpha = fade; ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(back, edge[0][1]); edge.forEach(p => ctx.lineTo(p[0], p[1])); ctx.lineTo(back, edge[edge.length - 1][1]); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 9; ctx.globalAlpha = 0.9 * fade; ctx.lineJoin = 'round'; strokePath(edge);
+          ctx.fillStyle = '#ffffff'; for (let j = 0; j < edge.length; j += 2) { const q = edge[j], rr = 2 + 2.5 * (0.5 + 0.5 * Math.sin(j * 1.7 + k * 30)); ctx.globalAlpha = 0.8 * fade; ctx.beginPath(); ctx.arc(q[0] + dirX * (3 + Math.sin(j * 2.3) * 5), q[1], rr, 0, 6.283); ctx.fill(); }   // 거품
+          ctx.strokeStyle = '#bff4ff'; ctx.lineWidth = 2; for (let j = 1; j <= 3; j++) { ctx.globalAlpha = 0.35 * fade; strokePath(edge.map(p => [p[0] - (side < 0 ? 1 : -1) * j * 14 + wob(p[1] * 0.05 + k * 7 + j) * 5, p[1]])); }
         }
       }
-      // 소용돌이: 가운데 어두운 눈 + 뒤쪽 물살 띠 (진하게)
+      // 소용돌이 눈(어두운 가운데)과 꼬인 물기둥
       if (k > 0.5) {
         const va = a * Math.min(1, (k - 0.5) / 0.4);
-        for (let r = 0; r < 3; r++) { const cy = rowY(r); ctx.globalAlpha = va * 0.45; ctx.fillStyle = '#021c33'; ctx.beginPath(); ctx.ellipse(W / 2, cy, W * 0.16, W * 0.16 * 0.3, 0, 0, 6.283); ctx.fill(); ctx.globalAlpha = va * 0.35; ctx.beginPath(); ctx.ellipse(W / 2, cy, W * 0.28, W * 0.28 * 0.3, 0, 0, 6.283); ctx.fill(); }
-        // 꼬인 물기둥 (줄무늬 셀 셰이딩)
-        for (let y = subMinY() - 30, n = 0; y < subMaxY() + 30; y += 10, n++) { const rr = 14 + 6 * Math.sin(y * 0.05 + k * 7), xx = W / 2 + Math.sin(y * 0.02 + k * 3) * 8; ctx.globalAlpha = va * 0.85; ctx.fillStyle = (n + Math.floor(k * 12)) % 2 ? '#1f9fdc' : '#8fe9ff'; ctx.strokeStyle = '#043a5e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(xx, y, rr, rr * 0.35, 0, 0, 6.283); ctx.fill(); ctx.stroke(); }
-        ctx.globalAlpha = va;
-        for (const p of sk.surge.vortex) if (Math.sin(p.ang - (p.row % 2 ? -1 : 1) * p.len / 2) <= 0) drawRibbon(p, false);
+        for (let r = 0; r < 3; r++) { const cy = rowY(r), R = W * 0.22; const g = ctx.createRadialGradient(W / 2, cy, 0, W / 2, cy, R); g.addColorStop(0, 'rgba(0,20,45,.55)'); g.addColorStop(1, 'rgba(0,20,45,0)'); ctx.globalAlpha = va; ctx.fillStyle = g; ctx.save(); ctx.translate(W / 2, cy); ctx.scale(1, 0.32); ctx.translate(-W / 2, -cy); ctx.beginPath(); ctx.arc(W / 2, cy, R, 0, 6.283); ctx.fill(); ctx.restore(); }
+        ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#7fe3ff'; ctx.lineWidth = 1.6;
+        for (let y = subMinY() - 30; y < subMaxY() + 30; y += 12) { const rr = 16 + 9 * Math.sin(y * 0.05 + k * 7); ctx.globalAlpha = va * 0.3; ctx.beginPath(); ctx.ellipse(W / 2 + Math.sin(y * 0.02 + k * 3) * 8, y, rr, rr * 0.3, 0, 0, 6.283); ctx.stroke(); }
+        // 물 덩어리: 굵고 투명한 물띠가 빙빙 돎
+        for (let r = 0; r < 3; r++) { const cy = rowY(r), dir = r % 2 ? -1 : 1; for (let j = 0; j < 5; j++) { const rr = W * (0.12 + j * 0.08), st = dir * k * (5 - j * 0.6) + j * 1.3; ctx.globalAlpha = va * 0.22; ctx.strokeStyle = j % 2 ? '#38b8e8' : '#7fe3ff'; ctx.lineWidth = 10 + j * 3; ctx.beginPath(); ctx.ellipse(W / 2, cy, rr, rr * 0.3, 0, st, st + 3.6); ctx.stroke(); } }
+        // 뒤쪽 물살 (멀리 있는 반쪽은 어둡게)
+        ctx.lineCap = 'round';
+        for (const p of sk.surge.vortex) { const cy = rowY(p.row), dir = p.row % 2 ? -1 : 1, s0 = dir > 0 ? p.ang - p.len : p.ang, s1 = dir > 0 ? p.ang : p.ang + p.len; if (Math.sin(p.ang) > 0) continue; ctx.globalAlpha = va * 0.45; ctx.strokeStyle = '#4fc9ee'; ctx.lineWidth = p.w * 0.8; ctx.beginPath(); ctx.ellipse(W / 2, cy, p.rad, p.rad * 0.3, 0, s0, s1); ctx.stroke(); }
       }
     }
     if (sk.f === 2 && sk.gale) {
@@ -881,13 +843,11 @@
       // 먹구름 (천천히 흘러감)
       ctx.globalCompositeOperation = 'source-over';
       const cy0 = Math.max(-offY, surfaceY - 170);
-      ctx.globalAlpha = a; ctx.fillStyle = '#12082a'; for (const c of G.clouds) { ctx.beginPath(); ctx.arc(c.x, cy0 + c.y, c.r * 0.72 + 4, 0, 6.283); ctx.fill(); }   // 테두리
-      ctx.fillStyle = '#2a1552'; for (const c of G.clouds) { ctx.beginPath(); ctx.arc(c.x, cy0 + c.y, c.r * 0.72, 0, 6.283); ctx.fill(); }
-      ctx.fillStyle = '#43287a'; for (const c of G.clouds) { ctx.beginPath(); ctx.arc(c.x - c.r * 0.12, cy0 + c.y - c.r * 0.18, c.r * 0.5, 0, 6.283); ctx.fill(); }   // 윗면 밝은 쪽
+      for (const c of G.clouds) { const y = cy0 + c.y, g = ctx.createRadialGradient(c.x, y, 0, c.x, y, c.r); g.addColorStop(0, 'rgba(28,14,48,.9)'); g.addColorStop(0.6, 'rgba(40,20,70,.55)'); g.addColorStop(1, 'rgba(40,20,70,0)'); ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, y, c.r, 0, 6.283); ctx.fill(); }
       // 구름 속 번쩍임
       if (G.cloud > 0) { ctx.globalCompositeOperation = 'lighter'; const y = cy0 + 30, g = ctx.createRadialGradient(G.flashX, y, 0, G.flashX, y, 160); g.addColorStop(0, 'rgba(230,210,255,.9)'); g.addColorStop(1, 'rgba(150,90,255,0)'); ctx.globalAlpha = G.cloud * a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(G.flashX, y, 160, 0, 6.283); ctx.fill(); }
       // 비
-      ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#cdbfff'; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.35 * a; ctx.beginPath();
+      ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#cdbfff'; ctx.lineWidth = 1; ctx.globalAlpha = 0.3 * a; ctx.beginPath();
       for (const r of G.rain) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + r.l * 0.25, r.y - r.l); } ctx.stroke();
     }
     if (sk.f === 3 && sk.solar && ship) {
@@ -913,12 +873,15 @@
   function drawSkillFront() {
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const k = sk ? sk.t : 0, a = sk && k >= 0 ? Math.max(0, Math.min(1, k / 0.4, (sk.dur - k) / 0.8)) : 0;
-    // 서지: 앞쪽 물살 띠 (가까운 반쪽은 밝게) — 만화풍이라 덧칠(source-over)
+    // 서지: 앞쪽 물살 (가까운 반쪽은 밝고 굵게)
     if (sk && sk.f === 1 && sk.surge && k > 0.5) {
       const va = a * Math.min(1, (k - 0.5) / 0.4);
-      ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = va;
-      for (const p of sk.surge.vortex) if (Math.sin(p.ang - (p.row % 2 ? -1 : 1) * p.len / 2) > 0) drawRibbon(p, true);
-      ctx.restore();
+      for (const p of sk.surge.vortex) {
+        if (Math.sin(p.ang) <= 0) continue;
+        const cy = rowY(p.row), dir = p.row % 2 ? -1 : 1, s0 = dir > 0 ? p.ang - p.len : p.ang, s1 = dir > 0 ? p.ang : p.ang + p.len;
+        ctx.globalAlpha = va * 0.85; ctx.strokeStyle = p.w > 4 ? '#ffffff' : '#9eeeff'; ctx.lineWidth = p.w * 1.5;
+        ctx.beginPath(); ctx.ellipse(W / 2, cy, p.rad, p.rad * 0.3, 0, s0, s1); ctx.stroke();
+      }
     }
     // 솔라: 떠오르는 태양 (코로나가 일렁임)
     if (sk && sk.f === 3 && sk.solar && ship && k >= 0) {
@@ -938,24 +901,14 @@
       g = ctx.createLinearGradient(sp.x - W * 0.6, 0, sp.x + W * 0.6, 0); g.addColorStop(0, 'rgba(255,220,140,0)'); g.addColorStop(0.5, 'rgba(255,245,210,.8)'); g.addColorStop(1, 'rgba(255,220,140,0)');
       ctx.globalAlpha = sa * (0.5 + 0.2 * Math.sin(k * 4)); ctx.fillStyle = g; ctx.fillRect(sp.x - W * 0.6, sp.y - 1.5, W * 1.2, 3);
     }
-    // 벼락: 보라 번짐 → 진한 테두리 → 보라 몸통 → 흰 심 (각지고 두껍게, 깜빡깜빡 두 번 내리침)
+    // 벼락 (3겹: 보라 번짐 → 연보라 → 흰 심)
     for (const b of bolts) {
-      const p = b.t / b.dur, al = (p < 0.12 ? 1 : 1 - (p - 0.12) / 0.88) * (Math.floor(b.t * 45) % 4 === 1 ? 0.25 : 1);
-      ctx.lineJoin = 'miter'; ctx.miterLimit = 3; ctx.lineCap = 'butt';
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * 0.45; ctx.strokeStyle = '#7a3cff'; ctx.lineWidth = 34 * b.w; strokePath(b.main);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = al; ctx.strokeStyle = '#1e0848'; ctx.lineWidth = 16 * b.w; strokePath(b.main); ctx.lineWidth = 8 * b.w; b.br.forEach(strokePath);
-      ctx.strokeStyle = '#b98aff'; ctx.lineWidth = 11 * b.w; strokePath(b.main); ctx.lineWidth = 5 * b.w; b.br.forEach(strokePath);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5 * b.w; strokePath(b.main); ctx.lineWidth = 2 * b.w; b.br.forEach(strokePath);
+      const p = b.t / b.dur, al = (p < 0.1 ? 1 : 1 - (p - 0.1) / 0.9) * (0.75 + Math.random() * 0.25);
+      ctx.globalAlpha = al * 0.35; ctx.strokeStyle = '#8a4dff'; ctx.lineWidth = 14 * b.w; strokePath(b.main);
+      ctx.globalAlpha = al * 0.85; ctx.strokeStyle = '#cfb0ff'; ctx.lineWidth = 4.5 * b.w; strokePath(b.main);
+      ctx.lineWidth = 2 * b.w; b.br.forEach(strokePath);
+      ctx.globalAlpha = al; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.8 * b.w; strokePath(b.main); ctx.lineWidth = 0.9 * b.w; b.br.forEach(strokePath);
     }
-    // 벼락 맞은 자리: 별 모양 번쩍 (테두리 + 보라 + 흰 속)
-    if (sk && sk.gale) for (const st of sk.gale.stars) {
-      const p = st.t / st.dur, r = st.r * (0.6 + 0.6 * ease3(p)), al = 1 - p * p;
-      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = al; ctx.lineJoin = 'miter';
-      polyFill(starPts(st.x, st.y, r, st.n, st.rot, 0.42)); ctx.strokeStyle = '#1e0848'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#b98aff'; ctx.fill();
-      polyFill(starPts(st.x, st.y, r * 0.62, st.n, st.rot + 0.2, 0.45)); ctx.fillStyle = '#ffffff'; ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // 고리(충격파)
     for (const r of rings) {
       const p = r.t / r.dur, e2 = 1 - (1 - p) * (1 - p), rr = r.r0 + (r.r1 - r.r0) * e2;
@@ -964,23 +917,12 @@
     }
     // 빛·물방울 입자
     for (const g of glows) {
-      if (g.chunk) continue;
       const al = Math.max(0, Math.min(1, g.life / g.max * 1.5)) * (g.twinkle ? 0.5 + 0.5 * Math.sin(g.life * 18 + g.x) : 1);
       ctx.globalAlpha = al;
       if (g.soft) { const rg = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r); rg.addColorStop(0, '#ffffff'); rg.addColorStop(0.35, g.color); rg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.283); ctx.fill(); }
       else if (g.streak) { ctx.strokeStyle = g.color; ctx.lineWidth = g.r; ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x - g.vx * 0.04, g.y - g.vy * 0.04); ctx.stroke(); }
       else { ctx.fillStyle = g.color; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.283); ctx.fill(); }
     }
-    // 거친 물 덩어리 조각 (진한 그림자 위에 흰/하늘색 조각)
-    ctx.globalCompositeOperation = 'source-over'; ctx.lineJoin = 'miter';
-    for (const g of glows) {
-      if (!g.chunk) continue;
-      ctx.globalAlpha = Math.max(0, Math.min(1, g.life / g.max * 2));
-      const r = g.r * 1.6 + 1;
-      ctx.save(); ctx.translate(1.5, 2); polyFill(chunkPts(g, r)); ctx.fillStyle = '#0a5a8c'; ctx.fill(); ctx.restore();
-      polyFill(chunkPts(g, r)); ctx.fillStyle = g.color === '#ffffff' || g.color === '#eafcff' ? '#ffffff' : '#bff4ff'; ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'lighter';
     // 번쩍 (화면 전체가 하얗게)
     const wv = sk ? (sk.gale ? sk.gale.white : sk.surge ? sk.surge.white : sk.solar ? sk.solar.white : 0) : 0;
     if (wv > 0) { ctx.globalAlpha = wv; ctx.fillStyle = sk.solar ? '#fff0c0' : sk.surge ? '#d8f8ff' : '#efe6ff'; ctx.fillRect(0, -offY, W, viewH); }
