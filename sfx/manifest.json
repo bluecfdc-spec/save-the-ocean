@@ -897,7 +897,8 @@
    "sfx/candidates/스카이_03_3_ea75d1.mp3": "ea75d1fe",
    "sfx/candidates/스카이_03_4_296bbd.mp3": "296bbd24"
   },
-  "done": false
+  "done": true,
+  "pick": "스카이_03_4_296bbd.mp3"
  },
  "스카이_04": {
   "game": "스카이",
@@ -937,7 +938,8 @@
    "sfx/candidates/스카이_05_3_1b81a3.mp3": "1b81a330",
    "sfx/candidates/스카이_05_4_cfcc3c.mp3": "cfcc3c3f"
   },
-  "done": false
+  "done": true,
+  "pick": "스카이_05_4_cfcc3c.mp3"
  },
  "스카이_06": {
   "game": "스카이",

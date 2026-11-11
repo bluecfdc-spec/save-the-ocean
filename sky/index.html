@@ -344,7 +344,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='56';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='57';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -946,7 +946,7 @@ const Music=(()=>{
   const LS=11.378,LE=60.256;let bgRaw=null,bgm=null,src=null,bgPos=0,bgT0=0,bgOff=0,rate=1,bgGain=null;
   try{fetch('assets/bgm.mp3?v=52').then(r=>r.ok?r.arrayBuffer():null).then(b=>{bgRaw=b;dec()}).catch(()=>{})}catch(e){}
   // 효과음 (ElevenLabs, 홍균님이 고른 것): 파일이 없으면 합성음으로 대신한다
-  const SFX={},SRAW={},SLAST={};['01','02','03','04','05','06','07','08'].forEach(n=>{try{fetch('assets/sfx/sky'+n+'.mp3?v=56').then(r=>r.ok?r.arrayBuffer():null).then(b=>{if(b){SRAW[n]=b;decS()}}).catch(()=>{})}catch(e){}});
+  const SFX={},SRAW={},SLAST={};['01','02','03','04','05','06','07','08'].forEach(n=>{try{fetch('assets/sfx/sky'+n+'.mp3?v=57').then(r=>r.ok?r.arrayBuffer():null).then(b=>{if(b){SRAW[n]=b;decS()}}).catch(()=>{})}catch(e){}});
   function decS(){if(!ac)return;for(const n in SRAW){const b=SRAW[n];delete SRAW[n];try{ac.decodeAudioData(b,x=>{SFX[n]=x},()=>{})}catch(e){}}}
   function sp(n,v,gap){if(!on||!ac||!SFX[n])return false;const t=ac.currentTime;if(t-(SLAST[n]||-9)<(gap||.06))return true;SLAST[n]=t;
     try{const s=ac.createBufferSource(),g=ac.createGain();s.buffer=SFX[n];g.gain.value=v||1;s.connect(g);g.connect(master);s.start()}catch(e){}return true}
