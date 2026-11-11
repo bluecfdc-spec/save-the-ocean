@@ -838,5 +838,165 @@
   },
   "done": false,
   "hold": true
+ },
+ "스카이_01": {
+  "game": "스카이",
+  "num": "01",
+  "name": "출격",
+  "sec": 1.3,
+  "prompt": "arcade spaceship launch, punchy synth engine roar rising fast into a bright whoosh, retro shoot-em-up, loud and exciting",
+  "files": [
+   "sfx/candidates/스카이_01_1_dcc403.mp3",
+   "sfx/candidates/스카이_01_2_3666af.mp3",
+   "sfx/candidates/스카이_01_3_fc3e24.mp3",
+   "sfx/candidates/스카이_01_4_551f4e.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_01_1_dcc403.mp3": "dcc40370",
+   "sfx/candidates/스카이_01_2_3666af.mp3": "3666afb0",
+   "sfx/candidates/스카이_01_3_fc3e24.mp3": "fc3e24c8",
+   "sfx/candidates/스카이_01_4_551f4e.mp3": "551f4ed1"
+  },
+  "done": false
+ },
+ "스카이_02": {
+  "game": "스카이",
+  "num": "02",
+  "name": "탄 스침",
+  "sec": 0.5,
+  "prompt": "arcade near-miss laser whizz, fast high-pitched zip passing by the ear, crisp retro shoot-em-up",
+  "files": [
+   "sfx/candidates/스카이_02_1_c77157.mp3",
+   "sfx/candidates/스카이_02_2_969767.mp3",
+   "sfx/candidates/스카이_02_3_5f21d8.mp3",
+   "sfx/candidates/스카이_02_4_b08708.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_02_1_c77157.mp3": "c7715787",
+   "sfx/candidates/스카이_02_2_969767.mp3": "969767de",
+   "sfx/candidates/스카이_02_3_5f21d8.mp3": "5f21d8ad",
+   "sfx/candidates/스카이_02_4_b08708.mp3": "b0870863"
+  },
+  "done": false
+ },
+ "스카이_03": {
+  "game": "스카이",
+  "num": "03",
+  "name": "기체 폭발",
+  "sec": 1.5,
+  "prompt": "big arcade spaceship explosion, heavy punchy boom with crunchy retro bitcrushed debris and deep sub hit, satisfying",
+  "files": [
+   "sfx/candidates/스카이_03_1_52afa3.mp3",
+   "sfx/candidates/스카이_03_2_0d4247.mp3",
+   "sfx/candidates/스카이_03_3_1b2c85.mp3",
+   "sfx/candidates/스카이_03_4_7be473.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_03_1_52afa3.mp3": "52afa388",
+   "sfx/candidates/스카이_03_2_0d4247.mp3": "0d4247a5",
+   "sfx/candidates/스카이_03_3_1b2c85.mp3": "1b2c8554",
+   "sfx/candidates/스카이_03_4_7be473.mp3": "7be47341"
+  },
+  "done": false
+ },
+ "스카이_04": {
+  "game": "스카이",
+  "num": "04",
+  "name": "저격탄 발사",
+  "sec": 0.7,
+  "prompt": "arcade sniper laser charge then sharp powerful zap shot, piercing and dangerous, retro shoot-em-up",
+  "files": [
+   "sfx/candidates/스카이_04_1_590e5d.mp3",
+   "sfx/candidates/스카이_04_2_2706b0.mp3",
+   "sfx/candidates/스카이_04_3_701a4c.mp3",
+   "sfx/candidates/스카이_04_4_5f7c94.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_04_1_590e5d.mp3": "590e5d54",
+   "sfx/candidates/스카이_04_2_2706b0.mp3": "2706b0b2",
+   "sfx/candidates/스카이_04_3_701a4c.mp3": "701a4cb5",
+   "sfx/candidates/스카이_04_4_5f7c94.mp3": "5f7c944b"
+  },
+  "done": false
+ },
+ "스카이_05": {
+  "game": "스카이",
+  "num": "05",
+  "name": "탄 소멸(뇌격으로 탄이 지워질 때)",
+  "sec": 0.8,
+  "prompt": "arcade lightning strike zapping bullets, sharp electric crack with crackling sparks and quick thunder snap, powerful",
+  "files": [
+   "sfx/candidates/스카이_05_1_eaeb19.mp3",
+   "sfx/candidates/스카이_05_2_3517e2.mp3",
+   "sfx/candidates/스카이_05_3_5acf74.mp3",
+   "sfx/candidates/스카이_05_4_7e327b.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_05_1_eaeb19.mp3": "eaeb1999",
+   "sfx/candidates/스카이_05_2_3517e2.mp3": "3517e26e",
+   "sfx/candidates/스카이_05_3_5acf74.mp3": "5acf74ff",
+   "sfx/candidates/스카이_05_4_7e327b.mp3": "7e327b90"
+  },
+  "done": false
+ },
+ "스카이_06": {
+  "game": "스카이",
+  "num": "06",
+  "name": "경쟁 기체 격추",
+  "sec": 1,
+  "prompt": "arcade enemy ship destroyed, short punchy explosion pop with bright retro sparkle, satisfying",
+  "files": [
+   "sfx/candidates/스카이_06_1_29a950.mp3",
+   "sfx/candidates/스카이_06_2_169539.mp3",
+   "sfx/candidates/스카이_06_3_3c66a2.mp3",
+   "sfx/candidates/스카이_06_4_c93db0.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_06_1_29a950.mp3": "29a950ca",
+   "sfx/candidates/스카이_06_2_169539.mp3": "169539b1",
+   "sfx/candidates/스카이_06_3_3c66a2.mp3": "3c66a21c",
+   "sfx/candidates/스카이_06_4_c93db0.mp3": "c93db0e4"
+  },
+  "done": false
+ },
+ "스카이_07": {
+  "game": "스카이",
+  "num": "07",
+  "name": "방패 피격",
+  "sec": 0.7,
+  "prompt": "arcade energy shield blocking a bullet, bright metallic clang with shimmering power-up ring, heroic",
+  "files": [
+   "sfx/candidates/스카이_07_1_99f0fd.mp3",
+   "sfx/candidates/스카이_07_2_d00b91.mp3",
+   "sfx/candidates/스카이_07_3_be663d.mp3",
+   "sfx/candidates/스카이_07_4_d01280.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_07_1_99f0fd.mp3": "99f0fdf2",
+   "sfx/candidates/스카이_07_2_d00b91.mp3": "d00b91f3",
+   "sfx/candidates/스카이_07_3_be663d.mp3": "be663de5",
+   "sfx/candidates/스카이_07_4_d01280.mp3": "d0128088"
+  },
+  "done": false
+ },
+ "스카이_08": {
+  "game": "스카이",
+  "num": "08",
+  "name": "신기록",
+  "sec": 1.5,
+  "prompt": "arcade new high score jingle, fast bright ascending 8-bit arpeggio with sparkling synth fanfare, triumphant",
+  "files": [
+   "sfx/candidates/스카이_08_1_c35404.mp3",
+   "sfx/candidates/스카이_08_2_148ef3.mp3",
+   "sfx/candidates/스카이_08_3_776665.mp3",
+   "sfx/candidates/스카이_08_4_b3b0a6.mp3"
+  ],
+  "ver": {
+   "sfx/candidates/스카이_08_1_c35404.mp3": "c35404fe",
+   "sfx/candidates/스카이_08_2_148ef3.mp3": "148ef31a",
+   "sfx/candidates/스카이_08_3_776665.mp3": "77666516",
+   "sfx/candidates/스카이_08_4_b3b0a6.mp3": "b3b0a6d1"
+  },
+  "done": false
  }
 }
