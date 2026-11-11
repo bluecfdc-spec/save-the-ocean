@@ -6,7 +6,7 @@
 
   // ───────────── DOM ─────────────
   const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
+  let ctx = canvas.getContext('2d');   // 필살기 도트 효과를 그릴 때 잠깐 작은 화면으로 바꿔 끼운다
   const wrap = document.getElementById('game-wrap');
   const hpFill = document.getElementById('hpFill');
   const hpText = document.getElementById('hpText');
@@ -801,15 +801,47 @@
     const k = sk.t, rise = ease3(k / 0.9);
     return { x: ship.x, y: ship.y + 10 - rise * 95, R: 30 + 10 * Math.max(0, 1 - k / 1.2) };
   }
-  // 전장 뒤쪽(배경 위, 잠수함 아래) 연출
+  // ── 도트(픽셀) 효과: 작은 화면에 그린 뒤 색·투명도를 몇 단계로 줄이고(바둑판 점) 크게 키워 붙인다 ──
+  const PXS = 3;   // 도트 한 칸 = 화면 3칸
+  const pixCv = document.createElement('canvas'), pixCtx = pixCv.getContext('2d', { willReadFrequently: true });
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  function pixLayer(fn, comp) {
+    const pw = Math.ceil(W / PXS), ph = Math.ceil(viewH / PXS);
+    if (pixCv.width !== pw || pixCv.height !== ph) { pixCv.width = pw; pixCv.height = ph; }
+    pixCtx.setTransform(1, 0, 0, 1, 0, 0); pixCtx.globalCompositeOperation = 'source-over'; pixCtx.globalAlpha = 1; pixCtx.clearRect(0, 0, pw, ph);
+    pixCtx.setTransform(1 / PXS, 0, 0, 1 / PXS, 0, offY / PXS);
+    const main = ctx; ctx = pixCtx;
+    try { fn(); } finally { ctx = main; }
+    const im = pixCtx.getImageData(0, 0, pw, ph), d = im.data;
+    for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
+      const i = (y * pw + x) * 4, a = d[i + 3]; if (!a) continue;
+      const b = (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+      const av = a / 255; if (av < 0.28) { d[i + 3] = 0; continue; }   // 아주 옅은 번짐은 버려서 화면이 지저분해지지 않게
+      const al = Math.max(0.5, Math.floor(av * 2 + b) / 2);   // 투명도 반 · 꽉 두 단계 (바둑판 점으로 섞임)
+      d[i + 3] = al * 255;
+      for (let c = 0; c < 3; c++) d[i + c] = Math.min(255, Math.floor(d[i + c] / 255 * 5 + b * 0.9) * 51 + 12);   // 색 6단계
+    }
+    pixCtx.putImageData(im, 0, 0);
+    ctx.save(); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = comp;
+    ctx.drawImage(pixCv, 0, -offY, pw * PXS, ph * PXS); ctx.restore();
+  }
+  // 전장 뒤쪽(배경 위, 잠수함 아래) 연출: 바다 색조는 그대로, 효과는 도트로
   function drawSkillBack() {
+    if (!sk || sk.t < 0) return;
+    const k = sk.t, a = Math.max(0, Math.min(1, k / 0.4, (sk.dur - k) / 0.8)), top = surfaceY, bot = seabedY + 40;
+    ctx.save();
+    if (sk.f === 1) { ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#0aa7c9'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, top, W, bot - top); }
+    if (sk.f === 2) { ctx.globalAlpha = 0.55 * a; ctx.fillStyle = '#3a1080'; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, -offY, W, viewH); }
+    if (sk.f === 3) { ctx.globalAlpha = 0.32 * a; ctx.fillStyle = '#ffb000'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, -offY, W, viewH); }
+    ctx.restore();
+    pixLayer(drawSkillBackFx, 'source-over');
+  }
+  function drawSkillBackFx() {
     if (!sk || sk.t < 0) return;
     const k = sk.t, fadeIn = Math.min(1, k / 0.4), fadeOut = Math.min(1, (sk.dur - k) / 0.8), a = Math.max(0, Math.min(fadeIn, fadeOut));
     const top = surfaceY, bot = seabedY + 40;
     ctx.save();
     if (sk.f === 1 && sk.surge) {
-      ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#0aa7c9'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, top, W, bot - top);
-      ctx.globalCompositeOperation = 'source-over';
       // 해일 벽 (양쪽에서 밀려오는 물 덩어리)
       if (k < 1.0) {
         const e = ease3(Math.min(1, k / 0.75)), fade = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
@@ -839,7 +871,6 @@
     }
     if (sk.f === 2 && sk.gale) {
       const G = sk.gale;
-      ctx.globalAlpha = 0.55 * a; ctx.fillStyle = '#3a1080'; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, -offY, W, viewH);
       // 먹구름 (천천히 흘러감)
       ctx.globalCompositeOperation = 'source-over';
       const cy0 = Math.max(-offY, surfaceY - 170);
@@ -851,7 +882,6 @@
       for (const r of G.rain) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + r.l * 0.25, r.y - r.l); } ctx.stroke();
     }
     if (sk.f === 3 && sk.solar && ship) {
-      ctx.globalAlpha = 0.32 * a; ctx.fillStyle = '#ffb000'; ctx.globalCompositeOperation = 'soft-light'; ctx.fillRect(0, -offY, W, viewH);
       // 물속 빛기둥: 태양에서 부채꼴로 내려가며 천천히 흔들림
       const sp = sunPos();
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.rect(0, top + 1, W, bot - top + 200); ctx.clip();
@@ -869,8 +899,21 @@
     }
     ctx.restore();
   }
-  // 전장 앞쪽(폭발 위) 연출
+  // 전장 앞쪽(폭발 위) 연출: 효과는 도트로, 화면 번쩍임·테두리는 그대로
   function drawSkillFront() {
+    if (sk || bolts.length || glows.length || rings.length) pixLayer(drawSkillFrontFx, 'lighter');
+    const wv = sk ? (sk.gale ? sk.gale.white : sk.surge ? sk.surge.white : sk.solar ? sk.solar.white : 0) : 0;
+    if (wv > 0) { ctx.save(); ctx.globalAlpha = wv; ctx.fillStyle = sk.solar ? '#fff0c0' : sk.surge ? '#d8f8ff' : '#efe6ff'; ctx.fillRect(0, -offY, W, viewH); ctx.restore(); }
+    if (sk && sk.t >= 0) {   // 필살기 동안 화면 가장자리에 세력 색 테두리
+      const va = Math.max(0, Math.min(1, sk.t / 0.3, (sk.dur - sk.t) / 0.8)) * (0.5 + 0.15 * Math.sin(sk.t * 6));
+      const c = sk.f === 1 ? '40,200,255' : sk.f === 2 ? '150,80,255' : '255,190,40';
+      const cx = W / 2, cy = (viewH / 2) - offY, R = Math.hypot(W, viewH) / 2;
+      const vg = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R);
+      vg.addColorStop(0, 'rgba(' + c + ',0)'); vg.addColorStop(1, 'rgba(' + c + ',' + va + ')');
+      ctx.save(); ctx.fillStyle = vg; ctx.fillRect(0, -offY, W, viewH); ctx.restore();
+    }
+  }
+  function drawSkillFrontFx() {
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const k = sk ? sk.t : 0, a = sk && k >= 0 ? Math.max(0, Math.min(1, k / 0.4, (sk.dur - k) / 0.8)) : 0;
     // 서지: 앞쪽 물살 (가까운 반쪽은 밝고 굵게)
@@ -923,19 +966,7 @@
       else if (g.streak) { ctx.strokeStyle = g.color; ctx.lineWidth = g.r; ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x - g.vx * 0.04, g.y - g.vy * 0.04); ctx.stroke(); }
       else { ctx.fillStyle = g.color; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.283); ctx.fill(); }
     }
-    // 번쩍 (화면 전체가 하얗게)
-    const wv = sk ? (sk.gale ? sk.gale.white : sk.surge ? sk.surge.white : sk.solar ? sk.solar.white : 0) : 0;
-    if (wv > 0) { ctx.globalAlpha = wv; ctx.fillStyle = sk.solar ? '#fff0c0' : sk.surge ? '#d8f8ff' : '#efe6ff'; ctx.fillRect(0, -offY, W, viewH); }
     ctx.restore();
-    // 필살기 동안 화면 가장자리에 세력 색 테두리
-    if (sk && sk.t >= 0) {
-      const va = Math.max(0, Math.min(1, sk.t / 0.3, (sk.dur - sk.t) / 0.8)) * (0.5 + 0.15 * Math.sin(sk.t * 6));
-      const c = sk.f === 1 ? '40,200,255' : sk.f === 2 ? '150,80,255' : '255,190,40';
-      const cx = W / 2, cy = (viewH / 2) - offY, R = Math.hypot(W, viewH) / 2;
-      const vg = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R);
-      vg.addColorStop(0, 'rgba(' + c + ',0)'); vg.addColorStop(1, 'rgba(' + c + ',' + va + ')');
-      ctx.save(); ctx.fillStyle = vg; ctx.fillRect(0, -offY, W, viewH); ctx.restore();
-    }
   }
   // 솔라 보호막: 금빛 돔을 선과 빛으로 직접 그림 (가장자리가 밝고, 빛 띠가 돌아감)
   function drawSolarDome() {
