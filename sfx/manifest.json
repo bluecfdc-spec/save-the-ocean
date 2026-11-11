@@ -551,8 +551,7 @@
    "sfx/candidates/스카이_01_3_ad5ddb.mp3": "ad5ddbda",
    "sfx/candidates/스카이_01_4_1195cc.mp3": "1195cce3"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_02": {
   "game": "스카이",
@@ -572,8 +571,7 @@
    "sfx/candidates/스카이_02_3_8cebed.mp3": "8cebed96",
    "sfx/candidates/스카이_02_4_1c4827.mp3": "1c4827a7"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_03": {
   "game": "스카이",
@@ -593,8 +591,7 @@
    "sfx/candidates/스카이_03_3_6bb946.mp3": "6bb94629",
    "sfx/candidates/스카이_03_4_8958cb.mp3": "8958cbdb"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_04": {
   "game": "스카이",
@@ -614,8 +611,7 @@
    "sfx/candidates/스카이_04_3_161bc7.mp3": "161bc77c",
    "sfx/candidates/스카이_04_4_246cc6.mp3": "246cc640"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_05": {
   "game": "스카이",
@@ -656,8 +652,7 @@
    "sfx/candidates/스카이_06_3_23a021.mp3": "23a0212a",
    "sfx/candidates/스카이_06_4_87917a.mp3": "87917a78"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_07": {
   "game": "스카이",
@@ -677,8 +672,7 @@
    "sfx/candidates/스카이_07_3_33fe5f.mp3": "33fe5f94",
    "sfx/candidates/스카이_07_4_fe4503.mp3": "fe45037c"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "스카이_08": {
   "game": "스카이",
@@ -698,8 +692,7 @@
    "sfx/candidates/스카이_08_3_b60ccd.mp3": "b60ccd48",
    "sfx/candidates/스카이_08_4_36d32b.mp3": "36d32bb9"
   },
-  "done": false,
-  "hold": true
+  "done": false
  },
  "오션_01": {
   "game": "오션",
