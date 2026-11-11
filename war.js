@@ -213,12 +213,12 @@
   };
   function paint(el) {
     if (!el.clientWidth) return;   // 숨겨진 탭은 건너뜀
-    const m = LB.warMonth(), sum = last ? last.reduce((a, t) => a + t.w, 0) : 0, mine = (LB.profile() || {}).faction;
+    const m = LB.warMonth(), sum = last ? last.reduce((a, t) => a + t.w, 0) : 0, mine = WAR.mine ? WAR.mine() : (LB.profile() || {}).faction;
     const title = el.querySelector('.war-title'), rows = el.querySelector('.war-rows'), cv = el.querySelector('.war-map'), note = el.querySelector('.war-note');
     title.textContent = t('war.title', { ym: m.y + '.' + String(m.m).padStart(2, '0') });
     rows.innerHTML = WAR.FACTIONS.map(f => {
       const row = last ? last.find(x => x.f === f.id) || {} : {}, tt = row.total || 0, w = row.w || 0;
-      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + '" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><div class="wr-txt"><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div></div>';
+      return '<div class="war-row' + (mine === f.id ? ' mine' : '') + (WAR.armed === f.id ? ' armed' : '') + '" data-f="' + f.id + '" style="--fc:' + f.color + '"><img src="' + f.icon + '" alt=""><div class="wr-txt"><b style="color:' + f.color + '">' + t('f.' + f.key) + '</b><span class="pct">' + (sum ? Math.round(w / sum * 100) + '%' : '–') + '</span><span class="pts">' + (last ? I18N.num(tt) : '…') + '</span></div></div>';
     }).join('');
     note.textContent = last === null ? t('war.fail') : '';
     // 지도는 탭 안에 남는 높이에 맞춰 크기를 정한다 (스크롤 없이 한 화면)
