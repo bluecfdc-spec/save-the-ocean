@@ -344,7 +344,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 // 새 버전 확인: 브라우저(특히 카톡 안 브라우저)가 예전 페이지를 저장해 두고 보여주는 것을 막는다
-(function(){var VER='55';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+(function(){var VER='56';try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
   t=(t||'').trim();if(t&&t!==VER&&location.search.indexOf('v='+t)<0){var q=new URLSearchParams(location.search);q.set('v',t);location.replace(location.pathname+'?'+q.toString())}}).catch(function(){})}catch(e){}})();
 (function(){
 const $=id=>document.getElementById(id);
@@ -501,7 +501,7 @@ function update(dt){
   for(let i=0;i<4&&objs.length<want;i++)spawn();
   const lv=Math.floor(time/30);
   Music.tempo(Math.min(2,lv));               // 30초, 60초를 넘기면 음악이 한 단계씩 빨라진다
-  if(lv>level){level=lv;spawn(6);stageB={n:lv+1,t:0};flash('#ffffff',.18,.2)} // 30초마다 저격탄 한 발 + STAGE 배너
+  if(lv>level){level=lv;spawn(6);Music.sfx('04');stageB={n:lv+1,t:0};flash('#ffffff',.18,.2)} // 30초마다 저격탄 한 발 + STAGE 배너
 
   // 필살기 게이지: 버틴 시간으로 찬다 (효과가 도는 동안은 안 참)
   const busy=time<ult.slowUntil||ult.shield>0;
@@ -539,7 +539,7 @@ function die(){
   fx.push({n:'ship_'+(FAC[flag]?flag:'solar')+'_crack',x:ship.x,y:ship.y,t:0,d:.35,s0:34,s1:40});boom(ship.x,ship.y,flag,1);punch=.7;flash('#ff2d6b',.35,.3);
   if(mp.on){mpDied();return}
   const fin=Math.round(time*100)/100;
-  const rec=fin>best;if(rec){best=fin;try{localStorage.setItem('stargraze_best_t',best)}catch(e){}}
+  const rec=fin>best;if(rec){setTimeout(()=>Music.sfx('08'),700);best=fin;try{localStorage.setItem('stargraze_best_t',best)}catch(e){}}
   $('bestV').textContent=best.toFixed(2);$('scoreV').textContent=fin.toFixed(2);
   setTimeout(()=>{if(state!=='over')return;
     $('ovT').textContent='GAME OVER';$('ovS').hidden=false;$('ovS').textContent=fin.toFixed(2)+'초';
@@ -602,7 +602,7 @@ function boom(x,y,f,big){
   sparks(x,y,30,'#ffd27a',430*m);sparks(x,y,12,fc,320*m);
   for(let i=0;i<18;i++){const a=Math.random()*6.283,s=rnd(40,200)*m;glow({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,d:rnd(.5,1),s:rnd(1.2,2.6),c:i%2?fc:'#ffffff',dr:2})}
   ring(x,y,110*m,'#ffffff',.42,7);ring(x,y,75*m,fc,.6,4);
-  shake=Math.max(shake,big?16:8);Music.boom();
+  shake=Math.max(shake,big?16:8);if(!Music.sfx(big?'03':'06'))Music.boom();
 }
 // 필살기 연출 시작: 이름 배너 0.6초(화면 느리게) → 발동(멈춤·쿵·번쩍) → 효과
 function startSkill(f){sk={f,t:0,fired:false,cx:ship.x,cy:ship.y,last:null,lastT:-9,amb:0,rip:0,q:[]}}
@@ -625,12 +625,12 @@ function zapHit(x,y,small){
   for(let j=0;j<3;j++){const a=Math.random()*6.283,l=rnd(10,24);bolt(x,y,x+Math.cos(a)*l,y+Math.sin(a)*l,.13,1.2)}
   glow({x,y,k:'soft',s:small?24:36,c:'#b57bff',d:.26});shake=Math.max(shake,small?3:6);
   if(sk&&sk.cl){const c=sk.cl[Math.random()*sk.cl.length|0];c.lit=1}
-  if(!small)flash('#efe4ff',.14,.08);
+  if(!small){flash('#efe4ff',.14,.08);Music.sfx('05',.75,.3)}
 }
 function solarBlock(){   // 태양 방패가 탄을 막는 순간
   ult.shield=0;ring(ship.x,ship.y,95,'#ffd451',.55,7);ring(ship.x,ship.y,50,'#ffffff',.3,4);sparks(ship.x,ship.y,22,'#ffe08a',360);
   glow({x:ship.x,y:ship.y,k:'soft',s:60,c:'#ffd451',d:.3});hitStop=.1;shake=Math.max(shake,10);flash('#ffd451',.32,.25);
-  pops.push({x:ship.x,y:ship.y-20,t:0,s:'방패!'});Music.boom();
+  pops.push({x:ship.x,y:ship.y-20,t:0,s:'방패!'});if(!Music.sfx('07'))Music.boom();
 }
 function updateSkill(dt){
   const s=sk;if(!s)return;s.t+=dt;
@@ -945,6 +945,11 @@ const Music=(()=>{
   // 배경음악 (Suno 'Space Rumble - Near Miss'): 처음엔 도입부부터, 그 뒤로는 11.4초~1분 0.3초 구간만 끊김 없이 반복
   const LS=11.378,LE=60.256;let bgRaw=null,bgm=null,src=null,bgPos=0,bgT0=0,bgOff=0,rate=1,bgGain=null;
   try{fetch('assets/bgm.mp3?v=52').then(r=>r.ok?r.arrayBuffer():null).then(b=>{bgRaw=b;dec()}).catch(()=>{})}catch(e){}
+  // 효과음 (ElevenLabs, 홍균님이 고른 것): 파일이 없으면 합성음으로 대신한다
+  const SFX={},SRAW={},SLAST={};['01','02','03','04','05','06','07','08'].forEach(n=>{try{fetch('assets/sfx/sky'+n+'.mp3?v=56').then(r=>r.ok?r.arrayBuffer():null).then(b=>{if(b){SRAW[n]=b;decS()}}).catch(()=>{})}catch(e){}});
+  function decS(){if(!ac)return;for(const n in SRAW){const b=SRAW[n];delete SRAW[n];try{ac.decodeAudioData(b,x=>{SFX[n]=x},()=>{})}catch(e){}}}
+  function sp(n,v,gap){if(!on||!ac||!SFX[n])return false;const t=ac.currentTime;if(t-(SLAST[n]||-9)<(gap||.06))return true;SLAST[n]=t;
+    try{const s=ac.createBufferSource(),g=ac.createGain();s.buffer=SFX[n];g.gain.value=v||1;s.connect(g);g.connect(master);s.start()}catch(e){}return true}
   function dec(){if(!bgRaw||!ac||bgm)return;const b=bgRaw;bgRaw=null;try{ac.decodeAudioData(b,x=>{bgm=x},()=>{})}catch(e){}}
   function pos(){let p=bgOff+(ac.currentTime-bgT0)*rate;if(p>LE)p=LS+(p-LS)%(LE-LS);return p}
   function playBg(off){src=ac.createBufferSource();src.buffer=bgm;src.loop=true;src.loopStart=LS;src.loopEnd=LE;src.playbackRate.value=rate;
@@ -953,13 +958,14 @@ const Music=(()=>{
   return{
     start(){if(!on)return;
       try{if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=.5;master.connect(ac.destination);
-          bgGain=ac.createGain();bgGain.gain.value=.9;bgGain.connect(master);dec();
+          bgGain=ac.createGain();bgGain.gain.value=.9;bgGain.connect(master);dec();decS();
           nbuf=ac.createBuffer(1,ac.sampleRate*.3,ac.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
         ac.resume();step=0;stopBg();if(bgm){rate=1;playBg(0)}else run()}catch(e){}},
     stop(){stopBg();clearInterval(timer);timer=null},
     boom(){if(!on||!ac)return;try{const t=ac.currentTime;kick(t);kick(t+.05);noise(t,.4,.45,250)}catch(e){}},   // 폭발음
     beep(){if(!on||!ac)return;try{tone('square',81,ac.currentTime,.16,.14)}catch(e){}},   // 카운트다운 소리
-    launch(){if(!on||!ac)return;try{const t=ac.currentTime,d=1.3;   // 출격음: 엔진이 낮게 깔리다가 점점 커지며 치솟고(슈우웅), 끝에서 멀어진다
+    sfx(n,v,gap){return sp(n,v,gap)},
+    launch(){if(!on||!ac)return;if(sp('01'))return;try{const t=ac.currentTime,d=1.3;   // 출격음: 엔진이 낮게 깔리다가 점점 커지며 치솟고(슈우웅), 끝에서 멀어진다
         const n=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();n.buffer=nbuf;n.loop=true;
         fl.type='lowpass';fl.Q.value=4;fl.frequency.setValueAtTime(180,t);fl.frequency.exponentialRampToValueAtTime(3200,t+d*.9);
         g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(.5,t+d*.85);g.gain.exponentialRampToValueAtTime(.001,t+d);
@@ -978,7 +984,7 @@ const Music=(()=>{
     resume(){if(on&&ac&&!timer){if(bgm)playBg(bgPos);else run()}},
     toggle(){on=!on;if(!on)this.stop();return on},
     tempo(l){ST=60/(152+l*16)/4;const r=[1,1.04,1.08][l]||1;if(r!==rate){if(src){bgOff=pos();bgT0=ac.currentTime;src.playbackRate.value=r}rate=r}},   // 30초·60초마다 음악이 조금씩 빨라진다                      // 0단계 152, 1단계 168, 2단계 184 BPM
-    blip(){if(!on||!ac||!timer)return;const t=ac.currentTime;if(t-lastBlip<.12)return;lastBlip=t; // 스침 효과음
+    blip(){if(!on||!ac||!timer)return;const t=ac.currentTime;if(t-lastBlip<.12)return;lastBlip=t;if(sp('02',.7))return; // 스침 효과음
       tone('square',96,t,.05,.07);tone('square',103,t+.04,.07,.06)}
   };
 })();
