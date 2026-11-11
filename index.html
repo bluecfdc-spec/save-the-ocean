@@ -149,6 +149,9 @@
   .war-row { display: grid; grid-template-columns: 22px 1fr auto 6.5em; gap: 8px; align-items: center; font-family: system-ui, sans-serif; font-size: 13px; padding: 5px 4px; border-top: 1px solid rgba(255,255,255,.07); text-align: left; }
   .war-row:first-child { border-top: 0; margin-top: 4px; }
   .war-row.mine { background: rgba(255,255,255,.08); border-radius: 8px; }
+  .war-row[data-f] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .war-row[data-f]:active { transform: scale(.96); }
+  .war-row.armed { box-shadow: 0 0 0 2px #fff, 0 0 12px var(--fc); animation: fsPulse .5s ease-in-out infinite alternate; }
   .war-row img { width: 22px; height: 22px; display: block; }
   .war-row .pct { font-family: 'Orbitron', sans-serif; font-weight: 800; color: #fff; }
   .war-row .pts { font-family: 'Orbitron', sans-serif; font-size: 11px; color: #a9c3da; text-align: right; }
@@ -496,7 +499,7 @@
 <script>document.write('<script src="season.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script><script src="war-seasons.js?v=' + new Date().toISOString().slice(0, 10) + '"><\/script>');</script>
 <script src="audio.js?v=20261007o"></script>
 <script src="leaderboard.js?v=20261007o"></script>
-<script src="war.js?v=20261007o"></script>
+<script src="war.js?v=20261111c"></script>
 <script>
   // iOS 더블탭 확대/핀치 확대 방지 (버튼 연타 시 화면이 커지는 문제)
   (function () {
@@ -511,6 +514,6 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
   })();
 </script>
-<script src="game.js?v=20261111b"></script>
+<script src="game.js?v=20261111c"></script>
 </body>
 </html>

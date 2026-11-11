@@ -1251,19 +1251,30 @@
     const cur = myFac(), open = (window.STO_CONFIG || {}).FACTION_SWITCH !== 'off';
     fsRow.innerHTML = WAR.FACTIONS.map(f => '<button type="button" data-f="' + f.id + '" style="--fc:' + f.color + '" class="' + (f.id === cur ? 'on' : '') + (f.id === fsArmed ? ' armed' : '') + '"' + (open ? '' : ' disabled') + '><img src="' + f.icon + '" alt=""><span>' + t('f.' + f.key) + '</span></button>').join('');
   }
-  fsRow.addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b || b.disabled || state !== 'over') return;
-    const n = Number(b.dataset.f), cur = myFac();
-    if (n === cur) { fsArmed = 0; renderFacSwitch(); return; }
-    if (fsArmed !== n) {                                      // 실수로 바뀌지 않게: 한 번 더 눌러야 바뀐다
-      fsArmed = n; renderFacSwitch(); showToast(t('fs.confirm', { f: t('f.' + WAR.byId(n).key) }));
-      clearTimeout(fsT); fsT = setTimeout(() => { fsArmed = 0; renderFacSwitch(); }, 2500); return;
+  // 세력 바꾸기 (게임 오버 화면 · 첫 화면 점령전 세력 칸 공통): 실수로 바뀌지 않게 한 번 더 눌러야 바뀐다
+  function pickFac(n) {
+    const cur = myFac(), redraw = () => { WAR.armed = fsArmed; renderFacSwitch(); WAR.repaint(); };
+    if ((window.STO_CONFIG || {}).FACTION_SWITCH === 'off') return;
+    if (n === cur) { fsArmed = 0; redraw(); return; }
+    if (LB.factionLocked()) { showToast(t('prof.locked')); return; }
+    if (fsArmed !== n) {
+      fsArmed = n; redraw(); showToast(t('fs.confirm', { f: t('f.' + WAR.byId(n).key) }));
+      clearTimeout(fsT); fsT = setTimeout(() => { fsArmed = 0; redraw(); }, 2500); return;
     }
     clearTimeout(fsT); fsArmed = 0;
-    setFac(n);
-    renderFacSwitch(); renderReg(); WAR.repaint();
+    setFac(n); redraw(); renderReg(); renderSkill();
+    SFX.click && SFX.click();
     showToast(t('fs.done', { f: t('f.' + WAR.byId(n).key) }));
+  }
+  fsRow.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled || state !== 'over') return;
+    pickFac(Number(b.dataset.f));
   });
+  WAR.mine = () => myFac();
+  ['warStart', 'warOver'].forEach(id => document.getElementById(id).addEventListener('click', e => {
+    const r = e.target.closest('.war-row[data-f]'); if (!r || state === 'play') return;
+    pickFac(Number(r.dataset.f));
+  }));
   document.addEventListener('i18n:change', () => { if (state === 'over') renderFacSwitch(); });
   // 게임 그만하기: 한 번 누르면 확인, 2초 안에 한 번 더 누르면 바로 게임 오버(점수 등록 화면)
   const quitBtn = document.getElementById('quitBtn'); let quitT = 0;
