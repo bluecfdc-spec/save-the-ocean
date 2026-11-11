@@ -69,7 +69,8 @@
   let score = 0, hp = MAX_HP, time = 0, level = 0;
   let ship, bombs = [], subs = [], torps = [], fx = [], bubbles = [], texts = [], streaks = [];
   let spawnTimer = 0, shake = 0, radarAngle = 0, lastT = 0;
-  let hitStop = 0, ripples = [], ghosts = [];   // 타격 멈춤, 수면 물결, 맞은 잠수함 하얀 번쩍임
+  let hitStop = 0, ripples = [], ghosts = [];
+  let glows = [], rings = [], punch = 0;   // 필살기용 빛 입자·고리, 화면 쿵 확대   // 타격 멈춤, 수면 물결, 맞은 잠수함 하얀 번쩍임
   let input = { left: false, right: false };
   let kills = 0, items = [], drillTimer = 0;
   let foeFac = 0;   // 이번 판의 적 세력: 서지→게일, 게일→솔라, 솔라→서지·게일 중 판마다 하나
@@ -122,7 +123,7 @@
   function reset() {
     score = 0; hp = MAX_HP; time = 0; level = 0; spawnTimer = 0.8; shake = 0;
     bombs = []; subs = []; torps = []; fx = []; bubbles = []; texts = [];
-    hitStop = 0; ripples = []; ghosts = [];
+    hitStop = 0; ripples = []; ghosts = []; glows = []; rings = []; punch = 0;
     ship = { x: W / 2, y: surfaceY, w: SHIP_W, h: SHIP_W * 56 / 140, dir: 1, speed: 230, inv: 0, mv: 0, roll: 0, pitch: 0, wakeT: 0, shield: 0, drill: 0, skill: 0, gold: false };
     sk = null; banner = null; bolts = []; bursts = []; galeT = 0;
     { const mf = myFac(); foeFac = mf === 1 ? 2 : mf === 2 ? 3 : mf === 3 ? (Math.random() < 0.5 ? 1 : 2) : 0; ship.skill = mf; }   // 특수기술 1개를 갖고 시작
@@ -354,6 +355,29 @@
     shake = Math.max(shake, s.red ? 7 : 4);
   }
   function addRipple(x, big) { ripples.push({ x, t: 0, dur: big ? 0.9 : 0.6, w: big ? 70 : 40 }); }
+  // ── 필살기 연출 도구 ──
+  function screenFlash(color, op, dur) {
+    flash.style.transition = 'none'; flash.style.background = color; flash.style.opacity = op;
+    requestAnimationFrame(() => { flash.style.transition = 'opacity ' + dur + 's'; flash.style.opacity = 0; });
+  }
+  function addRing(x, y, r0, r1, dur, color, lw, flat) { rings.push({ x, y, r0, r1, t: 0, dur, color, lw, flat: flat || 1 }); }
+  function addGlow(o) { if (glows.length < 500) glows.push(Object.assign({ vx: 0, vy: 0, r: 2, drag: 0.92, grav: 0, streak: false, max: o.life }, o)); }
+  function sparkBurst(x, y, n, color, speed, life, streak) {
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = speed * (0.4 + Math.random() * 0.8); addGlow({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: life * (0.6 + Math.random() * 0.6), r: 1.5 + Math.random() * 2, color, streak }); }
+  }
+  // 지그재그 번개 줄기 (위→아래), 곁가지 포함
+  function makeBolt(x, y0, y1) {
+    const pts = [], n = 16; let xx = x + (Math.random() - 0.5) * 24;
+    for (let i = 0; i <= n; i++) { const yy = y0 + (y1 - y0) * i / n; pts.push([i === n ? x : xx, yy]); xx += (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 14); xx += (x - xx) * 0.2; }
+    const br = [];
+    for (let i = 3; i < n - 2; i += 4) if (Math.random() < 0.6) { const [bx, by] = pts[i], d = Math.random() < 0.5 ? -1 : 1, seg = [[bx, by]]; let cx = bx, cy = by; for (let j = 0; j < 4; j++) { cx += d * (8 + Math.random() * 12); cy += 10 + Math.random() * 12; seg.push([cx, cy]); } br.push(seg); }
+    return { pts, br };
+  }
+  function galeStrike(x, y, big) {   // 번개가 떨어진 자리
+    addRing(x, y, 4, big ? 70 : 46, 0.35, '#d9b8ff', big ? 4 : 3);
+    sparkBurst(x, y, big ? 14 : 8, '#e6d2ff', big ? 260 : 200, 0.35, true);
+    addGlow({ x, y, r: big ? 46 : 30, life: 0.22, drag: 1, color: '#b98aff', soft: true });
+  }
   function addBubble(x, y, big) {
     bubbles.push({ x: x + (Math.random() - 0.5) * 6, y, vy: -(18 + Math.random() * 28), life: 0.8 + Math.random() * 1.2, r: big ? 1.5 + Math.random() * 2.5 : 1 + Math.random() * 1.5 });
   }
@@ -547,6 +571,7 @@
           if (ship.shield <= 0) { ship.gold = false; updateHud(); popText(ship.x, ship.y - 30, 'GUARD!', '#ffd77a'); }
           if (sk && sk.f === 3 || ship.shield <= 0) SFX.goldPing(); else SFX.deflect();
           fx.push(explosion(t.x, ship.y + 6, 16, false)); addRipple(t.x, false);
+          if (ship.shield > 0) { addRing(t.x, ship.y + 4, 4, 40, 0.35, '#ffe08a', 3); sparkBurst(t.x, ship.y + 4, 10, '#ffe08a', 220, 0.4, true); hitStop = Math.max(hitStop, 0.05); }
           for (let k = 0; k < 10; k++) bubbles.push({ x: t.x + (Math.random() - 0.5) * 10, y: ship.y + 4, vy: -(60 + Math.random() * 100), vx: (Math.random() - 0.5) * 120, life: 0.5, r: 1.5 + Math.random() * 2, foam: true, grav: true });
           continue;
         }
@@ -554,8 +579,7 @@
           hp = Math.max(0, hp - HIT_DMG); ship.inv = 0.6; shake = 12;
           fx.push(explosion(t.x, ship.y, 30, false)); hitStop = Math.max(hitStop, 0.1); addRipple(t.x, true);
           SFX.hit();
-          flash.style.transition = 'none'; flash.style.opacity = 0.45;
-          requestAnimationFrame(() => { flash.style.transition = 'opacity .5s'; flash.style.opacity = 0; });
+          screenFlash('#ff2a1a', 0.45, 0.5);
           updateHud();
           if (hp <= 0) gameOver();
         }
@@ -610,16 +634,31 @@
     sk = { f, t: -SKILL_PRE, dur: SKILL[f].dur };
     banner = { f, t: 0 };
     SFX.skillBanner(); shake = Math.max(shake, 6);
-    flash.style.transition = 'none'; flash.style.opacity = 0.35;
-    requestAnimationFrame(() => { flash.style.transition = 'opacity .6s'; flash.style.opacity = 0; });
+    screenFlash(f === 1 ? '#7fe8ff' : f === 2 ? '#c9a2ff' : '#ffe08a', 0.45, 0.6);
     renderSkill();
   }
   // 배너가 끝나고 실제 효과가 시작되는 순간
   function beginSkill() {
     if (!sk) return;
-    if (sk.f === 1) { SFX.surge(sk.dur); subs.forEach(s => { s.cx = undefined; }); }
-    if (sk.f === 2) { SFX.zap(true); galeT = 0; }
-    if (sk.f === 3) { SFX.solar(); ship.shield = SKILL[3].dur; updateHud(); }
+    hitStop = Math.max(hitStop, 0.12); punch = 1;
+    if (sk.f === 1) {
+      SFX.surge(sk.dur); subs.forEach(s => { s.cx = undefined; });
+      const cy = (subMinY() + subMaxY()) / 2;
+      addRing(W / 2, cy, 10, W * 0.75, 0.6, '#bff4ff', 6, 0.4); addRing(W / 2, cy, 10, W * 0.5, 0.5, '#5fd8ff', 4, 0.4);
+      sparkBurst(W / 2, cy, 30, '#bff4ff', 420, 0.6, true);
+      shake = Math.max(shake, 12); screenFlash('#bff4ff', 0.5, 0.5);
+    }
+    if (sk.f === 2) {
+      SFX.zap(true); galeT = 0; shake = Math.max(shake, 16); screenFlash('#ffffff', 0.7, 0.35);
+      for (let i = 0; i < 3; i++) { const x = W * (0.2 + 0.3 * i), y = subMinY() + Math.random() * (seabedY - subMinY()); bolts.push({ x, y, t: 0, dur: 0.45, k: Math.floor(Math.random() * 4) + 1, w: 60, g: makeBolt(x, surfaceY - 70, y) }); galeStrike(x, y, true); }
+    }
+    if (sk.f === 3) {
+      SFX.solar(); ship.shield = SKILL[3].dur; updateHud();
+      addRing(ship.x, ship.y, 10, W * 0.9, 0.8, '#fff1b0', 7); addRing(ship.x, ship.y, 10, W * 0.55, 0.6, '#ffc531', 4);
+      sk.sun = 1;   // 군함에서 퍼지는 햇살 폭발
+      for (let i = 0; i < 40; i++) { const a = Math.PI + Math.random() * Math.PI, v = 150 + Math.random() * 300; addGlow({ x: ship.x, y: ship.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.7 + 60, life: 0.8 + Math.random() * 0.6, r: 1.5 + Math.random() * 2.5, color: '#ffe08a', streak: Math.random() < 0.5 }); }
+      shake = Math.max(shake, 10); screenFlash('#fff3c4', 0.6, 0.6);
+    }
   }
   function killSub(s, viaGale) {
     const i = subs.indexOf(s); if (i < 0) return;
@@ -630,7 +669,7 @@
     if (onScreen) {
       fx.push(explosion(s.x, s.y, s.red ? 46 : 36, s.red)); hitFx(s);
       popText(s.x, s.y - 20, '+' + pts + (deep ? ' DEEP' : ''), deep ? '#ffd77a' : '#e4c8ff');
-      if (viaGale) { bursts.push({ x: s.x, y: s.y, t: 0, dur: 0.55, size: 90 + Math.random() * 30 }); bolts.push({ x: s.x, y: s.y, t: 0, dur: 0.4, k: Math.floor(Math.random() * 4) + 1, w: 46 + Math.random() * 18 }); }
+      if (viaGale) { bursts.push({ x: s.x, y: s.y, t: 0, dur: 0.55, size: 90 + Math.random() * 30 }); bolts.push({ x: s.x, y: s.y, t: 0, dur: 0.4, k: Math.floor(Math.random() * 4) + 1, w: 46 + Math.random() * 18, g: makeBolt(s.x, surfaceY - 70, s.y) }); galeStrike(s.x, s.y, s.red); shake = Math.max(shake, 9); }
       for (let k = 0; k < 10; k++) addBubble(s.x + (Math.random() - 0.5) * 40, s.y, true);
       SFX.boom(s.red);
     }
@@ -639,8 +678,33 @@
   function updateSkill(dt) {
     for (let i = bolts.length - 1; i >= 0; i--) { bolts[i].t += dt; if (bolts[i].t > bolts[i].dur) bolts.splice(i, 1); }
     for (let i = bursts.length - 1; i >= 0; i--) { bursts[i].t += dt; if (bursts[i].t > bursts[i].dur) bursts.splice(i, 1); }
+    for (let i = rings.length - 1; i >= 0; i--) { rings[i].t += dt; if (rings[i].t > rings[i].dur) rings.splice(i, 1); }
+    for (let i = glows.length - 1; i >= 0; i--) {
+      const g = glows[i]; g.life -= dt;
+      if (g.orb) { g.ang += g.va * dt; g.rad = Math.max(4, g.rad - g.vr * dt); g.va *= 1 + dt * 0.8; g.px = g.x; g.py = g.y; g.x = g.cx + Math.cos(g.ang) * g.rad; g.y = g.cy + Math.sin(g.ang) * g.rad * 0.32; }
+      else { g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= g.drag; g.vy = g.vy * g.drag + g.grav * dt; }
+      if (g.life <= 0) glows.splice(i, 1);
+    }
+    if (punch > 0) punch = Math.max(0, punch - dt * 4);
     if (!sk || sk.t < 0) return;
     sk.t += dt;
+    if (sk.sun) sk.sun = Math.max(0, sk.sun - dt * 1.4);
+    if (sk.f === 1) {
+      // 소용돌이를 따라 빙글빙글 빨려 드는 빛줄기
+      const rows = 3, pull = sk.t < SKILL[1].pull;
+      for (let n = 0; n < (pull ? 4 : 2); n++) {
+        const r = Math.floor(Math.random() * rows), cy = subMinY() + (subMaxY() - subMinY()) * (r + 0.5) / rows;
+        const ang = Math.random() * 6.283, rad = W * (0.3 + Math.random() * 0.3), ox = W / 2 + Math.cos(ang) * rad, oy = cy + Math.sin(ang) * rad * 0.32;
+        addGlow({ orb: true, cx: W / 2, cy, ang, rad, vr: pull ? 140 : 60, va: (r % 2 ? -1 : 1) * (pull ? 4.5 : 2.2), life: 0.6 + Math.random() * 0.4, r: 1.2 + Math.random() * 1.6, color: Math.random() < 0.3 ? '#ffffff' : '#9eeeff', x: ox, y: oy, px: ox, py: oy });
+      }
+      if (pull && Math.random() < dt * 3) { const cy = subMinY() + (subMaxY() - subMinY()) * (Math.floor(Math.random() * 3) + 0.5) / 3; addRing(W / 2, cy, W * 0.6, 20, 0.5, '#bff4ff', 2.5, 0.32); }
+    }
+    if (sk.f === 3) {
+      // 물속에 떠오르는 금빛 반짝이 + 군함 보호막 맥동
+      if (Math.random() < 0.7) addGlow({ x: Math.random() * W, y: seabedY - Math.random() * (seabedY - surfaceY) * 0.6, vx: (Math.random() - 0.5) * 10, vy: -(20 + Math.random() * 40), drag: 1, life: 1.2 + Math.random() * 1, r: 1 + Math.random() * 1.8, color: '#ffe9a0', twinkle: true });
+      sk.pulse = (sk.pulse || 0) - dt;
+      if (sk.pulse <= 0 && ship) { sk.pulse = 0.9; addRing(ship.x, ship.y - 6, ship.w * 0.4, ship.w * 1.1, 0.7, '#ffd34a', 2.5, 0.55); }
+    }
     if (sk.f === 1) {
       // 소용돌이로 빨려 드는 거품
       if (Math.random() < 0.9) { const side = Math.random() < 0.5 ? -1 : 1; bubbles.push({ x: W / 2 + side * (60 + Math.random() * 140), y: subMinY() + Math.random() * (subMaxY() - subMinY()), vy: -(10 + Math.random() * 20), vx: -side * (60 + Math.random() * 80), life: 0.8 + Math.random() * 0.6, r: 1 + Math.random() * 2.2 }); }
@@ -651,13 +715,13 @@
       for (const s of subs.slice()) { if (s.zap === undefined) s.zap = Math.random() * 0.35; s.zap -= dt; if (s.zap <= 0) killSub(s, true); }
       for (let i = torps.length - 1; i >= 0; i--) {
         const tp = torps[i]; if (tp.zap === undefined) tp.zap = Math.random() * 0.3; tp.zap -= dt;
-        if (tp.zap <= 0) { torps.splice(i, 1); bursts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.4, size: 50 }); if (tp.y > surfaceY) bolts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.3, k: Math.floor(Math.random() * 4) + 1, w: 34 }); }
+        if (tp.zap <= 0) { torps.splice(i, 1); bursts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.4, size: 50 }); galeStrike(tp.x, tp.y, false); if (tp.y > surfaceY) bolts.push({ x: tp.x, y: tp.y, t: 0, dur: 0.3, k: Math.floor(Math.random() * 4) + 1, w: 34, g: makeBolt(tp.x, surfaceY - 70, tp.y) }); }
       }
       if (galeT <= 0) {   // 배경 번개
         galeT = 0.12 + Math.random() * 0.18;
-        bolts.push({ x: 20 + Math.random() * (W - 40), y: subMinY() + Math.random() * (seabedY - subMinY()), t: 0, dur: 0.28 + Math.random() * 0.2, k: Math.floor(Math.random() * 4) + 1, w: 40 + Math.random() * 40 });
+        { const bx = 20 + Math.random() * (W - 40), by = subMinY() + Math.random() * (seabedY - subMinY()); bolts.push({ x: bx, y: by, t: 0, dur: 0.28 + Math.random() * 0.2, k: Math.floor(Math.random() * 4) + 1, w: 40 + Math.random() * 40, g: makeBolt(bx, surfaceY - 70, by) }); galeStrike(bx, by, false); }
         if (Math.random() < 0.5) SFX.zap(false);
-        if (Math.random() < 0.35) { flash.style.transition = 'none'; flash.style.opacity = 0.18; requestAnimationFrame(() => { flash.style.transition = 'opacity .25s'; flash.style.opacity = 0; }); }
+        if (Math.random() < 0.35) screenFlash('#e9dcff', 0.22, 0.25);
       }
     }
     if (sk.t >= sk.dur) { sk = null; renderSkill(); }
@@ -710,6 +774,34 @@
         ctx.globalAlpha = 0.6 * q; if (h > 4) ctx.drawImage(im, W / 2 + ox * W - w / 2, seabedY + 20 - h, w, h);
       });
     }
+    // 솔라 발동: 군함에서 퍼지는 햇살 빛줄기
+    if (sk && sk.f === 3 && sk.sun > 0 && ship) {
+      const a = sk.sun, len = W * (1.1 - a * 0.6);
+      ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(sk.t * 0.6);
+      for (let i = 0; i < 16; i++) {
+        ctx.rotate(6.283 / 16); ctx.globalAlpha = a * (i % 2 ? 0.35 : 0.6);
+        const gr = ctx.createLinearGradient(0, 0, len, 0); gr.addColorStop(0, '#fff6cc'); gr.addColorStop(1, 'rgba(255,200,60,0)');
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(len, -len * 0.06); ctx.lineTo(len, len * 0.06); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      ctx.globalAlpha = a; const rg = ctx.createRadialGradient(ship.x, ship.y, 0, ship.x, ship.y, 90); rg.addColorStop(0, '#ffffff'); rg.addColorStop(0.4, 'rgba(255,220,120,.7)'); rg.addColorStop(1, 'rgba(255,200,60,0)');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(ship.x, ship.y, 90, 0, 6.283); ctx.fill();
+    }
+    // 게일: 번개가 내려치는 하늘 쪽 번쩍임
+    if (sk && sk.f === 2 && sk.t >= 0) {
+      const a = Math.min(1, sk.t / 0.3, (sk.dur - sk.t) / 0.6) * (0.25 + 0.25 * Math.random());
+      const gr = ctx.createLinearGradient(0, surfaceY - 120, 0, surfaceY + 10); gr.addColorStop(0, 'rgba(190,140,255,' + a + ')'); gr.addColorStop(1, 'rgba(190,140,255,0)');
+      ctx.globalAlpha = 1; ctx.fillStyle = gr; ctx.fillRect(0, surfaceY - 120, W, 130);
+    }
+    for (const b of bolts) {
+      if (!b.g) continue;
+      const p = b.t / b.dur, al = (p < 0.15 ? 1 : 1 - (p - 0.15) / 0.85) * (0.7 + Math.random() * 0.3);
+      const path = pts => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); };
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.globalAlpha = al * 0.35; ctx.strokeStyle = '#9a5cff'; ctx.lineWidth = 12; path(b.g.pts);
+      ctx.globalAlpha = al * 0.8; ctx.strokeStyle = '#d6b8ff'; ctx.lineWidth = 4; path(b.g.pts); b.g.br.forEach(path);
+      ctx.globalAlpha = al; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.6; path(b.g.pts);
+    }
     for (const b of bolts) {
       const im = IMG['fx_gale_bolt' + b.k]; if (!okImg(im)) continue;
       const p = b.t / b.dur, y0 = surfaceY - 70, h = b.y + 26 - y0;
@@ -721,7 +813,32 @@
       const p = e.t / e.dur, s = e.size * (0.5 + p * 0.8);
       ctx.globalAlpha = 1 - p; ctx.drawImage(im, e.x - s / 2, e.y - s / 2, s, s);
     }
+    // 고리(충격파)
+    for (const r of rings) {
+      const p = r.t / r.dur, e2 = 1 - (1 - p) * (1 - p), rr = r.r0 + (r.r1 - r.r0) * e2;
+      ctx.globalAlpha = (1 - p) * 0.9; ctx.strokeStyle = r.color; ctx.lineWidth = r.lw * (1 - p) + 0.6;
+      ctx.beginPath(); ctx.ellipse(r.x, r.y, Math.max(1, rr), Math.max(1, rr * r.flat), 0, 0, 6.283); ctx.stroke();
+    }
+    // 빛 입자
+    ctx.lineCap = 'round';
+    for (const g of glows) {
+      const a = Math.max(0, Math.min(1, g.life / g.max * 1.5)) * (g.twinkle ? 0.5 + 0.5 * Math.sin(g.life * 18 + g.x) : 1);
+      ctx.globalAlpha = a;
+      if (g.soft) { const rg = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r); rg.addColorStop(0, '#ffffff'); rg.addColorStop(0.35, g.color); rg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.283); ctx.fill(); }
+      else if (g.orb && g.px !== undefined) { ctx.strokeStyle = g.color; ctx.lineWidth = g.r * 1.4; ctx.beginPath(); ctx.moveTo(g.px, g.py); ctx.lineTo(g.x, g.y); ctx.stroke(); }
+      else if (g.streak) { ctx.strokeStyle = g.color; ctx.lineWidth = g.r; ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x - g.vx * 0.05, g.y - g.vy * 0.05); ctx.stroke(); }
+      else { ctx.fillStyle = g.color; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.283); ctx.fill(); }
+    }
     ctx.restore();
+    // 필살기 동안 화면 가장자리에 세력 색 테두리
+    if (sk && sk.t >= 0) {
+      const a = Math.max(0, Math.min(1, sk.t / 0.3, (sk.dur - sk.t) / 0.8)) * (0.55 + 0.15 * Math.sin(sk.t * 6));
+      const c = sk.f === 1 ? '40,200,255' : sk.f === 2 ? '150,80,255' : '255,190,40';
+      const cx = W / 2, cy = (viewH / 2) - offY, R = Math.hypot(W, viewH) / 2;
+      const vg = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R);
+      vg.addColorStop(0, 'rgba(' + c + ',0)'); vg.addColorStop(1, 'rgba(' + c + ',' + a + ')');
+      ctx.save(); ctx.fillStyle = vg; ctx.fillRect(0, -offY, W, viewH); ctx.restore();
+    }
   }
   // 발동 배너: 커지며 등장 → 잠깐 머묾 → 사라짐 (실제 시간 기준)
   function drawBanner() {
@@ -791,6 +908,7 @@
   function render() {
     ctx.save();
     if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    if (punch > 0) { const z = 1 + 0.05 * punch * punch; ctx.translate(W / 2, viewH / 2); ctx.scale(z, z); ctx.translate(-W / 2, -viewH / 2); }   // 필살기 발동 순간 화면이 쿵
     ctx.translate(0, offY);   // 전장은 화면 안에서 offY 만큼 내려간 곳에 그린다
     // 배경
     if (IMG.bg.complete && IMG.bg.naturalWidth) {
