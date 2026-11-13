@@ -1,7 +1,8 @@
-/* 탱크럼블 순위판 — Firestore tank_scores_test (탱크대전 테스트 기록과 같은 칸, flag:'TR' 로 구분) · 익명 로그인 */
+/* 탱크럼블 순위판 — Firestore tank_scores_test (탱크대전 테스트 기록과 같은 칸, flag로 구분) · 익명 로그인
+   v182(2026-11-13): 점수 방식이 '격파 100점 + 콤보'로 바뀌어 flag 'TR' → 'TR2' 새 순위판 (옛 기록은 'TR'로 남아 있음) */
 window.TR_RANK = (function () {
   'use strict';
-  var COL = 'tank_scores_test', TAG = 'TR', FID = { surge: 1, gale: 2, solar: 3 }, FBY = { 1: 'surge', 2: 'gale', 3: 'solar' };
+  var COL = 'tank_scores_test', TAG = 'TR2', FID = { surge: 1, gale: 2, solar: 3 }, FBY = { 1: 'surge', 2: 'gale', 3: 'solar' };
   var app = null, authed = null, uid = '', last = 0, lastFac = 'solar', done = false;
   var $ = function (id) { return document.getElementById(id); };
   function init() { if (app) return true; try { app = firebase.initializeApp(window.DG_FIREBASE, 'tankrumble'); return true; } catch (e) { return false; } }
