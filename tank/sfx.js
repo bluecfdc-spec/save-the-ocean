@@ -116,6 +116,11 @@ window.SFX = (function () {
     for (var i = 0; i < k; i++) { tone('triangle', notes[i], notes[i], 0.35, 0.22, t + i * 0.07); tone('sine', notes[i] * 2, notes[i] * 2, 0.25, 0.08, t + i * 0.07); }
     var b = burst(0.5, 0.18, 8000, 1500, t); b.f.frequency.setValueAtTime(1200, t); b.f.frequency.exponentialRampToValueAtTime(9000, t + 0.4);
   };
+  S.combo = function (n) {                                         // 콤보: 콤보가 오를수록 한 음씩 높아지는 '챙-챙-치잉' + 반짝 (v182)
+    if (!ensure()) return; var t = ctx.currentTime, k = Math.min(9, n || 2), f = 523 * Math.pow(2, (k - 2) * 2 / 12);
+    tone('square', f, f, 0.08, 0.07, t); tone('square', f * 1.335, f * 1.335, 0.09, 0.07, t + 0.055); tone('triangle', f * 2, f * 2, 0.4, 0.2, t + 0.11); tone('sine', f * 4, f * 4, 0.3, 0.06, t + 0.11);
+    var b = burst(0.35, 0.1, 10000, 3000, t + 0.1); b.f.frequency.setValueAtTime(3000, t + 0.1); b.f.frequency.exponentialRampToValueAtTime(10000, t + 0.4);
+  };
   S.gain = function (kind) {                                       // 자원 획득 '띠링' (종류별 음높이)
     if (!ensure()) return; var t = ctx.currentTime, f = { 2: 880, 3: 1175, 4: 1480, 5: 1760 }[kind] || 988;
     tone('sine', f, f, 0.18, 0.14, t); tone('sine', f * 1.5, f * 1.5, 0.22, 0.1, t + 0.06);
