@@ -7,7 +7,9 @@
    ⑥ 내 탱크가 채워서 줄을 깨면 6초 동안 1.5배 빨라짐(잔상) + 특별 연출
    ⑦ 무한 점수. 블록 놓을 곳이 없으면 끝
    v8 (2026-10-15): 블록을 톡 누르면 왼쪽으로 90° 회전, 끌어서 놓기는 따로 / 기 게이지(줄 1개 = 1칸, 4칸 차면 다음 발사 3발)
-      / 여러 줄 동시 = 보너스 점수(줄 하나 더할 때마다 +500), 여러 줄 3갈래 발사는 없앰 */
+      / 여러 줄 동시 = 보너스 점수(줄 하나 더할 때마다 +500), 여러 줄 3갈래 발사는 없앰
+   v182 (2026-11-13, 홍균님): 점수는 내 탱크 미사일로 적을 부술 때만 1대 100점. 6초 안에 또 부수면 콤보 → N콤보 = +N×100 보너스.
+      줄 지우기·블록 놓기·아이템·비행기·세력 기술은 점수 없음. 명중 별빛 + 콤보 도장·콤보 바·화면 테두리 빛 */
 (function () {
   'use strict';
   var SOLAR_MS = 5000, TAP_MOVE = 10, TAP_MS = 350, CHARGE_MAX = 4;   // 톡(회전) 판정: 10px 안에서 0.35초 안에 뗌 / 기 게이지 칸 수
@@ -54,7 +56,7 @@
 
   // ---------- 상태 ----------
   var G = null, fac = 'solar', best = 0;
-  try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best') || 0; } catch (e) { }
+  try { fac = localStorage.getItem('tank_fac') || 'solar'; best = +localStorage.getItem('tank_easy_best2') || 0; } catch (e) { }
   function newPiece() { var pool = G && !G.over && !G.tut && gsec() >= 60 ? SHAPES.concat(SHAPES_1MIN) : SHAPES, sh = pool[rnd(pool.length)]; if (Array.isArray(sh[0][0])) sh = sh[rnd(sh.length)];   // ㄹ 묶음이면 둘 중 하나
     if (G && !G.over && !G.tut && G.board && Math.random() < helpRate()) sh = goodShape(pool, sh);   // 몰래 돕기: 들어가고 줄을 깰 수 있는 모양을 골라 줌
     var pc = { cells: sh, tint: TINT[rnd(TINT.length)] };
@@ -76,7 +78,7 @@
     sfx('rotate'); if (!G.tut) checkFit(); }
   function start() { freshScreen();
     var efs = ['surge', 'gale', 'solar'].filter(function (f) { return f !== fac; });
-    G = { score: 0, combo: 0, moves: 0, kills: 0, fac: fac, efac: efs[rnd(2)], board: [], tank: { x: 4, y: 9, fx: 4, fy: 9, path: [], at: 0, trail: [] },
+    G = { score: 0, shown: 0, scoreAt: 0, kc: 0, kcAt: 0, kcMax: 0, combo: 0, moves: 0, kills: 0, fac: fac, efac: efs[rnd(2)], board: [], tank: { x: 4, y: 9, fx: 4, fy: 9, path: [], at: 0, trail: [] },
       tray: [newPiece(), newPiece(), newPiece()], en: [], dying: [], items: {}, loot: {}, planes: [], fx: [], parts: [], shots: [], shells: [], drag: null, over: false, banner: null, shake: 0, boostUntil: 0, charge: 0, chargeAt: 0 };
     for (var y = 0; y < ROWS; y++) { G.board.push([]); for (var x = 0; x < COLS; x++) G.board[y].push(0); }
     G.t0 = now(); spawn(0.5); G.spawnAt = now() + 7500; G.prevBest = LUCK.best;   // 이번 판이 넘어야 할 최고 생존 기록
@@ -237,7 +239,7 @@
   function place(i, gx, gy) {
     var p = G.tray[i], t = now(); p.cells.forEach(function (c, ci) { var X = gx + c[0], Y = gy + c[1]; G.board[Y][X] = p.tint; delete G.loot[X + ',' + Y]; if (p.item && p.item.i === ci) G.items[X + ',' + Y] = p.item.kind; G.fx.push({ k: 'land', x: X, y: Y, at: t }); });
     G.tray[i] = null; if (!G.tray.some(Boolean) && !G.tut) G.tray = [newPiece(), newPiece(), newPiece()];
-    sfx('place'); G.score += p.cells.length * 5; G.moves++;
+    sfx('place'); G.moves++;
     if (!lineCheck()) G.combo = 0;
     checkFit();
   }
@@ -254,19 +256,16 @@
     rows.forEach(function (y) { for (var x = 0; x < COLS; x++) clr(x, y); });
     cols.forEach(function (x) { for (var y = 0; y < ROWS; y++) clr(x, y); });
     G.fx.push({ k: 'beam', rows: rows, cols: cols, at: t, gold: gold, ox: tk.x, oy: tk.y });
-    G.combo++; var mult = Math.min(5, G.combo), pts = n * 100 * mult * (gold ? 2 : 1), bonus = (n - 1) * 500;   // 여러 줄 동시 = 줄 하나 더할 때마다 보너스 +500
-    G.score += pts + bonus;
+    G.combo++; var mult = Math.min(5, G.combo), bonus = n > 1;   // v182: 줄 지우기는 점수 없음 (연속 줄 지우기는 소리만 높아짐)
     var tpx = bx(tk.x) + S / 2, tpy = by(tk.y) + S / 2;
     var sideR = tk.x < COLS / 2, nfs = Math.round(S * 0.75), nx = tpx + (sideR ? 1 : -1) * S * 1.4, nrot = (sideR ? -1 : 1) * Math.PI / 9;   // 보너스 숫자: 블록 1.5칸 크기, 탱크를 가리지 않게 옆에 20도 기울여서
-    if (gold) fnum('+' + pts, nx, tpy - S * 0.7, nfs, 'gale', (mult > 1 ? 'COMBO ×' + mult + ' · ' : '') + '탱크 ×2!', 1600, null, nrot);
-    else pop((mult > 1 ? 'COMBO ×' + mult + '  ' : '') + '+' + pts, OX + S * COLS / 2, BY + S * 2.6, '#ffe066', true);
     sfx('clear', n + mult - 1);
     if (bonus) {                                              // 보너스 연출: 금빛 햇살 + 큰 글씨 + 줄마다 금가루
       var bxs = cols.length ? cols.reduce(function (a, c) { return a + bx(c) + S / 2; }, 0) / cols.length : OX + S * COLS / 2,
         bys = rows.length ? rows.reduce(function (a, r) { return a + by(r) + S / 2; }, 0) / rows.length : BY + S * ROWS / 2;
       if (gold) { bxs = nx + (tk.x < COLS / 2 ? 1 : -1) * S * 0.3; bys = tpy - S * 2.2; }                                    // 탱크 점수 숫자 바로 위
       else if (Math.abs(bys - tpy) < S * 1.5 && Math.abs(bxs - tpx) < S * 2.5) bxs = nx;   // 내 탱크를 가리지 않게 옆으로
-      fnum('+' + bonus, bxs, Math.max(HUD + S * 1.2, bys), nfs, 'gold', n + '줄 보너스!', 1600, null, nrot, gold ? 350 : 80);
+      fnum(n + '줄!', bxs, Math.max(HUD + S * 1.2, bys), nfs, 'gold', '동시 클리어 · 기 +' + n, 1400, null, nrot, gold ? 350 : 80);
       rows.forEach(function (y) { for (var x = 0; x < COLS; x += 2) burst(bx(x) + S / 2, by(y) + S / 2, 5, ['#fff6c0', '#ffd451', '#ffffff'], 6, 4, 0.12, 900); });
       cols.forEach(function (x) { for (var y = 0; y < ROWS; y += 2) burst(bx(x) + S / 2, by(y) + S / 2, 5, ['#fff6c0', '#ffd451', '#ffffff'], 6, 4, 0.12, 900); });
       setTimeout(function () { sfx('bonus', n); }, gold ? 350 : 80); }
@@ -295,17 +294,39 @@
         G.shots.push(ps); k++; sfx('ultReady'); continue; }
       var tgt = null; G.en.forEach(function (e) { if (e.x === c && (!tgt || e.r > tgt.r)) tgt = e; });
       var s = { x: c, at: t + 120 + k * 90, y0: y0, ty: tgt ? enemyY(tgt, t + 640 + k * 90) : EY - S * 2, dur: 520, tgt: tgt };
-      s.pts = pierce ? 600 : 300;                              // 탱크로 메운 줄의 발사는 격파 점수도 2배
-      if (tgt) { G.en.splice(G.en.indexOf(tgt), 1); G.dying.push({ e: tgt, until: s.at + s.dur }); G.score += s.pts; G.kills++; }
+      if (tgt) { G.en.splice(G.en.indexOf(tgt), 1); G.dying.push({ e: tgt, until: s.at + s.dur }); G.kills++; }   // 점수는 맞는 순간(killScore)
       G.shots.push(s); k++; }
   }
-  function shotLand(s) { if (!s.tgt) return; if (s.pts > 300) { explode(s.x, s.ty, s.tgt.ang, s.pts, null, true); fnum('+' + s.pts, bx(s.x) + S / 2, s.ty, Math.round(S * 0.55), 'drill', '×2', 1100, 'gale', -Math.PI / 12); } else explode(s.x, s.ty, s.tgt.ang, 300); }
-  function explode(x, py, ang, pts, label, noPop, quiet) {   // quiet: 한꺼번에 많이 터질 때 화면 번쩍임 생략
+  function shotLand(s) { if (!s.tgt) return; explode(s.x, s.ty, s.tgt.ang, 0, null, true, false, true); killScore(bx(s.x) + S / 2, s.ty); }
+  // ---------- 점수: 내 탱크로 격파할 때만 (v182) ----------
+  var COMBO_MS = 6000, CTIER = ['255,214,81', '255,214,81', '255,214,81', '255,150,40', '255,72,72', '255,90,210', '170,120,255'];   // 콤보 색: 2·3 금 → 4 주황 → 5 빨강 → 6 분홍 → 7+ 보라
+  function ctier(n) { return CTIER[Math.min(CTIER.length - 1, n)]; }
+  function comboLeft(t) { return G.kc >= 1 ? Math.max(0, 1 - (t - G.kcAt) / COMBO_MS) : 0; }
+  function killScore(px, py) {                              // 1대 = 100점. 6초 안에 또 부수면 콤보: N콤보 = +N×100 보너스
+    var t = now(); G.kc = G.kc && t - G.kcAt < COMBO_MS ? G.kc + 1 : 1; G.kcAt = t; G.kcMax = Math.max(G.kcMax, G.kc);
+    var n = G.kc, bonus = n >= 2 ? n * 100 : 0; G.score += 100 + bonus; G.scoreAt = t;
+    fnum('+100', px + rr(-S * 0.2, S * 0.2), py - ER * 0.6, Math.round(S * 0.62), 'gold', null, 950, null, rr(-0.14, 0.14));
+    if (!bonus) return;
+    G.fx = G.fx.filter(function (f) { return f.k !== 'combo'; });   // 콤보 도장은 하나만 (새 숫자로 쾅)
+    var cx = OX + S * COLS / 2, cy = BY + S * 1.35, col = ctier(n), m = Math.min(6, n);
+    G.fx.push({ k: 'combo', n: n, bonus: bonus, at: t, x: cx, y: cy, col: col, kx: px, ky: py });
+    ring(cx, cy, S * 0.5, S * (2.4 + 0.3 * m), 'rgba(' + col + ',', 560, 6); ring(cx, cy, S * 0.3, S * 1.5, 'rgba(255,255,255,', 300, 3);
+    sparks(cx, cy, 10 + 3 * m, ['#ffffff', 'rgb(' + col + ')', '#fff3c0'], 8 + m);
+    for (var i = 0; i < 8; i++) { var q = i / 8; G.parts.push({ x: px + (cx - px) * q, y: py + (cy - py) * q, vx: rr(-0.6, 0.6), vy: rr(-0.6, 0.6), g: 0, s: rr(2, 3.5) * S / 40, c: i % 2 ? '#ffffff' : 'rgb(' + col + ')', at: t + i * 18, life: 360, gl: true, sq: true }); }   // 격파 자리 → 콤보 도장으로 빛 꼬리
+    shake(6 + 2 * m); sfx('combo', n);
+    if (n >= 4) G.fx.push({ k: 'flashAll', at: t, col: col, a: 0.1 + 0.02 * m });
+  }
+  function hitFx(px, py, t) {                               // 명중 순간: 하얀 별빛(도트) + 작은 빛줄기, 콤보가 쌓일수록 크게
+    var m = Math.min(6, G.kc + 1); G.fx.push({ k: 'star', x: px, y: py, at: t, r: S * (1.15 + 0.14 * m), rot: rr(-0.2, 0.2) });
+    sparks(px, py, 6 + m, ['#ffffff', '#fff3c0', '#ffe066'], 10 + m);
+  }
+  function explode(x, py, ang, pts, label, noPop, quiet, mine) {   // quiet: 한꺼번에 많이 터질 때 화면 번쩍임 생략 / mine: 내 탱크 미사일 명중 → 별빛 + 콤보만큼 더 묵직하게
     var px = bx(x) + S / 2, t = now(); if (G.tut) tutKill();
+    if (mine) hitFx(px, py, t);
     G.fx.push({ k: 'ghost', x: px, y: py, ang: ang, at: t });                  // 맞은 적이 하얗게 번쩍 커지며 사라짐
     boomFx(px, py, S * (quiet ? 1.5 : 2.2), t);                                                 // 불덩이(코드로 그림, 도트)
     G.fx.push({ k: 'wreck', x: x, py: py, ang: ang, at: t });
-    if (!quiet) { G.fx.push({ k: 'flashAll', at: t, col: '255,150,60', a: 0.18 }); hitStop(0.06); }
+    if (!quiet) { G.fx.push({ k: 'flashAll', at: t, col: '255,150,60', a: 0.18 }); hitStop(mine ? 0.06 + 0.014 * Math.min(6, G.kc + 1) : 0.06); }
     if (!quiet) ring(px, py, S * 0.3, S * 2.2, 'rgba(255,190,90,', 500, 5); ring(px, py, S * 0.2, S * 1.3, 'rgba(255,255,255,', 280, 3);
     burst(px, py, quiet ? 6 : 12, ['#3a3530', '#6b6055', '#4a3a2a'], 6, 5, 0.3, 900);   // 쇳조각
     sparks(px, py, quiet ? 6 : 12, ['#ffffff', '#fff3c0', '#ffb13d', '#ff7a2a'], 9);   // 빛줄기 불꽃
@@ -318,7 +339,7 @@
     pop('아이템!', bx(x) + S / 2, by(y) - S * 0.2, '#9be37a'); }
   function pickup(x, y, t) { var k = x + ',' + y, L = G.loot[k]; if (!L) return; delete G.loot[k];
     var px = bx(x) + S / 2, py = by(y) + S / 2; ring(px, py, S * 0.3, S * 1.8, 'rgba(160,255,140,', 420, 5); burst(px, py, 14, ['#fff', '#9be37a', '#ffe066'], 4, 4, 0.1, 500); sfx('gain');
-    G.score += 200; var sR = G.tank.x < COLS / 2; fnum('+200', px + (sR ? 1 : -1) * S * 1.4, py - S * 0.7, Math.round(S * 0.75), 'gold', '아이템 보너스', 1300, null, (sR ? -1 : 1) * Math.PI / 9);   // 아이템을 먹으면 기본 200점 (먹으러 가게 유도)
+    // v182: 아이템은 점수 없음 (점수는 내 탱크로 격파할 때만)
     if (L.kind === 'plane') callPlane(t); else useMark(t, L.fac); if (G.tut) tutPicked(L); }
   function callPlane(t) {                                   // 비행기: 적진을 돌며 랜덤으로 최대 3대 폭격
     var pl = { at: t, dur: 3800, left: 3, nextDrop: t + 850 };   // 상공을 도는 동안 그때 있는 적 탱크를 골라 투하 (나중에 나온 탱크도 맞음)
@@ -336,7 +357,7 @@
       for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) if (G.board[y][x] === ROCK) { G.board[y][x] = 0; n++;   // 해일 물마루가 그 줄에 닿는 순간 부서져 쓸려 감
         var d = (1 - Math.sqrt(Math.max(0, 1 - (bot - by(y) - S / 2) / (bot - top)))) * SURGE_SWEEP; G.fx.push({ k: 'cell', x: x, y: y, at: t + d, tint: ROCK, wet: true });
         (function (x, y, d) { setTimeout(function () { if (!G) return; var px = bx(x) + S / 2, py = by(y) + S / 2; for (var k = 0; k < 10; k++) G.parts.push({ x: px + rr(-S, S) * 0.4, y: py + rr(-S, S) * 0.4, vx: rr(-2, 2), vy: rr(-6, -2) * S / 40, g: 0.25, s: rr(2.5, 5) * S / 40, c: ['#ffffff', '#c8f6ff', '#4fd8ff', '#2a2a2e', '#55555c'][rnd(5)], at: now(), life: rr(500, 850), sq: k % 2 === 0 }); }, d); })(x, y, d); }
-      if (!G.tut) G.fx.push({ k: 'bigtext', t: '서지 해일!', sub: '적 블록 ' + n + '개 쓸어버림', at: t, col: '79,216,255' }); G.score += n * 30;
+      if (!G.tut) G.fx.push({ k: 'bigtext', t: '서지 해일!', sub: '적 블록 ' + n + '개 쓸어버림', at: t, col: '79,216,255' });
     } else if (f === 'gale') {                               // 게일: 적 진영 네 줄 모두에 보라 벼락 → 적 탱크 전멸 (v179, 홍균님)
       var allE = G.en.slice().sort(function (a, b) { return b.r - a.r || a.x - b.x; });
       skillStart('gale', t); pixRange();
@@ -349,7 +370,7 @@
         setTimeout(function () { if (!G) return; var py = enemyY(e), px = bx(e.x) + S / 2, tz = now(); dd.until = 0;   // 차례로 내리꽂힘 + 바로 전 벼락과 사슬로 이어짐
           bolt(px + rr(-S, S), EY - S * 1.2, px, py, { life: 280, w: S * 0.1 }); if (lastZ && tz - lastZ.at < 350) bolt(lastZ.x, lastZ.y, px, py, { life: 240, w: S * 0.06, nb: 1 }); lastZ = { x: px, y: py, at: tz };
           if (G.sk) G.sk.cf = 1; sparks(px, py, 6, ['#ffffff', '#e0ccff', '#a070ff'], 6); ring(px, py, S * 0.2, S * 1.4, 'rgba(200,160,255,', 360, 4);
-          explode(e.x, py, e.ang, 300, null, true, i > 0); G.score += 300; }, 200 + i * 45); });
+          explode(e.x, py, e.ang, 0, null, true, i > 0); }, 200 + i * 45); });
       if (!G.tut) G.fx.push({ k: 'bigtext', t: '게일 낙뢰!', sub: allE.length ? '적 탱크 ' + allE.length + '대 전멸' : '적이 없다', at: t, col: '197,139,255' });
     } else {                                                 // 솔라: 적 전장에 빛이 내려 적 탱크 5초 무력화 (움직임·발사 멈춤, 날아오던 돌덩이도 사라짐)
       G.frozenUntil = t + SOLAR_MS; G.frozenAt = t;
@@ -372,7 +393,7 @@
     G.over = true; G.endSec = gsec(); sfx('bad');
     if (!G.tut && G.endSec >= 5) { if (G.endSec > (G.prevBest || 0)) { LUCK.streak = 0; LUCK.best = Math.floor(G.endSec); } else LUCK.streak++; LUCK.plays++;   // 몰래 돕기: 연패 세기
       try { localStorage.setItem('tank_lose_streak', LUCK.streak); localStorage.setItem('tank_plays', LUCK.plays); } catch (e) { } }
-    var nb = G.score > best; if (nb) { best = G.score; try { localStorage.setItem('tank_easy_best', best); } catch (e) { } }
+    var nb = G.score > best; if (nb) { best = G.score; try { localStorage.setItem('tank_easy_best2', best); } catch (e) { } }
     banner('놓을 곳이 없다!', '#ff6a5a');
     // 마지막 연출: 전장의 적 탱크가 일제히 나를 조준·발사 → 내 탱크 폭파 (적이 없으면 서너 대가 한꺼번에 몰려옴)
     var t = now(), tk = G.tank, enter = 0;
@@ -524,15 +545,13 @@
       var q = (t - pl.at) / pl.dur;
       if (!G.over && pl.left > 0 && q > 0.2 && q < 0.86 && t >= pl.nextDrop) { var live = G.en.filter(function (e) { return e.r > -0.6 && (!G.tut || e.tplane); });
         if (live.length) { var e = live[rnd(live.length)], pp = planePos(pl, t); pl.left--; pl.nextDrop = t + 520;
-          G.en.splice(G.en.indexOf(e), 1); G.dying.push({ e: e, until: t + 460 }); G.kills++; G.score += 300;
+          G.en.splice(G.en.indexOf(e), 1); G.dying.push({ e: e, until: t + 460 }); G.kills++;
           G.bombs = G.bombs || []; G.bombs.push({ x0: pp.x, y0: pp.y, e: e, at: t, dur: 460 }); sfx('launch'); } }
       return t - pl.at < pl.dur; });
-    G.bombs = (G.bombs || []).filter(function (b) { if (t - b.at < b.dur) return true; explode(b.e.x, enemyY(b.e), b.e.ang, 300); return false; });
+    G.bombs = (G.bombs || []).filter(function (b) { if (t - b.at < b.dur) return true; explode(b.e.x, enemyY(b.e), b.e.ang, 0, null, true); return false; });
     G.shots = G.shots.filter(function (s) { if (t < s.at) return true;
       if (s.pierce) { var pp = Math.min(1, (t - s.at) / s.dur), py2 = s.y0 + (s.ty - s.y0) * pp * pp * (0.6 + 0.4 * pp) / 1, xx2 = bx(s.x) + S / 2;
-        s.tgts.forEach(function (dd) { if (dd.done) return; var ty2 = enemyY(dd.e); if (py2 - S * 0.5 <= ty2) { dd.done = true; dd.until = 0; s.hits++; var pts = 600 * s.hits; G.score += pts; explode(s.x, ty2, dd.e.ang, pts, null, true);   // 드릴탄(탱크로 메운 줄): 300×N의 2배
-            var tn = now(); G.fx.forEach(function (f) { if (f.k === 'fnum' && f.pal === 'drill') f.life = Math.min(f.life, tn - f.at + 250); });   // 앞 숫자는 빨리 사라지고 새 숫자가 커짐
-            fnum('+' + pts, bx(s.x) + S / 2 + (s.hits % 2 ? 1 : -1) * S * 1.1, ty2, Math.round(S * Math.min(0.7, 0.5 + 0.05 * s.hits)), 'drill', (s.hits > 1 ? '관통 ×' + s.hits + ' · ' : '') + '×2', 1200, 'gale', (s.hits % 2 ? -1 : 1) * Math.PI / 12); } });
+        s.tgts.forEach(function (dd) { if (dd.done) return; var ty2 = enemyY(dd.e); if (py2 - S * 0.5 <= ty2) { dd.done = true; dd.until = 0; s.hits++; explode(s.x, ty2, dd.e.ang, 0, null, true, s.hits > 1, true); killScore(bx(s.x) + S / 2 + (s.hits % 2 ? 1 : -1) * S * 0.9, ty2); } });   // 드릴탄: 한 대씩 맞을 때마다 100점 + 콤보
         for (var q = 0; q < 3; q++) G.parts.push({ x: xx2 + rr(-S * 0.25, S * 0.25), y: py2 + S * 0.5, vx: rr(-2.5, 2.5), vy: rr(0.5, 3), g: 0.15, s: rr(2, 4), c: ['#fff6c0', '#ffd451', '#ff9a1f'][rnd(3)], at: t, life: 380 });
         if (t - s.at >= s.dur) return false; return true; }
       if (t - s.at >= s.dur) { shotLand(s); return false; }
@@ -669,7 +688,7 @@
     var lf = ctx.createLinearGradient(sp.x - W * 0.5, 0, sp.x + W * 0.5, 0); lf.addColorStop(0, 'rgba(255,230,160,0)'); lf.addColorStop(0.5, 'rgba(255,250,220,' + (0.75 * se) + ')'); lf.addColorStop(1, 'rgba(255,230,160,0)');   // 가로 렌즈 빛(가늘게)
     ctx.fillStyle = lf; ctx.beginPath(); ctx.moveTo(sp.x - W * 0.5, sp.y); ctx.lineTo(sp.x, sp.y - 2); ctx.lineTo(sp.x + W * 0.5, sp.y); ctx.lineTo(sp.x, sp.y + 2); ctx.closePath(); ctx.fill();
     ctx.restore(); }
-  var PRE_K = { wreck: 1, cell: 1, ghost: 1 }, PIX_K = { boom: 1, ring: 1, muzzle: 1, beam: 1, tracer: 1 };
+  var PRE_K = { wreck: 1, cell: 1, ghost: 1 }, PIX_K = { boom: 1, ring: 1, muzzle: 1, beam: 1, tracer: 1, star: 1 };
   function drawPre(t) {                                        // 효과 아래에 깔리는 그림(부서지는 블록, 격파된 탱크, 흰 번쩍 사본)
     G.fx.forEach(function (f) { var a = t - f.at;
       if (f.k === 'cell') { if (a < 0) { block(bx(f.x), by(f.y), S, f.tint); return; } if (a > 380) return; var p = a / 380, s2 = S * (1 + 0.3 * p);
@@ -687,6 +706,17 @@
     if (!glow && sk && sk.f === 'gale') { var e = skEnv(sk, t); ctx.save(); ctx.strokeStyle = 'rgba(200,190,255,' + (0.4 * e) + ')'; ctx.lineWidth = 1.5; ctx.beginPath(); sk.rain.forEach(function (r) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - S * 0.15 * r.l, r.y + S * 0.5 * r.l); }); ctx.stroke(); ctx.restore(); n++; }   // 비
     G.fx.forEach(function (f) { var a = t - f.at; if (a < 0) return;
       if (!glow) return;
+      if (f.k === 'star') { if (a > 260) return; var sq3 = a / 260, sr = f.r * (a < 60 ? 0.5 + 0.5 * a / 60 : 1 - 0.35 * (sq3 - 0.23)), sal = 1 - sq3 * sq3;   // 명중 별빛: 긴 십자 4갈래 + 짧은 대각 4갈래
+        ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot);
+        for (var si = 0; si < 8; si++) { var len = si % 2 ? sr * 0.45 : sr, bw = (si % 2 ? 0.07 : 0.1) * f.r; ctx.save(); ctx.rotate(si * Math.PI / 4); var sg = ctx.createLinearGradient(0, 0, len, 0); sg.addColorStop(0, 'rgba(255,255,255,' + sal + ')'); sg.addColorStop(0.5, 'rgba(255,236,160,' + (0.8 * sal) + ')'); sg.addColorStop(1, 'rgba(255,190,80,0)');
+          ctx.fillStyle = sg; ctx.beginPath(); ctx.moveTo(0, -bw); ctx.lineTo(len, 0); ctx.lineTo(0, bw); ctx.closePath(); ctx.fill(); ctx.restore(); }
+        var cg2 = ctx.createRadialGradient(0, 0, 0, 0, 0, f.r * 0.32); cg2.addColorStop(0, 'rgba(255,255,255,' + sal + ')'); cg2.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = cg2; ctx.beginPath(); ctx.arc(0, 0, f.r * 0.32, 0, 7); ctx.fill();
+        ctx.restore(); n++; return; }
+      if (f.k === 'combo') { if (a > 760) return; var cq = a / 760, cal = cq < 0.15 ? 1 : 1 - (cq - 0.15) / 0.85, m2 = Math.min(6, f.n), clen = S * (2.1 + 0.28 * m2) * (0.4 + 0.6 * Math.min(1, a / 160));   // 콤보 도장 뒤 빛살(도트), 콤보 색
+        ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(a / 1400);
+        for (var ci = 0; ci < 16; ci++) { var cl = clen * (ci % 2 ? 0.62 : 1), cw = S * (ci % 2 ? 0.12 : 0.2); ctx.save(); ctx.rotate(ci * Math.PI / 8); var cg = ctx.createLinearGradient(0, 0, cl, 0); cg.addColorStop(0, 'rgba(255,255,255,' + (0.85 * cal) + ')'); cg.addColorStop(0.35, 'rgba(' + f.col + ',' + (0.75 * cal) + ')'); cg.addColorStop(1, 'rgba(' + f.col + ',0)');
+          ctx.fillStyle = cg; ctx.beginPath(); ctx.moveTo(S * 0.3, -cw); ctx.lineTo(cl, 0); ctx.lineTo(S * 0.3, cw); ctx.closePath(); ctx.fill(); ctx.restore(); }
+        ctx.restore(); n++; return; }
       if (f.k === 'boom') { if (!f.lobes) { f.sz = S * (f.big ? 2.4 : f.small ? 0.9 : 1.4); f.lobes = []; for (var i = 0; i < 7; i++) f.lobes.push([rr(0, 6.283), i ? rr(0.25, 0.6) : 0, i ? rr(0.45, 0.7) : 0.85]); } if (drawBoom(f, a)) n++; return; }
       if (f.k === 'ring') { if (a > f.life) return; var p3 = a / f.life, rad = f.r0 + (f.r1 - f.r0) * (1 - (1 - p3) * (1 - p3)); ctx.save(); ctx.strokeStyle = f.col + (1 - p3) + ')'; ctx.lineWidth = f.w * (1 - p3) + 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, rad, 0, 7); ctx.stroke(); ctx.restore(); n++; return; }
       if (f.k === 'muzzle') { var life = f.big ? 200 : 160; if (a > life) return; var p4 = a / life, ml = S * (f.big ? 1.1 : 0.9) * (1 - p4 * 0.5);
@@ -761,6 +791,34 @@
       ctx.lineWidth = Math.max(3, rfs * 0.22); ctx.strokeStyle = 'rgba(0,0,0,.85)'; var rt = e.hold ? '장전 완료' : rdy ? '발사!' : '리로드';
       ctx.strokeText(rt, cx, y0 - 2); ctx.fillStyle = rdy ? '#ff5a3a' : '#ffd451'; ctx.fillText(rt, cx, y0 - 2); ctx.restore();
     }
+  }
+  function drawCombo(f, a) {                                  // 콤보 도장: "N COMBO" 쾅 찍히고(크게 → 살짝 작게 → 제자리) 아래 "+보너스"
+    var al = Math.min(1, (1300 - a) / 300), sc = a < 110 ? 2.3 - 1.45 * (a / 110) : a < 210 ? 0.85 + 0.2 * ((a - 110) / 100) : 1.05 - 0.05 * Math.min(1, (a - 210) / 120),
+      big = Math.round(S * (1.25 + 0.06 * Math.min(6, f.n))), y = f.y - Math.max(0, a - 700) * 0.02, col = f.col;
+    ctx.save(); ctx.globalAlpha = al; ctx.translate(f.x, y); ctx.rotate(-0.07); ctx.scale(sc, sc);
+    var ns = String(f.n); ctx.font = '900 ' + big + 'px Orbitron, "Black Han Sans", sans-serif'; var nw = ctx.measureText(ns).width;
+    var ls = Math.round(big * 0.46); ctx.font = '800 ' + ls + 'px Orbitron, "Black Han Sans", sans-serif'; var lw = ctx.measureText('COMBO').width, gap = big * 0.12, x0 = -(nw + gap + lw) / 2;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'miter'; ctx.miterLimit = 3;
+    function stamp(str, x, yy, fs, wgt) { ctx.font = wgt + ' ' + fs + 'px Orbitron, "Black Han Sans", sans-serif';
+      ctx.lineWidth = Math.max(4, fs * 0.24); ctx.strokeStyle = '#000'; ctx.strokeText(str, x, yy);
+      var g = ctx.createLinearGradient(0, yy - fs * 0.5, 0, yy + fs * 0.5); g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, 'rgb(' + col + ')'); g.addColorStop(1, 'rgb(' + col.split(',').map(function (v) { return Math.round(v * 0.62); }).join(',') + ')');
+      ctx.fillStyle = g; ctx.shadowColor = 'rgba(' + col + ',.9)'; ctx.shadowBlur = fs * 0.35; ctx.fillText(str, x, yy); ctx.shadowBlur = 0;
+      if (a < 160) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * (1 - a / 160); ctx.fillStyle = '#fff'; ctx.fillText(str, x, yy); ctx.restore(); } }   // 찍히는 순간 하얗게 번쩍
+    stamp(ns, x0, 0, big, '900'); stamp('COMBO', x0 + nw + gap, big * 0.14, ls, '800');
+    if (a > 120) { var ba = Math.min(1, (a - 120) / 140), bs = Math.round(S * 0.58) * (a < 260 ? 1.25 - 0.25 * ba : 1); ctx.globalAlpha = al * ba; ctx.textAlign = 'center';
+      ctx.font = '800 ' + Math.round(bs) + 'px Orbitron, "Black Han Sans", sans-serif'; ctx.lineWidth = Math.max(3, bs * 0.22); ctx.strokeStyle = '#000'; ctx.strokeText('+' + f.bonus, 0, big * 0.88); ctx.fillStyle = '#fff3a0'; ctx.fillText('+' + f.bonus, 0, big * 0.88);
+      ctx.font = Math.round(bs * 0.62) + 'px "Black Han Sans", sans-serif'; ctx.lineWidth = Math.max(3, bs * 0.15); ctx.strokeText('콤보 보너스', 0, big * 0.88 + bs * 0.85); ctx.fillStyle = '#fff'; ctx.fillText('콤보 보너스', 0, big * 0.88 + bs * 0.85); }
+    ctx.restore(); }
+  function comboHud(t) {                                       // 콤보 남은 시간 바(점수 아래) + 3콤보부터 화면 테두리가 콤보 색으로 숨 쉬듯 빛남
+    var left = comboLeft(t); if (!left || G.over) return; var col = ctier(Math.max(2, G.kc)), bw = S * 3.4, bh = Math.max(4, S * 0.13), x0 = W / 2 - bw / 2, y0 = HUD + 12;
+    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x0 - 2, y0 - 2, bw + 4, bh + 4); var g = ctx.createLinearGradient(x0, 0, x0 + bw, 0); g.addColorStop(0, '#ffffff'); g.addColorStop(1, 'rgb(' + col + ')'); ctx.fillStyle = g; ctx.fillRect(x0, y0, bw * left, bh);
+    if (left < 0.3 && Math.floor(t / 120) % 2) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(x0, y0, bw * left, bh); }   // 곧 끝나요: 깜빡
+    var lab = G.kc >= 2 ? G.kc + ' COMBO' : 'COMBO 준비'; ctx.font = '800 ' + Math.round(S * 0.32) + 'px Orbitron, "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(lab, W / 2, y0 + bh + 3); ctx.fillStyle = 'rgb(' + col + ')'; ctx.fillText(lab, W / 2, y0 + bh + 3);
+    ctx.restore();
+    if (G.kc >= 3) { var pa = (0.18 + 0.08 * Math.min(4, G.kc - 3)) * (0.65 + 0.35 * Math.sin(t / 140)) * Math.min(1, left * 3), ew = S * 1.1, kc = ctier(G.kc);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      [[0, 0, ew, 0, 0, 0, ew, H], [W, 0, W - ew, 0, W - ew, 0, ew, H]].forEach(function (e) { var gg = ctx.createLinearGradient(e[0], 0, e[2], 0); gg.addColorStop(0, 'rgba(' + kc + ',' + pa + ')'); gg.addColorStop(1, 'rgba(' + kc + ',0)'); ctx.fillStyle = gg; ctx.fillRect(e[4], e[5], e[6], e[7]); });
+      ctx.restore(); }
   }
   function draw(t) {
     ctx.clearRect(0, 0, W, H);
@@ -879,7 +937,7 @@
     pixLayer(function () { return drawPixFx(t, true); }, 'lighter');
     G.fx = G.fx.filter(function (f) { var a = t - f.at; if (a < 0) return true;
       if (f.k === 'tracer' && a > f.dur && !f.hit) { f.hit = true; G.fx.push({ k: 'boom', px: f.x1, py: f.y1, at: t, small: true }); burst(f.x1, f.y1, 6, ['#fff3c0', '#ff6a2a'], 3, 3, 0.1, 400); sparks(f.x1, f.y1, 6, ['#ffffff', '#ffb13d'], 6); shake(5); sfx('boom', false); }
-      if (PRE_K[f.k] || PIX_K[f.k]) return a < ({ wreck: 1200, cell: 380, ghost: 200, ring: f.life, muzzle: 200, beam: 520, tracer: f.dur + 1, boom: 760 })[f.k];
+      if (PRE_K[f.k] || PIX_K[f.k]) return a < ({ wreck: 1200, cell: 380, ghost: 200, ring: f.life, muzzle: 200, beam: 520, tracer: f.dur + 1, boom: 760, star: 260 })[f.k];
       if (f.k === 'land' || f.k === 'thud') return a < 240;
       if (f.k === 'cell') { if (a > 380) return false; var p = a / 380, s2 = S * (1 + 0.3 * p);
         ctx.save(); ctx.globalAlpha = 1 - p; block(bx(f.x) + (S - s2) / 2, by(f.y) + (S - s2) / 2, s2, f.gold ? '#ffd451' : '#fff'); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = f.gold ? 'rgba(255,214,80,.8)' : 'rgba(255,255,255,.7)'; ctx.fillRect(bx(f.x) + (S - s2) / 2, by(f.y) + (S - s2) / 2, s2, s2); ctx.restore(); return true; }
@@ -926,6 +984,7 @@
           ctx.strokeStyle = 'rgba(' + c2 + ',' + al + ')'; ctx.shadowColor = f.cy ? '#4fd8ff' : '#c58bff'; ctx.shadowBlur = 22; ctx.lineWidth = bl ? 2.5 : 5; ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,' + al + ')'; ctx.lineWidth = bl ? 1 : 2; ctx.stroke(); }
         for (var bv = 0; bv < 6; bv++) { var vx = rr(0, W); ctx.beginPath(); ctx.moveTo(vx, hy); for (var bk2 = 1; bk2 <= 4; bk2++) ctx.lineTo(vx + rr(-S * 0.3, S * 0.3), hy - ER * 0.9 * bk2 / 4 * (bv % 2 ? 1 : -1)); ctx.strokeStyle = 'rgba(' + c2 + ',' + (al * 0.7) + ')'; ctx.lineWidth = 1.5; ctx.stroke(); }
         ctx.restore(); if (a < 70) { ctx.fillStyle = 'rgba(' + c2 + ',.22)'; ctx.fillRect(-12, -12, W + 24, H + 24); } return true; }
+      if (f.k === 'combo') { if (a > 1300) return false; drawCombo(f, a); return true; }
       if (f.k === 'fnum') { if (a > f.life) return false;        // 보너스 큰 숫자: 크게 튀어나왔다가 통통 → 천천히 떠오르며 사라짐
         if (a < 0) return true; var fsc = a < 140 ? 0.3 + 0.95 * (a / 140) : a < 260 ? 1.25 - 0.25 * ((a - 140) / 120) : 1, fal = Math.min(1, (f.life - a) / 380), fy = f.y - Math.max(0, a - 400) * 0.012;   // 짜잔: 작게 → 크게 툭 → 제자리
         fancy(f.t, f.x, fy, f.size, f.pal, fal, a, fsc, f.rot);
@@ -948,12 +1007,15 @@
     var hfs = Math.max(12, Math.min(20, Math.floor(W / 20))), sfs = Math.max(20, Math.min(30, Math.floor(W / 13)));   // 작은 폰에서도 글씨가 겹치거나 삐져나가지 않게
     function tw(str, fs) { ctx.font = fs + 'px "Black Han Sans", "Do Hyeon", sans-serif'; return ctx.measureText(str).width; }
     function fitFs(str, fs, mw) { var w0 = tw(str, fs); return w0 > mw ? Math.max(9, Math.floor(fs * mw / w0)) : fs; }
-    var scS = G.score.toLocaleString(), bsS = '최고 ' + Math.max(best, G.score).toLocaleString(), kS = '격파 ' + G.kills;
+    if (G.shown < G.score) G.shown = Math.min(G.score, G.shown + Math.max(7, Math.ceil((G.score - G.shown) * 0.16)));   // 점수가 또르르 올라감
+    var scS = Math.round(G.shown).toLocaleString(), bsS = '최고 ' + Math.max(best, G.score).toLocaleString(), kS = '격파 ' + G.kills;
     sfs = fitFs(scS, sfs, W * 0.42); var side = W / 2 - tw(scS, sfs) / 2 - 18;            // 가운데 점수와 양옆 글씨가 안 겹치게 줄임
     text(bsS, 10, HUD / 2, fitFs(bsS, hfs, side), '#ffd451', 'left');
-    text(scS, W / 2, HUD / 2, sfs, '#fff');
+    var sa = t - (G.scoreAt || -1e9), sbump = sa < 260 ? 1 + 0.28 * Math.sin(Math.PI * sa / 260) : 1;   // 점수 오를 때 통 튀고 금빛
+    ctx.save(); ctx.translate(W / 2, HUD / 2); ctx.scale(sbump, sbump); if (sa < 400) { ctx.shadowColor = '#ffb13d'; ctx.shadowBlur = 14 * (1 - sa / 400); } text(scS, 0, 0, sfs, sa < 300 ? '#ffe066' : '#fff'); ctx.restore();
     text(kS, W - 10, HUD * 0.3, fitFs(kS, hfs, side), '#ff9a8a', 'right');               // 격파: 조금 위로
     var ps = Math.floor(G.over && G.endSec != null ? G.endSec : gsec()); text(ps < 60 ? ps + '초' : Math.floor(ps / 60) + '분 ' + (ps % 60) + '초', W - 10, HUD * 0.72, Math.round(hfs * 0.85), '#cfe3ff', 'right');   // 그 아래 플레이 시간(초, 숫자만)
+    comboHud(t);
     if (boosted) { var bl = (G.boostUntil - t) / BOOST; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(OX, HUD + 2, S * COLS, 6); ctx.fillStyle = '#ffd451'; ctx.fillRect(OX, HUD + 2, S * COLS * bl, 6); }
     // 트레이
     for (var i = 0; i < 3; i++) { var rc = slotRect(i); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(rc.x + 4, rc.y, rc.w - 8, rc.h); ctx.strokeStyle = 'rgba(214,170,70,.45)'; ctx.lineWidth = 1.5; ctx.strokeRect(rc.x + 4, rc.y, rc.w - 8, rc.h);
@@ -983,7 +1045,7 @@
     { act: 'tap', tgt: [7, 7], lure: true, holdFire: true, text: '테트리스 빈 공간을\n탱크가 채울 수 있다\n이동해서 탱크로 직접 메우자!', kills: 3, focus: [[7, 'col']],
       after: '탱크로 테트리스 줄을 지우면\n드릴탄이 발사된다\n적진의 탱크 한 줄을\n모두 격파한다\n추가로 이동 속도가\n잠시 빨라진다' },
     { act: 'drag', piece: [[0, 0], [0, 1]], tgt: [3, 5], text: '블록을 이동해\n두 줄을 한 번에 지워 보자', clear: true,
-      after: '두 줄을 한 번에 지우면\n보너스 점수를 획득한다' },
+      after: '두 줄을 한 번에 지우면\n기가 2칸 모인다\n점수는 적을 부술 때만!\n연달아 부수면 콤보 보너스' },
     { act: 'drag', piece: [[0, 0], [1, 0]], tgt: [3, 4], fill: 4, charge: CHARGE_MAX, holdFire: true, text: '테트리스 줄을 제거할 때마다\n탱크 게이지가 오른다\n게이지가 가득 찼다\n3연발을 발사하자', kills: 2, focus: [[6, 'col'], [7, 'col'], [8, 'col']],
       after: '줄을 지울 때마다 기가 1칸 모인다\n4칸이 차면 다음 발사는\n미사일 3발이 나간다!' },
     { act: 'volley', after: '적 탱크가 블록을 쏘아 올린다\n테트리스 줄과 같이\n파괴할 수 있다' },
@@ -1165,7 +1227,7 @@
     var msg = beat ? '<b>최고 기록 +' + mmss(es - pb) + '!</b>' : close ? '<b>최고까지 단 ' + mmss(Math.max(1, gap)) + '!</b>' : es >= 300 ? '<b>5분 벽 돌파!</b>' : '<b>5분까지 ' + mmss(300 - es) + '!</b>';
     if ($('endTime')) $('endTime').innerHTML = '생존 ' + mmss(es) + ' · ' + msg + '<br><small>최고 생존 ' + mmss(bs) + '</small>';
     $('endB').textContent = '최고 기록!';
-    $('endScore').textContent = '점수 ' + G.score.toLocaleString();
+    $('endScore').textContent = '점수 ' + G.score.toLocaleString() + (G.kcMax >= 2 ? ' · 최고 ' + G.kcMax + '콤보' : '');
     $('endBtn').textContent = close || beat ? '한 판 더!' : '다시 하기';
     if (beat && !nb) $('endT').textContent = '생존 신기록!';
     sfx('resultMusic', nb);   // 탱크대전과 같은 결과 음악(최고 기록 = 승리 음악, 아니면 패배 음악)
