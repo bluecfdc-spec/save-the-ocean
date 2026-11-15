@@ -184,7 +184,7 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
       <div class="bd-h"><h2>${esc(w.title)}</h2><small>${md(m.start)} ~ ${md(m.end)}${past?" · 마감":" · "+esc(asOf)+" 기준"}</small></div>
       <div class="count lc bd-cards3">
         <div class="cd"><b class="${spent>0?"out":""}">${num(spent)}</b><span>쓴 돈<br>예산 ${num(w.budget)}${carrySum?`<br><em class="bd-plus">${carrySum<0?"−":"+"}이월 ${num(Math.abs(carrySum))}</em>`:""}${filled?`<br><em class="bd-plus">+채움 ${num(filled)}</em>`:""}</span></div>
-        <div class="cd"><b class="${remain<0?"out":""}">${remain<0?"−"+num(-remain):num(remain)}</b><span>${past?"남긴 돈":"가용 금액<br>= 통장 잔액"}</span></div>
+        <div class="cd"><b class="${remain<0?"out":""}">${remain<0?"−"+num(-remain):num(remain)}</b><span>${past?"남긴 돈":(w.cardDue?`가용 금액<br>= 통장 ${num(w.bank)}<br>− 카드값 예정 ${num(w.cardDue)}`:"가용 금액<br>= 통장 잔액")}</span></div>
         <div class="cd main"><b>${past?Math.round(pct*100)+"%":num(perDay)}</b><span>${past?"예산 대비 사용":"하루 한도<br>"+left+"일 남음"}</span></div>
       </div>
       <div class="bd-badge" style="--lv:${LV[1]}">${LV[0]}</div>
