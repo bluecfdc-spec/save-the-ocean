@@ -183,7 +183,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     <h3>할 일 추가</h3>
     <div class="ed">
       <div class="row">
-        <label style="flex:1 1 140px">날짜<input type="date" id="a-date" required></label>
+        <label style="flex:1 1 140px">날짜(비우면 미정)<input type="date" id="a-date"></label>
         <label style="flex:1 1 100px">담당<select id="a-who"><option>홍균</option><option>시뇽</option><option>둘다</option></select></label>
       </div>
       <label>할 일<input type="text" id="a-title" required maxlength="80"></label>
@@ -265,21 +265,21 @@ function render(){
   $("prog").style.width=total?(done/total*100)+"%":"0";
   $("progt").textContent=total?`${done} / ${total} 완료`:"";
   let view=tasks.filter(t=>filter==="all"||(filter==="open"?!t.done:t.done));
-  view.sort((a,b)=>String(a.date).localeCompare(String(b.date))||(a.order??0)-(b.order??0));
+  view.sort((a,b)=>(!a.date)-(!b.date)||String(a.date).localeCompare(String(b.date))||(a.order??0)-(b.order??0));
   if(!view.length){$("list").innerHTML=`<p class="empty">${total?"이 보기에는 할 일이 없습니다.":"아직 할 일이 없습니다. Claude에게 말하거나 아래에서 추가하세요."}</p>`;return}
   const groups=new Map();
-  for(const t of view){const m=monday(t.date),k=m.getTime();if(!groups.has(k))groups.set(k,{m,items:[]});groups.get(k).items.push(t)}
+  for(const t of view){const m=t.date?monday(t.date):null,k=m?m.getTime():"none";if(!groups.has(k))groups.set(k,{m,items:[]});groups.get(k).items.push(t)}
   const today=todayStr();let html="";
   for(const [k,g] of groups){
-    const sun=new Date(g.m);sun.setDate(sun.getDate()+6);
-    const wk=tasks.filter(t=>monday(t.date).getTime()===k),wd=wk.filter(t=>t.done).length;
+    const sun=g.m?new Date(g.m):null;if(sun)sun.setDate(sun.getDate()+6);
+    const wk=tasks.filter(t=>(t.date?monday(t.date).getTime():"none")===k),wd=wk.filter(t=>t.done).length;
     const thisWeek=monday(today).getTime()===k;
-    html+=`<section class="week"><div class="wk-h"><h2>${md(g.m)} – ${md(sun)}${thisWeek?" · 이번 주":""}</h2><small>${wd}/${wk.length} 완료</small></div>`;
+    html+=`<section class="week"><div class="wk-h"><h2>${g.m?md(g.m)+" – "+md(sun)+(thisWeek?" · 이번 주":""):"날짜 미정"}</h2><small>${wd}/${wk.length} 완료</small></div>`;
     for(const t of g.items){
-      const d=parse(t.date),we=d.getDay()===0||d.getDay()===6,late=!t.done&&t.date<today;
+      const d=t.date?parse(t.date):null,we=!!d&&(d.getDay()===0||d.getDay()===6),late=!!d&&!t.done&&t.date<today;
       const [cn,cc]=CATS[t.cat]||CATS.game,w=whoOf(t);
       html+=`<article class="task${we?" we":""}${t.done?" done":""}${t.date===today?" today":""}" data-id="${esc(t.id)}">
-        <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}</div>
+        <div class="d">${d?`<b>${md(d)}</b>${WD[d.getDay()]}`:"<b>–</b>"}</div>
         <input type="checkbox" class="ck" aria-label="완료" ${t.done?"checked":""}>
         <div class="body">
           <div class="t"><span class="who" style="--wc:${WHO[w]||WHO["홍균"]}">${esc(w)}</span><span class="tt">${esc(t.title)}</span>${t.cat==="todo"?"":`<span class="cat" style="--c:${cc}">${cn}</span>`}</div>
