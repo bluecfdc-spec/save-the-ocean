@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>제네시스 출시 일정표</title>
+<title>AI개발</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 :root{
@@ -115,6 +115,25 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 .seg button[aria-pressed="true"].i{background:var(--c-game);border-color:var(--c-game);color:#fff}
 .ed .ck2{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink)}
 .ed .ck2 input{width:20px;height:20px;accent-color:var(--accent)}
+/* 구독 현황 */
+#subs{margin-top:14px}
+.sub-row{display:grid;grid-template-columns:1.1fr 1fr 1.3fr 1.3fr 2fr;gap:4px 12px;padding:9px 8px;border-bottom:1px solid var(--line);align-items:baseline;font-size:14px}
+.sub-row span{min-width:0;overflow-wrap:anywhere}
+.sub-head{font-size:12px;color:var(--muted);padding-block:6px}
+.sub-row .s-nm{font-weight:700}
+.sub-row .s-amt{font-weight:700;font-variant-numeric:tabular-nums}
+.sub-row small{font-weight:400;color:var(--muted);font-size:12px}
+.sub-row .s-st{font-size:13px;color:var(--muted)}
+.sub-row .s-st b{display:inline-block;font-size:11px;border-radius:99px;padding:1px 8px;background:var(--sc);color:var(--bg);margin-right:2px}
+.sub-row.off .s-nm,.sub-row.off .s-amt,.sub-row.off .s-day,.sub-row.off .s-pay{color:var(--done)}
+.todo-h{margin-top:30px}
+@media (max-width:640px){
+  .sub-head{display:none}
+  .sub-row{grid-template-columns:1fr auto;grid-template-areas:"nm amt" "st st" "day pay"}
+  .sub-row .s-nm{grid-area:nm;font-size:15px}.sub-row .s-amt{grid-area:amt;text-align:right}
+  .sub-row .s-st{grid-area:st}.sub-row .s-day{grid-area:day;font-size:12px;color:var(--muted)}
+  .sub-row .s-pay{grid-area:pay;font-size:12px;color:var(--muted);text-align:right}
+}
 @media (max-width:480px){.task{grid-template-columns:48px 24px 1fr}.cd b{font-size:22px}}
 @media (prefers-reduced-motion:reduce){.prog i{transition:none}}
 </style>
@@ -122,7 +141,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 <body>
 
 <div class="gate" id="gate">
-  <h1>제네시스 출시 일정표</h1>
+  <h1>AI개발</h1>
   <p class="sub" id="gate-msg">홍균·시뇽 구글 계정으로만 열립니다.</p>
   <p><button class="btn pri" id="login">구글 계정으로 로그인</button></p>
 </div>
@@ -130,25 +149,22 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
 <div class="wrap" id="app" hidden>
   <div class="top">
     <div>
-      <h1>제네시스 출시 일정표</h1>
-      <p class="sub">평일 1~2시간(아이패드) / 토·일 PC</p>
+      <h1>AI개발</h1>
+      <p class="sub">구독 현황 · 할 일</p>
     </div>
     <div class="me"><span id="me"></span><button class="btn" id="logout">로그아웃</button></div>
   </div>
 
   <nav class="main-tabs" role="tablist" aria-label="일정표 탭">
-    <button role="tab" id="tab-plan" aria-selected="true">📅 일정</button>
+    <button role="tab" id="tab-plan" aria-selected="true">📋 구독·할 일</button>
     <button role="tab" id="tab-money" aria-selected="false">💰 가계부</button>
     <button role="tab" id="tab-dev" aria-selected="false">🛠 개발경비</button>
   </nav>
 
   <div id="pane-plan">
-  <div class="count">
-    <div class="cd"><b id="cd1">–</b><span>합본 테스트 · 11/7</span></div>
-    <div class="cd"><b id="cd2">–</b><span>심사 제출 · 11/28</span></div>
-    <div class="cd main"><b id="cd3">–</b><span>출시 · 12/19(토)</span></div>
-  </div>
+  <section id="subs"><p class="empty">구독 현황을 불러오는 중입니다.</p></section>
 
+  <div class="wk-h todo-h"><h2>해야 할 일</h2><small>Claude에게 말하면 여기에 들어갑니다</small></div>
   <div class="bar">
     <div class="prog" aria-hidden="true"><i id="prog"></i></div>
     <span id="progt" style="font-size:13px;color:var(--muted)">불러오는 중</span>
@@ -159,22 +175,9 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
       <button id="f-all" aria-pressed="false">전체</button>
       <button id="f-done" aria-pressed="false">완료</button>
     </div>
-    <div class="tabs" role="group" aria-label="담당">
-      <button id="w-all" aria-pressed="true">모두</button>
-      <button id="w-h" aria-pressed="false">홍균</button>
-      <button id="w-w" aria-pressed="false">시뇽</button>
-      <button id="w-b" aria-pressed="false">둘다</button>
-    </div>
-  </div>
-  <div class="legend">
-    <span style="--c:var(--c-acct)">계정·사업</span>
-    <span style="--c:var(--c-game)">게임·에셋</span>
-    <span style="--c:var(--c-test)">테스트</span>
-    <span style="--c:var(--c-video)">영상·홍보</span>
-    <span style="--c:var(--c-launch)">출시</span>
   </div>
 
-  <div id="list"><p class="empty">일정을 불러오는 중입니다.</p></div>
+  <div id="list"><p class="empty">할 일을 불러오는 중입니다.</p></div>
 
   <form class="box" id="addf">
     <h3>할 일 추가</h3>
@@ -182,10 +185,6 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
       <div class="row">
         <label style="flex:1 1 140px">날짜<input type="date" id="a-date" required></label>
         <label style="flex:1 1 100px">담당<select id="a-who"><option>홍균</option><option>시뇽</option><option>둘다</option></select></label>
-        <label style="flex:1 1 140px">분류<select id="a-cat">
-          <option value="acct">계정·사업</option><option value="game">게임·에셋</option>
-          <option value="test">테스트</option><option value="video">영상·홍보</option><option value="launch">출시</option>
-        </select></label>
       </div>
       <label>할 일<input type="text" id="a-title" required maxlength="80"></label>
       <label>설명(선택)<textarea id="a-det"></textarea></label>
@@ -193,16 +192,7 @@ details.edit[open] .ed{border:1px solid var(--accent);border-radius:0 8px 8px 8p
     </div>
   </form>
 
-  <details class="box" id="imp">
-    <summary style="cursor:pointer;font-weight:700">일정 가져오기 (처음 한 번)</summary>
-    <div class="ed">
-      <p style="margin:0;font-size:13px;color:var(--muted)">Claude 일정표의 "웹으로 옮기기" 버튼으로 복사한 내용을 붙여넣으세요. 같은 번호의 할 일은 덮어씁니다.</p>
-      <textarea id="imp-text" placeholder='[{"id":"t01", ...}]'></textarea>
-      <div class="row"><button class="btn pri" id="imp-go" type="button">가져오기</button><span id="imp-msg" style="font-size:13px;color:var(--muted)"></span></div>
-    </div>
-  </details>
-
-  <p class="note">홍균·시뇽 누구나 체크·메모·날짜·담당을 바꿀 수 있고, 누가 체크했는지 남습니다. 채팅에서 "○○ 끝났어"라고 하면 Claude도 체크합니다. 게임 항목은 각 게임 채팅에서 Claude에게 지시하고 폰으로 확인하는 시간입니다.</p>
+  <p class="note">구독 현황은 Claude가 갱신합니다. 할 일은 채팅에서 Claude에게 말하면 추가되고, "○○ 끝났어"라고 하면 체크됩니다. 여기서 직접 체크·메모·날짜 수정도 됩니다. 예전 제네시스 출시 일정은 지우지 않고 숨겨 두었습니다.</p>
   </div>
 
   <div id="pane-money" hidden><p class="empty">가계부를 불러오는 중입니다.</p></div>
@@ -220,7 +210,7 @@ window.__budgetReady=new Promise(res=>{const v=Date.now(),l=document.createEleme
 </script>
 <script>
 const COL="genesis_tasks";
-const CATS={acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
+const CATS={todo:["할 일","var(--c-acct)"],acct:["계정·사업","var(--c-acct)"],game:["게임·에셋","var(--c-game)"],test:["테스트","var(--c-test)"],video:["영상·홍보","var(--c-video)"],launch:["출시","var(--c-launch)"]};
 const WHO={"홍균":"var(--c-acct)","시뇽":"var(--c-video)","둘다":"var(--c-test)"};
 const whoOf=t=>t.who==="아내"?"시뇽":(t.who||"홍균");
 const WD=["일","월","화","수","목","금","토"];
@@ -234,9 +224,6 @@ const dlabel=n=>n>0?"D-"+n:n===0?"D-DAY":"D+"+(-n);
 const md=d=>(d.getMonth()+1)+"/"+d.getDate();
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function monday(s){const d=parse(s);d.setDate(d.getDate()-(d.getDay()+6)%7);return d}
-$("cd1").textContent=dlabel(daysTo("2026-11-07"));
-$("cd2").textContent=dlabel(daysTo("2026-11-28"));
-$("cd3").textContent=dlabel(daysTo("2026-12-19"));
 $("a-date").value=todayStr();
 
 firebase.initializeApp(window.FIREBASE_CONFIG);
@@ -265,7 +252,7 @@ auth.onAuthStateChanged(u=>{
     $("gate").hidden=true;$("app").hidden=false;
     const all=s.docs.map(d=>({id:d.id,...d.data()}));
     // 같은 컬렉션에 kind 로 구분: 없음 = 일정, money = 가계부, dev = 개발경비
-    tasks=all.filter(t=>!t.kind);money=all.filter(t=>t.kind==="money");dev=all.filter(t=>t.kind==="dev");
+    tasks=all.filter(t=>!t.kind&&t.cat==="todo");money=all.filter(t=>t.kind==="money");dev=all.filter(t=>t.kind==="dev");
     render();renderLedger("dev");
   },()=>{
     $("app").hidden=true;$("gate").hidden=false;
@@ -278,9 +265,8 @@ function render(){
   $("prog").style.width=total?(done/total*100)+"%":"0";
   $("progt").textContent=total?`${done} / ${total} 완료`:"";
   let view=tasks.filter(t=>filter==="all"||(filter==="open"?!t.done:t.done));
-  if(whoF!=="all")view=view.filter(t=>whoOf(t)===whoF||(whoF!=="둘다"&&whoOf(t)==="둘다"));
   view.sort((a,b)=>String(a.date).localeCompare(String(b.date))||(a.order??0)-(b.order??0));
-  if(!view.length){$("list").innerHTML=`<p class="empty">${total?"이 보기에는 할 일이 없습니다.":"아직 일정이 없습니다. 아래 '일정 가져오기'로 처음 일정을 넣어 주세요."}</p>`;return}
+  if(!view.length){$("list").innerHTML=`<p class="empty">${total?"이 보기에는 할 일이 없습니다.":"아직 할 일이 없습니다. Claude에게 말하거나 아래에서 추가하세요."}</p>`;return}
   const groups=new Map();
   for(const t of view){const m=monday(t.date),k=m.getTime();if(!groups.has(k))groups.set(k,{m,items:[]});groups.get(k).items.push(t)}
   const today=todayStr();let html="";
@@ -293,10 +279,10 @@ function render(){
       const d=parse(t.date),we=d.getDay()===0||d.getDay()===6,late=!t.done&&t.date<today;
       const [cn,cc]=CATS[t.cat]||CATS.game,w=whoOf(t);
       html+=`<article class="task${we?" we":""}${t.done?" done":""}${t.date===today?" today":""}" data-id="${esc(t.id)}">
-        <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}${we?" PC":""}</div>
+        <div class="d"><b>${md(d)}</b>${WD[d.getDay()]}</div>
         <input type="checkbox" class="ck" aria-label="완료" ${t.done?"checked":""}>
         <div class="body">
-          <div class="t"><span class="who" style="--wc:${WHO[w]||WHO["홍균"]}">${esc(w)}</span><span class="tt">${esc(t.title)}</span><span class="cat" style="--c:${cc}">${cn}</span></div>
+          <div class="t"><span class="who" style="--wc:${WHO[w]||WHO["홍균"]}">${esc(w)}</span><span class="tt">${esc(t.title)}</span>${t.cat==="todo"?"":`<span class="cat" style="--c:${cc}">${cn}</span>`}</div>
           ${t.detail?`<div class="det">${esc(t.detail)}</div>`:""}
           <div class="meta">
             ${t.time?`<span>⏱ ${esc(t.time)}</span>`:""}
@@ -321,8 +307,6 @@ function render(){
 
 for(const [id,f] of [["f-open","open"],["f-all","all"],["f-done","done"]])
   $(id).onclick=()=>{filter=f;for(const b of ["f-open","f-all","f-done"])$(b).setAttribute("aria-pressed",b===id);render()};
-for(const [id,w] of [["w-all","all"],["w-h","홍균"],["w-w","시뇽"],["w-b","둘다"]])
-  $(id).onclick=()=>{whoF=w;for(const b of ["w-all","w-h","w-w","w-b"])$(b).setAttribute("aria-pressed",b===id);render()};
 
 $("list").addEventListener("toggle",e=>{const a=e.target.closest&&e.target.closest(".task");if(!a)return;e.target.open?openEdit.add(a.dataset.id):openEdit.delete(a.dataset.id)},true);
 
@@ -347,29 +331,36 @@ $("list").addEventListener("click",async e=>{
 
 $("addf").addEventListener("submit",async e=>{
   e.preventDefault();const title=$("a-title").value.trim();if(!title)return;
-  try{await db.collection(COL).add({date:$("a-date").value,who:$("a-who").value,cat:$("a-cat").value,title,detail:$("a-det").value.trim(),done:false,doneAt:"",doneByName:"",memo:"",order:900,time:"",cost:""});
+  try{await db.collection(COL).add({date:$("a-date").value,who:$("a-who").value,cat:"todo",title,detail:$("a-det").value.trim(),done:false,doneAt:"",doneByName:"",memo:"",order:900,time:"",cost:""});
     $("a-title").value="";$("a-det").value="";$("a-msg").textContent="추가됨"}
   catch{$("a-msg").textContent="추가 못 함: 다시 시도해 주세요"}
 });
 
-$("imp-go").onclick=async()=>{
-  let rows;try{rows=JSON.parse($("imp-text").value)}catch{$("imp-msg").textContent="붙여넣은 내용을 읽지 못했습니다";return}
-  if(!Array.isArray(rows)){$("imp-msg").textContent="목록 형식이 아닙니다";return}
-  const keep=["date","order","who","cat","title","detail","time","cost","done","doneAt","doneByName","memo"];
-  let n=0;
+// ───────── 구독 현황 (subs.json 을 Claude 가 갱신 — 보기 전용) ─────────
+const SUB_ST={active:["구독 중","var(--c-game)"],cancelled:["해지","var(--done)"],free:["무료","var(--done)"],usage:["사용 중","var(--c-acct)"]};
+async function loadSubs(){
+  const el=$("subs");
   try{
-    for(let i=0;i<rows.length;i+=400){
-      const batch=db.batch();
-      for(const r of rows.slice(i,i+400)){
-        if(!r||!/^[A-Za-z0-9_-]{1,40}$/.test(r.id||""))continue;
-        const d={};for(const k of keep)if(k in r)d[k]=r[k];
-        batch.set(ref(r.id),d);n++;
-      }
-      await batch.commit();
-    }
-    $("imp-msg").textContent=n+"개 가져옴";$("imp-text").value="";
-  }catch{$("imp-msg").textContent="가져오지 못했습니다. 다시 시도해 주세요"}
-};
+    const r=await fetch("subs.json?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;
+    const S=await r.json(),rate=Number(S.rate)||1500,w=n=>"₩"+Math.round(n).toLocaleString("ko-KR");
+    const krw=i=>i.usd!=null?Number(i.usd)*rate:Number(i.krw)||0;
+    const act=S.items.filter(i=>i.status==="active"),sum=c=>act.filter(i=>i.cycle===c).reduce((n,i)=>n+krw(i),0);
+    const rows=S.items.map(i=>{const [sn,sc]=SUB_ST[i.status]||SUB_ST.active;
+      const amt=w(krw(i))+(i.usd!=null?` <small>($${Number(i.usd).toLocaleString("en-US",Number.isInteger(Number(i.usd))?{}:{minimumFractionDigits:2})})</small>`:"")+(i.amountNote?` <small>(${esc(i.amountNote)})</small>`:"");
+      const st=[i.plan,i.until?(i.status==="cancelled"?i.until+"까지 이용":i.until+" 만료"):"",i.note].filter(Boolean).map(esc).join(", ");
+      return `<div class="sub-row${i.status==="active"||i.status==="usage"?"":" off"}">
+        <span class="s-nm">${esc(i.name)}</span><span class="s-day">${esc(i.day)}</span><span class="s-amt">${amt}</span>
+        <span class="s-pay">${esc(i.pay)}</span><span class="s-st"><b style="--sc:${sc}">${sn}</b>${st?" "+st:""}</span></div>`}).join("");
+    el.innerHTML=`<div class="count lc">
+        <div class="cd main"><b>${w(sum("monthly"))}</b><span>매월 나가는 돈</span></div>
+        <div class="cd"><b>${w(sum("yearly"))}</b><span>연 1회 나가는 돈</span></div>
+        <div class="cd"><b>${act.length}개</b><span>구독 중</span></div></div>
+      <div class="wk-h"><h2>구독 현황</h2><small>적용환율 $1 = ${w(rate)} · ${esc(S.updated)} 기준</small></div>
+      <div class="sub-row sub-head"><span class="s-nm">서비스</span><span class="s-day">결제일</span><span class="s-amt">결제금액</span><span class="s-pay">결제방법</span><span class="s-st">현재 구독상태</span></div>
+      ${rows}`;
+  }catch{el.innerHTML='<p class="empty">구독 현황을 불러오지 못했습니다. 새로고침해 주세요.</p>'}
+}
+loadSubs();
 
 // ───────── 개발경비 (가계부 탭은 budget.js 가 budget.json 으로 그림) ─────────
 const LEDGER={
