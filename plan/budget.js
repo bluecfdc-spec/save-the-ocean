@@ -1,4 +1,5 @@
-// 가계부 탭: 자산현황 · 생활비 · 용돈 — budget.json 을 읽어 그리기만 함 (입력 없음)
+// 가계부 탭: 자산현황 · 생활비 · 용돈 — Firestore(genesis_tasks/budget_data)에서 읽어 그리기만 함 (입력 없음)
+// 숫자는 공개 저장소에 두지 않는다. 로그인한 홍균·시뇽만 읽을 수 있다. 갱신 방법은 tools/budget-sync.mjs 참고.
 (function(){
   const pad=n=>String(n).padStart(2,"0");
   const won=n=>Math.round(Number(n)||0).toLocaleString("ko-KR")+"원";
@@ -207,7 +208,12 @@ const FILL_CODES=["할부","대출","시뇽 비상자금","야근 보너스","�
     root=el;
     el.innerHTML=`<section class="bd" id="bd-assets"></section><section class="bd" id="bd-living"></section><section class="bd" id="bd-allowance"></section>
       <p class="note">숫자는 Claude가 내역을 분석할 때마다 갱신합니다. 홍균·시뇽 둘만 볼 수 있어요.</p>`;
-    try{const r=await fetch("budget.json?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;DATA=await r.json()}
+    try{
+      // 로그인이 확인된 뒤에 Firestore 에서 읽는다 (로그인 전에는 권한이 없어 읽히지 않음)
+      const au=firebase.auth();
+      await new Promise(res=>{let off=null,ok=false;off=au.onAuthStateChanged(u=>{if(!u||ok)return;ok=true;if(off)off();res()});if(ok&&off)off()});
+      const d=await firebase.firestore().collection("genesis_tasks").doc("budget_data").get();
+      if(!d.exists)throw 0;DATA=JSON.parse(d.data().json)}
     catch{el.innerHTML=`<p class="empty">가계부 데이터를 아직 불러오지 못했습니다.</p>`;return}
     DATA.months.sort((a,b)=>a.start.localeCompare(b.start));
     // 21일이 지나 새 달이 됐는데 아직 내역이 안 들어왔으면, 같은 권장 금액으로 빈 달을 자동으로 만들어 보여 줌
