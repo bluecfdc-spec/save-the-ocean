@@ -336,13 +336,15 @@ $("addf").addEventListener("submit",async e=>{
   catch{$("a-msg").textContent="추가 못 함: 다시 시도해 주세요"}
 });
 
-// ───────── 구독 현황 (subs.json 을 Claude 가 갱신 — 보기 전용) ─────────
+// ───────── 구독 현황 (Firestore genesis_tasks/subs_data — Claude 가 갱신, 보기 전용. 공개 저장소에는 두지 않음) ─────────
 const SUB_ST={active:["구독 중","var(--c-game)"],cancelled:["해지","var(--done)"],free:["무료","var(--done)"],usage:["사용 중","var(--c-acct)"]};
 async function loadSubs(){
   const el=$("subs");
   try{
-    const r=await fetch("subs.json?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;
-    const S=await r.json(),rate=Number(S.rate)||1500,w=n=>"₩"+Math.round(n).toLocaleString("ko-KR");
+    // 로그인이 확인된 뒤에 Firestore 에서 읽는다 (로그인 전에는 권한이 없어 읽히지 않음)
+    await new Promise(res=>{let off=null,ok=false;off=auth.onAuthStateChanged(u=>{if(!u||ok)return;ok=true;if(off)off();res()});if(ok&&off)off()});
+    const sd=await ref("subs_data").get();if(!sd.exists)throw 0;
+    const S=JSON.parse(sd.data().json),rate=Number(S.rate)||1500,w=n=>"₩"+Math.round(n).toLocaleString("ko-KR");
     const krw=i=>i.usd!=null?Number(i.usd)*rate:Number(i.krw)||0;
     const act=S.items.filter(i=>i.status==="active"),sum=c=>act.filter(i=>i.cycle===c).reduce((n,i)=>n+krw(i),0);
     const rows=S.items.map(i=>{const [sn,sc]=SUB_ST[i.status]||SUB_ST.active;
@@ -362,7 +364,7 @@ async function loadSubs(){
 }
 loadSubs();
 
-// ───────── 개발경비 (가계부 탭은 budget.js 가 budget.json 으로 그림) ─────────
+// ───────── 개발경비 (가계부 탭은 budget.js 가 Firestore 에서 읽어 그림) ─────────
 const LEDGER={
   money:{title:"가계부",io:true,
     out:["식비","장보기","생활·집","교통·차","의료","육아·교육","쇼핑","경조사·선물","여가·여행","보험·통신","기타"],
