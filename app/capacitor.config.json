@@ -1,0 +1,19 @@
+{
+  "appId": "com.divinegenesis.rumble",
+  "appName": "DG Rumble",
+  "webDir": "www",
+  "backgroundColor": "#05070f",
+  "server": {
+    "url": "https://bluecfdc-spec.github.io/save-the-ocean/hub/",
+    "allowNavigation": [
+      "bluecfdc-spec.github.io"
+    ]
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#05070f"
+  },
+  "android": {
+    "backgroundColor": "#05070f"
+  }
+}

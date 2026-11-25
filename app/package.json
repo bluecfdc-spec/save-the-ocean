@@ -1,0 +1,15 @@
+{
+  "name": "dg-rumble-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DIVINE GENESIS: RUMBLE 앱 포장 (통합 홈 hub/ 를 여는 껍데기)",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}

@@ -1,0 +1,106 @@
+# DIVINE GENESIS: RUMBLE 앱 포장
+#  - app/ 이 바뀌면: 안드로이드 시험판(APK) + 아이폰 빌드 점검(서명 없이)
+#  - 수동 실행(testflight 선택): 아이폰 서명 → TestFlight 올리기 (시크릿 4개 필요)
+name: app-build
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', '.github/workflows/app-build.yml']
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '무엇을 만들까'
+        type: choice
+        default: check
+        options: [check, testflight]
+      build:
+        description: '빌드 번호 (testflight 때, 올릴 때마다 1씩 크게)'
+        default: '1'
+
+env:
+  BUNDLE_ID: ${{ vars.RUMBLE_BUNDLE_ID || 'com.divinegenesis.rumble' }}
+
+jobs:
+  android:
+    if: github.event_name == 'push' || inputs.target == 'check'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm install
+      - run: node tools/prep.mjs android
+      - run: cd android && ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dg-rumble-android-test
+          path: app/android/app/build/outputs/apk/debug/*.apk
+
+  ios-check:
+    if: github.event_name == 'push' || inputs.target == 'check'
+    runs-on: macos-15
+    defaults: { run: { working-directory: app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: node tools/prep.mjs ios
+      - name: 서명 없이 빌드 점검
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -n 40
+
+  ios-testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testflight'
+    runs-on: macos-15
+    defaults: { run: { working-directory: app } }
+    env:
+      ASC_KEY_ID: ${{ secrets.RUMBLE_ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.RUMBLE_ASC_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.RUMBLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: node tools/prep.mjs ios
+      - name: 열쇠 준비
+        env: { P8: '${{ secrets.RUMBLE_ASC_KEY_P8 }}' }
+        run: |
+          test -n "$P8" || { echo "시크릿 RUMBLE_ASC_KEY_P8 이 없습니다"; exit 1; }
+          mkdir -p ~/keys && printf '%s' "$P8" > ~/keys/AuthKey_${ASC_KEY_ID}.p8
+      - name: 묶기
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/App.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CURRENT_PROJECT_VERSION="${{ inputs.build }}" archive | tail -n 40
+      - name: TestFlight 올리기
+        run: |
+          cat > $RUNNER_TEMP/export.plist <<P
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>destination</key><string>upload</string>
+          <key>teamID</key><string>${TEAM_ID}</string>
+          <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          P
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/export.plist -exportPath $RUNNER_TEMP/out \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -n 40
+      - if: always()
+        run: rm -rf ~/keys
